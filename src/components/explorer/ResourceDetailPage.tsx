@@ -17,7 +17,7 @@ import { DeveloperJsonView } from './DeveloperJsonView';
  * Mitigates T-02-08 (reference tampering).
  */
 const FHIR_REFERENCE_PATTERN = /^[A-Z][a-zA-Z]+$/;
-const FHIR_ID_PATTERN = /^[a-f0-9A-F][a-f0-9A-F\-]+$/;
+const FHIR_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9\-.]{0,63}$/;
 
 function isValidFhirReference(resourceType: string, id: string): boolean {
   return FHIR_REFERENCE_PATTERN.test(resourceType) && FHIR_ID_PATTERN.test(id);
@@ -108,7 +108,7 @@ export function ResourceDetailPage() {
 
       const href = anchor.getAttribute('href') || '';
       // Match FHIR reference pattern: /ResourceType/id at end of URL
-      const match = href.match(/\/([A-Z][a-zA-Z]+)\/([a-f0-9A-F][a-f0-9A-F\-]+)$/);
+      const match = href.match(/\/([A-Z][a-zA-Z]+)\/([A-Za-z0-9][A-Za-z0-9\-.]{0,63})$/);
       if (match) {
         const [, refType, refId] = match;
         // Validate the extracted reference (T-02-08)
