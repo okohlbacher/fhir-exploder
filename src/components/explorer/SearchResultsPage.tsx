@@ -2,7 +2,8 @@ import { useState, useMemo, useCallback } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { Alert, Anchor, Breadcrumbs, Skeleton, Stack, Text } from '@mantine/core';
 import { SearchControl } from '@medplum/react';
-import type { Bundle, Resource } from '@medplum/fhirtypes';
+import type { SearchClickEvent, SearchLoadEvent, SearchChangeEvent } from '@medplum/react';
+import type { Bundle } from '@medplum/fhirtypes';
 import type { SearchRequest } from '@medplum/core';
 import type { ExplorerOutletContext } from './ExplorerLayout';
 import { parseResourceTypes } from '../../fhir/capability';
@@ -89,14 +90,14 @@ export function SearchResultsPage() {
     [searchRequest, setSearch]
   );
 
-  const handleSearchLoad = useCallback((e: { bundle: Bundle }) => {
-    setBundle(e.bundle);
+  const handleSearchLoad = useCallback((e: SearchLoadEvent) => {
+    setBundle(e.response);
     setLoading(false);
     setError(null);
   }, []);
 
   const handleClick = useCallback(
-    (e: { resource: Resource }) => {
+    (e: SearchClickEvent) => {
       const resource = e.resource;
       if (resource.resourceType && resource.id) {
         navigate(`/explorer/${resource.resourceType}/${resource.id}`);
@@ -148,13 +149,12 @@ export function SearchResultsPage() {
         search={searchRequest}
         hideToolbar={true}
         hideFilters={true}
-        onClick={(e) => handleClick(e as unknown as { resource: Resource })}
-        onLoad={(e) => handleSearchLoad(e as unknown as { bundle: Bundle })}
-        onChange={(e) => {
+        onClick={handleClick}
+        onLoad={handleSearchLoad}
+        onChange={(e: SearchChangeEvent) => {
           // Only update if search definition meaningfully changed (Pitfall 2)
-          const newDef = (e as unknown as { definition: SearchRequest }).definition;
-          if (newDef && JSON.stringify(newDef) !== JSON.stringify(searchRequest)) {
-            setSearch(newDef);
+          if (e.definition && JSON.stringify(e.definition) !== JSON.stringify(searchRequest)) {
+            setSearch(e.definition);
           }
         }}
       />
