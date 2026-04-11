@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button, Group, MultiSelect, Paper, Stack, TextInput } from '@mantine/core';
 import { getCuratedParams } from '../../utils/curated-params';
 
@@ -21,6 +21,13 @@ export function SearchFilterPanel({ resourceType, allSearchParams, onSearch }: S
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [includeValues, setIncludeValues] = useState<string[]>([]);
   const [revincludeValues, setRevincludeValues] = useState<string[]>([]);
+
+  // Reset filter state when resource type changes (WR-02)
+  useEffect(() => {
+    setFilterValues({});
+    setIncludeValues([]);
+    setRevincludeValues([]);
+  }, [resourceType]);
 
   const curatedParams = getCuratedParams(resourceType, allSearchParams);
   const visibleParams = showAllFilters ? allSearchParams : curatedParams;
