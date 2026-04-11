@@ -1,8 +1,13 @@
-import { Alert, Stack, Title } from '@mantine/core';
+import { Alert, Stack, Text, Title } from '@mantine/core';
 import { IconAlertCircle, IconAlertTriangle, IconCircleCheck } from '@tabler/icons-react';
 import type { ConnectionState } from '../../fhir/types';
 import type { AppSettings } from '../../config/types';
+import { parseResourceTypes } from '../../fhir/capability';
+import { useResourceCounts } from '../../hooks/useResourceCounts';
 import { ServerInfoCard } from './ServerInfoCard';
+import { ResourceTypeList } from './ResourceTypeList';
+import { MedplumCompatGate } from './MedplumCompatGate';
+import { useMemo } from 'react';
 
 interface DashboardPageProps {
   settings: AppSettings | null;
@@ -24,6 +29,21 @@ export function DashboardPage({
   connectionState,
   onConnect,
 }: DashboardPageProps) {
+  const resourceTypes = useMemo(() => {
+    if (connectionState.status === 'connected') {
+      return parseResourceTypes(connectionState.capability);
+    }
+    return [];
+  }, [connectionState]);
+
+  const resourceTypeNames = useMemo(
+    () => resourceTypes.map(rt => rt.type),
+    [resourceTypes]
+  );
+
+  const client = connectionState.status === 'connected' ? connectionState.client : null;
+  const counts = useResourceCounts(client, resourceTypeNames);
+
   return (
     <Stack gap="lg">
       <Title order={2}>Server Connection</Title>
@@ -76,8 +96,24 @@ export function DashboardPage({
         </Alert>
       )}
 
-      {/* Resource types list will be added in Plan 03 */}
-      <div />
+      {connectionState.status === 'connected' && (
+        <>
+          <ResourceTypeList resourceTypes={resourceTypes} counts={counts} />
+          <MedplumCompatGate
+            client={connectionState.client}
+            resourceTypes={resourceTypeNames}
+          />
+        </>
+      )}
+
+      {connectionState.status !== 'connected' && connectionState.status !== 'connecting' && (
+        <Stack align="center" py="xl">
+          <Title order={3}>Not Connected</Title>
+          <Text c="dimmed">
+            Configure your FHIR server in settings.yaml and click Connect to begin exploring.
+          </Text>
+        </Stack>
+      )}
     </Stack>
   );
 }
