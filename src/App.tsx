@@ -3,12 +3,9 @@ import { Routes, Route } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
 import { DashboardPage } from './components/dashboard/DashboardPage';
 import { SettingsPage } from './components/settings/SettingsPage';
+import { ExplorerLayout } from './components/explorer/ExplorerLayout';
 import { useSettings } from './hooks/useSettings';
 import { useConnection } from './hooks/useConnection';
-
-function ExplorerPage() {
-  return <div>Explorer (Phase 2)</div>;
-}
 
 function PatientsPage() {
   return <div>Patients (Phase 3)</div>;
@@ -48,7 +45,11 @@ export function App() {
           path="/settings"
           element={<SettingsPage settings={settings} usingDefaults={usingDefaults} />}
         />
-        <Route path="/explorer" element={<ExplorerPage />} />
+        <Route path="/explorer" element={<ExplorerLayout />}>
+          <Route index element={<div>Select a resource type</div>} />
+          <Route path=":resourceType" element={<div>Search results (Plan 02)</div>} />
+          <Route path=":resourceType/:id" element={<div>Resource detail (Plan 03)</div>} />
+        </Route>
         <Route path="/patients" element={<PatientsPage />} />
         <Route path="/quality" element={<QualityPage />} />
       </Route>
