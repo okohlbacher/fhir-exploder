@@ -1,8 +1,10 @@
-import { Select, Stack, Title, Text } from '@mantine/core';
+import { Badge, Group, Loader, Select, Stack, Title, Text } from '@mantine/core';
+import { useMedplum } from '@medplum/react-hooks';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import type { ExplorerOutletContext } from './ExplorerLayout';
 import { parseResourceTypes } from '../../fhir/capability';
 import { groupByCategory, CATEGORY_ORDER } from '../../utils/fhir-categories';
+import { useResourceCounts } from '../../hooks/useResourceCounts';
 import { useMemo } from 'react';
 
 /**
@@ -13,7 +15,10 @@ export function ResourceTypeLanding() {
   const { capability } = useOutletContext<ExplorerOutletContext>();
   const navigate = useNavigate();
 
+  const client = useMedplum();
   const parsedTypes = useMemo(() => parseResourceTypes(capability), [capability]);
+  const typeNames = useMemo(() => parsedTypes.map(t => t.type), [parsedTypes]);
+  const counts = useResourceCounts(client, typeNames);
 
   const typeOptions = useMemo(
     () => parsedTypes.map((t) => t.type).sort((a, b) => a.localeCompare(b)),
@@ -61,15 +66,24 @@ export function ResourceTypeLanding() {
               <Text fw={600} size="sm" c="dimmed" mb="xs">{category}</Text>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {types.map((t) => (
-                  <Text
+                  <Group
                     key={t.type}
-                    size="sm"
-                    c="blue.6"
+                    gap="xs"
+                    wrap="nowrap"
                     style={{ cursor: 'pointer' }}
                     onClick={() => navigate(`/explorer/${t.type}`)}
                   >
-                    {t.type}
-                  </Text>
+                    <Text size="sm" c="blue.6">{t.type}</Text>
+                    {counts[t.type] === 'loading' && <Loader size="xs" />}
+                    {counts[t.type] === 'error' && (
+                      <Badge color="red" size="sm" variant="light">Error</Badge>
+                    )}
+                    {typeof counts[t.type] === 'number' && (
+                      <Badge color="blue" size="sm" variant="light">
+                        {(counts[t.type] as number).toLocaleString()}
+                      </Badge>
+                    )}
+                  </Group>
                 ))}
               </div>
             </div>
