@@ -17,10 +17,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Resource Browsing
 
-- [ ] **BRWS-01**: User can see a list of all resource types available on the server with counts per type
-- [ ] **BRWS-02**: User can search resources by FHIR search parameters auto-generated from the CapabilityStatement
+- [x] **BRWS-01**: User can see a list of all resource types available on the server with counts per type
+- [x] **BRWS-02**: User can search resources by FHIR search parameters auto-generated from the CapabilityStatement
 - [ ] **BRWS-03**: User can paginate through search results using Bundle next/prev links with configurable _count
-- [ ] **BRWS-04**: User can view an individual resource as pretty-printed JSON with syntax highlighting
+- [x] **BRWS-04**: User can view an individual resource as pretty-printed JSON with syntax highlighting
 - [ ] **BRWS-05**: User can view an individual resource in a human-readable rendered form (via Medplum components)
 - [ ] **BRWS-06**: User can toggle between three display modes: human-readable (default), clinical+raw, and developer/FHIR-structure view
 - [ ] **BRWS-07**: User can click Reference fields to navigate to the referenced resource
@@ -85,10 +85,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONN-03 | Phase 1 | Pending |
 | CONN-04 | Phase 1 | Pending |
 | CONN-05 | Phase 1 | Pending |
-| BRWS-01 | Phase 2 | Pending |
-| BRWS-02 | Phase 2 | Pending |
+| BRWS-01 | Phase 2 | Complete |
+| BRWS-02 | Phase 2 | Complete |
 | BRWS-03 | Phase 2 | Pending |
-| BRWS-04 | Phase 2 | Pending |
+| BRWS-04 | Phase 2 | Complete |
 | BRWS-05 | Phase 2 | Pending |
 | BRWS-06 | Phase 2 | Pending |
 | BRWS-07 | Phase 2 | Pending |

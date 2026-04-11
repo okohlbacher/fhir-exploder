@@ -49,7 +49,7 @@ Plans:
   5. User can click a Reference field on any resource and navigate directly to the referenced resource
 **Plans:** 3 plans
 Plans:
-- [ ] 02-01-PLAN.md -- Foundation hooks (useSearchState, useBreadcrumbTrail), curated-params utility, JsonSyntaxHighlight, ExplorerLayout with routing
+- [x] 02-01-PLAN.md -- Foundation hooks (useSearchState, useBreadcrumbTrail), curated-params utility, JsonSyntaxHighlight, ExplorerLayout with routing
 - [ ] 02-02-PLAN.md -- Search/browse UI: ResourceTypeSelector, SearchFilterPanel, SearchResultsPage with SearchControl, PaginationControls
 - [ ] 02-03-PLAN.md -- Resource detail view with three display modes (Human-readable, Clinical+Raw, Developer/JSON), reference navigation, breadcrumbs
 **UI hint**: yes
