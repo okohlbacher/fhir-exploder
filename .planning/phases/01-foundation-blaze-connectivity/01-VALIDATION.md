@@ -2,8 +2,8 @@
 phase: 1
 slug: foundation-blaze-connectivity
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-11
 ---
 
@@ -18,7 +18,7 @@ created: 2026-04-11
 | Property | Value |
 |----------|-------|
 | **Framework** | vitest |
-| **Config file** | none — Wave 0 installs |
+| **Config file** | vitest.config.ts (created in Plan 01 Task 1, Wave 0) |
 | **Quick run command** | `npx vitest run --reporter=verbose` |
 | **Full suite command** | `npx vitest run --reporter=verbose` |
 | **Estimated runtime** | ~5 seconds |
@@ -38,11 +38,11 @@ created: 2026-04-11
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 1-01-01 | 01 | 1 | CONN-01 | — | N/A | unit | `npx vitest run` | ❌ W0 | ⬜ pending |
-| 1-01-02 | 01 | 1 | CONN-02 | — | N/A | unit | `npx vitest run` | ❌ W0 | ⬜ pending |
-| 1-02-01 | 02 | 1 | CONN-03 | — | N/A | unit | `npx vitest run` | ❌ W0 | ⬜ pending |
-| 1-02-02 | 02 | 1 | CONN-04 | — | N/A | unit | `npx vitest run` | ❌ W0 | ⬜ pending |
-| 1-03-01 | 03 | 2 | CONN-05 | — | N/A | integration | `npx vitest run` | ❌ W0 | ⬜ pending |
+| 1-01-01 | 01 | 1 | CONN-01 | — | N/A | unit | `npx vitest run` | ✅ W0 (Plan 01 Task 1) | ⬜ pending |
+| 1-01-02 | 01 | 1 | CONN-02 | — | N/A | unit | `npx vitest run` | ✅ W0 (Plan 01 Task 1) | ⬜ pending |
+| 1-02-01 | 02 | 2 | CONN-03 | — | N/A | unit | `npx vitest run` | ✅ W0 (Plan 01 Task 1) | ⬜ pending |
+| 1-02-02 | 02 | 2 | CONN-04 | — | N/A | unit | `npx vitest run` | ✅ W0 (Plan 01 Task 1) | ⬜ pending |
+| 1-03-01 | 03 | 3 | CONN-05 | — | N/A | integration | `npx vitest run` | ✅ W0 (Plan 01 Task 1) | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -50,11 +50,15 @@ created: 2026-04-11
 
 ## Wave 0 Requirements
 
-- [ ] `vitest` — install vitest as dev dependency
-- [ ] `src/__tests__/` — test directory structure
-- [ ] `vitest.config.ts` — vitest configuration
+- [x] `vitest` — installed as dev dependency in Plan 01 Task 1
+- [x] `vitest.config.ts` — created in Plan 01 Task 1
+- [x] `src/__tests__/` — test directory with scaffold files created in Plan 01 Task 1:
+  - `src/__tests__/settings.test.ts` (CONN-01, CONN-02)
+  - `src/__tests__/errors.test.ts` (CONN-04)
+  - `src/__tests__/capability.test.ts` (CONN-03)
+  - `src/__tests__/fhir-categories.test.ts` (CONN-03)
 
-*If none: "Existing infrastructure covers all phase requirements."*
+*Wave 0 infrastructure is created by Plan 01 Task 1 before any other tasks execute.*
 
 ---
 
@@ -63,17 +67,17 @@ created: 2026-04-11
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
 | Blaze server reachable and responds | CONN-03 | Requires running Blaze instance | Start Blaze, load app, verify connection indicator |
-| Medplum component renders FHIR resource | CONN-05 | Requires live FHIR data | Connect to Blaze with data, verify ResourceTable renders |
+| Medplum component renders FHIR resource | CONN-05 | Requires live FHIR data | Connect to Blaze with data, verify MedplumCompatGate renders ResourceTable (Plan 03 Task 2 checkpoint) |
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 5s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 5s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** pending execution
