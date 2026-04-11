@@ -1,14 +1,15 @@
 ---
 phase: 02-resource-explorer
-reviewed: 2026-04-11T12:00:00Z
+reviewed: 2026-04-11T14:30:00Z
 depth: standard
-files_reviewed: 27
+files_reviewed: 30
 files_reviewed_list:
   - src/App.tsx
   - src/contexts/ConnectionContext.tsx
   - src/hooks/useConnection.ts
   - src/hooks/useSearchState.ts
   - src/hooks/useBreadcrumbTrail.ts
+  - src/hooks/useResourceCounts.ts
   - src/components/explorer/ExplorerLayout.tsx
   - src/components/explorer/ResourceTypeLanding.tsx
   - src/components/explorer/ResourceTypeSelector.tsx
@@ -30,25 +31,30 @@ files_reviewed_list:
   - src/__tests__/pagination.test.tsx
   - src/__tests__/reference-navigation.test.tsx
   - src/__tests__/resource-detail.test.tsx
+  - src/__tests__/resource-type-landing-counts.test.tsx
   - src/__tests__/search-state.test.ts
 findings:
   critical: 0
-  warning: 3
-  info: 2
-  total: 5
+  warning: 5
+  info: 5
+  total: 10
 status: issues_found
 ---
 
 # Phase 02: Code Review Report
 
-**Reviewed:** 2026-04-11
+**Reviewed:** 2026-04-11 (updated with gap-closure plan 02-05 findings)
 **Depth:** standard
-**Files Reviewed:** 27
+**Files Reviewed:** 30
 **Status:** issues_found
 
 ## Summary
 
-Full standard-depth review of the Resource Explorer feature (Phase 02). The codebase is well-structured with good separation of concerns, proper use of Medplum components, and solid security practices (FHIR reference validation, XSS-safe JSON rendering, input validation on page sizes). Three warnings were identified: a default page count that is not selectable in the UI, a missing error handler that can leave the UI in a permanent loading state, and a test-to-source regex divergence. Two informational notes on minor robustness improvements.
+Full standard-depth review of the Resource Explorer feature (Phase 02), including the gap-closure plan 02-05 that wires per-type resource counts into the Explorer landing page. The new code (`useResourceCounts` hook, updated `ResourceTypeLanding`, and the accompanying test suite) is functionally correct and well-structured. The concurrency-limited worker-pool pattern in `useResourceCounts` is solid. Two new warnings were identified: a TypeScript narrowing gap that produces a type assertion in the component, and a fragile CSS-class-name query in the test. Three new informational items cover a misleading UI text string, a missing eslint-exhaustive-deps note, and a misleading mock structure in the test.
+
+Prior findings (WR-01 through WR-03, IN-01 through IN-02) are unchanged and remain open.
+
+---
 
 ## Warnings
 
@@ -97,6 +103,53 @@ const handleSearchLoad = useCallback((e: SearchLoadEvent) => {
 const match = href.match(/\/([A-Z][a-zA-Z]+)\/([A-Za-z0-9][A-Za-z0-9\-.]{0,63})$/);
 ```
 
+### WR-04: TypeScript narrowing gap forces unsafe type assertion in ResourceTypeLanding
+
+**File:** `src/components/explorer/ResourceTypeLanding.tsx:83`
+**Issue:** After the guard `typeof counts[t.type] === 'number'` on line 81, TypeScript does not narrow the type of `counts[t.type]` to `number` when accessed a second time inside the JSX expression on line 83. This is a known TypeScript limitation with indexed record access — the type-checker re-evaluates the index signature on each access and loses the narrowing. The workaround used is `counts[t.type] as number`, which is a type assertion that could silently mask future type errors if `CountValue` changes.
+**Fix:** Store the value in a local variable before the conditional render to allow proper narrowing:
+```typescript
+{types.map((t) => {
+  const count = counts[t.type];
+  return (
+    <Group key={t.type} gap="xs" wrap="nowrap" style={{ cursor: 'pointer' }}
+      onClick={() => navigate(`/explorer/${t.type}`)}>
+      <Text size="sm" c="blue.6">{t.type}</Text>
+      {count === 'loading' && <Loader size="xs" />}
+      {count === 'error' && (
+        <Badge color="red" size="sm" variant="light">Error</Badge>
+      )}
+      {typeof count === 'number' && (
+        <Badge color="blue" size="sm" variant="light">
+          {count.toLocaleString()}
+        </Badge>
+      )}
+    </Group>
+  );
+})}
+```
+This eliminates the `as number` cast and makes TypeScript narrowing work correctly.
+
+### WR-05: Loader test couples to internal Mantine CSS class name
+
+**File:** `src/__tests__/resource-type-landing-counts.test.tsx:91-93`
+**Issue:** The loading state test queries `document.querySelectorAll('.mantine-Loader-root')` to verify loaders are rendered. This CSS class name is a Mantine implementation detail that can change between patch/minor releases without a breaking-change notice. The inline comment also says "Mantine Loader renders with role='presentation' (svg elements)" — suggesting a role-based query was considered — but the test uses a class query instead, creating a contradiction between comment and assertion.
+**Fix:** Query by ARIA role or a data-testid attribute instead:
+```typescript
+// Option A: Role-based query (check what role Mantine Loader actually renders as)
+const loaders = document.querySelectorAll('[role="status"]');
+expect(loaders.length).toBeGreaterThanOrEqual(3);
+
+// Option B: Use data-testid by wrapping Loader in the component
+// In ResourceTypeLanding.tsx:
+{counts[t.type] === 'loading' && <Loader size="xs" data-testid="count-loader" />}
+// In test:
+const loaders = screen.getAllByTestId('count-loader');
+expect(loaders.length).toBeGreaterThanOrEqual(3);
+```
+
+---
+
 ## Info
 
 ### IN-01: Stale closure potential in useBreadcrumbTrail.navigateTo
@@ -134,8 +187,46 @@ useEffect(() => {
 }, [resourceType]);
 ```
 
+### IN-03: Landing page helper text does not match current UI context
+
+**File:** `src/components/explorer/ResourceTypeLanding.tsx:43-45`
+**Issue:** The Text element reads "Use the filters above to search, or click Search with no filters to see all resources." There are no filters on the landing page — filters are only present on the `SearchResultsPage`. This copy appears to be placeholder text that was not updated when the landing page content was defined. It will confuse users who see it on first load.
+**Fix:** Update the helper text to describe the landing page's actual purpose:
+```tsx
+<Text c="dimmed">
+  Select a resource type below to browse all resources of that type, or use the dropdown to jump directly to a type.
+</Text>
+```
+
+### IN-04: useResourceCounts effect dependency serialization not noted for eslint-exhaustive-deps
+
+**File:** `src/hooks/useResourceCounts.ts:69`
+**Issue:** The effect uses `resourceTypes.join(',')` in the dependency array instead of `resourceTypes` directly. This is a correct and intentional pattern to avoid infinite re-runs when the parent component recreates the array on each render. However, eslint's `react-hooks/exhaustive-deps` rule will flag `resourceTypes` as a missing dependency (since it is used inside the effect body via `[...resourceTypes]` on line 38). Without a comment or eslint-disable annotation, this will generate a lint warning that obscures whether the deviation is intentional.
+**Fix:** Add an explanatory comment to document the intent:
+```typescript
+// resourceTypes.join(',') is an intentional serialization of the array to
+// avoid re-triggering the effect when the parent re-creates the array reference
+// with the same contents. eslint-disable-next-line react-hooks/exhaustive-deps
+}, [client, resourceTypes.join(',')]);
+```
+
+### IN-05: Misleading mock structure in count display test
+
+**File:** `src/__tests__/resource-type-landing-counts.test.tsx:50-51`
+**Issue:** The `react-router-dom` mock returns `{ capability: ..., client: { search: vi.fn() } }` from `useOutletContext`. The `client` field is not part of `ExplorerOutletContext` as used by `ResourceTypeLanding` — the component obtains its FHIR client via `useMedplum()` (which is separately mocked at lines 57-59), not from the outlet context. The `client` field in the mocked outlet context is dead code. This creates a misleading impression that `ResourceTypeLanding` reads `client` from the outlet context, which could cause confusion when maintaining the test or tracing how the client reaches the hook.
+**Fix:** Remove the `client` field from the mocked outlet context to match the actual interface:
+```typescript
+useOutletContext: () => ({
+  capability: {
+    resourceType: 'CapabilityStatement',
+    rest: [ /* ... */ ],
+  },
+  // No client field — component uses useMedplum() directly
+}),
+```
+
 ---
 
-_Reviewed: 2026-04-11_
+_Reviewed: 2026-04-11 (updated with gap-closure plan 02-05)_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
