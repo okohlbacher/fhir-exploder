@@ -47,7 +47,11 @@ Plans:
   3. User can paginate through large result sets using Next/Previous navigation with configurable page size
   4. User can view any individual resource in three modes: human-readable (default), clinical+raw split, and developer/FHIR-structure JSON view
   5. User can click a Reference field on any resource and navigate directly to the referenced resource
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 02-01-PLAN.md -- Foundation hooks (useSearchState, useBreadcrumbTrail), curated-params utility, JsonSyntaxHighlight, ExplorerLayout with routing
+- [ ] 02-02-PLAN.md -- Search/browse UI: ResourceTypeSelector, SearchFilterPanel, SearchResultsPage with SearchControl, PaginationControls
+- [ ] 02-03-PLAN.md -- Resource detail view with three display modes (Human-readable, Clinical+Raw, Developer/JSON), reference navigation, breadcrumbs
 **UI hint**: yes
 
 ### Phase 3: Patient-Centric Browsing & MII Modules
@@ -93,8 +97,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Blaze Connectivity | 0/3 | Planning complete | - |
-| 2. Resource Explorer | 0/0 | Not started | - |
+| 1. Foundation & Blaze Connectivity | 3/3 | Complete | 2026-04-11 |
+| 2. Resource Explorer | 0/3 | Planning complete | - |
 | 3. Patient-Centric Browsing & MII Modules | 0/0 | Not started | - |
 | 4. Terminology Resolution | 0/0 | Not started | - |
 | 5. Data Quality Dashboard | 0/0 | Not started | - |
