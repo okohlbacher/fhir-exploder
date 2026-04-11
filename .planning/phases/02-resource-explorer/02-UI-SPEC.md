@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-04-11
+revised: 2026-04-11
 ---
 
 # Phase 02 — UI Design Contract
@@ -45,18 +46,18 @@ Exceptions: none
 
 ## Typography
 
-Uses Mantine size tokens mapped to the system font stack. Phase 1 established these patterns:
+Uses Mantine size tokens mapped to the system font stack. Two-weight system: 400 (regular) and 600 (semibold).
 
 | Role | Size | Weight | Line Height | Mantine Token |
 |------|------|--------|-------------|---------------|
 | Body | 14px | 400 (regular) | 1.55 | sm |
-| Label | 14px | 500 (medium) | 1.55 | sm, fw={500} |
+| Label | 14px | 600 (semibold) | 1.55 | sm, fw={600} |
 | Heading | 20px | 600 (semibold) | 1.2 | Title order={2} |
 | Subheading | 16px | 600 (semibold) | 1.3 | Title order={4} |
 
 Usage in this phase:
 - **Body (sm, 400):** Search result cell text, JSON content, resource property values
-- **Label (sm, 500):** Resource type names in links, search parameter labels, tab labels, breadcrumb segments
+- **Label (sm, 600):** Resource type names in links, search parameter labels, tab labels, breadcrumb segments
 - **Heading (order=2, 600):** Page title ("Resource Explorer"), resource detail heading
 - **Subheading (order=4, 600):** Section headings within resource detail (e.g., "Search Parameters", display mode labels in clinical+raw view)
 
@@ -77,7 +78,7 @@ Accent reserved for:
 - Resource type links (clickable resource names in search results)
 - Reference field links (clickable FHIR references via ReferenceDisplay)
 - Active display mode tab indicator
-- Primary "Search" button
+- Primary "Search {ResourceType}" button
 - Active breadcrumb segment
 - Resource count badges (Badge color="blue" variant="light", established in Phase 1)
 - Page size selector active state
@@ -101,7 +102,7 @@ Components specific to Phase 2, organized by screen area:
 | SearchControl | @medplum/react SearchControl | Primary search UI: filters, sorting, pagination, result table (D-01) |
 | Curated filter panel | Group + TextInput/Select (Mantine) | Shows common search params by default (D-02) |
 | "Show all filters" toggle | Button variant="subtle" | Expands to show all CapabilityStatement search params (D-02) |
-| Search button | Button | Explicit search submit (D-03) |
+| Search button | Button | Explicit search submit with dynamic label "Search {ResourceType}" (D-03) |
 | Page size selector | Select | Dropdown with 10, 25, 50, 100 options, default 20 (D-08) |
 | Pagination controls | Group + Button | Next/Previous using Bundle links (D-07) |
 | Result count display | Text | Shows "Showing 1-20 of 1,234" from Bundle.total (D-09) |
@@ -133,7 +134,7 @@ Components specific to Phase 2, organized by screen area:
 ### Search Flow (D-01, D-02, D-03, D-04)
 1. User arrives at `/explorer/:resourceType` (via dashboard link or type selector)
 2. Curated search params shown by default (name, date, status, code depending on type)
-3. User fills params, clicks "Search" or presses Enter
+3. User fills params, clicks "Search {ResourceType}" or presses Enter
 4. URL updates with search state: `/explorer/Patient?name=Mueller&_count=25`
 5. Results load with Skeleton placeholders, then render in SearchControl table
 6. Browser back/forward navigates search history
@@ -170,7 +171,7 @@ Components specific to Phase 2, organized by screen area:
 
 | Element | Copy |
 |---------|------|
-| Primary CTA | "Search" (button in filter panel) |
+| Primary CTA | "Search {ResourceType}" (dynamic label, e.g., "Search Patient", "Search Observation") |
 | Empty state heading | "No resources found" |
 | Empty state body | "No {ResourceType} resources match your search. Try adjusting your filters or search a different resource type." |
 | Empty state (no search yet) heading | "Browse {ResourceType} resources" |
@@ -193,6 +194,8 @@ Components specific to Phase 2, organized by screen area:
 
 ## Layout Contract
 
+**Primary focal point:** The search results table (SearchControl) is the dominant visual element on the explorer page, occupying the largest area of the main content region. All other elements (filters, pagination, breadcrumbs) serve to refine or navigate what appears in this table. On the resource detail view, the tab content panel is the focal point.
+
 ### Explorer Page Structure
 ```
 +--sidebar--+--main-content-area------------------------------------+
@@ -201,9 +204,9 @@ Components specific to Phase 2, organized by screen area:
 |            | [Search Filter Panel]                                 |
 |            |   [Curated filters row]                               |
 |            |   [Show all filters toggle]                           |
-|            |   [Search button]                                     |
+|            |   [Search {ResourceType} button]                      |
 |            | [Results status: "Showing 1-20 of 1,234"]             |
-|            | [Search Results Table (SearchControl)]                |
+|            | [Search Results Table (SearchControl)]  <-- FOCAL      |
 |            | [Pagination: < Previous | page size | Next >]         |
 +------------+------------------------------------------------------+
 ```
@@ -214,7 +217,7 @@ Components specific to Phase 2, organized by screen area:
 |            | [Breadcrumbs: Explorer > Patient/123 > Encounter/456] |
 |            | [Resource heading: Encounter/456]                     |
 |            | [Tabs: Human-readable | Clinical + Raw | Developer]   |
-|            | [Tab content panel]                                   |
+|            | [Tab content panel]  <-- FOCAL                        |
 |            |                                                       |
 +------------+------------------------------------------------------+
 ```
