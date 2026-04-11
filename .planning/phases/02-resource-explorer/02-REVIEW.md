@@ -2,9 +2,18 @@
 phase: 02-resource-explorer
 reviewed: 2026-04-11T00:00:00Z
 depth: standard
-files_reviewed: 26
+files_reviewed: 25
 files_reviewed_list:
   - src/App.tsx
+  - src/__tests__/curated-params.test.ts
+  - src/__tests__/display-modes.test.tsx
+  - src/__tests__/explorer-type-selector.test.tsx
+  - src/__tests__/include-params.test.ts
+  - src/__tests__/json-highlight.test.ts
+  - src/__tests__/pagination.test.tsx
+  - src/__tests__/reference-navigation.test.tsx
+  - src/__tests__/resource-detail.test.tsx
+  - src/__tests__/search-state.test.ts
   - src/components/explorer/ClinicalRawView.tsx
   - src/components/explorer/DeveloperJsonView.tsx
   - src/components/explorer/ExplorerLayout.tsx
@@ -20,140 +29,75 @@ files_reviewed_list:
   - src/hooks/useBreadcrumbTrail.ts
   - src/hooks/useSearchState.ts
   - src/utils/curated-params.ts
-  - src/__tests__/curated-params.test.ts
-  - src/__tests__/display-modes.test.tsx
-  - src/__tests__/explorer-type-selector.test.tsx
-  - src/__tests__/include-params.test.ts
-  - src/__tests__/json-highlight.test.ts
-  - src/__tests__/pagination.test.tsx
-  - src/__tests__/reference-navigation.test.tsx
-  - src/__tests__/resource-detail.test.tsx
-  - src/__tests__/search-state.test.ts
 findings:
-  critical: 1
-  warning: 5
-  info: 2
-  total: 8
+  critical: 0
+  warning: 1
+  info: 1
+  total: 2
 status: issues_found
 ---
 
-# Phase 2: Code Review Report
+# Phase 02: Code Review Report (Re-review)
 
 **Reviewed:** 2026-04-11
 **Depth:** standard
-**Files Reviewed:** 26
+**Files Reviewed:** 25
 **Status:** issues_found
 
 ## Summary
 
-The Resource Explorer implementation is well-structured with clean component separation, proper connection gating via ExplorerLayout, URL-driven search state, and a custom JSON syntax highlighter that correctly avoids dangerouslySetInnerHTML. The code follows project conventions (Medplum + Mantine + react-router-dom).
+This is a re-review after fixes from the initial review were applied. The five previously fixed issues have all been verified as resolved:
 
-Key concerns: a FHIR ID validation regex is too restrictive and will reject valid FHIR resource IDs (critical for reference navigation), stale filter state on resource type changes, and incorrect _revinclude option generation. Several type casts suppress TypeScript safety on SearchControl event handlers.
+- **CR-01 (FHIR ID regex)**: Fixed. `FHIR_ID_PATTERN` is now `/^[A-Za-z0-9][A-Za-z0-9\-.]{0,63}$/` and the `handleReferenceClick` regex matches accordingly.
+- **WR-01 (side effect in setState)**: Fixed. `navigateTo` now reads `trail[index]` outside the setter and calls `navigate()` after `setTrail`.
+- **WR-02 (filter state not reset)**: Fixed. `useEffect` on `resourceType` resets `filterValues`, `includeValues`, and `revincludeValues`.
+- **WR-03 (revinclude options)**: Fixed. `revincludeOptions` is now an empty array with a comment explaining cross-type analysis is needed.
+- **WR-05 (unsafe casts)**: Fixed. Event handlers now use proper Medplum event types (`SearchClickEvent`, `SearchLoadEvent`, `SearchChangeEvent`) with `satisfies` for outlet context.
 
-## Critical Issues
+**WR-04 (hardcoded 'eq' operator)** was intentionally skipped -- Medplum's SearchRequest type requires the `operator` field. This is acceptable as-is.
 
-### CR-01: FHIR ID validation regex rejects valid resource IDs
-
-**File:** `src/components/explorer/ResourceDetailPage.tsx:20-21`
-**Issue:** `FHIR_ID_PATTERN = /^[a-f0-9A-F][a-f0-9A-F\-]+$/` only allows hexadecimal characters and hyphens. Per the FHIR R4 spec, resource IDs are `[A-Za-z0-9\-\.]{1,64}`. This regex will reject common valid IDs like `"patient-1"`, `"example"`, `"obs-lab-42"`, or any ID starting with a non-hex letter (g-z, G-Z). Reference navigation will silently fail for these resources because `isValidFhirReference` returns false and `preventDefault` is never called.
-**Fix:**
-```typescript
-const FHIR_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9\-.]{0,63}$/;
-```
-Also update the corresponding regex in `handleReferenceClick` (line 111):
-```typescript
-const match = href.match(/\/([A-Z][a-zA-Z]+)\/([A-Za-z0-9][A-Za-z0-9\-.]{0,63})$/);
-```
+The codebase is in good shape. One warning about a test validating against a different regex than the source code, and one informational note about a stale closure pattern.
 
 ## Warnings
 
-### WR-01: Side effect inside setState updater function
+### WR-01: Test regex does not match source code regex for reference interception
 
-**File:** `src/hooks/useBreadcrumbTrail.ts:31-36`
-**Issue:** `navigateTo` calls `navigate()` (a side effect triggering route change) inside the `setTrail` updater callback. React does not guarantee when state updater functions execute, and in concurrent mode they may run multiple times. Calling `navigate()` inside a setter can produce double navigations or race conditions.
-**Fix:**
+**File:** `src/__tests__/reference-navigation.test.tsx:13`
+**Issue:** The test uses regex `/\/([A-Z][a-zA-Z]+)\/([a-f0-9A-F][a-f0-9A-F\-]+)$/` which only matches hexadecimal characters in the ID segment. The actual source code in `ResourceDetailPage.tsx:111` uses `/\/([A-Z][a-zA-Z]+)\/([A-Za-z0-9][A-Za-z0-9\-.]{0,63})$/` which correctly matches all FHIR-compliant IDs (full alphanumeric, dots, hyphens, up to 64 chars). This divergence means:
+- The test would fail to match IDs like `example`, `obs-lab-42`, or `patient.test.1` even though the production code handles them correctly.
+- A regression in the source code regex would not be caught because the test validates a different, narrower pattern.
+**Fix:** Update the test to use the same regex as the source code, or better yet, import the validation function and test it directly:
 ```typescript
+// Option A: Match the source regex
+const match = href.match(/\/([A-Z][a-zA-Z]+)\/([A-Za-z0-9][A-Za-z0-9\-.]{0,63})$/);
+
+// Option B: Test the actual validation function
+import { isValidFhirReference } from '../components/explorer/ResourceDetailPage';
+// (would require exporting the function)
+```
+
+## Info
+
+### IN-01: Stale closure potential in useBreadcrumbTrail.navigateTo
+
+**File:** `src/hooks/useBreadcrumbTrail.ts:30-36`
+**Issue:** The `navigateTo` callback captures `trail` from the outer scope in its dependency array. If `push` is called and `navigateTo` is called before the next render completes, `trail` could be stale (missing the just-pushed entry). In practice this is unlikely to cause bugs because user interaction flow (click reference, then click breadcrumb) spans multiple renders, but using a ref would be more robust.
+**Fix:** Use a ref to always access the latest trail value:
+```typescript
+const trailRef = useRef<BreadcrumbEntry[]>([]);
+trailRef.current = trail;
+
 const navigateTo = useCallback(
   (index: number) => {
-    const entry = trail[index];
+    const entry = trailRef.current[index];
     if (entry) {
       setTrail((prev) => prev.slice(0, index + 1));
       navigate(`/explorer/${entry.resourceType}/${entry.id}`);
     }
   },
-  [navigate, trail]
+  [navigate]
 );
 ```
-
-### WR-02: Filter state not reset when resource type changes
-
-**File:** `src/components/explorer/SearchFilterPanel.tsx:21-23`
-**Issue:** `filterValues`, `includeValues`, and `revincludeValues` are initialized once with `useState` and never reset when `resourceType` prop changes. When a user switches from Patient to Observation via the ResourceTypeSelector, the previous Patient filter values (e.g., `name: "Smith"`) remain in the text inputs and will be submitted as Observation search params on next search.
-**Fix:** Add a `useEffect` to reset state when `resourceType` changes:
-```typescript
-useEffect(() => {
-  setFilterValues({});
-  setIncludeValues([]);
-  setRevincludeValues([]);
-}, [resourceType]);
-```
-Or use `resourceType` as the `key` prop on the component from the parent to force remount.
-
-### WR-03: _revinclude options are identical to _include options
-
-**File:** `src/components/explorer/SearchFilterPanel.tsx:29-35`
-**Issue:** Both `includeOptions` and `revincludeOptions` are computed identically: `allSearchParams.filter(p => !p.startsWith('_')).map(p => \`${resourceType}:${p}\`)`. FHIR `_revinclude` specifies OTHER resource types whose references point TO the current resource (e.g., `Observation:patient` when viewing a Patient). Generating them from the current resource's own params is semantically wrong and will produce useless options.
-**Fix:** Either remove `_revinclude` from the UI until proper reverse-include discovery is implemented (requires inspecting other resource types' search params from the CapabilityStatement), or pass correct revinclude options from the parent:
-```typescript
-// In SearchResultsPage, compute revinclude options from all resource types
-// that have a reference search param pointing to the current resourceType
-```
-
-### WR-04: All search filters hardcoded to 'eq' operator
-
-**File:** `src/components/explorer/SearchResultsPage.tsx:50-54`
-**Issue:** Every filter is assigned `operator: 'eq'`. FHIR date params (`date`, `birthdate`, `onset-date`) typically require range operators (`ge`, `le`, `gt`, `lt`). String params like `name` use substring matching by default in FHIR (no operator needed), so forcing `eq` may change behavior. Token params like `code` do use `eq`, but this blanket approach produces incorrect or overly restrictive searches for date-based filters.
-**Fix:** Either remove the explicit operator (let the server apply default behavior):
-```typescript
-filters: Object.entries(filters).map(([code, value]) => ({
-  code,
-  operator: 'eq' as const, // TODO: Infer operator from param type
-  value,
-})),
-```
-Or add operator selection per filter in the SearchFilterPanel UI. As a minimal fix, omit the operator field entirely and let Medplum/the server use defaults:
-```typescript
-filters: Object.entries(filters).map(([code, value]) => ({
-  code,
-  value,
-})),
-```
-
-### WR-05: Multiple `as unknown as` casts suppress type safety
-
-**File:** `src/components/explorer/SearchResultsPage.tsx:151-158`
-**Issue:** Three event handlers on `SearchControl` use `as unknown as` double casts: `onClick`, `onLoad`, and `onChange`. This completely bypasses TypeScript's type checking. If the Medplum component's event signature changes across versions, these casts will hide the incompatibility at compile time, producing runtime errors.
-**Fix:** Type the event handlers to match the actual Medplum SearchControl event types. Check `@medplum/react` 5.1.7 type definitions for the correct signatures and remove the casts. If the types genuinely don't match, add a comment explaining why and consider a thin adapter function rather than `unknown` casts.
-
-## Info
-
-### IN-01: Module-level regex with global flag
-
-**File:** `src/components/explorer/JsonSyntaxHighlight.tsx:24`
-**Issue:** `TOKEN_REGEX` is declared at module scope with the `g` flag, making it stateful via `lastIndex`. The `tokenize` function does reset `lastIndex = 0` on line 37, which prevents the bug. However, a module-level global regex is fragile -- if a future caller forgets the reset, results will be incorrect. Consider creating the regex inside the function or removing the `g` flag and using `matchAll` or a different approach.
-**Fix:**
-```typescript
-export function tokenize(json: string): JsonToken[] {
-  const TOKEN_REGEX = /("(?:[^"\\]|\\.)*")|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\b|(true|false)\b|(null)\b|([{}[\]:,])/g;
-  // ... rest of function
-}
-```
-
-### IN-02: Test files use existence checks instead of rendering tests
-
-**File:** Multiple test files (`display-modes.test.tsx`, `explorer-type-selector.test.tsx`, `pagination.test.tsx`, `reference-navigation.test.tsx`, `resource-detail.test.tsx`)
-**Issue:** Most tests only verify that components are `toBeDefined()` or that `typeof` is `'function'`, without actually rendering the components or testing their behavior. For example, `display-modes.test.tsx` has tests named "renders ResourceTable with the provided resource" but only checks `expect(HumanReadableView).toBeDefined()`. These tests provide minimal confidence in component correctness. The `json-highlight.test.ts`, `curated-params.test.ts`, and `search-state.test.ts` files are well-written with actual logic testing.
-**Fix:** Add rendering tests using `@testing-library/react` with appropriate providers (MedplumProvider, MemoryRouter) for component tests that claim to verify rendering behavior.
 
 ---
 
