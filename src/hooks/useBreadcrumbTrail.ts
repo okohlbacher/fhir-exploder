@@ -28,16 +28,13 @@ export function useBreadcrumbTrail() {
 
   const navigateTo = useCallback(
     (index: number) => {
-      setTrail((prev) => {
-        const sliced = prev.slice(0, index + 1);
-        const entry = sliced[sliced.length - 1];
-        if (entry) {
-          navigate(`/explorer/${entry.resourceType}/${entry.id}`);
-        }
-        return sliced;
-      });
+      const entry = trail[index];
+      if (entry) {
+        setTrail((prev) => prev.slice(0, index + 1));
+        navigate(`/explorer/${entry.resourceType}/${entry.id}`);
+      }
     },
-    [navigate]
+    [navigate, trail]
   );
 
   const reset = useCallback(() => {
