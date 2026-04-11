@@ -32,9 +32,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. A Medplum React component can successfully render a FHIR resource fetched from Blaze (compatibility gate)
 **Plans:** 3 plans
 Plans:
-- [ ] 01-01-PLAN.md -- Scaffold Vite project, install dependencies, create test infrastructure (Wave 0), config types/settings loader/theme, app shell with sidebar and routing
-- [ ] 01-02-PLAN.md -- FHIR client factory, connection flow, error handling, settings page, sidebar status
-- [ ] 01-03-PLAN.md -- CapabilityStatement parsing, resource type display with lazy-loaded counts, Medplum React compatibility gate, end-to-end verification
+- [x] 01-01-PLAN.md -- Scaffold Vite project, install dependencies, create test infrastructure (Wave 0), config types/settings loader/theme, app shell with sidebar and routing
+- [x] 01-02-PLAN.md -- FHIR client factory, connection flow, error handling, settings page, sidebar status
+- [x] 01-03-PLAN.md -- CapabilityStatement parsing, resource type display with lazy-loaded counts, Medplum React compatibility gate, end-to-end verification
 **UI hint**: yes
 
 ### Phase 2: Resource Explorer
