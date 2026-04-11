@@ -21,9 +21,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **BRWS-02**: User can search resources by FHIR search parameters auto-generated from the CapabilityStatement
 - [x] **BRWS-03**: User can paginate through search results using Bundle next/prev links with configurable _count
 - [x] **BRWS-04**: User can view an individual resource as pretty-printed JSON with syntax highlighting
-- [ ] **BRWS-05**: User can view an individual resource in a human-readable rendered form (via Medplum components)
-- [ ] **BRWS-06**: User can toggle between three display modes: human-readable (default), clinical+raw, and developer/FHIR-structure view
-- [ ] **BRWS-07**: User can click Reference fields to navigate to the referenced resource
+- [x] **BRWS-05**: User can view an individual resource in a human-readable rendered form (via Medplum components)
+- [x] **BRWS-06**: User can toggle between three display modes: human-readable (default), clinical+raw, and developer/FHIR-structure view
+- [x] **BRWS-07**: User can click Reference fields to navigate to the referenced resource
 - [x] **BRWS-08**: User can use _include/_revinclude to fetch related resources in a single query
 
 ### Patient-Centric Browsing
@@ -89,9 +89,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BRWS-02 | Phase 2 | Complete |
 | BRWS-03 | Phase 2 | Complete |
 | BRWS-04 | Phase 2 | Complete |
-| BRWS-05 | Phase 2 | Pending |
-| BRWS-06 | Phase 2 | Pending |
-| BRWS-07 | Phase 2 | Pending |
+| BRWS-05 | Phase 2 | Complete |
+| BRWS-06 | Phase 2 | Complete |
+| BRWS-07 | Phase 2 | Complete |
 | BRWS-08 | Phase 2 | Complete |
 | PTNT-01 | Phase 3 | Pending |
 | PTNT-02 | Phase 3 | Pending |
