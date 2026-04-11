@@ -31,7 +31,8 @@ describe('getCuratedParams', () => {
   it('returns common params for unknown resource type', () => {
     const allParams = ['patient', 'code', 'date', 'status', 'foo'];
     const result = getCuratedParams('UnknownType', allParams);
-    expect(result).toEqual(['patient', 'code', 'date', 'status']);
+    // Order follows COMMON_PARAMS priority, not allParams order
+    expect(result).toEqual(['patient', 'date', 'status', 'code']);
   });
 
   it('falls back to first 5 params when no common params match', () => {
