@@ -37,9 +37,10 @@ export function SearchFilterPanel({ resourceType, allSearchParams, onSearch }: S
     .filter((p) => !p.startsWith('_'))
     .map((p) => `${resourceType}:${p}`);
 
-  const revincludeOptions = allSearchParams
-    .filter((p) => !p.startsWith('_'))
-    .map((p) => `${resourceType}:${p}`);
+  // _revinclude requires discovering OTHER resource types whose reference params
+  // point TO the current resourceType (e.g., Observation:patient for Patient).
+  // This needs CapabilityStatement cross-type analysis; disabled until implemented.
+  const revincludeOptions: string[] = [];
 
   const handleFilterChange = useCallback((param: string, value: string) => {
     setFilterValues((prev) => ({ ...prev, [param]: value }));
