@@ -52,7 +52,7 @@ Plans:
 - [x] 02-01-PLAN.md -- Foundation hooks (useSearchState, useBreadcrumbTrail), curated-params utility, JsonSyntaxHighlight, ExplorerLayout with routing
 - [x] 02-02-PLAN.md -- Search/browse UI: ResourceTypeSelector, SearchFilterPanel, SearchResultsPage with SearchControl, PaginationControls
 - [x] 02-03-PLAN.md -- Resource detail view with three display modes (Human-readable, Clinical+Raw, Developer/JSON), reference navigation, breadcrumbs
-- [ ] 02-04-PLAN.md -- Gap closure: shared connection state via ConnectionContext (fixes explorer "Not connected" blocker)
+- [x] 02-04-PLAN.md -- Gap closure: shared connection state via ConnectionContext (fixes explorer "Not connected" blocker)
 **UI hint**: yes
 
 ### Phase 3: Patient-Centric Browsing & MII Modules
