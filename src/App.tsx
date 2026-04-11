@@ -6,6 +6,7 @@ import { SettingsPage } from './components/settings/SettingsPage';
 import { ExplorerLayout } from './components/explorer/ExplorerLayout';
 import { ResourceTypeLanding } from './components/explorer/ResourceTypeLanding';
 import { SearchResultsPage } from './components/explorer/SearchResultsPage';
+import { ResourceDetailPage } from './components/explorer/ResourceDetailPage';
 import { useSettings } from './hooks/useSettings';
 import { useConnection } from './hooks/useConnection';
 
@@ -50,7 +51,7 @@ export function App() {
         <Route path="/explorer" element={<ExplorerLayout />}>
           <Route index element={<ResourceTypeLanding />} />
           <Route path=":resourceType" element={<SearchResultsPage />} />
-          <Route path=":resourceType/:id" element={<div>Resource detail (Plan 03)</div>} />
+          <Route path=":resourceType/:id" element={<ResourceDetailPage />} />
         </Route>
         <Route path="/patients" element={<PatientsPage />} />
         <Route path="/quality" element={<QualityPage />} />
