@@ -30,7 +30,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. App shows a clear, actionable error message when the FHIR server is unreachable or returns an error
   4. App shows loading indicators while FHIR requests are in flight
   5. A Medplum React component can successfully render a FHIR resource fetched from Blaze (compatibility gate)
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 01-01-PLAN.md -- Scaffold Vite project, install dependencies, create app shell with sidebar and settings loader
+- [ ] 01-02-PLAN.md -- FHIR client factory, connection flow, error handling, settings page, sidebar status
+- [ ] 01-03-PLAN.md -- CapabilityStatement parsing, resource type display with lazy-loaded counts, end-to-end verification
 **UI hint**: yes
 
 ### Phase 2: Resource Explorer
@@ -89,7 +93,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Blaze Connectivity | 0/0 | Not started | - |
+| 1. Foundation & Blaze Connectivity | 0/3 | Planning complete | - |
 | 2. Resource Explorer | 0/0 | Not started | - |
 | 3. Patient-Centric Browsing & MII Modules | 0/0 | Not started | - |
 | 4. Terminology Resolution | 0/0 | Not started | - |
