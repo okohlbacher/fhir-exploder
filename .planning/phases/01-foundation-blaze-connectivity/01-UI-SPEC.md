@@ -47,18 +47,16 @@ Exceptions: Sidebar width is 240px (not a spacing token -- layout constant). Min
 
 ## Typography
 
-All sizes use Mantine's default font scale, configured via `createTheme()`:
+All sizes use Mantine's default font scale, configured via `createTheme()`. Exactly 2 weights: 400 (regular) and 600 (semibold).
 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 14px | 400 (regular) | 1.55 |
-| Label | 14px | 500 (medium) | 1.45 |
+| Label | 14px | 600 (semibold) | 1.45 |
 | Heading (h2/h3) | 20px | 600 (semibold) | 1.3 |
-| Display (h1/page title) | 28px | 700 (bold) | 1.2 |
+| Display (h1/page title) | 28px | 600 (semibold) | 1.2 |
 
-Source: Mantine 8 default `fontSizes` are xs=12, sm=14, md=16, lg=18, xl=20. We use `sm` (14px) for body to maximize data density on this data-heavy, desktop-only tool (REQUIREMENTS.md: "optimize for 1200px+ screens"). Headings use `xl` (20px). Page titles at 28px for clear hierarchy on the landing/dashboard page.
-
-Note: Two primary weights (400 and 600) cover 90% of usage. Weight 500 reserved strictly for form labels and sidebar navigation items. Weight 700 reserved strictly for page-level display headings (h1).
+Source: Mantine 8 default `fontSizes` are xs=12, sm=14, md=16, lg=18, xl=20. We use `sm` (14px) for body to maximize data density on this data-heavy, desktop-only tool (REQUIREMENTS.md: "optimize for 1200px+ screens"). Headings use `xl` (20px). Page titles at 28px for clear hierarchy on the landing/dashboard page. The 28px display heading is visually distinct from 20px headings by size alone; both use semibold (600).
 
 ---
 
