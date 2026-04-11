@@ -1,0 +1,11 @@
+fhir:
+  serverUrl: "http://localhost:8080/fhir"
+  auth:
+    mode: open
+    # username: admin   # for basic auth
+    # password: secret  # for basic auth
+    # token: "eyJ..."  # for bearer auth
+
+# Future phases:
+# terminology:
+#   serverUrl: "https://terminology.mii.de/fhir"
