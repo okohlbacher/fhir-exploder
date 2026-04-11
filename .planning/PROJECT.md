@@ -12,11 +12,11 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Connect to a Blaze FHIR server with configurable URL and auth (open, basic auth, or bearer token) via settings.yaml — Validated in Phase 1: Foundation & Blaze Connectivity
 
 ### Active
 
-- [ ] Connect to a Blaze FHIR server with configurable URL and auth (open, basic auth, or bearer token) via settings.yaml
+
 - [ ] Patient-centric browsing: list patients, drill into their clinical data organized by MII Kerndatensatz modules (Diagnose, Prozedur, Laborbefund, Medikation, Fall, Consent)
 - [ ] Generic resource explorer: browse any FHIR resource type, search/filter, paginate through large result sets, inspect individual resources
 - [ ] Data quality dashboard: resource counts per type, field completeness stats, coding coverage metrics
@@ -56,8 +56,8 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Medplum React for FHIR rendering | TypeScript-first, comprehensive resource components, maintained | — Pending |
-| settings.yaml for configuration | Simple file-based config, no database needed for a local tool | — Pending |
+| Medplum React for FHIR rendering | TypeScript-first, comprehensive resource components, maintained | ✓ Validated Phase 1 |
+| settings.yaml for configuration | Simple file-based config, no database needed for a local tool | ✓ Validated Phase 1 |
 | MII Kerndatensatz as optional lens | Users may want MII-structured OR raw FHIR views depending on task | — Pending |
 | Three auth modes (open/basic/token) | Covers common Blaze deployment configurations | — Pending |
 
@@ -79,4 +79,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-11 after initialization*
+*Last updated: 2026-04-11 after Phase 1 completion*
