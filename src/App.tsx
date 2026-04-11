@@ -4,6 +4,8 @@ import { AppLayout } from './components/layout/AppLayout';
 import { DashboardPage } from './components/dashboard/DashboardPage';
 import { SettingsPage } from './components/settings/SettingsPage';
 import { ExplorerLayout } from './components/explorer/ExplorerLayout';
+import { ResourceTypeLanding } from './components/explorer/ResourceTypeLanding';
+import { SearchResultsPage } from './components/explorer/SearchResultsPage';
 import { useSettings } from './hooks/useSettings';
 import { useConnection } from './hooks/useConnection';
 
@@ -46,8 +48,8 @@ export function App() {
           element={<SettingsPage settings={settings} usingDefaults={usingDefaults} />}
         />
         <Route path="/explorer" element={<ExplorerLayout />}>
-          <Route index element={<div>Select a resource type</div>} />
-          <Route path=":resourceType" element={<div>Search results (Plan 02)</div>} />
+          <Route index element={<ResourceTypeLanding />} />
+          <Route path=":resourceType" element={<SearchResultsPage />} />
           <Route path=":resourceType/:id" element={<div>Resource detail (Plan 03)</div>} />
         </Route>
         <Route path="/patients" element={<PatientsPage />} />
