@@ -53,7 +53,7 @@ Plans:
 - [x] 02-02-PLAN.md -- Search/browse UI: ResourceTypeSelector, SearchFilterPanel, SearchResultsPage with SearchControl, PaginationControls
 - [x] 02-03-PLAN.md -- Resource detail view with three display modes (Human-readable, Clinical+Raw, Developer/JSON), reference navigation, breadcrumbs
 - [x] 02-04-PLAN.md -- Gap closure: shared connection state via ConnectionContext (fixes explorer "Not connected" blocker)
-- [ ] 02-05-PLAN.md -- Gap closure: wire per-type resource counts into Explorer landing page (BRWS-01)
+- [x] 02-05-PLAN.md -- Gap closure: wire per-type resource counts into Explorer landing page (BRWS-01)
 **UI hint**: yes
 
 ### Phase 3: Patient-Centric Browsing & MII Modules
