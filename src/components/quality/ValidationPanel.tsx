@@ -330,7 +330,11 @@ export function ValidationPanel(_props: ValidationPanelProps) {
           </Stack>
         )}
 
-      <Group justify="flex-end">
+      <Group justify="flex-end" align="center" gap="sm">
+        <Text size="xs" c="dimmed" ta="right" style={{ maxWidth: 420 }}>
+          Export includes resource IDs and validator diagnostics drawn
+          from the sampled resources. Review before sharing externally.
+        </Text>
         <Button
           variant="subtle"
           leftSection={<IconDownload size={16} />}
