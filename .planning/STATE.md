@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-03-PLAN.md
-last_updated: "2026-04-12T09:37:53.077Z"
+stopped_at: Completed 05-04-PLAN.md
+last_updated: "2026-04-12T09:50:25.414Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 21
-  completed_plans: 19
-  percent: 90
+  completed_plans: 20
+  percent: 95
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 05 (data-quality-dashboard) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-04-12
 
@@ -70,6 +70,7 @@ Progress: [██████████] 100%
 | Phase 05-data-quality-dashboard P01 | 427s | 2 tasks | 21 files |
 | Phase 05-data-quality-dashboard P02 | 405s | 2 tasks | 14 files |
 | Phase 05-data-quality-dashboard P03 | 523 | 2 tasks | 15 files |
+| Phase 05-data-quality-dashboard P04 | 7min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -121,6 +122,9 @@ Recent decisions affecting current work:
 - [Phase 05-data-quality-dashboard]: [Phase 05]: Module-scoped cache singleton pattern (cacheInstance + cacheServerUrl guard) rebuilds on server URL change — Plan 04 coverage hook must mirror this shape, not share cacheInstance (buildMetricsKey namespaces by metric kind)
 - [Phase 05-data-quality-dashboard]: [Phase 05]: isPathPopulated walks [x] choice types by stripping the suffix and probing any parent key starting with the prefix (Pitfall 3); arrays take [0] for v1 and slice-aware mustSupport (Pitfall 4) is delegated to the Coverage tab
 - [Phase 05-data-quality-dashboard]: [Phase 05]: useCompletenessReport applies useDebouncedValue(sampleSize, 500ms) at the hook level — SampleSizeControl stays stateless so Plans 03/04 debounce at their own cadences
+- [Phase 05-data-quality-dashboard]: [Phase 05]: Pitfall 5 defense pattern — Object.keys(X).every(k => CC_KEYS.has(k)) with minimal allowlist for intended FHIR shape; excludes Identifier/Reference/Quantity by their extra keys
+- [Phase 05-data-quality-dashboard]: [Phase 05]: Empty-object {} at CC position classifies as empty — supports FHIR authoring pattern code:{} required by plan behavior table; tradeoff documented
+- [Phase 05-data-quality-dashboard]: [Phase 05]: useCodingCoverage duplicates getCache(serverUrl) from useCompletenessReport; refactor to cacheSingleton.ts deferred until a third consumer appears
 
 ### Pending Todos
 
@@ -133,6 +137,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T09:37:53.075Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-04-12T09:50:25.412Z
+Stopped at: Completed 05-04-PLAN.md
 Resume file: None

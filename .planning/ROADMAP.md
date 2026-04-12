@@ -99,7 +99,7 @@ Plans:
 - [x] 05-01-PLAN.md (Wave 1) -- Foundation: quality contracts + metrics cache + sampling helper + Quality route shell + QualityLayout + sample-size control + settings.validation block + SettingsPage validation section + Clear metrics cache + 10 Wave-0 test scaffolds with fixtures
 - [x] 05-02-PLAN.md (Wave 2, depends on 01) -- QUAL-01: counts aggregation + useQualityMetrics orchestrator + QualityOverviewPage shell with 4-card summary strip + 4-tab layout + sortable ResourceCountsPanel with inline Progress bars
 - [x] 05-03-PLAN.md (Wave 2, depends on 01) -- QUAL-02: 7 bundled MII StructureDefinitions + completenessWalker (requiredElementPaths + isPathPopulated with Pitfall 3 value[x] handling) + useCompletenessReport hook + CompletenessPanel + CompletenessDrillDown
-- [ ] 05-04-PLAN.md (Wave 2, depends on 01) -- QUAL-03: classifyCodedFields sibling walker (Pitfall 5 Identifier exclusion) + aggregateCoverage + useCodingCoverage hook + CodingCoveragePanel with 3-bucket stacked Progress bars + CodingDrillDown with CodeableConceptDisplay examples
+- [x] 05-04-PLAN.md (Wave 2, depends on 01) -- QUAL-03: classifyCodedFields sibling walker (Pitfall 5 Identifier exclusion) + aggregateCoverage + useCodingCoverage hook + CodingCoveragePanel with 3-bucket stacked Progress bars + CodingDrillDown with CodeableConceptDisplay examples
 - [ ] 05-05-PLAN.md (Wave 3, depends on 01+03) -- QUAL-04: structuralValidator (reuses Plan 03 walker) + remoteValidator (independent MedplumClient, never posts to Blaze) + resolveBackends + useValidationRun batch runner + ValidationPanel with Blaze $validate warning banner + ValidationIssueList + JSON report export
 **UI hint**: yes
 
