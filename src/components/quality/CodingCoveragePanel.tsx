@@ -25,7 +25,6 @@ import {
   Text,
   UnstyledButton,
 } from '@mantine/core';
-import { BarChart } from '@mantine/charts';
 import { IconChevronDown, IconChevronUp, IconSelector } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
 
@@ -158,31 +157,6 @@ export function CodingCoveragePanel({ types, client, sampleSize }: CodingCoverag
           <Text size="sm">empty</Text>
         </Group>
       </Group>
-
-      {/* Stacked bar chart overview */}
-      {rows.filter((r) => r.systemPct !== null).length > 0 && (
-        <BarChart
-          h={Math.max(200, rows.filter((r) => r.systemPct !== null).length * 28)}
-          data={rows
-            .filter((r) => r.systemPct !== null)
-            .map((r) => ({
-              type: r.type,
-              'system+code': r.systemPct ?? 0,
-              'text-only': r.textPct ?? 0,
-              empty: r.emptyPct ?? 0,
-            }))}
-          dataKey="type"
-          type="stacked"
-          series={[
-            { name: 'system+code', color: 'blue.6' },
-            { name: 'text-only', color: 'orange.6' },
-            { name: 'empty', color: 'red.6' },
-          ]}
-          orientation="vertical"
-          gridAxis="x"
-          tickLine="x"
-        />
-      )}
 
       <Table striped highlightOnHover>
         <Table.Thead>
