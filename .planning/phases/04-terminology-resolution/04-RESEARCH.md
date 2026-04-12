@@ -683,27 +683,17 @@ All phase 4 test files are new. No existing test infrastructure covers terminolo
 | A5 | The phase owner accepts "search result tables show raw codes; detail views show resolved text" as initial scope | Pitfalls §6 | If not, adds a sub-plan to build a custom bundle-fetching search wrapper (significant extra work). Flag for `/gsd-discuss-phase` if revisited. |
 | A6 | Operators of MII-mirrored deployments provide their own TLS-termination layer; the SPA does not do mTLS | Environment Availability | Documentation concern. If wrong, we'd need a Vite dev-server proxy config for production, which is unusual. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Should the search results table show resolved displays too?** (See Pitfall 6)
-   - What we know: Medplum's `SearchControl` fetches its own bundles internally; we can't inject resolved values without wrapping or replacing it.
-   - What's unclear: Whether the user considers "table shows raw codes, detail shows resolved text" acceptable for v1.
-   - Recommendation: Treat as out of scope for Phase 4 and document it as a known limitation. Add as a follow-up plan if the discrepancy is jarring in dogfood.
+All four questions were resolved during discuss-phase and locked as CONTEXT.md decisions D-09 through D-12. Kept here for historical traceability.
 
-2. **Should the terminology server URL default in `settings.yaml` be the MII URL or Ontoserver?**
-   - What we know: MII URL is mTLS-gated and will fail in a browser SPA without operator infrastructure. Ontoserver public endpoint works out of the box.
-   - What's unclear: Whether the user is OK with `public/settings.yaml` pointing at Ontoserver as the dev default (with the MII URL in a commented block next to it).
-   - Recommendation: **Ship with Ontoserver (`https://r4.ontoserver.csiro.au/fhir`) uncommented as dev default**, leave the MII URL as a documented commented alternative. This is the only way to ship a working demo without per-user cert install. Does not conflict with D-01 (the MII URL remains a supported destination per D-02).
+1. **Should the search results table show resolved displays too?** (See Pitfall 6) — **RESOLVED (D-09):** Out of scope for v1; SearchControl tables show raw codes. Documented limitation; follow-up phase if dogfood finds the discrepancy jarring.
 
-3. **localStorage size management.**
-   - What we know: Browsers allow 5-10 MB of localStorage. A cache entry is ~100 bytes. 50,000 entries = 5 MB.
-   - What's unclear: Whether typical MII deployments will blow past 50K unique codes.
-   - Recommendation: Simple bounded LRU at 10,000 entries in-memory, serialize only the 2,000 most recently accessed to localStorage on idle. Oversimplification is fine for v1; revisit if users hit limits.
+2. **Should the terminology server URL default in `settings.yaml` be the MII URL or Ontoserver?** — **RESOLVED (D-10):** Ship Ontoserver (`https://r4.ontoserver.csiro.au/fhir`) as the uncommented dev default; MII URL ships as a commented example with an mTLS note. Does not conflict with D-01/D-02 — MII remains a supported destination.
 
-4. **Should resolution block first paint, or progressively enhance?**
-   - What we know: `useResolvedResource` as sketched returns original resource synchronously, then swaps to resolved on effect completion. Causes one extra render per resource.
-   - What's unclear: Whether a brief "flash of raw codes" is worse than a loading spinner.
-   - Recommendation: Progressive enhancement is correct default — raw codes are valid FHIR, users recognize them; spinner-on-every-view is worse UX. For ResourceTable specifically, show a small inline `<Loader size="xs" />` in the top-right while resolution is pending. Matches existing Dashboard loading-indicator pattern [VERIFIED: STATE.md note "DashboardPage count display pattern"].
+3. **localStorage size management.** — **RESOLVED (D-11):** Bounded LRU — 10,000 entries in-memory, 2,000 mirrored to localStorage. Evict oldest on overflow. "Clear terminology cache" settings action clears both layers.
+
+4. **Should resolution block first paint, or progressively enhance?** — **RESOLVED (D-12):** Progressive enhancement. Render raw code immediately; swap to resolved display when `$lookup` settles. No spinner, no layout shift (reserve line height). The original researcher recommendation to include an inline `<Loader size="xs" />` in ResourceTable was superseded by D-12's no-spinner constraint.
 
 ## Sources
 
