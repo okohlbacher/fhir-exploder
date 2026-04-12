@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-04-12T07:25:51.006Z"
+stopped_at: Completed 04-04-PLAN.md
+last_updated: "2026-04-12T07:34:46.886Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 16
-  completed_plans: 14
-  percent: 88
+  completed_plans: 15
+  percent: 94
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 04 (terminology-resolution) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-04-12
 
@@ -65,6 +65,7 @@ Progress: [██████████] 100%
 | Phase 04-terminology-resolution P01 | 185s | 2 tasks | 8 files |
 | Phase 04-terminology-resolution P02 | 90s | 1 tasks | 3 files |
 | Phase 04-terminology-resolution P03 | 285s | 2 tasks | 6 files |
+| Phase 04-terminology-resolution P04 | 355s | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,10 @@ Recent decisions affecting current work:
 - [Phase 04-terminology-resolution]: [Phase 04]: Inflight dedup via Map<key, Promise> coalesces concurrent resolveCoding calls for the same system|code — exactly one  per unique code per render pass (V-07)
 - [Phase 04-terminology-resolution]: [Phase 04]: TerminologyProvider memo key is JSON.stringify(settings.terminology) parsed inside the factory — deps = [terminologyKey] is exhaustive without eslint-disable (W-1 fix)
 - [Phase 04-terminology-resolution]: [Phase 04]: collectCodings walker recurses every object key — no per-key skip list; typeof !== 'object' early-return is sufficient to skip Coding's primitive fields without masking nested Codings under FHIR 'code' keys
+- [Phase 04-terminology-resolution]: [Phase 04]: useResolvedResource delivers progressive enhancement (raw sync + enriched async) — no spinner, no layout shift (D-12 baseline)
+- [Phase 04-terminology-resolution]: [Phase 04]: Provider nesting locked at ConnectionProvider > AppRoutes > TerminologyProvider > Routes — TerminologyProvider inside AppRoutes because settings comes from useSettings()
+- [Phase 04-terminology-resolution]: [Phase 04]: ClinicalRawView right panel keeps raw wire-format JSON even when left panel is enriched — Cross-View Consistency per UI-SPEC C-3
+- [Phase 04-terminology-resolution]: [Phase 04]: Component tests for Medplum-composed views mock @medplum/react.ResourceTable to observe value prop — bypasses need for @medplum/definitions schema bundle which is not installed
 
 ### Pending Todos
 
@@ -110,6 +115,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T07:25:40.549Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-04-12T07:34:35.775Z
+Stopped at: Completed 04-04-PLAN.md
 Resume file: None
