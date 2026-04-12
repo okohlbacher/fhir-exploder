@@ -5,6 +5,8 @@ import {
   Badge,
   Button,
   Group,
+  NumberInput,
+  Select,
   Skeleton,
   Stack,
   Table,
@@ -19,7 +21,22 @@ import { PaginationControls } from '../explorer/PaginationControls';
 interface PatientSearchParams {
   name: string;
   identifier: string;
-  birthDate: string;
+  ageMin: string;
+  ageMax: string;
+  gender: string;
+}
+
+/** Convert an age in years to a FHIR birthdate bound (YYYY-MM-DD). */
+function ageToBirthdate(age: number, bound: 'ge' | 'le'): string {
+  const now = new Date();
+  // For "age >= X" → birthdate <= (today - X years)
+  // For "age <= X" → birthdate >= (today - (X+1) years + 1 day)
+  if (bound === 'ge') {
+    const d = new Date(now.getFullYear() - age, now.getMonth(), now.getDate());
+    return d.toISOString().slice(0, 10);
+  }
+  const d = new Date(now.getFullYear() - age - 1, now.getMonth(), now.getDate() + 1);
+  return d.toISOString().slice(0, 10);
 }
 
 const DEFAULT_COUNT = 20;
@@ -29,7 +46,7 @@ function getPatientName(patient: Patient): string {
   const n = patient.name[0];
   if (n.text) return n.text;
   const parts = [n.family, ...(n.given ?? [])].filter(Boolean);
-  return parts.join(', ') || patient.id ?? '';
+  return parts.join(', ') || (patient.id ?? '');
 }
 
 function getPatientIdentifier(patient: Patient): string {
@@ -52,7 +69,9 @@ export function PatientListPage() {
   const initialFromUrl = useMemo<PatientSearchParams>(() => ({
     name: urlParams.get('name') ?? '',
     identifier: urlParams.get('identifier') ?? '',
-    birthDate: urlParams.get('birthdate') ?? '',
+    ageMin: urlParams.get('ageMin') ?? '',
+    ageMax: urlParams.get('ageMax') ?? '',
+    gender: urlParams.get('gender') ?? '',
   }), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [searchParams, setSearchParams] = useState<PatientSearchParams>(initialFromUrl);
@@ -131,8 +150,20 @@ export function PatientListPage() {
       }
     }
 
-    if (activeSearch.birthDate) {
-      params.set('birthdate', activeSearch.birthDate);
+    // Age range → FHIR birthdate range conversion
+    const ageMin = activeSearch.ageMin ? parseInt(activeSearch.ageMin, 10) : NaN;
+    const ageMax = activeSearch.ageMax ? parseInt(activeSearch.ageMax, 10) : NaN;
+    if (!isNaN(ageMin)) {
+      // age >= ageMin means birthdate <= (today - ageMin years)
+      params.append('birthdate', `le${ageToBirthdate(ageMin, 'ge')}`);
+    }
+    if (!isNaN(ageMax)) {
+      // age <= ageMax means birthdate >= (today - (ageMax+1) years + 1 day)
+      params.append('birthdate', `ge${ageToBirthdate(ageMax, 'le')}`);
+    }
+
+    if (activeSearch.gender) {
+      params.set('gender', activeSearch.gender);
     }
 
     const url = `Patient?${params.toString()}`;
@@ -165,7 +196,9 @@ export function PatientListPage() {
     const params = new URLSearchParams();
     if (searchParams.name) params.set('name', searchParams.name);
     if (searchParams.identifier) params.set('identifier', searchParams.identifier);
-    if (searchParams.birthDate) params.set('birthdate', searchParams.birthDate);
+    if (searchParams.ageMin) params.set('ageMin', searchParams.ageMin);
+    if (searchParams.ageMax) params.set('ageMax', searchParams.ageMax);
+    if (searchParams.gender) params.set('gender', searchParams.gender);
     if (count !== DEFAULT_COUNT) params.set('_count', String(count));
     setUrlParams(params);
   }, [searchParams, count, setUrlParams]);
@@ -232,13 +265,43 @@ export function PatientListPage() {
           onKeyDown={handleKeyDown}
           style={{ minWidth: 220 }}
         />
-        <TextInput
-          label="Birth Date"
-          placeholder="YYYY-MM-DD"
-          value={searchParams.birthDate}
-          onChange={updateField('birthDate')}
-          onKeyDown={handleKeyDown}
-          style={{ minWidth: 180 }}
+        <NumberInput
+          label="Age from"
+          placeholder="Min"
+          value={searchParams.ageMin ? parseInt(searchParams.ageMin, 10) : ''}
+          onChange={(val) =>
+            setSearchParams((prev) => ({ ...prev, ageMin: val ? String(val) : '' }))
+          }
+          min={0}
+          max={150}
+          style={{ width: 90 }}
+        />
+        <NumberInput
+          label="Age to"
+          placeholder="Max"
+          value={searchParams.ageMax ? parseInt(searchParams.ageMax, 10) : ''}
+          onChange={(val) =>
+            setSearchParams((prev) => ({ ...prev, ageMax: val ? String(val) : '' }))
+          }
+          min={0}
+          max={150}
+          style={{ width: 90 }}
+        />
+        <Select
+          label="Gender"
+          placeholder="All"
+          value={searchParams.gender || null}
+          onChange={(val) =>
+            setSearchParams((prev) => ({ ...prev, gender: val ?? '' }))
+          }
+          data={[
+            { value: 'male', label: 'Male' },
+            { value: 'female', label: 'Female' },
+            { value: 'other', label: 'Other' },
+            { value: 'unknown', label: 'Unknown' },
+          ]}
+          clearable
+          style={{ width: 130 }}
         />
         <Button onClick={handleSearch}>Search Patients</Button>
       </Group>
