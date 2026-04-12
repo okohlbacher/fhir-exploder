@@ -34,10 +34,15 @@ function isValidFhirReference(resourceType: string, id: string): boolean {
  * This avoids Pitfall 5 (ReferenceDisplay links leaving the app).
  */
 export function ResourceDetailPage() {
-  const { resourceType, id } = useParams<{ resourceType: string; id: string }>();
+  const { resourceType, id, patientId } = useParams<{
+    resourceType: string;
+    id: string;
+    patientId?: string;
+  }>();
   const navigate = useNavigate();
   const client = useMedplum();
-  const breadcrumbs = useBreadcrumbTrail();
+  const basePath = patientId ? `/patients/${patientId}` : '/explorer';
+  const breadcrumbs = useBreadcrumbTrail(basePath);
 
   const [resource, setResource] = useState<Resource | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -136,13 +141,16 @@ export function ResourceDetailPage() {
         onNavigate={breadcrumbs.navigateTo}
         currentResourceType={resourceType}
         currentId={id}
+        basePath={basePath}
       />
 
       <Group>
         <Button
           variant="subtle"
           leftSection={<IconArrowLeft size={16} />}
-          onClick={() => navigate(`/explorer/${resourceType}`)}
+          onClick={() =>
+            navigate(patientId ? `/patients/${patientId}` : `/explorer/${resourceType}`)
+          }
         >
           Back to results
         </Button>
