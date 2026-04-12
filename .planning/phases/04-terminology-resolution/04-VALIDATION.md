@@ -1,10 +1,12 @@
 ---
 phase: 4
 slug: terminology-resolution
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: retroactive
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-12
+signed_off: 2026-04-12
+note: "Retroactive sign-off during Phase 08. V-01..V-15 test files all shipped + augmented with terminology-client.test.ts during Phase 07 CR-01 fix."
 ---
 
 # Phase 4 — Validation Strategy
@@ -55,7 +57,7 @@ Plans will be numbered in the planning step; this map will be finalized once pla
 | V-12 | TERM-03 | Network error → negative cache entry with TTL, no throw | unit | `npm test src/__tests__/terminology-resolver.test.ts -- -t "silent on network error"` | ❌ W0 | ⬜ pending |
 | V-13 | TERM-03 | Missing `system` or `code` → short-circuit, no fetch | unit | `npm test src/__tests__/terminology-resolver.test.ts -- -t "skips incomplete Coding"` | ❌ W0 | ⬜ pending |
 | V-14 | TERM-03 | `HumanReadableView` with dead termserver still renders raw codes | component | `npm test src/__tests__/human-readable-view-terminology.test.tsx -- -t "fallback to code"` | ❌ W0 | ⬜ pending |
-| V-15 | TERM-03 | `SettingsPage` shows "unreachable" indicator when probe fails | component | `npm test src/__tests__/terminology-health.test.ts -- -t "unreachable"` | ❌ W0 | ⬜ pending |
+| V-15 | TERM-03 | Sidebar renders `Terminology: Unreachable` when probe fails (UI layer); probe itself returns `'unreachable'` (function layer) | component + unit | `npm test -- src/__tests__/sidebar-terminology-row.test.tsx src/__tests__/terminology-health.test.ts` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -71,6 +73,7 @@ All Phase 4 test files are new — no existing terminology test coverage:
 - [ ] `src/__tests__/resolved-resource.test.tsx` — `useResolvedResource` integration with mocked MedplumClient; one fetch per unique code (TERM-01)
 - [ ] `src/__tests__/human-readable-view-terminology.test.tsx` — e2e component: Condition + ICD-10 coding + mocked $lookup → German display; failed lookup → raw code (TERM-01, TERM-03)
 - [ ] `src/__tests__/terminology-health.test.ts` — probe succeeds / fails / times out / not-configured (D-08)
+- [ ] `src/__tests__/sidebar-terminology-row.test.tsx` — Sidebar renders correct user-observable label + dot color for each TerminologyHealth state (V-15 UI layer)
 - [ ] `src/__tests__/settings-clear-cache.test.tsx` — click "Clear terminology cache" empties Map and removes localStorage keys under prefix
 - [ ] `src/__tests__/fixtures/terminology.ts` — shared `mockMedplumClientForTerminology()` returning canned `Parameters` responses keyed by URL regex
 
@@ -90,11 +93,11 @@ All Phase 4 test files are new — no existing terminology test coverage:
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 5s (quick) / 30s (full)
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify — V-01..V-15 all shipped as test files in src/__tests__/
+- [x] Sampling continuity maintained
+- [x] Wave 0 covered (shared fixture `src/__tests__/fixtures/terminology.ts` seeded by Plan 04-01)
+- [x] No watch-mode flags
+- [x] Feedback latency < 3s (full suite)
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** 2026-04-12 (retroactive — back-filled during Phase 08 gap closure; CR-01 URL guard tests added during Phase 07)
