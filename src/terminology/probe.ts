@@ -18,29 +18,44 @@ export async function probeTerminologyHealth(
 ): Promise<TerminologyHealth> {
   if (!client) return 'not-configured';
 
+  const { signal, cancel } = buildTimeoutSignal(timeoutMs);
   try {
-    const signal = buildTimeoutSignal(timeoutMs);
     await client.get('metadata', signal ? { signal } : undefined);
     return 'ok';
   } catch {
     return 'unreachable';
+  } finally {
+    // Always clear any pending fallback timer so the event loop can drain —
+    // otherwise repeated probes (D-08 periodic re-probe) accumulate live
+    // timers and delay test runner exit.
+    cancel();
   }
 }
 
-function buildTimeoutSignal(timeoutMs: number): AbortSignal | undefined {
+interface TimeoutSignal {
+  signal: AbortSignal | undefined;
+  cancel: () => void;
+}
+
+function buildTimeoutSignal(timeoutMs: number): TimeoutSignal {
   // Prefer the native AbortSignal.timeout when available (modern browsers, Node 18+).
   const maybeTimeout = (AbortSignal as unknown as { timeout?: (ms: number) => AbortSignal })
     .timeout;
   if (typeof maybeTimeout === 'function') {
-    return maybeTimeout.call(AbortSignal, timeoutMs);
+    return { signal: maybeTimeout.call(AbortSignal, timeoutMs), cancel: () => {} };
   }
 
-  // Fallback for environments without AbortSignal.timeout.
+  // Fallback for environments without AbortSignal.timeout: own the timer so we
+  // can clear it regardless of whether the request succeeded, failed, or the
+  // signal fired first.
   if (typeof AbortController !== 'undefined') {
     const controller = new AbortController();
-    setTimeout(() => controller.abort(new Error('Timeout')), timeoutMs);
-    return controller.signal;
+    const handle = setTimeout(() => controller.abort(new Error('Timeout')), timeoutMs);
+    return {
+      signal: controller.signal,
+      cancel: () => clearTimeout(handle),
+    };
   }
 
-  return undefined;
+  return { signal: undefined, cancel: () => {} };
 }
