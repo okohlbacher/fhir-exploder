@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-04-12T05:45:10.276Z"
-last_activity: 2026-04-12 -- Phase 03 execution started
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-04-12T05:51:52.659Z"
+last_activity: 2026-04-12
 progress:
   total_phases: 5
   completed_phases: 2
   total_plans: 11
-  completed_plans: 8
-  percent: 73
+  completed_plans: 9
+  percent: 82
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 03 (patient-centric-browsing-mii-modules) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 03
-Last activity: 2026-04-12 -- Phase 03 execution started
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-04-12
 
 Progress: [..........] 0%
 
@@ -58,6 +58,7 @@ Progress: [..........] 0%
 | Phase 02 P03 | 188s | 2 tasks | 9 files |
 | Phase 02 P04 | 68s | 2 tasks | 3 files |
 | Phase 02 P05 | 315s | 1 tasks | 2 files |
+| Phase 03-patient-centric-browsing-mii-modules P01 | 200s | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,9 @@ Recent decisions affecting current work:
 - [Phase 02]: Container-level click interception for FHIR references instead of ReferenceDisplay (Pitfall 5 mitigation)
 - [Phase 02]: ConnectionProvider wraps all routes; useConnection() becomes thin context wrapper for backward compatibility
 - [Phase 02]: Reused DashboardPage count display pattern (Badge/Loader/Error) in Explorer landing for consistency
+- [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: useBreadcrumbTrail parameterized with basePath (default /explorer) so patient routes reuse the hook without duplication
+- [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: MII_MODULES centralised in src/utils/mii-modules.ts as single source of truth for labels, colors, FHIR resource types, and patient search params
+- [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: PatientListPage gates SearchControl behind a searchTriggered flag to prevent accidental unfiltered Patient queries against large Blaze servers
 
 ### Pending Todos
 
@@ -86,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-11T19:04:56.870Z
-Stopped at: Phase 3 UI-SPEC approved
-Resume file: .planning/phases/03-patient-centric-browsing-mii-modules/03-UI-SPEC.md
+Last session: 2026-04-12T05:51:52.657Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None
