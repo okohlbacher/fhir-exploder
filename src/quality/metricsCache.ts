@@ -62,17 +62,19 @@ export class QualityMetricsCache {
   }
 
   /**
-   * Wipes in-memory Map AND removes every localStorage key beginning with
-   * LOCAL_STORAGE_PREFIX across all server namespaces (matches the
-   * Settings "Clear metrics cache" button behavior).
+   * Wipes in-memory Map AND removes every localStorage key belonging to
+   * THIS instance's server namespace. Other servers' cached metrics are
+   * untouched — use `clearAllQualityMetrics()` for the cross-server wipe
+   * that the Settings "Clear metrics cache" button performs.
    */
   clear(): void {
     this.memory.clear();
     if (!this.persist || typeof localStorage === 'undefined') return;
+    const prefixForServer = `${LOCAL_STORAGE_PREFIX}${this.serverUrl}|`;
     const toRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith(LOCAL_STORAGE_PREFIX)) toRemove.push(k);
+      if (k && k.startsWith(prefixForServer)) toRemove.push(k);
     }
     for (const k of toRemove) {
       try {
@@ -153,9 +155,9 @@ export class QualityMetricsCache {
  * Iterates localStorage, removes every key starting with
  * LOCAL_STORAGE_PREFIX, and returns the number removed.
  *
- * Unlike QualityMetricsCache#clear() which clears one instance's memory
- * plus all localStorage, this is a pure localStorage wipe that works even
- * when no cache instance exists (e.g., called from Settings where no
+ * Unlike QualityMetricsCache#clear() which scopes its wipe to a single
+ * server namespace, this is a cross-server localStorage wipe that works
+ * even when no cache instance exists (e.g., called from Settings where no
  * metrics have been requested yet this session).
  */
 export function clearAllQualityMetrics(): number {
