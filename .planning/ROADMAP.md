@@ -12,14 +12,14 @@ FHIR Exploder delivers a local-first React application for exploring Blaze FHIR 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Blaze Connectivity** - App shell, settings management, Blaze connection, Medplum compatibility validation
-- [ ] **Phase 2: Resource Explorer** - Browse, search, paginate, and inspect any FHIR resource type with three display modes
-- [ ] **Phase 3: Patient-Centric Browsing & MII Modules** - Patient list, clinical detail views, MII Kerndatensatz module navigation
-- [ ] **Phase 4: Terminology Resolution** - Resolve CodeableConcept display values via MII Terminology Server with caching and fallback
-- [ ] **Phase 5: Data Quality Dashboard** - Resource counts, field completeness, coding coverage, and profile validation
-- [ ] **Phase 6: v1.0 Gap Closure — Patient-aware Reference Navigation** - Fix MC-1/BF-1: ResourceDetailPage honors patient subtree basePath; reconcile REQUIREMENTS.md CONN checkboxes
-- [ ] **Phase 7: v1.0 Gap Closure — Code Review Fixes** - Apply 32 code review findings across Phases 4+5 (3 critical: unguarded URL, PHI banner gating, cancellation race)
-- [ ] **Phase 8: v1.0 Gap Closure — Retroactive Nyquist Compliance** - Fill missing VALIDATION.md for Phases 2-4; flip Phase 5 VALIDATION.md nyquist_compliant flag
+- [x] **Phase 1: Foundation & Blaze Connectivity** - App shell, settings management, Blaze connection, Medplum compatibility validation
+- [x] **Phase 2: Resource Explorer** - Browse, search, paginate, and inspect any FHIR resource type with three display modes
+- [x] **Phase 3: Patient-Centric Browsing & MII Modules** - Patient list, clinical detail views, MII Kerndatensatz module navigation
+- [x] **Phase 4: Terminology Resolution** - Resolve CodeableConcept display values via MII Terminology Server with caching and fallback
+- [x] **Phase 5: Data Quality Dashboard** - Resource counts, field completeness, coding coverage, and profile validation
+- [x] **Phase 6: v1.0 Gap Closure — Patient-aware Reference Navigation** - Fix MC-1/BF-1: ResourceDetailPage honors patient subtree basePath; reconcile REQUIREMENTS.md CONN checkboxes
+- [x] **Phase 7: v1.0 Gap Closure — Code Review Fixes** - Applied 15 findings (3 critical + 12 warning) across Phases 4+5 via /gsd-code-review-fix
+- [x] **Phase 8: v1.0 Gap Closure — Retroactive Nyquist Compliance** - All 5 VALIDATION.md files flipped to nyquist_compliant: true
 
 ## Phase Details
 
@@ -161,6 +161,6 @@ Phases 6-8 are gap-closure phases added after the v1.0 milestone audit (2026-04-
 | 3. Patient-Centric Browsing & MII Modules | 3/3 | Complete | 2026-04-12 |
 | 4. Terminology Resolution | 5/5 | Complete | 2026-04-12 |
 | 5. Data Quality Dashboard | 5/5 | Complete | 2026-04-12 |
-| 6. v1.0 Gap Closure — Patient-aware Reference Navigation | 0/2 | Planned | - |
-| 7. v1.0 Gap Closure — Code Review Fixes | 0/0 | Planned | - |
-| 8. v1.0 Gap Closure — Retroactive Nyquist Compliance | 0/0 | Planned | - |
+| 6. v1.0 Gap Closure — Patient-aware Reference Navigation | 2/2 | Complete | 2026-04-12 |
+| 7. v1.0 Gap Closure — Code Review Fixes | — | Complete (direct fix via /gsd-code-review-fix) | 2026-04-12 |
+| 8. v1.0 Gap Closure — Retroactive Nyquist Compliance | — | Complete (docs-only) | 2026-04-12 |
