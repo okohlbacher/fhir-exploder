@@ -44,14 +44,12 @@ import type {
 /** Allowlist of keys that appear on genuine CodeableConcepts. */
 const CC_KEYS = new Set(['coding', 'text', 'extension', 'id']);
 
-function isCodeableConcept(node: Record<string, unknown>): boolean {
-  const keys = Object.keys(node);
-  // Rule 1: key set must be a subset of the CC allowlist. This is what
-  // excludes Identifier (`value`/`use`/`type`), Reference (`reference`),
+function isCodeableConcept(cc: Record<string, unknown>): boolean {
+  // Rule 1 (Pitfall 5 allowlist): key set must be a subset of the CC
+  // allowlist. `Object.keys(cc).every(k => CC_KEYS.has(k))` excludes
+  // Identifier (`value`/`use`/`type`), Reference (`reference`),
   // Quantity (`value`/`unit`/`code`), etc.
-  for (const k of keys) {
-    if (!CC_KEYS.has(k)) return false;
-  }
+  if (!Object.keys(cc).every((k) => CC_KEYS.has(k))) return false;
   // Rule 2: we need SOME reason to think this is a CC. Either:
   //   a) a CC marker is present (coding array / text string / extension / id), or
   //   b) the node is literally `{}` — an empty placeholder at what the
@@ -60,12 +58,12 @@ function isCodeableConcept(node: Record<string, unknown>): boolean {
   // pattern where a CC field is declared with an empty object when the
   // coder had no value to record — per 05-04-PLAN behavior table, an
   // empty-object CC must classify as `empty`.
-  if (keys.length === 0) return true;
+  if (Object.keys(cc).length === 0) return true;
   const hasMarker =
-    Array.isArray(node.coding) ||
-    typeof node.text === 'string' ||
-    'extension' in node ||
-    'id' in node;
+    Array.isArray(cc.coding) ||
+    typeof cc.text === 'string' ||
+    'extension' in cc ||
+    'id' in cc;
   return hasMarker;
 }
 

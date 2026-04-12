@@ -100,6 +100,16 @@ vi.mock('../components/quality/CompletenessPanel', () => ({
   ),
 }));
 
+// ----- CodingCoveragePanel mock -----
+// Plan 05-04 replaces the stub with a real sampling panel. Same rationale
+// as the Completeness mock above — coverage behavior is verified in
+// coding-coverage-panel.test.tsx.
+vi.mock('../components/quality/CodingCoveragePanel', () => ({
+  CodingCoveragePanel: () => (
+    <div data-testid="mock-CodingCoveragePanel">Mock Coding Coverage Panel</div>
+  ),
+}));
+
 // ----- Imports AFTER mocks are configured -----
 import { MemoryRouter } from 'react-router-dom';
 import { QualityOverviewPage } from '../components/quality/QualityOverviewPage';
@@ -178,13 +188,13 @@ describe('QualityOverviewPage (QUAL-01)', () => {
     expect(sortableHeaders.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('tab panels mount with keepMounted — Completeness (05-03) is mocked, 05-04/05 stubs still present', () => {
+  it('tab panels mount with keepMounted — Completeness (05-03) and Coverage (05-04) are mocked, 05-05 stub still present', () => {
     mockUseResourceCounts.mockReturnValue({ Patient: 120 });
     renderPage();
-    // Plan 05-03 replaced the CompletenessPanel stub; tests mock it out.
+    // Plans 05-03 and 05-04 replaced their respective stubs; tests mock them.
     expect(screen.getByTestId('mock-CompletenessPanel')).toBeDefined();
-    // 05-04 and 05-05 stubs still present.
-    expect(screen.getByText(/Coming in Plan 05-04/)).toBeDefined();
+    expect(screen.getByTestId('mock-CodingCoveragePanel')).toBeDefined();
+    // 05-05 stub still present.
     expect(screen.getByText(/Coming in Plan 05-05/)).toBeDefined();
   });
 
