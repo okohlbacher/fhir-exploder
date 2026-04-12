@@ -12,7 +12,7 @@ FHIR Exploder delivers a local-first React application for exploring Blaze FHIR 
 ## v1.1 Phases
 
 - [x] **Phase 9: Inline Settings & Server Configuration** — Users can edit FHIR and terminology server settings from the sidebar without touching settings.yaml
-- [ ] **Phase 10: Bookmarkable Search & URL State** — Search state persisted in URL params; bookmarks restore exact search results
+- [x] **Phase 10: Bookmarkable Search & URL State** — Search state persisted in URL params; bookmarks restore exact search results
 - [ ] **Phase 11: Search Results Export** — Users can export current search results as CSV or NDJSON
 - [ ] **Phase 12: Patient Timeline** — Horizontal event ribbon on patient overview showing clinical events chronologically
 - [ ] **Phase 13: Charts & Code Quality** — Install @mantine/charts + recharts for quality dashboard visuals; resolve 17 info-level code review findings
@@ -88,7 +88,7 @@ Plans:
 ## Progress
 
 Phase 9: ✅ Complete
-Phase 10: ⬜ Not started
+Phase 10: ✅ Complete
 Phase 11: ⬜ Not started
 Phase 12: ⬜ Not started
 Phase 13: ⬜ Not started
