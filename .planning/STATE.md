@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-04-12T09:14:44.179Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-04-12T09:24:37.533Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 21
-  completed_plans: 17
-  percent: 81
+  completed_plans: 18
+  percent: 86
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 05 (data-quality-dashboard) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-04-12
 
@@ -68,6 +68,7 @@ Progress: [██████████] 100%
 | Phase 04-terminology-resolution P04 | 355s | 2 tasks | 6 files |
 | Phase 04-terminology-resolution P05 | 229s | 2 tasks | 6 files |
 | Phase 05-data-quality-dashboard P01 | 427s | 2 tasks | 21 files |
+| Phase 05-data-quality-dashboard P02 | 405s | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,9 @@ Recent decisions affecting current work:
 - [Phase 05-data-quality-dashboard]: [Phase 05]: Wave 0 failing-test harness — every Wave 2 test imports from its target module path with @ts-expect-error so tsc stays green while vitest fails deterministically with 'Failed to resolve import'
 - [Phase 05-data-quality-dashboard]: [Phase 05]: QualityOutletContext shape matches ExplorerOutletContext (client + capability) so Wave 2 drill-downs can reuse Phase 2 helpers verbatim
 - [Phase 05-data-quality-dashboard]: [Phase 05]: SampleSizeControl is stateless — downstream hooks (Plans 03/04) apply useDebouncedValue per-hook; control exposes live value/onChange
+- [Phase 05-data-quality-dashboard]: [Phase 05]: useQualityMetrics uses version-keyed array reversal to force useResourceCounts to refire since its effect keys on types.join(',')
+- [Phase 05-data-quality-dashboard]: [Phase 05]: OverviewStripProps locked to exactly { summary, isLoading } — cards 3-4 pull overallCompleteness/overallCoverage from QualityMetricsContext, not props
+- [Phase 05-data-quality-dashboard]: [Phase 05]: Non-numeric counts always sort to end in sortCounts regardless of direction — settled rows first matches Phase 1 Dashboard ethos
 
 ### Pending Todos
 
@@ -125,6 +129,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T09:14:31.558Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-04-12T09:24:37.531Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
