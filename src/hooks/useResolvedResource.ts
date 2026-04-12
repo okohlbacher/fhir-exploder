@@ -5,9 +5,10 @@ import { useTerminology } from './useTerminology';
 /**
  * Returns a copy of `resource` with all Coding.display fields populated
  * from the terminology server (or cache). The original resource is
- * returned synchronously on first render; the component re-renders once
- * lookups settle. Failures leave display unset; Medplum's formatCoding
- * then falls back to the raw code.
+ * returned synchronously on first render and whenever the input
+ * reference changes; the component re-renders once lookups settle.
+ * Failures leave display unset; Medplum's formatCoding then falls back
+ * to the raw code.
  *
  * Progressive enhancement per D-12 / UI-SPEC C-3: no spinner, no
  * skeleton, no layout shift while resolution is in flight.
@@ -19,20 +20,35 @@ import { useTerminology } from './useTerminology';
  * Cancellation: if the component unmounts (or `resource` changes) before
  * resolution settles, the stale setState is skipped so React does not
  * warn about state updates on unmounted components.
+ *
+ * Stale-flash guard (WR-03): when the `resource` prop identity changes,
+ * the previously-resolved resource is synchronously replaced with the
+ * new raw input during render — otherwise the one-frame gap between
+ * the old `resolved` value and the next effect tick would flash the
+ * previous page's content during navigation. We implement this with
+ * the React "derived-state-from-props" idiom (useState + setState in
+ * render) so the reset happens in the same commit as the prop change.
  */
 export function useResolvedResource<T extends Resource>(
   resource: T | undefined,
 ): T | undefined {
   const resolver = useTerminology();
   const [resolved, setResolved] = useState<T | undefined>(resource);
+  const [lastInput, setLastInput] = useState<T | undefined>(resource);
+
+  // Synchronous reset when the input reference changes. This runs during
+  // render, but because React short-circuits same-state setState, it only
+  // triggers an extra render when `resource` actually changed (which is
+  // exactly the case we need to reset for).
+  if (resource !== lastInput) {
+    setLastInput(resource);
+    setResolved(resource);
+  }
 
   useEffect(() => {
     if (!resource) {
-      setResolved(undefined);
       return;
     }
-    // Render raw immediately — progressive enhancement baseline.
-    setResolved(resource);
     let cancelled = false;
     resolver
       .resolveResource(resource)
@@ -48,5 +64,8 @@ export function useResolvedResource<T extends Resource>(
     };
   }, [resource, resolver]);
 
-  return resolved;
+  // During the render where `resource` just changed, `resolved` is still
+  // the stale value (setState doesn't update the local var). Return the
+  // new input directly to avoid a one-frame stale flash.
+  return resource !== lastInput ? resource : resolved;
 }
