@@ -83,7 +83,7 @@ Plans:
 - [x] 04-02-PLAN.md (Wave 2, depends on 01) -- Bounded-LRU TerminologyCache (10K memory / 2K localStorage) + server-URL-namespaced keys
 - [x] 04-03-PLAN.md (Wave 3, depends on 01+02) -- TerminologyResolver ($lookup + in-flight dedup + silent fallback) + TerminologyContext/useTerminology
 - [x] 04-04-PLAN.md (Wave 4, depends on 03) -- useResolvedResource hook + wire into HumanReadableView/ClinicalRawView + mount TerminologyProvider in App
-- [ ] 04-05-PLAN.md (Wave 4, depends on 03) -- Sidebar two-row status block + Settings "Terminology Server" section with Clear cache button + V-15 UI test
+- [x] 04-05-PLAN.md (Wave 4, depends on 03) -- Sidebar two-row status block + Settings "Terminology Server" section with Clear cache button + V-15 UI test
 
 ### Phase 5: Data Quality Dashboard
 **Goal**: Users can audit the data on their FHIR server -- seeing resource counts, field completeness, coding quality, and profile conformance issues at a glance
