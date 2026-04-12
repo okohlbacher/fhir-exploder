@@ -8,6 +8,9 @@ export const DEFAULTS: AppSettings = {
       mode: 'open',
     },
   },
+  terminology: {
+    serverUrl: 'https://r4.ontoserver.csiro.au/fhir',
+  },
 };
 
 export interface LoadSettingsResult {
@@ -31,7 +34,14 @@ function deepMerge(defaults: AppSettings, partial: Record<string, unknown>): App
   }
 
   if (partial.terminology && typeof partial.terminology === 'object') {
-    result.terminology = partial.terminology as AppSettings['terminology'];
+    const terminology = partial.terminology as Record<string, unknown>;
+    result.terminology = {
+      ...defaults.terminology,
+      serverUrl:
+        typeof terminology.serverUrl === 'string'
+          ? terminology.serverUrl
+          : defaults.terminology?.serverUrl,
+    };
   }
 
   return result;

@@ -6,6 +6,12 @@ fhir:
     # password: secret  # for basic auth
     # token: "eyJ..."  # for bearer auth
 
-# Future phases:
-# terminology:
-#   serverUrl: "https://terminology.mii.de/fhir"
+terminology:
+  # Default: public CSIRO Ontoserver R4 sandbox (CORS-enabled, anonymous).
+  # $lookup / $translate / $expand all supported. Safe dev default.
+  serverUrl: "https://r4.ontoserver.csiro.au/fhir"
+
+  # Production MII Terminology Server. Requires mTLS (DFN-issued client cert).
+  # Browser SPAs cannot authenticate directly — operators must front-terminate
+  # TLS via a reverse proxy or use a local Ontoserver mirror.
+  # serverUrl: "https://terminology.medizininformatik-initiative.de/fhir"
