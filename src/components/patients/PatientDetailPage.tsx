@@ -14,6 +14,7 @@ import { PatientHeader } from '@medplum/react';
 import type { Patient } from '@medplum/fhirtypes';
 import { MiiModuleTabs } from './MiiModuleTabs';
 import { FhirResourcesView } from './FhirResourcesView';
+import { PatientTimeline } from './PatientTimeline';
 import type { PatientsOutletContext } from './PatientsLayout';
 
 type ViewMode = 'mii' | 'fhir';
@@ -142,6 +143,8 @@ export function PatientDetailPage() {
       {!loading && !error && patient && (
         <>
           <PatientHeader patient={patient} />
+
+          <PatientTimeline patientId={patientId} />
 
           <SegmentedControl
             value={viewMode}
