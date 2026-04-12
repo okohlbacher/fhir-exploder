@@ -9,11 +9,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Connection & Configuration
 
-- [ ] **CONN-01**: User can configure FHIR server URL, auth mode (open/basic/bearer), and credentials in a settings.yaml file
-- [ ] **CONN-02**: App reads settings.yaml at startup and connects to the configured FHIR server
-- [ ] **CONN-03**: App fetches and parses the server's CapabilityStatement to discover supported resource types, search parameters, and operations
-- [ ] **CONN-04**: App displays clear error messages when the FHIR server is unreachable or returns errors
-- [ ] **CONN-05**: App shows loading indicators during FHIR server requests
+- [x] **CONN-01**: User can configure FHIR server URL, auth mode (open/basic/bearer), and credentials in a settings.yaml file
+- [x] **CONN-02**: App reads settings.yaml at startup and connects to the configured FHIR server
+- [x] **CONN-03**: App fetches and parses the server's CapabilityStatement to discover supported resource types, search parameters, and operations
+- [x] **CONN-04**: App displays clear error messages when the FHIR server is unreachable or returns errors
+- [x] **CONN-05**: App shows loading indicators during FHIR server requests
 
 ### Resource Browsing
 
@@ -80,11 +80,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONN-01 | Phase 1, Phase 6 (reconcile) | Pending |
-| CONN-02 | Phase 1, Phase 6 (reconcile) | Pending |
-| CONN-03 | Phase 1, Phase 6 (reconcile) | Pending |
-| CONN-04 | Phase 1, Phase 6 (reconcile) | Pending |
-| CONN-05 | Phase 1, Phase 6 (reconcile) | Pending |
+| CONN-01 | Phase 1 | Complete |
+| CONN-02 | Phase 1 | Complete |
+| CONN-03 | Phase 1 | Complete |
+| CONN-04 | Phase 1 | Complete |
+| CONN-05 | Phase 1 | Complete |
 | BRWS-01 | Phase 2 | Complete |
 | BRWS-02 | Phase 2 | Complete |
 | BRWS-03 | Phase 2 | Complete |
@@ -113,4 +113,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-04-11*
-*Last updated: 2026-04-11 after roadmap creation*
+*Last updated: 2026-04-12 after v1.0 milestone audit — CONN-01..05 traceability reconciled (Phase 06-02)*
