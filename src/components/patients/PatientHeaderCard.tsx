@@ -15,7 +15,7 @@ function getPatientName(patient: Patient): string {
     ...(name.given ?? []),
     name.family,
   ].filter(Boolean);
-  return parts.join(' ') || patient.id ?? 'Unknown';
+  return parts.join(' ') || (patient.id ?? 'Unknown');
 }
 
 function getAge(birthDate: string | undefined): string | null {
