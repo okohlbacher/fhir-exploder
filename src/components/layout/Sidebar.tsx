@@ -1,4 +1,4 @@
-import { AppShell, Box, Group, NavLink, Text } from '@mantine/core';
+import { AppShell, Box, Group, NavLink, Stack, Text } from '@mantine/core';
 import {
   IconDatabase,
   IconUsers,
@@ -6,6 +6,8 @@ import {
   IconSettings,
 } from '@tabler/icons-react';
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
+import { useTerminologyHealth } from '../../hooks/useTerminologyHealth';
+import { TERMINOLOGY_STATUS_CONFIG } from '../../terminology/statusConfig';
 
 export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 
@@ -17,10 +19,10 @@ const STATUS_CONFIG: Record<
   ConnectionStatus,
   { color: string; label: string; pulse: boolean }
 > = {
-  idle: { color: '#adb5bd', label: 'Not connected', pulse: false },
-  connecting: { color: '#adb5bd', label: 'Connecting...', pulse: true },
-  connected: { color: '#40c057', label: 'Connected', pulse: false },
-  error: { color: '#fa5252', label: 'Disconnected', pulse: false },
+  idle: { color: '#adb5bd', label: 'FHIR server: Not connected', pulse: false },
+  connecting: { color: '#adb5bd', label: 'FHIR server: Connecting…', pulse: true },
+  connected: { color: '#40c057', label: 'FHIR server: Connected', pulse: false },
+  error: { color: '#fa5252', label: 'FHIR server: Unreachable', pulse: false },
 };
 
 const NAV_ITEMS = [
@@ -32,6 +34,8 @@ const NAV_ITEMS = [
 export function Sidebar({ connectionStatus }: SidebarProps) {
   const location = useLocation();
   const status = STATUS_CONFIG[connectionStatus];
+  const termHealth = useTerminologyHealth();
+  const termStatus = TERMINOLOGY_STATUS_CONFIG[termHealth];
 
   return (
     <>
@@ -39,20 +43,40 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
         <Text fw={600} size="lg">
           FHIR Exploder
         </Text>
-        <Group gap="xs" mt="xs">
-          <Box
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              backgroundColor: status.color,
-              animation: status.pulse ? 'pulse 1.5s ease-in-out infinite' : undefined,
-            }}
-          />
-          <Text size="xs" c="dimmed">
-            {status.label}
-          </Text>
-        </Group>
+        <Stack gap="xs" mt="xs">
+          <Group gap="xs">
+            <Box
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: status.color,
+                animation: status.pulse
+                  ? 'pulse 1.5s ease-in-out infinite'
+                  : undefined,
+              }}
+            />
+            <Text size="xs" c="dimmed">
+              {status.label}
+            </Text>
+          </Group>
+          <Group gap="xs">
+            <Box
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: termStatus.color,
+                animation: termStatus.pulse
+                  ? 'pulse 1.5s ease-in-out infinite'
+                  : undefined,
+              }}
+            />
+            <Text size="xs" c="dimmed">
+              {termStatus.label}
+            </Text>
+          </Group>
+        </Stack>
       </AppShell.Section>
 
       <AppShell.Section grow>

@@ -69,38 +69,41 @@ describe('Sidebar terminology row (V-15 UI)', () => {
   it('renders Reachable label with green dot', () => {
     vi.mocked(useTerminologyHealth).mockReturnValue('ok');
     renderSidebar();
-    expect(screen.getByText('Terminology: Reachable')).toBeInTheDocument();
+    expect(screen.getByText('Terminology: Reachable')).toBeTruthy();
     const dot = findDotForLabel('Terminology: Reachable');
     expect(dot).not.toBeNull();
-    expect(dot?.getAttribute('style') ?? '').toMatch(/#40c057/i);
+    // jsdom normalizes hex to rgb(); #40c057 → rgb(64, 192, 87)
+    expect(dot?.getAttribute('style') ?? '').toMatch(/rgb\(64,\s*192,\s*87\)/i);
   });
 
   it('renders Unreachable label with red dot (V-15 primary assertion)', () => {
     vi.mocked(useTerminologyHealth).mockReturnValue('unreachable');
     renderSidebar();
-    expect(screen.getByText('Terminology: Unreachable')).toBeInTheDocument();
+    expect(screen.getByText('Terminology: Unreachable')).toBeTruthy();
     const dot = findDotForLabel('Terminology: Unreachable');
     expect(dot).not.toBeNull();
-    expect(dot?.getAttribute('style') ?? '').toMatch(/#fa5252/i);
+    // #fa5252 → rgb(250, 82, 82)
+    expect(dot?.getAttribute('style') ?? '').toMatch(/rgb\(250,\s*82,\s*82\)/i);
   });
 
   it('renders Not configured label with neutral gray dot', () => {
     vi.mocked(useTerminologyHealth).mockReturnValue('not-configured');
     renderSidebar();
-    expect(screen.getByText('Terminology: Not configured')).toBeInTheDocument();
+    expect(screen.getByText('Terminology: Not configured')).toBeTruthy();
     const dot = findDotForLabel('Terminology: Not configured');
     expect(dot).not.toBeNull();
-    expect(dot?.getAttribute('style') ?? '').toMatch(/#adb5bd/i);
+    // #adb5bd → rgb(173, 181, 189)
+    expect(dot?.getAttribute('style') ?? '').toMatch(/rgb\(173,\s*181,\s*189\)/i);
   });
 
   it('renders Checking… label with pulsing neutral dot', () => {
     vi.mocked(useTerminologyHealth).mockReturnValue('unknown');
     renderSidebar();
-    expect(screen.getByText('Terminology: Checking…')).toBeInTheDocument();
+    expect(screen.getByText('Terminology: Checking…')).toBeTruthy();
     const dot = findDotForLabel('Terminology: Checking…');
     expect(dot).not.toBeNull();
     const style = dot?.getAttribute('style') ?? '';
-    expect(style).toMatch(/#adb5bd/i);
+    expect(style).toMatch(/rgb\(173,\s*181,\s*189\)/i);
     expect(style).toMatch(/animation/);
   });
 });
