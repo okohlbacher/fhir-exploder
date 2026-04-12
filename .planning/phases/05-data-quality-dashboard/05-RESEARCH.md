@@ -633,25 +633,21 @@ export function useCompletenessReport(
 | A5 | `client.post(path, body)` on a MedplumClient pointed at a validator URL correctly issues `POST {base}/{path}` with JSON body and honors `_format=json` | Pattern 4 | Medium — verify with a simple test against HL7's public validator before committing to the remote-backend pattern. `MedplumClient.post` signature verified in Phase 4, but was only used against terminology endpoints. |
 | A6 | The user's dashboard context includes `{ client, capability }` via `useOutletContext` (same pattern as Explorer / Patients) | Recommended Project Structure | Low — pattern is locked across all existing layouts |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the "validator server" be the terminology server or a separate endpoint?**
-   - What we know: CLAUDE.md and Phase 4 treat terminology and main FHIR server as distinct. Validation is conceptually a third kind of server.
-   - What's unclear: whether users want to reuse the terminology server URL for validation (unlikely — terminology servers don't usually `$validate` resources) or set a new one.
-   - Recommendation: separate `validation.validatorUrl` field in `settings.yaml`. Blank = structural-only mode. Document that `https://validator.fhir.org/validator` and Firely's public endpoint are candidates.
+   - RESOLVED: separate `validation.validatorUrl` field in `settings.yaml`. Blank = structural-only mode. Candidates documented: `https://validator.fhir.org/validator`, Firely's public endpoint. Locked in UI-SPEC Settings section + Plan 05-01 settings.validation block.
 
 2. **Do MII profiles cover all resource types the user might want to validate, or only the 6 MII modules?**
-   - What we know: MII modules cover Condition, Procedure, Observation, MedicationStatement, Encounter, Consent, Patient (from `mii-modules.ts` + Phase 3 context).
-   - What's unclear: what the user expects for resources outside the MII scope (DiagnosticReport, ServiceRequest, MedicationAdministration, etc.).
-   - Recommendation: Structural validation runs on any type with a registered profile; types without a profile get a "No MII profile — structural checks only" label. Do not attempt to guess a profile.
+   - RESOLVED: Structural validation runs on any type with a registered profile; types without a profile get a "No MII profile — structural checks only" label (UI-SPEC empty state C-VAL-05, Plan 05-05 ValidationPanel). No profile guessing.
 
 3. **Is a chart library justified for v1, or is Mantine-only sufficient?**
-   - What we know: `@mantine/charts` (BarChart) is ~150 KB gz with recharts.
-   - What's unclear: whether the user values visual comparison enough to accept the bundle bloat.
-   - Recommendation: Ship Mantine-only in v1 (Progress bars in a sorted table convey the same information). Add `@mantine/charts` in v2 if users ask for proper chart visuals. The planner SHOULD make this a plan-level choice; both paths honor D-04's "bar chart OR visual indicator."
+   - RESOLVED: Mantine-only for v1 — locked in UI-SPEC Dimension 6 (Registry Safety). No `@mantine/charts` or `recharts` install in this phase. Bar-chart branch of D-04 explicitly rejected in favor of the "visual indicator" branch (Mantine Progress/RingProgress/stacked Progress). Add chart library in a future v2 phase only if users request proper chart visuals. See Standard Stack table note below.
 
 4. **Export format for quality reports (Claude's discretion)?**
-   - Recommendation: **JSON** in v1 (a single downloadable file that captures all panels' state). CSV is v2 (QUAL-05/06 scope). No PDF in v1 — PDF is explicitly v2 (QUAL-06).
+   - RESOLVED: **JSON only** in v1 — single downloadable file captures all panels' state (Plan 05-05 Task 2, UI-SPEC `Export report (JSON)` CTA). CSV/PDF deferred to v2 (QUAL-05/QUAL-06 scope).
+
+> **Standard Stack reconciliation (2026-04-12):** In light of Q3 RESOLVED = Mantine-only for v1, the `@mantine/charts@8.3.18` and `recharts@^2.15.4` entries in the "Standard Stack — New (must install)" table above are **deferred to v2**. Phase 05 plans do NOT install these packages. Do not re-introduce them during implementation without explicit user approval.
 
 ## Environment Availability
 
