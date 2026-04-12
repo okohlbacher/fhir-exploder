@@ -5,6 +5,7 @@ import type { AppSettings } from '../../config/types';
 import { useTerminology } from '../../hooks/useTerminology';
 import { useTerminologyHealth } from '../../hooks/useTerminologyHealth';
 import { TERMINOLOGY_STATUS_CONFIG } from '../../terminology/statusConfig';
+import { clearAllQualityMetrics } from '../../quality/metricsCache';
 
 interface SettingsPageProps {
   settings: AppSettings | null;
@@ -30,6 +31,21 @@ export function SettingsPage({ settings, usingDefaults }: SettingsPageProps) {
         : beforeSize === 1
           ? '1 cached term removed from memory and local storage.'
           : `${beforeSize} cached terms removed from memory and local storage.`;
+    notifications.show({
+      color: 'green',
+      title: 'Cache cleared',
+      message,
+    });
+  }
+
+  function handleClearMetricsCache() {
+    const removed = clearAllQualityMetrics();
+    const message =
+      removed === 0
+        ? 'No cached metrics to clear.'
+        : removed === 1
+          ? '1 cached metric removed from local storage.'
+          : `${removed} cached metrics removed from local storage.`;
     notifications.show({
       color: 'green',
       title: 'Cache cleared',
@@ -145,6 +161,45 @@ export function SettingsPage({ settings, usingDefaults }: SettingsPageProps) {
               onClick={handleClearCache}
             >
               Clear terminology cache
+            </Button>
+          </div>
+        </Stack>
+      </Paper>
+
+      <Paper p="lg" shadow="xs">
+        <Stack gap="sm">
+          <Title order={3}>Validation</Title>
+
+          <div>
+            <Text fw={600} size="sm" mb={4}>
+              External validator URL
+            </Text>
+            {settings?.validation?.validatorUrl ? (
+              <Code>{settings.validation.validatorUrl}</Code>
+            ) : (
+              <Text c="dimmed" size="sm">
+                Not configured — set validation.validatorUrl in settings.yaml to enable external
+                $validate. Structural validation against bundled MII profiles runs without this.
+              </Text>
+            )}
+          </div>
+
+          <div>
+            <Text fw={600} size="sm" mb={4}>
+              Batch size
+            </Text>
+            <Code>{settings?.validation?.batchSize ?? 25}</Code>
+          </div>
+
+          <div>
+            <Button
+              variant="light"
+              color="red"
+              size="sm"
+              leftSection={<IconTrash size={16} />}
+              onClick={handleClearMetricsCache}
+            >
+              Clear metrics cache
             </Button>
           </div>
         </Stack>

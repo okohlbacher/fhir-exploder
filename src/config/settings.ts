@@ -11,6 +11,10 @@ export const DEFAULTS: AppSettings = {
   terminology: {
     serverUrl: 'https://r4.ontoserver.csiro.au/fhir',
   },
+  validation: {
+    // No default validatorUrl — structural-only mode unless user opts in.
+    batchSize: 25,
+  },
 };
 
 export interface LoadSettingsResult {
@@ -41,6 +45,21 @@ function deepMerge(defaults: AppSettings, partial: Record<string, unknown>): App
         typeof terminology.serverUrl === 'string'
           ? terminology.serverUrl
           : defaults.terminology?.serverUrl,
+    };
+  }
+
+  if (partial.validation && typeof partial.validation === 'object') {
+    const validation = partial.validation as Record<string, unknown>;
+    result.validation = {
+      ...defaults.validation,
+      validatorUrl:
+        typeof validation.validatorUrl === 'string'
+          ? validation.validatorUrl
+          : defaults.validation?.validatorUrl,
+      batchSize:
+        typeof validation.batchSize === 'number' && Number.isFinite(validation.batchSize)
+          ? validation.batchSize
+          : (defaults.validation?.batchSize ?? 25),
     };
   }
 

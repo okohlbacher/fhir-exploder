@@ -10,14 +10,14 @@ import { ResourceDetailPage } from './components/explorer/ResourceDetailPage';
 import { PatientsLayout } from './components/patients/PatientsLayout';
 import { PatientListPage } from './components/patients/PatientListPage';
 import { PatientDetailPage } from './components/patients/PatientDetailPage';
+import { QualityLayout } from './components/quality/QualityLayout';
+import { QualityOverviewPage } from './components/quality/QualityOverviewPage';
+import { CompletenessDrillDown } from './components/quality/CompletenessDrillDown';
+import { CodingDrillDown } from './components/quality/CodingDrillDown';
 import { ConnectionProvider } from './contexts/ConnectionContext';
 import { TerminologyProvider } from './contexts/TerminologyContext';
 import { useSettings } from './hooks/useSettings';
 import { useConnection } from './hooks/useConnection';
-
-function QualityPage() {
-  return <div>Quality (Phase 5)</div>;
-}
 
 function AppRoutes() {
   const { settings, usingDefaults } = useSettings();
@@ -63,7 +63,11 @@ function AppRoutes() {
               element={<ResourceDetailPage />}
             />
           </Route>
-          <Route path="/quality" element={<QualityPage />} />
+          <Route path="/quality" element={<QualityLayout />}>
+            <Route index element={<QualityOverviewPage />} />
+            <Route path="completeness/:type" element={<CompletenessDrillDown />} />
+            <Route path="coding/:type" element={<CodingDrillDown />} />
+          </Route>
         </Route>
       </Routes>
     </TerminologyProvider>
