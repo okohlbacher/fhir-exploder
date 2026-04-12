@@ -124,8 +124,14 @@ export function useCodingCoverage(
   // setCompleteness shape from Plan 05-03.
   const { setCoverage } = useQualityMetricsContext();
   useEffect(() => {
+    const values = Object.values(reports);
+    // Suppress rollup updates while we are still waiting for the first
+    // settlement of at least one type — otherwise the OverviewStrip card
+    // flickers em-dash → value → em-dash on rapid dep changes.
+    const stillWaiting =
+      values.length > 0 && values.some((r) => r === 'loading');
     const pcts: number[] = [];
-    for (const r of Object.values(reports)) {
+    for (const r of values) {
       if (r === 'loading' || r === 'error') continue;
       if (!r || typeof r !== 'object') continue;
       if (r.totalCodedFields > 0) {
@@ -133,7 +139,7 @@ export function useCodingCoverage(
       }
     }
     if (pcts.length === 0) {
-      setCoverage(undefined);
+      if (!stillWaiting) setCoverage(undefined);
       return;
     }
     const avg = pcts.reduce((a, b) => a + b, 0) / pcts.length;

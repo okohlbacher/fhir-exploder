@@ -122,14 +122,20 @@ export function useCompletenessReport(
   // See 05-01-SUMMARY for the locked rule. Undefined if nothing settled.
   const { setCompleteness } = useQualityMetricsContext();
   useEffect(() => {
+    const values = Object.values(reports);
+    // Suppress rollup updates while we are still waiting for the first
+    // settlement of at least one type — otherwise the OverviewStrip card
+    // flickers em-dash → value → em-dash on rapid dep changes.
+    const stillWaiting =
+      values.length > 0 && values.some((r) => r === 'loading');
     const pcts: number[] = [];
-    for (const r of Object.values(reports)) {
+    for (const r of values) {
       if (r === 'loading' || r === 'error') continue;
       if (!r || typeof r !== 'object') continue;
       if (r.total > 0) pcts.push((r.populated / r.total) * 100);
     }
     if (pcts.length === 0) {
-      setCompleteness(undefined);
+      if (!stillWaiting) setCompleteness(undefined);
       return;
     }
     const avg = pcts.reduce((a, b) => a + b, 0) / pcts.length;
