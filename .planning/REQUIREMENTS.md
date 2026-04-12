@@ -42,10 +42,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Data Quality
 
-- [ ] **QUAL-01**: User can view a dashboard showing resource counts per type across the server
-- [ ] **QUAL-02**: User can view field completeness statistics (percentage of populated fields) per resource type
-- [ ] **QUAL-03**: User can view coding coverage metrics (percentage of CodeableConcepts with system+code vs text-only)
-- [ ] **QUAL-04**: User can validate individual resources or batches against MII Kerndatensatz StructureDefinition profiles and see conformance issues
+- [x] **QUAL-01**: User can view a dashboard showing resource counts per type across the server
+- [x] **QUAL-02**: User can view field completeness statistics (percentage of populated fields) per resource type
+- [x] **QUAL-03**: User can view coding coverage metrics (percentage of CodeableConcepts with system+code vs text-only)
+- [x] **QUAL-04**: User can validate individual resources or batches against MII Kerndatensatz StructureDefinition profiles and see conformance issues
 
 ## v2 Requirements
 
@@ -101,10 +101,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TERM-01 | Phase 4 | Complete |
 | TERM-02 | Phase 4 | Complete |
 | TERM-03 | Phase 4 | Complete |
-| QUAL-01 | Phase 5 | Pending |
-| QUAL-02 | Phase 5 | Pending |
-| QUAL-03 | Phase 5 | Pending |
-| QUAL-04 | Phase 5 | Pending |
+| QUAL-01 | Phase 5 | Complete |
+| QUAL-02 | Phase 5 | Complete |
+| QUAL-03 | Phase 5 | Complete |
+| QUAL-04 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 25 total

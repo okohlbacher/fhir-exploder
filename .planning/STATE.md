@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 04-05-PLAN.md
-last_updated: "2026-04-12T07:42:00.614Z"
+status: executing
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-04-12T09:14:44.179Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 16
-  completed_plans: 16
-  percent: 100
+  total_plans: 21
+  completed_plans: 17
+  percent: 81
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 04 — terminology-resolution
+**Current focus:** Phase 05 — data-quality-dashboard
 
 ## Current Position
 
-Phase: 04 (terminology-resolution) — EXECUTING
-Plan: 5 of 5
-Status: Phase complete — ready for verification
+Phase: 05 (data-quality-dashboard) — EXECUTING
+Plan: 2 of 5
+Status: Ready to execute
 Last activity: 2026-04-12
 
 Progress: [██████████] 100%
@@ -67,6 +67,7 @@ Progress: [██████████] 100%
 | Phase 04-terminology-resolution P03 | 285s | 2 tasks | 6 files |
 | Phase 04-terminology-resolution P04 | 355s | 2 tasks | 6 files |
 | Phase 04-terminology-resolution P05 | 229s | 2 tasks | 6 files |
+| Phase 05-data-quality-dashboard P01 | 427s | 2 tasks | 21 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,11 @@ Recent decisions affecting current work:
 - [Phase 04-terminology-resolution]: [Phase 04]: TERMINOLOGY_STATUS_CONFIG extracted to src/terminology/statusConfig.ts — shared by Sidebar and SettingsPage so copy and color drift is impossible
 - [Phase 04-terminology-resolution]: [Phase 04]: useTerminologyHealth resets to 'unknown' on serverUrl change before kicking off probe — avoids stale 'ok' lingering after URL swap
 - [Phase 04-terminology-resolution]: [Phase 04]: Sidebar consumes useTerminologyHealth directly instead of threading it through AppLayout — keeps prop surface stable
+- [Phase 05-data-quality-dashboard]: [Phase 05]: QualityMetricsContext rollup rule locked — arithmetic mean of per-type percentages, excluding loading/errored/no-profile types; rationale MII equal-weight modules
+- [Phase 05-data-quality-dashboard]: [Phase 05]: Metrics cache bounds tightened vs TerminologyCache (500 memory / 200 localStorage) because perPath maps are ~10x heavier than terminology display strings
+- [Phase 05-data-quality-dashboard]: [Phase 05]: Wave 0 failing-test harness — every Wave 2 test imports from its target module path with @ts-expect-error so tsc stays green while vitest fails deterministically with 'Failed to resolve import'
+- [Phase 05-data-quality-dashboard]: [Phase 05]: QualityOutletContext shape matches ExplorerOutletContext (client + capability) so Wave 2 drill-downs can reuse Phase 2 helpers verbatim
+- [Phase 05-data-quality-dashboard]: [Phase 05]: SampleSizeControl is stateless — downstream hooks (Plans 03/04) apply useDebouncedValue per-hook; control exposes live value/onChange
 
 ### Pending Todos
 
@@ -119,6 +125,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T07:42:00.613Z
-Stopped at: Completed 04-05-PLAN.md
+Last session: 2026-04-12T09:14:31.558Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None

@@ -94,7 +94,13 @@ Plans:
   2. User can see field completeness statistics (percentage of populated fields) for each resource type
   3. User can see coding coverage metrics showing the percentage of CodeableConcepts with proper system+code vs text-only
   4. User can validate individual resources or batches against MII Kerndatensatz profiles and see a list of conformance issues
-**Plans**: TBD
+**Plans:** 5 plans (3 waves)
+Plans:
+- [x] 05-01-PLAN.md (Wave 1) -- Foundation: quality contracts + metrics cache + sampling helper + Quality route shell + QualityLayout + sample-size control + settings.validation block + SettingsPage validation section + Clear metrics cache + 10 Wave-0 test scaffolds with fixtures
+- [ ] 05-02-PLAN.md (Wave 2, depends on 01) -- QUAL-01: counts aggregation + useQualityMetrics orchestrator + QualityOverviewPage shell with 4-card summary strip + 4-tab layout + sortable ResourceCountsPanel with inline Progress bars
+- [ ] 05-03-PLAN.md (Wave 2, depends on 01) -- QUAL-02: 7 bundled MII StructureDefinitions + completenessWalker (requiredElementPaths + isPathPopulated with Pitfall 3 value[x] handling) + useCompletenessReport hook + CompletenessPanel + CompletenessDrillDown
+- [ ] 05-04-PLAN.md (Wave 2, depends on 01) -- QUAL-03: classifyCodedFields sibling walker (Pitfall 5 Identifier exclusion) + aggregateCoverage + useCodingCoverage hook + CodingCoveragePanel with 3-bucket stacked Progress bars + CodingDrillDown with CodeableConceptDisplay examples
+- [ ] 05-05-PLAN.md (Wave 3, depends on 01+03) -- QUAL-04: structuralValidator (reuses Plan 03 walker) + remoteValidator (independent MedplumClient, never posts to Blaze) + resolveBackends + useValidationRun batch runner + ValidationPanel with Blaze $validate warning banner + ValidationIssueList + JSON report export
 **UI hint**: yes
 
 ## Progress
@@ -109,4 +115,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Resource Explorer | 4/5 | Gap closure | - |
 | 3. Patient-Centric Browsing & MII Modules | 0/0 | Not started | - |
 | 4. Terminology Resolution | 0/0 | Not started | - |
-| 5. Data Quality Dashboard | 0/0 | Not started | - |
+| 5. Data Quality Dashboard | 0/5 | Planned | - |
