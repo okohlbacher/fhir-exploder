@@ -110,6 +110,16 @@ vi.mock('../components/quality/CodingCoveragePanel', () => ({
   ),
 }));
 
+// ----- ValidationPanel mock -----
+// Plan 05-05 replaces the stub with a real batch validator panel.
+// Same rationale as the Completeness/Coding mocks above — validation
+// behavior is verified in validation-panel.test.tsx.
+vi.mock('../components/quality/ValidationPanel', () => ({
+  ValidationPanel: () => (
+    <div data-testid="mock-ValidationPanel">Mock Validation Panel</div>
+  ),
+}));
+
 // ----- Imports AFTER mocks are configured -----
 import { MemoryRouter } from 'react-router-dom';
 import { QualityOverviewPage } from '../components/quality/QualityOverviewPage';
@@ -188,14 +198,13 @@ describe('QualityOverviewPage (QUAL-01)', () => {
     expect(sortableHeaders.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('tab panels mount with keepMounted — Completeness (05-03) and Coverage (05-04) are mocked, 05-05 stub still present', () => {
+  it('tab panels mount with keepMounted — Completeness (05-03), Coverage (05-04), and Validation (05-05) are all mocked', () => {
     mockUseResourceCounts.mockReturnValue({ Patient: 120 });
     renderPage();
-    // Plans 05-03 and 05-04 replaced their respective stubs; tests mock them.
+    // Plans 05-03, 05-04, and 05-05 replaced their respective stubs; tests mock them.
     expect(screen.getByTestId('mock-CompletenessPanel')).toBeDefined();
     expect(screen.getByTestId('mock-CodingCoveragePanel')).toBeDefined();
-    // 05-05 stub still present.
-    expect(screen.getByText(/Coming in Plan 05-05/)).toBeDefined();
+    expect(screen.getByTestId('mock-ValidationPanel')).toBeDefined();
   });
 
   it('Show empty types toggle reveals zero-count rows', () => {

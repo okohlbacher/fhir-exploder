@@ -1,19 +1,291 @@
-// STUB: replaced in Wave 2 Plan 05-05 (Profile Validation).
-// Keep prop signature stable: { client, sampleSize } — Plan 05-05
-// will overwrite this file with the real implementation.
-import { Text } from '@mantine/core';
+/**
+ * ValidationPanel — Plan 05-05, QUAL-04.
+ *
+ * The Validation tab of /quality. Replaces the Plan 02 stub.
+ *
+ * Structure (UI-SPEC lines 308-336):
+ *   1. Dismissible Blaze $validate warning banner (T-05-05-01 mitigation)
+ *      — shown at the TOP on first visit; dismiss persists via
+ *      localStorage under `quality.validation.bannerDismissed.v1:{serverUrl}|{validatorUrl}`.
+ *      The backend indicator Badge remains visible so dismissal does not
+ *      hide the fact that external validation is configured.
+ *   2. Controls row: Resource type Select, Sample size read-only display,
+ *      Validate sample button.
+ *   3. Backend indicator Badges: Structural (blue) + Remote (configured)/
+ *      Remote (not configured) (green/gray).
+ *   4. "No MII profile, no remote validator" Alert when both are absent.
+ *   5. Progress bar during run with Cancel button.
+ *   6. Cancellation footer when status === 'cancelled'.
+ *   7. 0-issues Alert on successful completion.
+ *   8. <ValidationIssueList> for populated issue list.
+ *   9. Export report (JSON) button: disabled until status in {complete,
+ *      cancelled}; on click, Blob download with filename
+ *      `quality-report-{ISODate}.json`.
+ *
+ * Prop signature is locked to match Plan 02's stub: { client, sampleSize }.
+ * Capability is read from the outlet context (QualityOutletContext).
+ * Settings come from useSettings().
+ */
+import {
+  Alert,
+  Badge,
+  Button,
+  Group,
+  NumberFormatter,
+  Paper,
+  Progress,
+  Select,
+  Stack,
+  Text,
+} from '@mantine/core';
+import { useLocalStorage } from '@mantine/hooks';
+import {
+  IconAlertTriangle,
+  IconCheck,
+  IconDownload,
+  IconInfoCircle,
+  IconX,
+} from '@tabler/icons-react';
+import { useMemo, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import type { MedplumClient } from '@medplum/core';
+import type { QualityOutletContext } from './QualityLayout';
+import { useSettings } from '../../hooks/useSettings';
+import { BUNDLED_PROFILE_TYPES } from '../../quality/profiles';
+import { parseResourceTypes } from '../../fhir/capability';
+import { resolveBackends } from '../../quality/validationBackends';
+import { useValidationRun } from '../../hooks/useValidationRun';
+import { ValidationIssueList } from './ValidationIssueList';
 
 export interface ValidationPanelProps {
   client: MedplumClient;
   sampleSize: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const BANNER_KEY_PREFIX = 'quality.validation.bannerDismissed.v1';
+const BANNER_COPY =
+  'This server does not implement $validate on resources. Phase 5 runs structural validation locally against bundled MII profiles. To run full FHIR validation, set validation.validatorUrl in settings.yaml to a validator that supports $validate (e.g. validator.fhir.org/validator).';
+
+// Placate TS on the NumberFormatter no-op usage (kept for potential re-use).
+void NumberFormatter;
+
 export function ValidationPanel(_props: ValidationPanelProps) {
+  const { capability, client } = useOutletContext<QualityOutletContext>();
+  const { settings } = useSettings();
+
+  const serverUrl = client.getBaseUrl();
+  const validatorUrl = settings?.validation?.validatorUrl;
+
+  // Banner dismissal is scoped per (serverUrl, validatorUrl) so a user who
+  // changes their validator URL sees the warning again.
+  const bannerKey = `${BANNER_KEY_PREFIX}:${serverUrl}|${validatorUrl ?? 'none'}`;
+  const [bannerDismissed, setBannerDismissed] = useLocalStorage<boolean>({
+    key: bannerKey,
+    defaultValue: false,
+  });
+
+  // Resource type union: bundled profiles + server capability types
+  const serverTypes = useMemo(
+    () => parseResourceTypes(capability).map((t) => t.type),
+    [capability],
+  );
+  const selectOptions = useMemo(() => {
+    const union = new Set<string>();
+    for (const t of BUNDLED_PROFILE_TYPES) union.add(t);
+    for (const t of serverTypes) union.add(t);
+    return Array.from(union).sort();
+  }, [serverTypes]);
+
+  const [resourceType, setResourceType] = useState<string>(() => {
+    // Default: first bundled type that the server also declares, else
+    // first bundled type overall.
+    const firstMatch = BUNDLED_PROFILE_TYPES.find((t) => serverTypes.includes(t));
+    return firstMatch ?? BUNDLED_PROFILE_TYPES[0] ?? 'Condition';
+  });
+
+  const sampleSize = _props.sampleSize;
+  const batchSize = settings?.validation?.batchSize ?? 25;
+
+  const run = useValidationRun({
+    client,
+    resourceType,
+    sampleSize,
+    batchSize,
+    settings: settings ?? null,
+  });
+
+  const { backends, hasRemote, hasProfile } = resolveBackends(
+    settings ?? null,
+    resourceType,
+  );
+  void backends;
+
+  const pct =
+    run.progress.total > 0
+      ? Math.round((run.progress.current / run.progress.total) * 100)
+      : 0;
+
+  const canExport = run.status === 'complete' || run.status === 'cancelled';
+
+  const handleExport = () => {
+    const payload = {
+      phase: '05-validation',
+      resourceType,
+      sampleSize,
+      batchSize,
+      computedAt: new Date().toISOString(),
+      status: run.status,
+      progress: run.progress,
+      issues: run.issues,
+      byResource: run.byResource,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `quality-report-${new Date().toISOString()}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <Text c="dimmed" data-testid="stub-ValidationPanel">
-      Coming in Plan 05-05
-    </Text>
+    <Stack gap="md">
+      {!bannerDismissed && (
+        <Alert
+          variant="light"
+          color="orange"
+          icon={<IconAlertTriangle size={20} />}
+          title="Blaze $validate unsupported"
+          withCloseButton
+          closeButtonLabel="Dismiss"
+          onClose={() => setBannerDismissed(true)}
+        >
+          <Text size="sm">{BANNER_COPY}</Text>
+        </Alert>
+      )}
+
+      <Paper withBorder p="md" radius="sm">
+        <Stack gap="sm">
+          <Group align="flex-end" gap="md">
+            <Select
+              label="Resource type"
+              data={selectOptions}
+              value={resourceType}
+              onChange={(v) => v && setResourceType(v)}
+              searchable
+              style={{ minWidth: 240 }}
+            />
+            <Text size="sm" c="dimmed">
+              Sample size: {sampleSize}
+            </Text>
+            <Button
+              variant="filled"
+              onClick={run.start}
+              disabled={run.status === 'running'}
+            >
+              Validate sample
+            </Button>
+            {run.status === 'running' && (
+              <Button
+                variant="subtle"
+                color="red"
+                onClick={run.cancel}
+                leftSection={<IconX size={14} />}
+              >
+                Cancel
+              </Button>
+            )}
+          </Group>
+
+          <Group gap="xs">
+            <Badge color="blue" variant="light" size="sm">
+              Structural
+            </Badge>
+            {hasRemote ? (
+              <Badge color="green" variant="light" size="sm">
+                Remote (configured)
+              </Badge>
+            ) : (
+              <Badge color="gray" variant="light" size="sm">
+                Remote (not configured)
+              </Badge>
+            )}
+          </Group>
+        </Stack>
+      </Paper>
+
+      {!hasProfile && !hasRemote && (
+        <Alert
+          variant="light"
+          color="orange"
+          icon={<IconInfoCircle size={20} />}
+        >
+          No MII profile for {resourceType}. Configure an external validator
+          URL in settings.yaml to validate this type.
+        </Alert>
+      )}
+
+      {run.status === 'running' && (
+        <Paper withBorder p="sm" radius="sm">
+          <Stack gap="xs" aria-live="polite">
+            <Text size="sm">
+              Validating {resourceType} ({run.progress.current}/
+              {run.progress.total})...
+            </Text>
+            <Progress value={pct} animated />
+          </Stack>
+        </Paper>
+      )}
+
+      {run.status === 'cancelled' && (
+        <Alert
+          variant="light"
+          color="yellow"
+          icon={<IconInfoCircle size={20} />}
+        >
+          Validation cancelled at {run.progress.current}/{run.progress.total}.
+          Results below reflect completed resources only.
+        </Alert>
+      )}
+
+      {run.status === 'error' && (
+        <Alert variant="light" color="red" icon={<IconAlertTriangle size={20} />}>
+          Validation failed: {run.errorMessage ?? 'unknown error'}
+        </Alert>
+      )}
+
+      {run.status === 'complete' && run.issues.length === 0 && (
+        <Alert variant="light" color="green" icon={<IconCheck size={20} />}>
+          No conformance issues found in the sampled {run.progress.total}{' '}
+          resources.
+        </Alert>
+      )}
+
+      {(run.status === 'complete' || run.status === 'cancelled') &&
+        run.issues.length > 0 && (
+          <Stack gap="xs">
+            <Text size="sm" c="dimmed">
+              {run.issues.length} issues across{' '}
+              {Object.keys(run.byResource).length} resources
+            </Text>
+            <ValidationIssueList issues={run.issues} />
+          </Stack>
+        )}
+
+      <Group justify="flex-end">
+        <Button
+          variant="subtle"
+          leftSection={<IconDownload size={16} />}
+          disabled={!canExport}
+          onClick={handleExport}
+        >
+          Export report (JSON)
+        </Button>
+      </Group>
+    </Stack>
   );
 }
