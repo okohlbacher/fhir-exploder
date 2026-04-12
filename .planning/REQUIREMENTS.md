@@ -38,7 +38,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **TERM-01**: App resolves CodeableConcept display values by querying the MII Terminology Server ($lookup, $translate)
 - [x] **TERM-02**: Resolved terminology display values are cached to avoid redundant server requests
-- [ ] **TERM-03**: App falls back gracefully to raw code values when the terminology server is unavailable or a code cannot be resolved
+- [x] **TERM-03**: App falls back gracefully to raw code values when the terminology server is unavailable or a code cannot be resolved
 
 ### Data Quality
 
@@ -100,7 +100,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PTNT-05 | Phase 3 | Complete |
 | TERM-01 | Phase 4 | Complete |
 | TERM-02 | Phase 4 | Complete |
-| TERM-03 | Phase 4 | Pending |
+| TERM-03 | Phase 4 | Complete |
 | QUAL-01 | Phase 5 | Pending |
 | QUAL-02 | Phase 5 | Pending |
 | QUAL-03 | Phase 5 | Pending |

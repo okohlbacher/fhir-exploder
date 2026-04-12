@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-02 terminology cache
-last_updated: "2026-04-12T07:18:21.405Z"
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-04-12T07:25:51.006Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
   completed_phases: 3
   total_plans: 16
-  completed_plans: 13
-  percent: 81
+  completed_plans: 14
+  percent: 88
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 ## Current Position
 
 Phase: 04 (terminology-resolution) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-04-12
 
@@ -64,6 +64,7 @@ Progress: [██████████] 100%
 | Phase 03-patient-centric-browsing-mii-modules P03 | 240s | 2 tasks | 5 files |
 | Phase 04-terminology-resolution P01 | 185s | 2 tasks | 8 files |
 | Phase 04-terminology-resolution P02 | 90s | 1 tasks | 3 files |
+| Phase 04-terminology-resolution P03 | 285s | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,10 @@ Recent decisions affecting current work:
 - [Phase 04-terminology-resolution]: [Phase 04]: mockMedplumClientForTerminology fixture exposes predicate-map API (metadataReachable + lookupResponses substring match) for reuse across plans 02-05
 - [Phase 04-terminology-resolution]: [Phase 04]: TerminologyCache uses global LOCAL_STORAGE_PREFIX so clear() wipes all server namespaces atomically (D-06)
 - [Phase 04-terminology-resolution]: [Phase 04]: In-memory LRU evicts by recency; localStorage mirror trims by oldest resolvedAt — two strategies tuned to each tier
+- [Phase 04-terminology-resolution]: [Phase 04]: TerminologyResolver public API is non-throwing — every failure caches a negative entry and returns coding unchanged; callers never need try/catch
+- [Phase 04-terminology-resolution]: [Phase 04]: Inflight dedup via Map<key, Promise> coalesces concurrent resolveCoding calls for the same system|code — exactly one  per unique code per render pass (V-07)
+- [Phase 04-terminology-resolution]: [Phase 04]: TerminologyProvider memo key is JSON.stringify(settings.terminology) parsed inside the factory — deps = [terminologyKey] is exhaustive without eslint-disable (W-1 fix)
+- [Phase 04-terminology-resolution]: [Phase 04]: collectCodings walker recurses every object key — no per-key skip list; typeof !== 'object' early-return is sufficient to skip Coding's primitive fields without masking nested Codings under FHIR 'code' keys
 
 ### Pending Todos
 
@@ -105,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T07:18:21.402Z
-Stopped at: Completed 04-02 terminology cache
+Last session: 2026-04-12T07:25:40.549Z
+Stopped at: Completed 04-03-PLAN.md
 Resume file: None
