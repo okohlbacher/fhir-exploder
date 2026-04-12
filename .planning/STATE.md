@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-04-12T06:16:31.566Z"
+status: executing
+stopped_at: Completed 04-01 terminology foundation
+last_updated: "2026-04-12T07:14:33.038Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
-  percent: 100
+  total_plans: 16
+  completed_plans: 12
+  percent: 75
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 03 — patient-centric-browsing-mii-modules
+**Current focus:** Phase 04 — terminology-resolution
 
 ## Current Position
 
-Phase: 04
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 04 (terminology-resolution) — EXECUTING
+Plan: 2 of 5
+Status: Ready to execute
 Last activity: 2026-04-12
 
 Progress: [██████████] 100%
@@ -62,6 +62,7 @@ Progress: [██████████] 100%
 | Phase 03-patient-centric-browsing-mii-modules P01 | 200s | 2 tasks | 7 files |
 | Phase 03-patient-centric-browsing-mii-modules P02 | 354s | 2 tasks | 7 files |
 | Phase 03-patient-centric-browsing-mii-modules P03 | 240s | 2 tasks | 5 files |
+| Phase 04-terminology-resolution P01 | 185s | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,9 @@ Recent decisions affecting current work:
 - [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: MiiModuleTabs uses keepMounted on root Tabs and every Tabs.Panel to eliminate refetch-on-tab-switch (Pitfall 4 mitigation)
 - [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: ClinicalTimeline fetches Encounter/Condition/Procedure/Observation in parallel with per-type catch-fallback, drops undated entries, and sorts descending via ISO lexicographic compare
 - [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: timeline-utils.ts centralises FHIR date-field fallback chains (Condition/Encounter/Procedure/Observation) and summary extraction, reusable for future data-quality introspection
+- [Phase 04-terminology-resolution]: [Phase 04]: DEFAULTS.terminology.serverUrl ships Ontoserver R4 (https://r4.ontoserver.csiro.au/fhir) as dev default; MII URL commented with mTLS note
+- [Phase 04-terminology-resolution]: [Phase 04]: probeTerminologyHealth collapses all failure modes (null/reject/timeout) into deterministic TerminologyHealth union — never throws, usable for sidebar dot without try/catch
+- [Phase 04-terminology-resolution]: [Phase 04]: mockMedplumClientForTerminology fixture exposes predicate-map API (metadataReachable + lookupResponses substring match) for reuse across plans 02-05
 
 ### Pending Todos
 
@@ -98,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T06:12:12.157Z
-Stopped at: Completed 03-03-PLAN.md
+Last session: 2026-04-12T07:14:22.761Z
+Stopped at: Completed 04-01 terminology foundation
 Resume file: None

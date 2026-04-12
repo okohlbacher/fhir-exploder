@@ -77,7 +77,13 @@ Plans:
   1. CodeableConcept fields across the app display resolved display values from the MII Terminology Server instead of raw codes
   2. Previously resolved terminology values load instantly from cache without additional server requests
   3. When the terminology server is unavailable or a code cannot be resolved, the app displays the raw code value without errors or broken UI
-**Plans**: TBD
+**Plans:** 5 plans (4 waves)
+Plans:
+- [x] 04-01-PLAN.md (Wave 1) -- Terminology settings + second MedplumClient factory + health probe + shared test fixture + types.ts
+- [ ] 04-02-PLAN.md (Wave 2, depends on 01) -- Bounded-LRU TerminologyCache (10K memory / 2K localStorage) + server-URL-namespaced keys
+- [ ] 04-03-PLAN.md (Wave 3, depends on 01+02) -- TerminologyResolver ($lookup + in-flight dedup + silent fallback) + TerminologyContext/useTerminology
+- [ ] 04-04-PLAN.md (Wave 4, depends on 03) -- useResolvedResource hook + wire into HumanReadableView/ClinicalRawView + mount TerminologyProvider in App
+- [ ] 04-05-PLAN.md (Wave 4, depends on 03) -- Sidebar two-row status block + Settings "Terminology Server" section with Clear cache button + V-15 UI test
 
 ### Phase 5: Data Quality Dashboard
 **Goal**: Users can audit the data on their FHIR server -- seeing resource counts, field completeness, coding quality, and profile conformance issues at a glance
