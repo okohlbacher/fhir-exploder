@@ -10,20 +10,33 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 ## Requirements
 
-### Validated
+### Validated (v1.0 — shipped 2026-04-12)
 
-- [x] Connect to a Blaze FHIR server with configurable URL and auth (open, basic auth, or bearer token) via settings.yaml — Validated in Phase 1: Foundation & Blaze Connectivity
-- [x] Generic resource explorer: browse any FHIR resource type, search/filter, paginate through large result sets, inspect individual resources — Validated in Phase 2: Resource Explorer
-- [x] Three display modes per resource: human-readable (default), clinical+raw toggle, developer/FHIR-structure view — Validated in Phase 2: Resource Explorer
-- [x] Patient-centric browsing: list patients, drill into their clinical data organized by MII Kerndatensatz modules (Diagnose, Prozedur, Laborbefund, Medikation, Fall, Consent) — Validated in Phase 3: Patient-Centric Browsing & MII Modules
+- [x] Blaze connectivity with configurable URL + auth (open/basic/bearer) via settings.yaml — Phase 1
+- [x] Generic resource explorer: browse, search, paginate, inspect any FHIR resource type — Phase 2
+- [x] Three display modes per resource (human-readable/clinical+raw/developer) — Phase 2
+- [x] Reference field click-through with patient-context preservation — Phase 2 + Phase 6 (gap closure)
+- [x] `_include` / `_revinclude` for related resources — Phase 2
+- [x] Patient-centric browsing with MII Kerndatensatz module tabs + clinical timeline — Phase 3
+- [x] MII Kerndatensatz as optional navigation lens alongside raw FHIR — Phase 3
+- [x] CodeableConcept resolution via MII Terminology Server (Ontoserver) with LRU cache + graceful fallback — Phase 4
+- [x] Data quality dashboard: counts, field completeness, coding coverage, profile validation — Phase 5
+- [x] Sampling-based quality analysis (10..1000 clamp) to handle 50K+ resource sets — Phase 5
+- [x] Settings management via settings.yaml (server URL, auth, terminology, validation) — Phase 1 + Phase 4 + Phase 5
 
-### Active
-- [ ] Data quality dashboard: resource counts per type, field completeness stats, coding coverage metrics
-- [ ] Profile validation: validate resources against MII Kerndatensatz profiles and display conformance issues
-- [ ] MII Kerndatensatz as optional navigation lens alongside raw FHIR resource type browsing
-- [ ] Resolve CodeableConcept display values via MII Terminology Server (https://terminology.medizininformatik-initiative.de/fhir)
-- [ ] Handle large datasets (50K+ resources) with proper pagination, lazy loading, and performant queries
-- [ ] Settings management via settings.yaml for server URL, auth credentials, terminology server URL
+## Current State
+
+**v1.0 shipped 2026-04-12** — see `.planning/milestones/v1.0-ROADMAP.md`. All 25 v1 requirements delivered across 8 phases (5 feature + 3 gap-closure). 286 tests green, 5/5 Nyquist compliant, full milestone audit passed.
+
+### Active (Next Milestone — TBD)
+
+Run `/gsd-new-milestone` to scope v1.1. Candidates carried over from v1:
+- Bookmark + share search URLs (BRWS-09)
+- Export results CSV/NDJSON (BRWS-10)
+- Quality metric trends over time (QUAL-05)
+- PDF quality reports (QUAL-06)
+- Chart library integration if needed (`@mantine/charts` + `recharts`)
+- Info-level code review polish (17 items deferred from v1.0)
 
 ### Out of Scope
 
@@ -57,8 +70,12 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 |----------|-----------|---------|
 | Medplum React for FHIR rendering | TypeScript-first, comprehensive resource components, maintained | ✓ Validated Phase 1 |
 | settings.yaml for configuration | Simple file-based config, no database needed for a local tool | ✓ Validated Phase 1 |
-| MII Kerndatensatz as optional lens | Users may want MII-structured OR raw FHIR views depending on task | — Pending |
-| Three auth modes (open/basic/token) | Covers common Blaze deployment configurations | — Pending |
+| MII Kerndatensatz as optional lens | Users may want MII-structured OR raw FHIR views depending on task | ✓ Validated Phase 3 |
+| Three auth modes (open/basic/token) | Covers common Blaze deployment configurations | ✓ Validated Phase 1 |
+| Mantine-only visuals for v1 (no charts library) | Bundle budget (~150KB savings); Progress/RingProgress satisfy visual indicator needs | ✓ Validated Phase 5 |
+| Dual-source profile validation (structural + optional remote) | Blaze does not implement $validate; structural walker always available, remote via user-configured validatorUrl | ✓ Validated Phase 5 |
+| Sampling over full scans | 50K+ resources can OOM browser; first N per type with client-side 10..1000 clamp | ✓ Validated Phase 5 |
+| PHI acknowledgment gate for remote validation | Explicit user consent before POSTing full resources to external validator | ✓ Validated Phase 7 |
 
 ## Evolution
 
@@ -78,4 +95,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-12 after Phase 5 completion — all 5 phases of milestone v1.0 complete*
+*Last updated: 2026-04-12 — v1.0 shipped. See `.planning/milestones/v1.0-ROADMAP.md` for full milestone archive.*
