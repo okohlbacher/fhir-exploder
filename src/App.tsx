@@ -9,6 +9,7 @@ import { SearchResultsPage } from './components/explorer/SearchResultsPage';
 import { ResourceDetailPage } from './components/explorer/ResourceDetailPage';
 import { PatientsLayout } from './components/patients/PatientsLayout';
 import { PatientListPage } from './components/patients/PatientListPage';
+import { PatientDetailPage } from './components/patients/PatientDetailPage';
 import { ConnectionProvider } from './contexts/ConnectionContext';
 import { useSettings } from './hooks/useSettings';
 import { useConnection } from './hooks/useConnection';
@@ -54,6 +55,11 @@ function AppRoutes() {
         </Route>
         <Route path="/patients" element={<PatientsLayout />}>
           <Route index element={<PatientListPage />} />
+          <Route path=":patientId" element={<PatientDetailPage />} />
+          <Route
+            path=":patientId/:resourceType/:id"
+            element={<ResourceDetailPage />}
+          />
         </Route>
         <Route path="/quality" element={<QualityPage />} />
       </Route>
