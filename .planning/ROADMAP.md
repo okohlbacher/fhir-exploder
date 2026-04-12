@@ -28,7 +28,10 @@ FHIR Exploder delivers a local-first React application for exploring Blaze FHIR 
   2. Clicking the terminology server status indicator opens an inline editor for the terminology server URL
   3. Saving settings triggers immediate reconnection — sidebar status dots update without page reload
   4. Settings persist in memory for the session (settings.yaml remains the source of truth on restart)
-**Plans:** TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 09-01-PLAN.md — SettingsContext: writable settings provider + useSettings delegate (Wave 1)
+- [ ] 09-02-PLAN.md — Modal components, Sidebar click triggers, App.tsx SettingsProvider wiring (Wave 2)
 **UI hint**: yes
 
 ### Phase 10: Bookmarkable Search & URL State
