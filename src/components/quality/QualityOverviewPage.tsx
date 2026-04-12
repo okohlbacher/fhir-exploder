@@ -1,6 +1,107 @@
-// STUB: replaced in Wave 2 Plan 02 (Counts + Overview).
-// This placeholder exists so src/App.tsx typechecks while Wave 1 builds the
-// route shell and Wave 2 plans implement the real content in parallel.
+/**
+ * QualityOverviewPage — /quality landing.
+ *
+ * Layout per 05-UI-SPEC.md:
+ *   1. Title "Data Quality"
+ *   2. Toolbar: SampleSizeControl + Last computed + Recompute button
+ *   3. OverviewStrip (4 summary cards, cards 3-4 fed by QualityMetricsContext)
+ *   4. Tabs (Counts / Completeness / Coding Coverage / Validation) — keepMounted
+ *
+ * Plans 03/04/05 overwrite the three stub panels (CompletenessPanel,
+ * CodingCoveragePanel, ValidationPanel) without editing this file again.
+ */
+import { Button, Group, Stack, Tabs, Text, Title } from '@mantine/core';
+import { IconRefresh } from '@tabler/icons-react';
+import { useMemo } from 'react';
+import { useOutletContext } from 'react-router-dom';
+import { notifications } from '@mantine/notifications';
+import type { QualityOutletContext } from './QualityLayout';
+import { parseResourceTypes } from '../../fhir/capability';
+import { useQualityMetrics } from '../../hooks/useQualityMetrics';
+import { useSampleSize, SampleSizeControl } from './SampleSizeControl';
+import { OverviewStrip } from './OverviewStrip';
+import { ResourceCountsPanel } from './ResourceCountsPanel';
+import { CompletenessPanel } from './CompletenessPanel';
+import { CodingCoveragePanel } from './CodingCoveragePanel';
+import { ValidationPanel } from './ValidationPanel';
+
+function formatRelative(d: Date | null): string {
+  if (!d) return 'Never';
+  const secs = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (secs < 60) return `${secs}s ago`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}min ago`;
+  const hrs = Math.floor(mins / 60);
+  return `${hrs}h ago`;
+}
+
 export function QualityOverviewPage() {
-  return <div data-testid="stub-QualityOverviewPage">Coming in Wave 2 (Plan 02)</div>;
+  const { client, capability } = useOutletContext<QualityOutletContext>();
+  const [sampleSize, setSampleSize] = useSampleSize();
+
+  const types = useMemo(
+    () => parseResourceTypes(capability).map((t) => t.type),
+    [capability],
+  );
+
+  const { counts, summary, lastComputed, recompute } = useQualityMetrics(client, types);
+
+  const handleRecompute = () => {
+    recompute();
+    notifications.show({
+      color: 'blue',
+      title: 'Recomputing',
+      message: 'Re-fetching counts…',
+    });
+  };
+
+  const typesLoaded =
+    Object.keys(counts).length > 0 &&
+    Object.values(counts).some((v) => v !== 'loading');
+
+  return (
+    <Stack gap="lg" p="xl">
+      <Title order={2}>Data Quality</Title>
+
+      <Group justify="space-between" align="flex-end">
+        <SampleSizeControl value={sampleSize} onChange={setSampleSize} />
+        <Group gap="sm">
+          <Text size="sm" c="dimmed">
+            Last computed {formatRelative(lastComputed)}
+          </Text>
+          <Button
+            variant="light"
+            leftSection={<IconRefresh size={16} />}
+            onClick={handleRecompute}
+          >
+            Recompute metrics
+          </Button>
+        </Group>
+      </Group>
+
+      <OverviewStrip summary={summary} isLoading={!typesLoaded} />
+
+      <Tabs defaultValue="counts" keepMounted>
+        <Tabs.List>
+          <Tabs.Tab value="counts">Counts</Tabs.Tab>
+          <Tabs.Tab value="completeness">Completeness</Tabs.Tab>
+          <Tabs.Tab value="coverage">Coding Coverage</Tabs.Tab>
+          <Tabs.Tab value="validation">Validation</Tabs.Tab>
+        </Tabs.List>
+
+        <Tabs.Panel value="counts" pt="md" keepMounted>
+          <ResourceCountsPanel counts={counts} />
+        </Tabs.Panel>
+        <Tabs.Panel value="completeness" pt="md" keepMounted>
+          <CompletenessPanel types={types} client={client} sampleSize={sampleSize} />
+        </Tabs.Panel>
+        <Tabs.Panel value="coverage" pt="md" keepMounted>
+          <CodingCoveragePanel types={types} client={client} sampleSize={sampleSize} />
+        </Tabs.Panel>
+        <Tabs.Panel value="validation" pt="md" keepMounted>
+          <ValidationPanel client={client} sampleSize={sampleSize} />
+        </Tabs.Panel>
+      </Tabs>
+    </Stack>
+  );
 }

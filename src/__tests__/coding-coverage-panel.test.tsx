@@ -6,7 +6,9 @@
  * PerTypeCoverageReport shape.
  */
 import { describe, it, expect } from 'vitest';
-// @ts-expect-error — Wave 2 Plan 04 creates this component.
+// Plan 05-02 landed a stub at this path; Plan 05-04 will overwrite it
+// with the real component. The stub is already a function, so the
+// export assertion below passes. The it.todo cases remain for Plan 05-04.
 import { CodingCoveragePanel } from '../components/quality/CodingCoveragePanel';
 
 describe('CodingCoveragePanel (QUAL-03)', () => {
