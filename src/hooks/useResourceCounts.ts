@@ -14,7 +14,13 @@ type CountValue = number | 'loading' | 'error';
  */
 export function useResourceCounts(
   client: MedplumClient | null,
-  resourceTypes: string[]
+  resourceTypes: string[],
+  /**
+   * Optional token used to force re-fetch even when `resourceTypes` is
+   * unchanged. Any caller can bump this to trigger the effect re-run
+   * without relying on array-ordering tricks.
+   */
+  refetchKey: number = 0,
 ): Record<string, CountValue> {
   const [counts, setCounts] = useState<Record<string, CountValue>>({});
   const cancelledRef = useRef(false);
@@ -66,7 +72,7 @@ export function useResourceCounts(
     return () => {
       cancelledRef.current = true;
     };
-  }, [client, resourceTypes.join(',')]);
+  }, [client, resourceTypes.join(','), refetchKey]);
 
   return counts;
 }
