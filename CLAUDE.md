@@ -13,6 +13,7 @@ A local-first React application for exploring, browsing, and auditing data on a 
 - **Runtime**: Local-only, runs in browser against localhost or reachable FHIR server
 - **FHIR version**: R4 (Blaze default, MII profiles are R4)
 - **Terminology**: Must handle terminology server being unavailable gracefully (fall back to raw codes)
+- **License**: MIT (see `LICENSE` at the repo root). Keep `package.json` `license` field and the LICENSE file in sync. New contributions are accepted under the same license.
 <!-- GSD:project-end -->
 
 <!-- GSD:stack-start source:research/STACK.md -->

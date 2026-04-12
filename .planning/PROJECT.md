@@ -49,6 +49,7 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 - **Runtime**: Local-only, runs in browser against localhost or reachable FHIR server
 - **FHIR version**: R4 (Blaze default, MII profiles are R4)
 - **Terminology**: Must handle terminology server being unavailable gracefully (fall back to raw codes)
+- **License**: MIT (see `LICENSE` at the repo root)
 
 ## Key Decisions
 
