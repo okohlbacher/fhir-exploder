@@ -15,10 +15,9 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 - [x] Connect to a Blaze FHIR server with configurable URL and auth (open, basic auth, or bearer token) via settings.yaml — Validated in Phase 1: Foundation & Blaze Connectivity
 - [x] Generic resource explorer: browse any FHIR resource type, search/filter, paginate through large result sets, inspect individual resources — Validated in Phase 2: Resource Explorer
 - [x] Three display modes per resource: human-readable (default), clinical+raw toggle, developer/FHIR-structure view — Validated in Phase 2: Resource Explorer
+- [x] Patient-centric browsing: list patients, drill into their clinical data organized by MII Kerndatensatz modules (Diagnose, Prozedur, Laborbefund, Medikation, Fall, Consent) — Validated in Phase 3: Patient-Centric Browsing & MII Modules
 
 ### Active
-
-- [ ] Patient-centric browsing: list patients, drill into their clinical data organized by MII Kerndatensatz modules (Diagnose, Prozedur, Laborbefund, Medikation, Fall, Consent)
 - [ ] Data quality dashboard: resource counts per type, field completeness stats, coding coverage metrics
 - [ ] Profile validation: validate resources against MII Kerndatensatz profiles and display conformance issues
 - [ ] MII Kerndatensatz as optional navigation lens alongside raw FHIR resource type browsing
@@ -78,4 +77,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-11 after Phase 2 completion*
+*Last updated: 2026-04-12 after Phase 3 completion*
