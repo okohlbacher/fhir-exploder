@@ -14,7 +14,7 @@
  * collide — two instances give each hook its own budget, important when
  * a server has many resource types.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import type { MedplumClient } from '@medplum/core';
 
@@ -51,11 +51,14 @@ export function useCodingCoverage(
   const [reports, setReports] = useState<
     Record<string, PerTypeReport<PerTypeCoverageReport>>
   >({});
-  const cancelledRef = useRef(false);
   const typesKey = useMemo(() => types.join(','), [types]);
 
   useEffect(() => {
-    cancelledRef.current = false;
+    // Per-effect local cancellation flag. A shared ref would allow a
+    // stale in-flight promise from a prior effect run to commit after
+    // this effect re-sets the ref to false. Closure-scoped `cancelled`
+    // isolates cancellation to the in-flight work of THIS effect.
+    let cancelled = false;
     if (!client || types.length === 0) {
       setReports({});
       return;
@@ -77,13 +80,13 @@ export function useCodingCoverage(
     let active = 0;
 
     function next() {
-      if (cancelledRef.current) return;
+      if (cancelled) return;
       while (active < CONCURRENCY && queue.length > 0) {
         const t = queue.shift()!;
         active++;
         sampleResources(client!, t, debouncedSize)
           .then((sample) => {
-            if (cancelledRef.current) return;
+            if (cancelled) return;
             const report = aggregateCoverage(sample);
             cache.set(
               buildMetricsKey(serverUrl, t, debouncedSize, 'coverage'),
@@ -98,7 +101,7 @@ export function useCodingCoverage(
             setReports((p) => ({ ...p, [t]: report }));
           })
           .catch(() => {
-            if (cancelledRef.current) return;
+            if (cancelled) return;
             setReports((p) => ({ ...p, [t]: 'error' }));
           })
           .finally(() => {
@@ -110,7 +113,7 @@ export function useCodingCoverage(
     next();
 
     return () => {
-      cancelledRef.current = true;
+      cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, typesKey, debouncedSize]);

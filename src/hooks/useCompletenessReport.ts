@@ -18,7 +18,7 @@
  *     is how OverviewStrip Card 3 flips from em-dash to a real value.
  *     Rule locked in 05-01-SUMMARY.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
 import type { MedplumClient } from '@medplum/core';
 
@@ -55,11 +55,14 @@ export function useCompletenessReport(
   const [reports, setReports] = useState<
     Record<string, PerTypeReport<PerTypeCompletenessReport>>
   >({});
-  const cancelledRef = useRef(false);
   const typesKey = useMemo(() => types.join(','), [types]);
 
   useEffect(() => {
-    cancelledRef.current = false;
+    // Per-effect local cancellation flag. A shared ref would allow a
+    // stale in-flight promise from a prior effect run to commit after
+    // this effect re-sets the ref to false. Closure-scoped `cancelled`
+    // isolates cancellation to the in-flight work of THIS effect.
+    let cancelled = false;
     if (!client || types.length === 0) {
       setReports({});
       return;
@@ -81,13 +84,13 @@ export function useCompletenessReport(
     let active = 0;
 
     function next() {
-      if (cancelledRef.current) return;
+      if (cancelled) return;
       while (active < CONCURRENCY && queue.length > 0) {
         const t = queue.shift()!;
         active++;
         computeForType(client!, t, debouncedSize)
           .then((report) => {
-            if (cancelledRef.current) return;
+            if (cancelled) return;
             cache.set(buildMetricsKey(serverUrl, t, debouncedSize, 'completeness'), {
               value: report,
               computedAt: Date.now(),
@@ -98,7 +101,7 @@ export function useCompletenessReport(
             setReports((p) => ({ ...p, [t]: report }));
           })
           .catch(() => {
-            if (cancelledRef.current) return;
+            if (cancelled) return;
             setReports((p) => ({ ...p, [t]: 'error' }));
           })
           .finally(() => {
@@ -110,7 +113,7 @@ export function useCompletenessReport(
     next();
 
     return () => {
-      cancelledRef.current = true;
+      cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, typesKey, debouncedSize]);
