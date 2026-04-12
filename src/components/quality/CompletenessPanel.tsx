@@ -25,6 +25,7 @@ import {
   Text,
   UnstyledButton,
 } from '@mantine/core';
+import { BarChart } from '@mantine/charts';
 import { IconChevronDown, IconChevronUp, IconSelector } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
 
@@ -127,6 +128,29 @@ export function CompletenessPanel({ types, client, sampleSize }: CompletenessPan
         resources per type. Full scans are not run to keep the dashboard responsive on large
         servers.
       </Alert>
+
+      {/* Horizontal bar chart overview */}
+      {rows.filter((r) => r.pct !== null).length > 0 && (
+        <BarChart
+          h={Math.max(200, rows.filter((r) => r.pct !== null).length * 28)}
+          data={rows
+            .filter((r) => r.pct !== null)
+            .map((r) => ({
+              type: r.type,
+              populated: Math.round(r.pct ?? 0),
+              missing: Math.round(100 - (r.pct ?? 0)),
+            }))}
+          dataKey="type"
+          type="stacked"
+          series={[
+            { name: 'populated', color: 'green.6' },
+            { name: 'missing', color: 'red.2' },
+          ]}
+          orientation="vertical"
+          gridAxis="x"
+          tickLine="x"
+        />
+      )}
 
       <Table striped highlightOnHover>
         <Table.Thead>

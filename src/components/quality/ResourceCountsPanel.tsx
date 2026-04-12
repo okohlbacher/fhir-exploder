@@ -19,13 +19,13 @@ import {
   Badge,
   Group,
   Loader,
-  Progress,
   Stack,
   Switch,
   Table,
   Text,
   UnstyledButton,
 } from '@mantine/core';
+import { BarChart } from '@mantine/charts';
 import { IconArrowDown, IconArrowUp, IconArrowsSort } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import type { CountValue } from '../../quality/types';
@@ -80,6 +80,22 @@ export function ResourceCountsPanel({ counts }: ResourceCountsPanelProps) {
           onChange={(e) => setIncludeEmpty(e.currentTarget.checked)}
         />
       </Group>
+
+      {/* Bar chart overview of resource counts */}
+      {rows.filter((r) => typeof r.count === 'number' && r.count > 0).length > 0 && (
+        <BarChart
+          h={Math.max(200, rows.filter((r) => typeof r.count === 'number' && r.count > 0).length * 28)}
+          data={rows
+            .filter((r) => typeof r.count === 'number' && r.count > 0)
+            .map((r) => ({ type: r.type, count: r.count as number }))}
+          dataKey="type"
+          series={[{ name: 'count', color: 'blue.6' }]}
+          orientation="vertical"
+          gridAxis="x"
+          tickLine="x"
+          barProps={{ radius: [0, 4, 4, 0] }}
+        />
+      )}
 
       <Table striped highlightOnHover>
         <Table.Thead>
