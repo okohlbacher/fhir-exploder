@@ -70,8 +70,15 @@ export function ValidationIssueList({ issues }: ValidationIssueListProps) {
             const type = parts[0];
             const id = parts[1];
             const severity = issue.severity ?? 'information';
+            // Composite key: the array-index tail keeps adjacent duplicate
+            // issues stable if the upstream dedupe collapses them to the
+            // same resource/expression/code triple; the prefix makes keys
+            // survive re-ordering when the user re-sorts or paginates.
+            const expression = issue.expression?.[0] ?? '';
+            const code = issue.code ?? '';
+            const rowKey = `${resourceId ?? 'noid'}|${expression}|${code}|${i}`;
             return (
-              <Table.Tr key={i}>
+              <Table.Tr key={rowKey}>
                 <Table.Td>{i + 1}</Table.Td>
                 <Table.Td>
                   <Badge
