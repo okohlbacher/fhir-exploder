@@ -2,13 +2,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode } from 'react';
-import type { Condition, Parameters } from '@medplum/fhirtypes';
-import { MedplumClient } from '@medplum/core';
-import { MedplumProvider } from '@medplum/react';
+import type { Condition, Parameters, Resource } from '@medplum/fhirtypes';
 import { MantineProvider } from '@mantine/core';
 import { TerminologyContext } from '../contexts/TerminologyContext';
 import { TerminologyResolver } from '../terminology/TerminologyResolver';
-import { HumanReadableView } from '../components/explorer/HumanReadableView';
 import { mockMedplumClientForTerminology } from './fixtures/terminology';
 
 // Polyfill ResizeObserver for jsdom (required by Mantine ScrollArea)
@@ -34,6 +31,32 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 });
+
+/**
+ * Medplum's real ResourceTable requires the full R4 StructureDefinition bundle
+ * to be indexed via @medplum/definitions (not installed in this project). Its
+ * rendering therefore cannot be exercised directly in jsdom. We mock the one
+ * Medplum component HumanReadableView uses to observe exactly what resource
+ * reaches it after useResolvedResource settles — the integration contract
+ * Plan 04 Task 2 cares about. This keeps V-05 / V-14 assertable at the
+ * component boundary without pulling ~5 MB of schema fixtures into the test.
+ */
+vi.mock('@medplum/react', () => ({
+  ResourceTable: ({ value }: { value: Resource | undefined }) => {
+    const display =
+      (value as Condition | undefined)?.code?.coding?.[0]?.display ?? '(none)';
+    const code = (value as Condition | undefined)?.code?.coding?.[0]?.code ?? '(none)';
+    return (
+      <div>
+        <span data-testid="rt-display">{display}</span>
+        <span data-testid="rt-code">{code}</span>
+      </div>
+    );
+  },
+}));
+
+// Now import HumanReadableView AFTER the mock is registered.
+import { HumanReadableView } from '../components/explorer/HumanReadableView';
 
 const TX_URL = 'https://tx.example/fhir';
 const ICD10 = 'http://hl7.org/fhir/sid/icd-10';
@@ -64,24 +87,13 @@ function makeCondition(): Condition {
 }
 
 function wrapWithProviders(resolver: TerminologyResolver) {
-  // Medplum's ResourceTable needs a MedplumClient in context for any Reference
-  // resolution or property display that reaches into `useMedplum()`. We build
-  // a real MedplumClient with a stubbed fetch so nothing ever hits the network
-  // — ResourceTable's pure-rendering path is all we exercise.
-  const medplum = new MedplumClient({
-    baseUrl: 'https://fhir.example/',
-    fhirUrlPath: 'fhir',
-    fetch: vi.fn(async () => new Response('{}', { status: 200 })) as unknown as typeof fetch,
-  });
   return function Wrapper({ children }: { children: ReactNode }) {
     return (
       <MantineProvider>
         <MemoryRouter>
-          <MedplumProvider medplum={medplum}>
-            <TerminologyContext.Provider value={resolver}>
-              {children}
-            </TerminologyContext.Provider>
-          </MedplumProvider>
+          <TerminologyContext.Provider value={resolver}>
+            {children}
+          </TerminologyContext.Provider>
         </MemoryRouter>
       </MantineProvider>
     );
@@ -105,17 +117,20 @@ describe('HumanReadableView terminology integration', () => {
     render(<HumanReadableView resource={makeCondition()} />, {
       wrapper: wrapWithProviders(resolver),
     });
-    // Medplum's ResourceTable renders CodeableConcept.coding[0].display once
-    // useResolvedResource hands over the enriched resource.
+    // First render: raw resource (no display) reaches the table.
+    expect(screen.getByTestId('rt-display').textContent).toBe('(none)');
+    // Once useResolvedResource settles, the enriched resource flows through.
     await waitFor(() => {
-      expect(
-        screen.getByText((content) => content.includes('Diabetes mellitus Typ 2')),
-      ).toBeTruthy();
+      expect(screen.getByTestId('rt-display').textContent).toBe(
+        'Diabetes mellitus Typ 2',
+      );
     });
   });
 
   it('fallback to code', async () => {
-    // Resolver fails on every $lookup — UI must render the raw code, no crash.
+    // Resolver fails on every $lookup → UI must render the raw resource, no
+    // crash, display stays unset so Medplum's native fallback would show the
+    // code. Verified here by checking `rt-code` == the raw code.
     const client = mockMedplumClientForTerminology({
       errors: { 'CodeSystem/$lookup': new Error('terminology server dead') },
     });
@@ -127,14 +142,17 @@ describe('HumanReadableView terminology integration', () => {
     render(<HumanReadableView resource={makeCondition()} />, {
       wrapper: wrapWithProviders(resolver),
     });
-    // Raw code appears via Medplum's native fallback (formatCoding -> code
-    // when display is unset). Assert the raw code is somewhere in the DOM
-    // and the enriched term never appears.
+    // Raw code is present from the first render and display stays unset.
+    expect(screen.getByTestId('rt-code').textContent).toBe('E11.9');
+    expect(screen.getByTestId('rt-display').textContent).toBe('(none)');
+    // Let effect + resolver settle; display MUST still be unset (silent fallback).
+    await new Promise((r) => setTimeout(r, 20));
     await waitFor(() => {
-      expect(
-        screen.getByText((content) => content.includes('E11.9')),
-      ).toBeTruthy();
+      // findByText equivalent: raw code remains asserted after settle.
+      expect(screen.findByText('E11.9')).toBeTruthy();
     });
+    expect(screen.getByTestId('rt-display').textContent).toBe('(none)');
+    // No "Diabetes mellitus Typ 2" should ever appear.
     expect(screen.queryByText('Diabetes mellitus Typ 2')).toBeNull();
   });
 });

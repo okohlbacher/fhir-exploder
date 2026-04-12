@@ -11,6 +11,7 @@ import { PatientsLayout } from './components/patients/PatientsLayout';
 import { PatientListPage } from './components/patients/PatientListPage';
 import { PatientDetailPage } from './components/patients/PatientDetailPage';
 import { ConnectionProvider } from './contexts/ConnectionContext';
+import { TerminologyProvider } from './contexts/TerminologyContext';
 import { useSettings } from './hooks/useSettings';
 import { useConnection } from './hooks/useConnection';
 
@@ -31,39 +32,41 @@ function AppRoutes() {
   const connectionStatus = connection.state.status;
 
   return (
-    <Routes>
-      <Route element={<AppLayout connectionStatus={connectionStatus} />}>
-        <Route
-          index
-          element={
-            <DashboardPage
-              settings={settings}
-              usingDefaults={usingDefaults}
-              connectionState={connection.state}
-              onConnect={handleConnect}
-            />
-          }
-        />
-        <Route
-          path="/settings"
-          element={<SettingsPage settings={settings} usingDefaults={usingDefaults} />}
-        />
-        <Route path="/explorer" element={<ExplorerLayout />}>
-          <Route index element={<ResourceTypeLanding />} />
-          <Route path=":resourceType" element={<SearchResultsPage />} />
-          <Route path=":resourceType/:id" element={<ResourceDetailPage />} />
-        </Route>
-        <Route path="/patients" element={<PatientsLayout />}>
-          <Route index element={<PatientListPage />} />
-          <Route path=":patientId" element={<PatientDetailPage />} />
+    <TerminologyProvider settings={settings}>
+      <Routes>
+        <Route element={<AppLayout connectionStatus={connectionStatus} />}>
           <Route
-            path=":patientId/:resourceType/:id"
-            element={<ResourceDetailPage />}
+            index
+            element={
+              <DashboardPage
+                settings={settings}
+                usingDefaults={usingDefaults}
+                connectionState={connection.state}
+                onConnect={handleConnect}
+              />
+            }
           />
+          <Route
+            path="/settings"
+            element={<SettingsPage settings={settings} usingDefaults={usingDefaults} />}
+          />
+          <Route path="/explorer" element={<ExplorerLayout />}>
+            <Route index element={<ResourceTypeLanding />} />
+            <Route path=":resourceType" element={<SearchResultsPage />} />
+            <Route path=":resourceType/:id" element={<ResourceDetailPage />} />
+          </Route>
+          <Route path="/patients" element={<PatientsLayout />}>
+            <Route index element={<PatientListPage />} />
+            <Route path=":patientId" element={<PatientDetailPage />} />
+            <Route
+              path=":patientId/:resourceType/:id"
+              element={<ResourceDetailPage />}
+            />
+          </Route>
+          <Route path="/quality" element={<QualityPage />} />
         </Route>
-        <Route path="/quality" element={<QualityPage />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </TerminologyProvider>
   );
 }
 
