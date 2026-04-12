@@ -30,10 +30,14 @@ import type {
 import type { ValidationBackend } from './types';
 
 export function createValidatorClient(validatorUrl: string): MedplumClient {
+  // Trim incidental whitespace in case the URL flowed through a channel
+  // that didn't trim (settings.ts trims on ingestion, but this keeps the
+  // factory safe when called from tests or future call sites).
+  const trimmed = validatorUrl.trim();
   // Normalize to ensure trailing slash on baseUrl so relative POST paths
   // resolve correctly (e.g., `Condition/$validate` resolves against
   // `.../fhir/Condition/$validate`, not `.../Condition/$validate`).
-  const normalized = validatorUrl.endsWith('/') ? validatorUrl : `${validatorUrl}/`;
+  const normalized = trimmed.endsWith('/') ? trimmed : `${trimmed}/`;
   return new MedplumClient({
     baseUrl: normalized,
     // validatorUrl is already the FHIR root — the default fhirUrlPath

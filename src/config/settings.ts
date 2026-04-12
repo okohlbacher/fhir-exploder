@@ -50,12 +50,21 @@ function deepMerge(defaults: AppSettings, partial: Record<string, unknown>): App
 
   if (partial.validation && typeof partial.validation === 'object') {
     const validation = partial.validation as Record<string, unknown>;
+    // Trim incidental whitespace on the validator URL so YAML parsing
+    // quirks (e.g., trailing newline, paste indentation) don't produce
+    // a "almost-correct" URL that silently fails at fetch time. Empty
+    // strings after trim collapse to the default.
+    const rawValidatorUrl =
+      typeof validation.validatorUrl === 'string'
+        ? validation.validatorUrl.trim()
+        : undefined;
+    const validatorUrl =
+      rawValidatorUrl && rawValidatorUrl.length > 0
+        ? rawValidatorUrl
+        : defaults.validation?.validatorUrl;
     result.validation = {
       ...defaults.validation,
-      validatorUrl:
-        typeof validation.validatorUrl === 'string'
-          ? validation.validatorUrl
-          : defaults.validation?.validatorUrl,
+      validatorUrl,
       batchSize:
         typeof validation.batchSize === 'number' && Number.isFinite(validation.batchSize)
           ? validation.batchSize
