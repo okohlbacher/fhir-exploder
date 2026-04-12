@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Tabs, Text } from '@mantine/core';
 import { MII_MODULES } from '../../utils/mii-modules';
+import { ClinicalTimeline } from './ClinicalTimeline';
 import { MiiModuleTab } from './MiiModuleTab';
 
 interface MiiModuleTabsProps {
@@ -54,9 +55,7 @@ export function MiiModuleTabs({ patientId }: MiiModuleTabsProps) {
         </Tabs.Panel>
       ))}
       <Tabs.Panel value="timeline" keepMounted>
-        <Text c="dimmed" pt="md">
-          Timeline (Plan 03)
-        </Text>
+        <ClinicalTimeline patientId={patientId} />
       </Tabs.Panel>
     </Tabs>
   );
