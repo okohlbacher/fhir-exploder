@@ -1,6 +1,10 @@
-import { Alert, Code, Paper, Stack, Text, Title } from '@mantine/core';
-import { IconAlertTriangle } from '@tabler/icons-react';
+import { Alert, Box, Button, Code, Group, Paper, Stack, Text, Title } from '@mantine/core';
+import { IconAlertTriangle, IconTrash } from '@tabler/icons-react';
+import { notifications } from '@mantine/notifications';
 import type { AppSettings } from '../../config/types';
+import { useTerminology } from '../../hooks/useTerminology';
+import { useTerminologyHealth } from '../../hooks/useTerminologyHealth';
+import { TERMINOLOGY_STATUS_CONFIG } from '../../terminology/statusConfig';
 
 interface SettingsPageProps {
   settings: AppSettings | null;
@@ -13,6 +17,26 @@ function maskToken(token: string): string {
 }
 
 export function SettingsPage({ settings, usingDefaults }: SettingsPageProps) {
+  const resolver = useTerminology();
+  const termHealth = useTerminologyHealth();
+  const termStatus = TERMINOLOGY_STATUS_CONFIG[termHealth];
+
+  function handleClearCache() {
+    const beforeSize = resolver.cache.size();
+    resolver.cache.clear();
+    const message =
+      beforeSize === 0
+        ? 'No cached terms to clear.'
+        : beforeSize === 1
+          ? '1 cached term removed from memory and local storage.'
+          : `${beforeSize} cached terms removed from memory and local storage.`;
+    notifications.show({
+      color: 'green',
+      title: 'Cache cleared',
+      message,
+    });
+  }
+
   return (
     <Stack gap="lg">
       <Title order={2}>Settings</Title>
@@ -71,18 +95,60 @@ export function SettingsPage({ settings, usingDefaults }: SettingsPageProps) {
                 <Code>{maskToken(settings.fhir.auth.token)}</Code>
               </div>
             )}
-
-            {settings.terminology?.serverUrl && (
-              <div>
-                <Text fw={600} mb={4}>
-                  Terminology Server:
-                </Text>
-                <Code>{settings.terminology.serverUrl}</Code>
-              </div>
-            )}
           </Stack>
         </Paper>
       )}
+
+      <Paper p="lg" shadow="xs">
+        <Stack gap="sm">
+          <Title order={3}>Terminology Server</Title>
+
+          <div>
+            <Text fw={600} size="sm" mb={4}>
+              Server URL
+            </Text>
+            {settings?.terminology?.serverUrl ? (
+              <Code>{settings.terminology.serverUrl}</Code>
+            ) : (
+              <Text c="dimmed" size="sm">
+                Not configured — set terminology.serverUrl in settings.yaml
+              </Text>
+            )}
+          </div>
+
+          <div>
+            <Text fw={600} size="sm" mb={4}>
+              Status
+            </Text>
+            <Group gap="xs">
+              <Box
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor: termStatus.color,
+                  animation: termStatus.pulse
+                    ? 'pulse 1.5s ease-in-out infinite'
+                    : undefined,
+                }}
+              />
+              <Text size="sm">{termStatus.label.replace(/^Terminology: /, '')}</Text>
+            </Group>
+          </div>
+
+          <div>
+            <Button
+              variant="light"
+              color="red"
+              size="sm"
+              leftSection={<IconTrash size={16} />}
+              onClick={handleClearCache}
+            >
+              Clear terminology cache
+            </Button>
+          </div>
+        </Stack>
+      </Paper>
 
       <Text c="dimmed" size="sm">
         Edit public/settings.yaml to change configuration. Restart the app to apply changes.
