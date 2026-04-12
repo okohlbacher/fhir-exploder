@@ -22,17 +22,9 @@ describe('probeTerminologyHealth', () => {
   });
 
   it("returns 'unreachable' when the request exceeds the probe timeout", async () => {
-    // Pending Promise that never resolves — probe must short-circuit via timeout.
-    const neverResolving: MedplumClient = {
-      get: () =>
-        new Promise((_resolve, reject) => {
-          // Attach a listener so AbortSignal.timeout(50) aborts the promise.
-          // If caller provides a signal, reject when it aborts.
-          // Consumers call probe.get('metadata', { signal }).
-        }),
-    } as unknown as MedplumClient;
-
-    // Patch: the probe passes an AbortSignal; emulate a client that honours it.
+    // Client that honours the AbortSignal the probe threads through via options.
+    // Without a signal, the Promise would never resolve — so we assert the probe
+    // both passes a signal AND converts the abort into an 'unreachable' result.
     const abortAwareClient: MedplumClient = {
       get: (_path: string, opts?: { signal?: AbortSignal }) =>
         new Promise((_resolve, reject) => {
@@ -56,7 +48,5 @@ describe('probeTerminologyHealth', () => {
 
     expect(result).toBe('unreachable');
     expect(elapsed).toBeLessThan(200);
-    // Silence unused-variable lint: the first stub is intentional illustrative leftover.
-    void neverResolving;
   });
 });

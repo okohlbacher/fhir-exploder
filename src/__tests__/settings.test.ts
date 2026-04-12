@@ -9,14 +9,14 @@ describe('loadSettings', () => {
 });
 
 describe('terminology defaults', () => {
-  const originalFetch = global.fetch;
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
-    global.fetch = vi.fn();
+    globalThis.fetch = vi.fn() as typeof fetch;
   });
 
   afterEach(() => {
-    global.fetch = originalFetch;
+    globalThis.fetch = originalFetch;
     vi.restoreAllMocks();
   });
 
@@ -32,7 +32,7 @@ describe('terminology defaults', () => {
 terminology:
   serverUrl: "https://example.org/fhir"
 `;
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       text: async () => yaml,
     } as Response);
@@ -47,7 +47,7 @@ terminology:
   auth:
     mode: open
 `;
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       text: async () => yaml,
     } as Response);
@@ -64,7 +64,7 @@ terminology:
 terminology:
   serverUrl: 42
 `;
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       text: async () => yaml,
     } as Response);
