@@ -13,6 +13,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@mantine/charts": "^9.0.1",
     "@mantine/core": "^8.3.18",
     "@mantine/hooks": "^8.3.18",
     "@mantine/notifications": "^8.3.18",
@@ -27,6 +28,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.14.0",
+    "recharts": "^3.8.1",
     "rfc6902": "^5.2.0",
     "signature_pad": "^5.1.3"
   },
