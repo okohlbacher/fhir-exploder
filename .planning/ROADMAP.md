@@ -119,7 +119,7 @@ Plans:
 **Plans:** 2 plans
 Plans:
 - [x] 06-01-PLAN.md — Make ResourceDetailPage + NavigationBreadcrumbs patient-aware; add integration tests (BRWS-07, PTNT-04, PTNT-05)
-- [ ] 06-02-PLAN.md — Reconcile REQUIREMENTS.md traceability: flip CONN-01..05 to Complete (CONN-01..05)
+- [x] 06-02-PLAN.md — Reconcile REQUIREMENTS.md traceability: flip CONN-01..05 to Complete (CONN-01..05)
 **UI hint**: no (bug fix in existing components)
 
 ### Phase 7: v1.0 Gap Closure — Code Review Fixes
