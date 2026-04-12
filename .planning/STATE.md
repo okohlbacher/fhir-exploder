@@ -1,141 +1,43 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: Gap Closure — Patient-aware Reference Navigation
-status: verifying
-stopped_at: Completed 06-02-PLAN.md — CONN-01..05 traceability reconciled
-last_updated: "2026-04-12T11:26:36.547Z"
+milestone: v1.1
+milestone_name: UX Polish & Data Export
+status: planning
+stopped_at: Defining requirements
+last_updated: "2026-04-12T13:30:00.000Z"
 last_activity: 2026-04-12
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 23
-  completed_plans: 23
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-11)
+See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 06 — v1-gap-closure-patient-navigation
+**Current focus:** Milestone v1.1 — defining requirements
 
 ## Current Position
 
-Phase: 06
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-12
-
-Progress: [██████████] 100%
-
-## Performance Metrics
-
-**Velocity:**
-
-- Total plans completed: 22
-- Average duration: -
-- Total execution time: 0 hours
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 01 | 3 | - | - |
-| 02 | 5 | - | - |
-| 03 | 3 | - | - |
-| 05 | 5 | - | - |
-| 06 | 2 | - | - |
-
-**Recent Trend:**
-
-- Last 5 plans: -
-- Trend: -
-
-*Updated after each plan completion*
-| Phase 02 P01 | 4min | 2 tasks | 9 files |
-| Phase 02 P02 | 202s | 2 tasks | 9 files |
-| Phase 02 P03 | 188s | 2 tasks | 9 files |
-| Phase 02 P04 | 68s | 2 tasks | 3 files |
-| Phase 02 P05 | 315s | 1 tasks | 2 files |
-| Phase 03-patient-centric-browsing-mii-modules P01 | 200s | 2 tasks | 7 files |
-| Phase 03-patient-centric-browsing-mii-modules P02 | 354s | 2 tasks | 7 files |
-| Phase 03-patient-centric-browsing-mii-modules P03 | 240s | 2 tasks | 5 files |
-| Phase 04-terminology-resolution P01 | 185s | 2 tasks | 8 files |
-| Phase 04-terminology-resolution P02 | 90s | 1 tasks | 3 files |
-| Phase 04-terminology-resolution P03 | 285s | 2 tasks | 6 files |
-| Phase 04-terminology-resolution P04 | 355s | 2 tasks | 6 files |
-| Phase 04-terminology-resolution P05 | 229s | 2 tasks | 6 files |
-| Phase 05-data-quality-dashboard P01 | 427s | 2 tasks | 21 files |
-| Phase 05-data-quality-dashboard P02 | 405s | 2 tasks | 14 files |
-| Phase 05-data-quality-dashboard P03 | 523 | 2 tasks | 15 files |
-| Phase 05-data-quality-dashboard P04 | 7min | 2 tasks | 7 files |
-| Phase 05 P05 | 7min | 2 tasks | 10 files |
-| Phase 06-v1-gap-closure-patient-navigation P01 | 3min | 2 tasks | 4 files |
-| Phase 06-v1-gap-closure-patient-navigation P02 | 126s | 1 tasks | 1 files |
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-12 — Milestone v1.1 started
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- Roadmap: 5 phases derived from 25 requirements across 5 categories (CONN, BRWS, PTNT, TERM, QUAL)
-- Research: MedplumClient compatibility with Blaze is the critical Phase 1 risk; must validate before committing to component strategy
-- [Phase 02]: URL-driven search state uses parseSearchRequest/formatSearchQuery from @medplum/core for bidirectional sync
-- [Phase 02]: ExplorerLayout gates on connection status and scopes MedplumProvider to connected subtree via Outlet context
-- [Phase 02]: SearchControl used with hideToolbar/hideFilters, custom filter panel and pagination built around it
-- [Phase 02]: Container-level click interception for FHIR references instead of ReferenceDisplay (Pitfall 5 mitigation)
-- [Phase 02]: ConnectionProvider wraps all routes; useConnection() becomes thin context wrapper for backward compatibility
-- [Phase 02]: Reused DashboardPage count display pattern (Badge/Loader/Error) in Explorer landing for consistency
-- [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: useBreadcrumbTrail parameterized with basePath (default /explorer) so patient routes reuse the hook without duplication
-- [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: MII_MODULES centralised in src/utils/mii-modules.ts as single source of truth for labels, colors, FHIR resource types, and patient search params
-- [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: PatientListPage gates SearchControl behind a searchTriggered flag to prevent accidental unfiltered Patient queries against large Blaze servers
-- [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: Patient detail page reuses Phase 2 ResourceDetailPage for patient-context resource drill-down via nested route /patients/:patientId/:resourceType/:id (unchanged ResourceDetailPage)
-- [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: FhirResourcesView discovers patient-linked types via CapabilityStatement patient/subject param filter; hides zero-count rows per D-09; prefers patient over subject when both present
-- [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: MiiModuleTabs uses keepMounted on root Tabs and every Tabs.Panel to eliminate refetch-on-tab-switch (Pitfall 4 mitigation)
-- [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: ClinicalTimeline fetches Encounter/Condition/Procedure/Observation in parallel with per-type catch-fallback, drops undated entries, and sorts descending via ISO lexicographic compare
-- [Phase 03-patient-centric-browsing-mii-modules]: [Phase 03]: timeline-utils.ts centralises FHIR date-field fallback chains (Condition/Encounter/Procedure/Observation) and summary extraction, reusable for future data-quality introspection
-- [Phase 04-terminology-resolution]: [Phase 04]: DEFAULTS.terminology.serverUrl ships Ontoserver R4 (https://r4.ontoserver.csiro.au/fhir) as dev default; MII URL commented with mTLS note
-- [Phase 04-terminology-resolution]: [Phase 04]: probeTerminologyHealth collapses all failure modes (null/reject/timeout) into deterministic TerminologyHealth union — never throws, usable for sidebar dot without try/catch
-- [Phase 04-terminology-resolution]: [Phase 04]: mockMedplumClientForTerminology fixture exposes predicate-map API (metadataReachable + lookupResponses substring match) for reuse across plans 02-05
-- [Phase 04-terminology-resolution]: [Phase 04]: TerminologyCache uses global LOCAL_STORAGE_PREFIX so clear() wipes all server namespaces atomically (D-06)
-- [Phase 04-terminology-resolution]: [Phase 04]: In-memory LRU evicts by recency; localStorage mirror trims by oldest resolvedAt — two strategies tuned to each tier
-- [Phase 04-terminology-resolution]: [Phase 04]: TerminologyResolver public API is non-throwing — every failure caches a negative entry and returns coding unchanged; callers never need try/catch
-- [Phase 04-terminology-resolution]: [Phase 04]: Inflight dedup via Map<key, Promise> coalesces concurrent resolveCoding calls for the same system|code — exactly one  per unique code per render pass (V-07)
-- [Phase 04-terminology-resolution]: [Phase 04]: TerminologyProvider memo key is JSON.stringify(settings.terminology) parsed inside the factory — deps = [terminologyKey] is exhaustive without eslint-disable (W-1 fix)
-- [Phase 04-terminology-resolution]: [Phase 04]: collectCodings walker recurses every object key — no per-key skip list; typeof !== 'object' early-return is sufficient to skip Coding's primitive fields without masking nested Codings under FHIR 'code' keys
-- [Phase 04-terminology-resolution]: [Phase 04]: useResolvedResource delivers progressive enhancement (raw sync + enriched async) — no spinner, no layout shift (D-12 baseline)
-- [Phase 04-terminology-resolution]: [Phase 04]: Provider nesting locked at ConnectionProvider > AppRoutes > TerminologyProvider > Routes — TerminologyProvider inside AppRoutes because settings comes from useSettings()
-- [Phase 04-terminology-resolution]: [Phase 04]: ClinicalRawView right panel keeps raw wire-format JSON even when left panel is enriched — Cross-View Consistency per UI-SPEC C-3
-- [Phase 04-terminology-resolution]: [Phase 04]: Component tests for Medplum-composed views mock @medplum/react.ResourceTable to observe value prop — bypasses need for @medplum/definitions schema bundle which is not installed
-- [Phase 04-terminology-resolution]: [Phase 04]: TERMINOLOGY_STATUS_CONFIG extracted to src/terminology/statusConfig.ts — shared by Sidebar and SettingsPage so copy and color drift is impossible
-- [Phase 04-terminology-resolution]: [Phase 04]: useTerminologyHealth resets to 'unknown' on serverUrl change before kicking off probe — avoids stale 'ok' lingering after URL swap
-- [Phase 04-terminology-resolution]: [Phase 04]: Sidebar consumes useTerminologyHealth directly instead of threading it through AppLayout — keeps prop surface stable
-- [Phase 05-data-quality-dashboard]: [Phase 05]: QualityMetricsContext rollup rule locked — arithmetic mean of per-type percentages, excluding loading/errored/no-profile types; rationale MII equal-weight modules
-- [Phase 05-data-quality-dashboard]: [Phase 05]: Metrics cache bounds tightened vs TerminologyCache (500 memory / 200 localStorage) because perPath maps are ~10x heavier than terminology display strings
-- [Phase 05-data-quality-dashboard]: [Phase 05]: Wave 0 failing-test harness — every Wave 2 test imports from its target module path with @ts-expect-error so tsc stays green while vitest fails deterministically with 'Failed to resolve import'
-- [Phase 05-data-quality-dashboard]: [Phase 05]: QualityOutletContext shape matches ExplorerOutletContext (client + capability) so Wave 2 drill-downs can reuse Phase 2 helpers verbatim
-- [Phase 05-data-quality-dashboard]: [Phase 05]: SampleSizeControl is stateless — downstream hooks (Plans 03/04) apply useDebouncedValue per-hook; control exposes live value/onChange
-- [Phase 05-data-quality-dashboard]: [Phase 05]: useQualityMetrics uses version-keyed array reversal to force useResourceCounts to refire since its effect keys on types.join(',')
-- [Phase 05-data-quality-dashboard]: [Phase 05]: OverviewStripProps locked to exactly { summary, isLoading } — cards 3-4 pull overallCompleteness/overallCoverage from QualityMetricsContext, not props
-- [Phase 05-data-quality-dashboard]: [Phase 05]: Non-numeric counts always sort to end in sortCounts regardless of direction — settled rows first matches Phase 1 Dashboard ethos
-- [Phase 05-data-quality-dashboard]: [Phase 05]: Module-scoped cache singleton pattern (cacheInstance + cacheServerUrl guard) rebuilds on server URL change — Plan 04 coverage hook must mirror this shape, not share cacheInstance (buildMetricsKey namespaces by metric kind)
-- [Phase 05-data-quality-dashboard]: [Phase 05]: isPathPopulated walks [x] choice types by stripping the suffix and probing any parent key starting with the prefix (Pitfall 3); arrays take [0] for v1 and slice-aware mustSupport (Pitfall 4) is delegated to the Coverage tab
-- [Phase 05-data-quality-dashboard]: [Phase 05]: useCompletenessReport applies useDebouncedValue(sampleSize, 500ms) at the hook level — SampleSizeControl stays stateless so Plans 03/04 debounce at their own cadences
-- [Phase 05-data-quality-dashboard]: [Phase 05]: Pitfall 5 defense pattern — Object.keys(X).every(k => CC_KEYS.has(k)) with minimal allowlist for intended FHIR shape; excludes Identifier/Reference/Quantity by their extra keys
-- [Phase 05-data-quality-dashboard]: [Phase 05]: Empty-object {} at CC position classifies as empty — supports FHIR authoring pattern code:{} required by plan behavior table; tradeoff documented
-- [Phase 05-data-quality-dashboard]: [Phase 05]: useCodingCoverage duplicates getCache(serverUrl) from useCompletenessReport; refactor to cacheSingleton.ts deferred until a third consumer appears
-- [Phase 05]: ValidationBackend composition: resolveBackends returns structural (always) + remote (optional via settings.validation.validatorUrl); dedupeIssues merges by severity|code|expression|diagnostics key
-- [Phase 05]: T-05-05-02 mitigation: remote validator constructs MedplumClient from validatorUrl alone with no shared state with Blaze client; regression test asserts fetch URL never resolves to Blaze base URL
-- [Phase 05]: Banner dismissal key scoped per (serverUrl, validatorUrl) — changing either flag re-shows the PHI-outbound warning banner
-- [Phase 06-v1-gap-closure-patient-navigation]: basePath threaded from ResourceDetailPage (route-aware parent) into useBreadcrumbTrail and NavigationBreadcrumbs siblings; closes MC-1/BF-1
-- [Phase 06-v1-gap-closure-patient-navigation]: NavigationBreadcrumbs discriminates root label via basePath.startsWith('/patients/') check; basePath itself never reaches navigate() (T-06-02 mitigation)
-- [Phase 06-v1-gap-closure-patient-navigation]: REQUIREMENTS.md CONN-01..05 reconciled to Complete post Phase 1 delivery; Phase 6 (reconcile) annotation dropped since reconciliation plan IS Phase 06-02
+- v1.1 scope: bookmark URLs, CSV/NDJSON export, charts library, patient timeline, inline settings editing, 17 code review fixes
+- Deferred QUAL-05 (trends) and QUAL-06 (PDF reports) to v2
+- Patient timeline inspired by EyeMatics horizontal ribbon design, generalized for any FHIR resource type
+- Medplum SearchControl/ResourceTable replaced with custom components in v1.1-dev (Blaze compatibility)
 
 ### Pending Todos
 
@@ -143,11 +45,10 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 1 gate: MedplumClient may not work against Blaze. Fallback is custom fetch-based FHIR client (loses Medplum hook ecosystem).
-- CORS: Vite dev proxy must be configured from day one for browser-to-Blaze requests.
+None.
 
 ## Session Continuity
 
-Last session: 2026-04-12T11:23:38.035Z
-Stopped at: Completed 06-02-PLAN.md — CONN-01..05 traceability reconciled
+Last session: 2026-04-12
+Stopped at: Defining v1.1 requirements
 Resume file: None

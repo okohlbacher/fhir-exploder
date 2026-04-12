@@ -28,15 +28,24 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 **v1.0 shipped 2026-04-12** — see `.planning/milestones/v1.0-ROADMAP.md`. All 25 v1 requirements delivered across 8 phases (5 feature + 3 gap-closure). 286 tests green, 5/5 Nyquist compliant, full milestone audit passed.
 
-### Active (Next Milestone — TBD)
+**v1.1-dev** tagged with Blaze compatibility fixes, dev feedback system, and 8 user-feedback-driven UI improvements (custom search table, ResourcePropertyTable, collapsible JSON tree, dashboard tiles, wildcard search, patient related resources).
 
-Run `/gsd-new-milestone` to scope v1.1. Candidates carried over from v1:
-- Bookmark + share search URLs (BRWS-09)
-- Export results CSV/NDJSON (BRWS-10)
-- Quality metric trends over time (QUAL-05)
-- PDF quality reports (QUAL-06)
-- Chart library integration if needed (`@mantine/charts` + `recharts`)
-- Info-level code review polish (17 items deferred from v1.0)
+## Current Milestone: v1.1 — UX Polish & Data Export
+
+**Goal:** Improve daily usability with bookmarkable searches, data export, a visual patient timeline, inline server settings editing, and chart-based quality visuals.
+
+**Target features:**
+- Bookmark + share search URLs (persisted search state in URL params)
+- Export search results as CSV/NDJSON
+- Charts library integration (`@mantine/charts` + `recharts`) for quality dashboard visuals
+- Generic patient timeline on patient overview (horizontal event ribbon, any FHIR resource type with dates)
+- Inline server settings editing (click FHIR/Terminology status in sidebar to edit URL/auth)
+- 17 info-level code review fixes from v1.0
+
+### Deferred to v2
+
+- QUAL-05: Quality metric trends over time
+- QUAL-06: PDF quality reports
 
 ### Out of Scope
 
@@ -95,4 +104,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-12 — v1.0 shipped. See `.planning/milestones/v1.0-ROADMAP.md` for full milestone archive.*
+*Last updated: 2026-04-12 — v1.1 milestone started. See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 archive.*
