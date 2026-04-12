@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import {
+  Anchor,
   Alert,
   Badge,
   Button,
@@ -339,7 +340,17 @@ export function PatientListPage() {
                 onClick={() => navigate(`/patients/${p.id}`)}
               >
                 <Table.Td>
-                  <Text size="sm" fw={500}>{getPatientName(p)}</Text>
+                  <Anchor
+                    size="sm"
+                    fw={500}
+                    href={`/patients/${p.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate(`/patients/${p.id}`);
+                    }}
+                  >
+                    {getPatientName(p)}
+                  </Anchor>
                 </Table.Td>
                 <Table.Td>
                   <Text size="sm">{p.birthDate ?? ''}</Text>
@@ -357,9 +368,19 @@ export function PatientListPage() {
                   </Text>
                 </Table.Td>
                 <Table.Td>
-                  <Text size="sm" ff="monospace" truncate style={{ maxWidth: 150 }}>
+                  <Anchor
+                    size="sm"
+                    ff="monospace"
+                    truncate="end"
+                    style={{ maxWidth: 150, display: 'block' }}
+                    href={`/patients/${p.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate(`/patients/${p.id}`);
+                    }}
+                  >
                     {p.id}
-                  </Text>
+                  </Anchor>
                 </Table.Td>
               </Table.Tr>
             ))}

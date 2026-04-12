@@ -387,14 +387,33 @@ export function SearchResultsPage() {
                 onClick={() => navigate(`/explorer/${r.resourceType}/${r.id}`)}
               >
                 <Table.Td>
-                  <Text size="sm" ff="monospace" truncate style={{ maxWidth: 200 }}>
+                  <Anchor
+                    size="sm"
+                    ff="monospace"
+                    truncate="end"
+                    style={{ maxWidth: 200, display: 'block' }}
+                    href={`/explorer/${r.resourceType}/${r.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate(`/explorer/${r.resourceType}/${r.id}`);
+                    }}
+                  >
                     {r.id}
-                  </Text>
+                  </Anchor>
                 </Table.Td>
                 <Table.Td>
-                  <Text size="sm" truncate style={{ maxWidth: 400 }}>
+                  <Anchor
+                    size="sm"
+                    truncate="end"
+                    style={{ maxWidth: 400, display: 'block' }}
+                    href={`/explorer/${r.resourceType}/${r.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate(`/explorer/${r.resourceType}/${r.id}`);
+                    }}
+                  >
                     {getResourceSummary(r)}
-                  </Text>
+                  </Anchor>
                 </Table.Td>
                 <Table.Td>
                   <Text size="sm">{getResourceDate(r)}</Text>

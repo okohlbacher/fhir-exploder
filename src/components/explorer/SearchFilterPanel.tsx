@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Button, Group, MultiSelect, Paper, Stack, TextInput } from '@mantine/core';
+import { Button, Group, MultiSelect, Paper, Select, Stack, TextInput } from '@mantine/core';
 import { getCuratedParams } from '../../utils/curated-params';
 
 interface SearchFilterPanelProps {
@@ -14,9 +14,78 @@ interface SearchFilterPanelProps {
 }
 
 /**
- * Search filter panel with curated defaults and advanced toggle (D-02, D-03, D-13).
- * Shows curated params by default, "Show all filters" reveals full CapabilityStatement params.
- * Includes _include/_revinclude multi-selects in advanced mode.
+ * Known value sets for categorical FHIR search parameters.
+ * Params listed here render as Select dropdowns instead of text inputs.
+ */
+const CATEGORICAL_VALUES: Record<string, { value: string; label: string }[]> = {
+  status: [
+    { value: 'active', label: 'Active' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'entered-in-error', label: 'Entered in Error' },
+    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'draft', label: 'Draft' },
+    { value: 'unknown', label: 'Unknown' },
+    { value: 'on-hold', label: 'On Hold' },
+    { value: 'stopped', label: 'Stopped' },
+    { value: 'preliminary', label: 'Preliminary' },
+    { value: 'final', label: 'Final' },
+    { value: 'amended', label: 'Amended' },
+  ],
+  gender: [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'other', label: 'Other' },
+    { value: 'unknown', label: 'Unknown' },
+  ],
+  'clinical-status': [
+    { value: 'active', label: 'Active' },
+    { value: 'recurrence', label: 'Recurrence' },
+    { value: 'relapse', label: 'Relapse' },
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'remission', label: 'Remission' },
+    { value: 'resolved', label: 'Resolved' },
+  ],
+  category: [
+    { value: 'vital-signs', label: 'Vital Signs' },
+    { value: 'laboratory', label: 'Laboratory' },
+    { value: 'imaging', label: 'Imaging' },
+    { value: 'procedure', label: 'Procedure' },
+    { value: 'survey', label: 'Survey' },
+    { value: 'social-history', label: 'Social History' },
+    { value: 'exam', label: 'Exam' },
+    { value: 'therapy', label: 'Therapy' },
+    { value: 'activity', label: 'Activity' },
+  ],
+  class: [
+    { value: 'IMP', label: 'Inpatient (IMP)' },
+    { value: 'AMB', label: 'Ambulatory (AMB)' },
+    { value: 'EMER', label: 'Emergency (EMER)' },
+    { value: 'HH', label: 'Home Health (HH)' },
+    { value: 'VR', label: 'Virtual (VR)' },
+    { value: 'SS', label: 'Short Stay (SS)' },
+  ],
+};
+
+/** Reference-type params get a special placeholder */
+const REFERENCE_PARAMS = new Set([
+  'patient', 'subject', 'encounter', 'performer', 'author',
+  'requester', 'recorder', 'asserter', 'practitioner', 'organization',
+]);
+
+function getPlaceholder(param: string): string | undefined {
+  if (REFERENCE_PARAMS.has(param)) return 'ID or prefix* for wildcard';
+  if (param === 'identifier') return 'ID, prefix*, or system|value';
+  if (param === 'code') return 'Code or system|code';
+  if (param === 'date') return 'YYYY-MM-DD or geYYYY-MM-DD';
+  return undefined;
+}
+
+/**
+ * Search filter panel with curated defaults and advanced toggle.
+ *
+ * Automatically renders Select dropdowns for known categorical params
+ * (status, gender, clinical-status, category, class) and TextInputs
+ * for everything else. Reference params get wildcard-aware placeholders.
  */
 export function SearchFilterPanel({ resourceType, allSearchParams, activeFilters, onSearch }: SearchFilterPanelProps) {
   const [showAllFilters, setShowAllFilters] = useState(false);
@@ -34,14 +103,10 @@ export function SearchFilterPanel({ resourceType, allSearchParams, activeFilters
   const curatedParams = getCuratedParams(resourceType, allSearchParams);
   const visibleParams = showAllFilters ? allSearchParams : curatedParams;
 
-  // Construct potential _include options from params that look like references
   const includeOptions = allSearchParams
     .filter((p) => !p.startsWith('_'))
     .map((p) => `${resourceType}:${p}`);
 
-  // _revinclude requires discovering OTHER resource types whose reference params
-  // point TO the current resourceType (e.g., Observation:patient for Patient).
-  // This needs CapabilityStatement cross-type analysis; disabled until implemented.
   const revincludeOptions: string[] = [];
 
   const handleFilterChange = useCallback((param: string, value: string) => {
@@ -49,14 +114,13 @@ export function SearchFilterPanel({ resourceType, allSearchParams, activeFilters
   }, []);
 
   const handleSubmit = useCallback(() => {
-    // Filter out empty values
-    const activeFilters: Record<string, string> = {};
+    const active: Record<string, string> = {};
     for (const [key, value] of Object.entries(filterValues)) {
       if (value.trim()) {
-        activeFilters[key] = value.trim();
+        active[key] = value.trim();
       }
     }
-    onSearch(activeFilters, {
+    onSearch(active, {
       include: includeValues.length > 0 ? includeValues : undefined,
       revinclude: revincludeValues.length > 0 ? revincludeValues : undefined,
     });
@@ -64,9 +128,7 @@ export function SearchFilterPanel({ resourceType, allSearchParams, activeFilters
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        handleSubmit();
-      }
+      if (e.key === 'Enter') handleSubmit();
     },
     [handleSubmit]
   );
@@ -75,24 +137,39 @@ export function SearchFilterPanel({ resourceType, allSearchParams, activeFilters
     <Paper p="md" bg="gray.0">
       <Stack gap="sm">
         <Group gap="sm" wrap="wrap">
-          {visibleParams.map((param) => (
-            <TextInput
-              key={param}
-              label={param}
-              placeholder={
-                ['patient', 'subject'].includes(param)
-                  ? 'ID or prefix* for wildcard'
-                  : param === 'identifier'
-                    ? 'ID, prefix*, or system|value'
-                    : undefined
-              }
-              value={filterValues[param] ?? ''}
-              onChange={(e) => handleFilterChange(param, e.currentTarget.value)}
-              onKeyDown={handleKeyDown}
-              size="sm"
-              style={{ minWidth: 150, flex: '1 1 200px' }}
-            />
-          ))}
+          {visibleParams.map((param) => {
+            const categoricalData = CATEGORICAL_VALUES[param];
+
+            if (categoricalData) {
+              return (
+                <Select
+                  key={param}
+                  label={param}
+                  placeholder="All"
+                  data={categoricalData}
+                  value={filterValues[param] || null}
+                  onChange={(val) => handleFilterChange(param, val ?? '')}
+                  clearable
+                  searchable
+                  size="sm"
+                  style={{ minWidth: 140, flex: '0 1 180px' }}
+                />
+              );
+            }
+
+            return (
+              <TextInput
+                key={param}
+                label={param}
+                placeholder={getPlaceholder(param)}
+                value={filterValues[param] ?? ''}
+                onChange={(e) => handleFilterChange(param, e.currentTarget.value)}
+                onKeyDown={handleKeyDown}
+                size="sm"
+                style={{ minWidth: 150, flex: '1 1 200px' }}
+              />
+            );
+          })}
         </Group>
 
         {showAllFilters && (
