@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 05-04-PLAN.md
-last_updated: "2026-04-12T09:50:25.414Z"
+status: verifying
+stopped_at: Completed 05-05-PLAN.md
+last_updated: "2026-04-12T10:03:01.149Z"
 last_activity: 2026-04-12
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 21
-  completed_plans: 20
-  percent: 95
+  completed_plans: 21
+  percent: 100
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-11)
 
 Phase: 05 (data-quality-dashboard) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-12
 
 Progress: [██████████] 100%
@@ -71,6 +71,7 @@ Progress: [██████████] 100%
 | Phase 05-data-quality-dashboard P02 | 405s | 2 tasks | 14 files |
 | Phase 05-data-quality-dashboard P03 | 523 | 2 tasks | 15 files |
 | Phase 05-data-quality-dashboard P04 | 7min | 2 tasks | 7 files |
+| Phase 05 P05 | 7min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -125,6 +126,9 @@ Recent decisions affecting current work:
 - [Phase 05-data-quality-dashboard]: [Phase 05]: Pitfall 5 defense pattern — Object.keys(X).every(k => CC_KEYS.has(k)) with minimal allowlist for intended FHIR shape; excludes Identifier/Reference/Quantity by their extra keys
 - [Phase 05-data-quality-dashboard]: [Phase 05]: Empty-object {} at CC position classifies as empty — supports FHIR authoring pattern code:{} required by plan behavior table; tradeoff documented
 - [Phase 05-data-quality-dashboard]: [Phase 05]: useCodingCoverage duplicates getCache(serverUrl) from useCompletenessReport; refactor to cacheSingleton.ts deferred until a third consumer appears
+- [Phase 05]: ValidationBackend composition: resolveBackends returns structural (always) + remote (optional via settings.validation.validatorUrl); dedupeIssues merges by severity|code|expression|diagnostics key
+- [Phase 05]: T-05-05-02 mitigation: remote validator constructs MedplumClient from validatorUrl alone with no shared state with Blaze client; regression test asserts fetch URL never resolves to Blaze base URL
+- [Phase 05]: Banner dismissal key scoped per (serverUrl, validatorUrl) — changing either flag re-shows the PHI-outbound warning banner
 
 ### Pending Todos
 
@@ -137,6 +141,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T09:50:25.412Z
-Stopped at: Completed 05-04-PLAN.md
+Last session: 2026-04-12T10:02:51.651Z
+Stopped at: Completed 05-05-PLAN.md
 Resume file: None
