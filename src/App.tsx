@@ -7,13 +7,11 @@ import { ExplorerLayout } from './components/explorer/ExplorerLayout';
 import { ResourceTypeLanding } from './components/explorer/ResourceTypeLanding';
 import { SearchResultsPage } from './components/explorer/SearchResultsPage';
 import { ResourceDetailPage } from './components/explorer/ResourceDetailPage';
+import { PatientsLayout } from './components/patients/PatientsLayout';
+import { PatientListPage } from './components/patients/PatientListPage';
 import { ConnectionProvider } from './contexts/ConnectionContext';
 import { useSettings } from './hooks/useSettings';
 import { useConnection } from './hooks/useConnection';
-
-function PatientsPage() {
-  return <div>Patients (Phase 3)</div>;
-}
 
 function QualityPage() {
   return <div>Quality (Phase 5)</div>;
@@ -54,7 +52,9 @@ function AppRoutes() {
           <Route path=":resourceType" element={<SearchResultsPage />} />
           <Route path=":resourceType/:id" element={<ResourceDetailPage />} />
         </Route>
-        <Route path="/patients" element={<PatientsPage />} />
+        <Route path="/patients" element={<PatientsLayout />}>
+          <Route index element={<PatientListPage />} />
+        </Route>
         <Route path="/quality" element={<QualityPage />} />
       </Route>
     </Routes>

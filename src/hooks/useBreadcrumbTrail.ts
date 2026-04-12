@@ -8,22 +8,27 @@ export interface BreadcrumbEntry {
 }
 
 /**
- * Manages a breadcrumb trail for reference navigation in the Resource Explorer.
+ * Manages a breadcrumb trail for reference navigation across both the
+ * generic Resource Explorer and patient-centric browsing.
  *
  * Each push adds a new entry and navigates to that resource's detail URL.
  * navigateTo(index) slices the trail to that point and navigates back.
  * reset() clears the trail entirely.
+ *
+ * @param basePath URL prefix for resource detail navigation (default `/explorer`).
+ *                 Phase 3 patient pages pass `/patients/:patientId` to keep users
+ *                 inside patient context when following references.
  */
-export function useBreadcrumbTrail() {
+export function useBreadcrumbTrail(basePath: string = '/explorer') {
   const [trail, setTrail] = useState<BreadcrumbEntry[]>([]);
   const navigate = useNavigate();
 
   const push = useCallback(
     (entry: BreadcrumbEntry) => {
       setTrail((prev) => [...prev, entry]);
-      navigate(`/explorer/${entry.resourceType}/${entry.id}`);
+      navigate(`${basePath}/${entry.resourceType}/${entry.id}`);
     },
-    [navigate]
+    [navigate, basePath]
   );
 
   const navigateTo = useCallback(
@@ -31,10 +36,10 @@ export function useBreadcrumbTrail() {
       const entry = trail[index];
       if (entry) {
         setTrail((prev) => prev.slice(0, index + 1));
-        navigate(`/explorer/${entry.resourceType}/${entry.id}`);
+        navigate(`${basePath}/${entry.resourceType}/${entry.id}`);
       }
     },
-    [navigate, trail]
+    [navigate, trail, basePath]
   );
 
   const reset = useCallback(() => {
