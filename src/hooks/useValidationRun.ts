@@ -19,7 +19,7 @@
  * UI can render "Resource → /explorer/{type}/{id}" links without having
  * to cross-reference byResource.
  */
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MedplumClient } from '@medplum/core';
 import type { OperationOutcomeIssue, Resource } from '@medplum/fhirtypes';
 import type { AppSettings } from '../config/types';
@@ -182,6 +182,15 @@ export function useValidationRun({
 
   const cancel = useCallback(() => {
     cancelledRef.current = true;
+  }, []);
+
+  // Unmount-safety: flip cancelledRef so the async batch loop bails at
+  // the next `if (cancelledRef.current) return;` check and no setState
+  // fires against an unmounted tree.
+  useEffect(() => {
+    return () => {
+      cancelledRef.current = true;
+    };
   }, []);
 
   return {
