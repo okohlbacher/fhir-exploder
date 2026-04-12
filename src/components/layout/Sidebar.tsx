@@ -1,4 +1,5 @@
-import { AppShell, Box, Group, NavLink, Stack, Text } from '@mantine/core';
+import { useState } from 'react';
+import { AppShell, Box, Group, NavLink, Stack, Text, UnstyledButton } from '@mantine/core';
 import {
   IconDashboard,
   IconDatabase,
@@ -9,6 +10,8 @@ import {
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import { useTerminologyHealth } from '../../hooks/useTerminologyHealth';
 import { TERMINOLOGY_STATUS_CONFIG } from '../../terminology/statusConfig';
+import { FhirSettingsModal } from '../settings/FhirSettingsModal';
+import { TerminologySettingsModal } from '../settings/TerminologySettingsModal';
 
 export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 
@@ -39,6 +42,9 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
   const termHealth = useTerminologyHealth();
   const termStatus = TERMINOLOGY_STATUS_CONFIG[termHealth];
 
+  const [fhirModalOpen, setFhirModalOpen] = useState(false);
+  const [termModalOpen, setTermModalOpen] = useState(false);
+
   return (
     <>
       <AppShell.Section p="md">
@@ -46,38 +52,42 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
           FHIR Exploder
         </Text>
         <Stack gap="xs" mt="xs">
-          <Group gap="xs">
-            <Box
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor: status.color,
-                animation: status.pulse
-                  ? 'pulse 1.5s ease-in-out infinite'
-                  : undefined,
-              }}
-            />
-            <Text size="xs" c="dimmed">
-              {status.label}
-            </Text>
-          </Group>
-          <Group gap="xs">
-            <Box
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor: termStatus.color,
-                animation: termStatus.pulse
-                  ? 'pulse 1.5s ease-in-out infinite'
-                  : undefined,
-              }}
-            />
-            <Text size="xs" c="dimmed">
-              {termStatus.label}
-            </Text>
-          </Group>
+          <UnstyledButton onClick={() => setFhirModalOpen(true)}>
+            <Group gap="xs">
+              <Box
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor: status.color,
+                  animation: status.pulse
+                    ? 'pulse 1.5s ease-in-out infinite'
+                    : undefined,
+                }}
+              />
+              <Text size="xs" c="dimmed" td="underline" style={{ cursor: 'pointer' }}>
+                {status.label}
+              </Text>
+            </Group>
+          </UnstyledButton>
+          <UnstyledButton onClick={() => setTermModalOpen(true)}>
+            <Group gap="xs">
+              <Box
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor: termStatus.color,
+                  animation: termStatus.pulse
+                    ? 'pulse 1.5s ease-in-out infinite'
+                    : undefined,
+                }}
+              />
+              <Text size="xs" c="dimmed" td="underline" style={{ cursor: 'pointer' }}>
+                {termStatus.label}
+              </Text>
+            </Group>
+          </UnstyledButton>
         </Stack>
       </AppShell.Section>
 
@@ -103,6 +113,9 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
           active={location.pathname === '/settings'}
         />
       </AppShell.Section>
+
+      <FhirSettingsModal opened={fhirModalOpen} onClose={() => setFhirModalOpen(false)} />
+      <TerminologySettingsModal opened={termModalOpen} onClose={() => setTermModalOpen(false)} />
     </>
   );
 }

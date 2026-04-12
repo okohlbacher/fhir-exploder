@@ -16,6 +16,7 @@ import { CompletenessDrillDown } from './components/quality/CompletenessDrillDow
 import { CodingDrillDown } from './components/quality/CodingDrillDown';
 import { ConnectionProvider } from './contexts/ConnectionContext';
 import { TerminologyProvider } from './contexts/TerminologyContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import { useSettings } from './hooks/useSettings';
 import { useConnection } from './hooks/useConnection';
 
@@ -76,9 +77,11 @@ function AppRoutes() {
 
 export function App() {
   return (
-    <ConnectionProvider>
-      <AppRoutes />
-    </ConnectionProvider>
+    <SettingsProvider>
+      <ConnectionProvider>
+        <AppRoutes />
+      </ConnectionProvider>
+    </SettingsProvider>
   );
 }
 

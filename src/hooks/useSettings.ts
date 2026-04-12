@@ -1,19 +1,11 @@
-import { useState, useEffect } from 'react';
-import type { AppSettings } from '../config/types';
-import { loadSettings } from '../config/settings';
+import { useSettingsContext } from '../contexts/SettingsContext';
 
+/**
+ * Read (and optionally mutate) the current app settings.
+ * Delegates to SettingsContext — requires SettingsProvider in the tree.
+ * Backward-compatible: existing consumers that destructure only
+ * { settings, usingDefaults, loading } continue to work unchanged.
+ */
 export function useSettings() {
-  const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [usingDefaults, setUsingDefaults] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadSettings().then(({ settings: s, usingDefaults: d }) => {
-      setSettings(s);
-      setUsingDefaults(d);
-      setLoading(false);
-    });
-  }, []);
-
-  return { settings, usingDefaults, loading };
+  return useSettingsContext();
 }
