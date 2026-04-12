@@ -17,6 +17,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 3: Patient-Centric Browsing & MII Modules** - Patient list, clinical detail views, MII Kerndatensatz module navigation
 - [ ] **Phase 4: Terminology Resolution** - Resolve CodeableConcept display values via MII Terminology Server with caching and fallback
 - [ ] **Phase 5: Data Quality Dashboard** - Resource counts, field completeness, coding coverage, and profile validation
+- [ ] **Phase 6: v1.0 Gap Closure — Patient-aware Reference Navigation** - Fix MC-1/BF-1: ResourceDetailPage honors patient subtree basePath; reconcile REQUIREMENTS.md CONN checkboxes
+- [ ] **Phase 7: v1.0 Gap Closure — Code Review Fixes** - Apply 32 code review findings across Phases 4+5 (3 critical: unguarded URL, PHI banner gating, cancellation race)
+- [ ] **Phase 8: v1.0 Gap Closure — Retroactive Nyquist Compliance** - Fill missing VALIDATION.md for Phases 2-4; flip Phase 5 VALIDATION.md nyquist_compliant flag
 
 ## Phase Details
 
@@ -103,16 +106,58 @@ Plans:
 - [x] 05-05-PLAN.md (Wave 3, depends on 01+03) -- QUAL-04: structuralValidator (reuses Plan 03 walker) + remoteValidator (independent MedplumClient, never posts to Blaze) + resolveBackends + useValidationRun batch runner + ValidationPanel with Blaze $validate warning banner + ValidationIssueList + JSON report export
 **UI hint**: yes
 
+### Phase 6: v1.0 Gap Closure — Patient-aware Reference Navigation
+**Goal**: Reference navigation stays in the patient subtree when the user is on a patient-scoped resource detail page — closes BF-1 so BRWS-07, PTNT-04, and PTNT-05 are fully satisfied
+**Depends on**: Phase 2, Phase 3
+**Requirements**: BRWS-07, PTNT-04, PTNT-05 (upgrade from partial → satisfied); housekeeping CONN-01..05 traceability reconciliation
+**Gap Closure**: Closes MILESTONE-AUDIT.md integration MC-1 + flow BF-1
+**Success Criteria** (what must be TRUE):
+  1. Clicking a Reference field inside `/patients/:patientId/:type/:id` navigates to `/patients/:patientId/:type/:newId` (stays in patient subtree)
+  2. "Back to results" button from patient-scoped detail navigates to the previous patient context, not `/explorer`
+  3. `NavigationBreadcrumbs` root anchor honors the patient basePath when present
+  4. REQUIREMENTS.md traceability table and checkboxes reconciled for all Phase 1 (CONN-01..05) shipments
+**Plans:** TBD
+**UI hint**: no (bug fix in existing components)
+
+### Phase 7: v1.0 Gap Closure — Code Review Fixes
+**Goal**: All critical and warning-level findings from Phase 4 + Phase 5 code reviews are addressed so v1.0 ships without known regressions in production code paths
+**Depends on**: Phase 4, Phase 5
+**Requirements**: None (tech debt closure); upgrades existing TERM-* and QUAL-* implementations for robustness
+**Gap Closure**: Closes tech_debt items in `.planning/v1.0-MILESTONE-AUDIT.md`
+**Success Criteria** (what must be TRUE):
+  1. Phase 4 REVIEW.md: CR-01 resolved (guarded URL parse); all 4 warnings resolved or explicitly accepted with rationale
+  2. Phase 5 REVIEW.md: CR-01 resolved (PHI banner gates first-use of remote validation with explicit acknowledgment); CR-02 resolved (cancellation race fixed via local `cancelled` closure pattern)
+  3. Phase 5 REVIEW.md: all 8 warnings resolved or explicitly accepted with rationale
+  4. Full test suite remains green after fixes (274+ tests)
+**Plans:** TBD
+**UI hint**: partial (PHI banner UX change)
+
+### Phase 8: v1.0 Gap Closure — Retroactive Nyquist Compliance
+**Goal**: Every v1.0 phase has a signed-off VALIDATION.md that documents the Nyquist test strategy used during execution, bringing Nyquist compliance from 1/5 to 5/5 for archive rigor
+**Depends on**: Phases 2, 3, 4, 5
+**Requirements**: None (process hygiene)
+**Gap Closure**: Closes nyquist.missing_phases and nyquist.partial_phases from MILESTONE-AUDIT.md
+**Success Criteria** (what must be TRUE):
+  1. `.planning/phases/02-resource-explorer/02-VALIDATION.md` exists with `nyquist_compliant: true` and every Phase 2 task mapped in the verification table
+  2. `.planning/phases/03-patient-centric-browsing-mii-modules/03-VALIDATION.md` exists with `nyquist_compliant: true`
+  3. `.planning/phases/04-terminology-resolution/04-VALIDATION.md` exists with `nyquist_compliant: true`
+  4. `.planning/phases/05-data-quality-dashboard/05-VALIDATION.md` frontmatter flipped to `nyquist_compliant: true` with sign-off checkboxes checked
+**Plans:** TBD
+**UI hint**: no (documentation only)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
-(Phases 4 and 5 both depend on Phase 2 but not on each other; sequential execution is the default.)
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+Phases 6-8 are gap-closure phases added after the v1.0 milestone audit (2026-04-12).
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Blaze Connectivity | 3/3 | Complete | 2026-04-11 |
-| 2. Resource Explorer | 4/5 | Gap closure | - |
-| 3. Patient-Centric Browsing & MII Modules | 0/0 | Not started | - |
-| 4. Terminology Resolution | 0/0 | Not started | - |
-| 5. Data Quality Dashboard | 0/5 | Planned | - |
+| 2. Resource Explorer | 5/5 | Complete | 2026-04-12 |
+| 3. Patient-Centric Browsing & MII Modules | 3/3 | Complete | 2026-04-12 |
+| 4. Terminology Resolution | 5/5 | Complete | 2026-04-12 |
+| 5. Data Quality Dashboard | 5/5 | Complete | 2026-04-12 |
+| 6. v1.0 Gap Closure — Patient-aware Reference Navigation | 0/0 | Planned | - |
+| 7. v1.0 Gap Closure — Code Review Fixes | 0/0 | Planned | - |
+| 8. v1.0 Gap Closure — Retroactive Nyquist Compliance | 0/0 | Planned | - |
