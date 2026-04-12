@@ -27,15 +27,15 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BRWS-09 | — | Pending |
-| BRWS-10 | — | Pending |
-| VIZ-01 | — | Pending |
-| VIZ-02 | — | Pending |
-| VIZ-03 | — | Pending |
-| CONF-01 | — | Pending |
-| CONF-02 | — | Pending |
-| CONF-03 | — | Pending |
-| DEBT-01 | — | Pending |
+| BRWS-09 | 10 | Pending |
+| BRWS-10 | 11 | Pending |
+| VIZ-01 | 13 | Pending |
+| VIZ-02 | 12 | Pending |
+| VIZ-03 | 12 | Pending |
+| CONF-01 | 9 | Pending |
+| CONF-02 | 9 | Pending |
+| CONF-03 | 9 | Pending |
+| DEBT-01 | 13 | Pending |
 
 ## Future Requirements (v2)
 
