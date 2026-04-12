@@ -102,13 +102,27 @@ export class TerminologyResolver {
    */
   async resolveResource<T extends Resource>(resource: T): Promise<T> {
     const codings = collectCodings(resource);
-    await Promise.all(codings.map((c) => this.resolveCoding(c)));
-    // Enrich: deep clone + populate display from cache lookup.
-    const clone = JSON.parse(JSON.stringify(resource)) as T;
-    for (const c of collectCodings(clone)) {
-      if (c.display || !c.system || !c.code) continue;
-      const entry = this.cache.get(makeTerminologyKey(this.serverUrl, c.system, c.code));
-      if (entry?.display) c.display = entry.display;
+    // First pass: resolve each coding. Keep the display results locally so
+    // the second-pass patch is immune to a concurrent cache.clear() (WR-04):
+    // previously, the enrichment re-read from the cache, which could be
+    // empty if the user clicked "Clear terminology cache" between the
+    // Promise.all and the clone — resulting in an unenriched render
+    // despite successful lookups.
+    const displays = await Promise.all(
+      codings.map((c) => {
+        if (c.display || !c.system || !c.code) return Promise.resolve(null);
+        return this.lookupDisplay(c.system, c.code);
+      }),
+    );
+    // structuredClone is safer than JSON.parse(JSON.stringify(...)) — it
+    // preserves `undefined`, Date, and typed arrays (FHIR doesn't use those
+    // today, but the pattern is brittle) and is faster than JSON roundtrip.
+    const clone = structuredClone(resource) as T;
+    const cloneCodings = collectCodings(clone);
+    for (let i = 0; i < cloneCodings.length; i++) {
+      const c = cloneCodings[i];
+      const d = displays[i];
+      if (d && !c.display) c.display = d;
     }
     return clone;
   }
