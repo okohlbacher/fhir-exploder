@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  Anchor,
   Badge,
   Center,
   Collapse,
@@ -8,15 +9,13 @@ import {
   Paper,
   Skeleton,
   Stack,
+  Table,
   Text,
   UnstyledButton,
 } from '@mantine/core';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { useMedplum } from '@medplum/react-hooks';
-import { SearchControl } from '@medplum/react';
-import type { SearchClickEvent } from '@medplum/react';
-import type { Bundle, CapabilityStatement } from '@medplum/fhirtypes';
-import type { SearchRequest } from '@medplum/core';
+import type { Bundle, CapabilityStatement, Resource } from '@medplum/fhirtypes';
 
 type CountState = number | 'loading' | 'error';
 
@@ -25,12 +24,6 @@ interface FhirResourcesViewProps {
   capability: CapabilityStatement;
 }
 
-/**
- * Discover which resource types accept a `patient` or `subject` search
- * parameter from the server's CapabilityStatement. Also returns a mapping
- * of type -> chosen parameter name (preferring `patient`, falling back
- * to `subject`) so we query the right parameter per type.
- */
 function usePatientLinkedTypes(capability: CapabilityStatement): {
   types: string[];
   paramByType: Map<string, 'patient' | 'subject'>;
@@ -39,7 +32,6 @@ function usePatientLinkedTypes(capability: CapabilityStatement): {
     const types: string[] = [];
     const paramByType = new Map<string, 'patient' | 'subject'>();
     const resources = capability.rest?.[0]?.resource ?? [];
-
     for (const r of resources) {
       const params = r.searchParam ?? [];
       const hasPatient = params.some((p) => p.name === 'patient');
@@ -55,114 +47,114 @@ function usePatientLinkedTypes(capability: CapabilityStatement): {
   }, [capability]);
 }
 
+function getSummary(r: Resource): string {
+  const obj = r as Record<string, unknown>;
+  for (const field of ['code', 'type', 'category']) {
+    const cc = obj[field];
+    if (cc && typeof cc === 'object') {
+      const concept = Array.isArray(cc) ? cc[0] : cc;
+      if (concept) {
+        const c = concept as Record<string, unknown>;
+        if (typeof c.text === 'string') return c.text;
+        if (Array.isArray(c.coding) && c.coding[0]) {
+          const coding = c.coding[0] as Record<string, unknown>;
+          return (coding.display as string) ?? (coding.code as string) ?? '';
+        }
+      }
+    }
+  }
+  return r.id ?? '';
+}
+
+function getDate(r: Resource): string {
+  const obj = r as Record<string, unknown>;
+  for (const field of [
+    'effectiveDateTime', 'performedDateTime', 'recordedDate', 'onsetDateTime',
+    'authoredOn', 'date', 'issued',
+  ]) {
+    if (typeof obj[field] === 'string') return (obj[field] as string).slice(0, 10);
+  }
+  return '';
+}
+
 /**
- * Patient-scoped FHIR Resources view (D-09, PTNT-05).
- *
- * Discovers resource types that reference a patient via the
- * CapabilityStatement, fetches the count of each scoped to the current
- * patient (`{Type}?patient=Patient/{id}&_summary=count`), and renders
- * non-zero types as expandable rows. Expanding a row mounts a
- * patient-scoped SearchControl whose row click navigates to
- * `/patients/{patientId}/{resourceType}/{resourceId}` so the user stays
- * in patient context.
- *
- * Security note (T-03-05): The resource type comes from the server's
- * CapabilityStatement (server-provided, not user input); the resource
- * ID is provided by SearchControl's click event (also server-provided).
- * The patient filter is built from `Patient/${patientId}` -- SearchControl
- * encodes the filter value when executing the FHIR search.
+ * Patient-scoped FHIR Resources view — uses direct FHIR search
+ * instead of Medplum's SearchControl.
  */
-export function FhirResourcesView({
-  patientId,
-  capability,
-}: FhirResourcesViewProps) {
+export function FhirResourcesView({ patientId, capability }: FhirResourcesViewProps) {
   const navigate = useNavigate();
   const client = useMedplum();
 
-  const { types: patientLinkedTypes, paramByType } =
-    usePatientLinkedTypes(capability);
+  const { types: patientLinkedTypes, paramByType } = usePatientLinkedTypes(capability);
 
   const [counts, setCounts] = useState<Record<string, CountState>>({});
   const [expandedType, setExpandedType] = useState<string | null>(null);
+  const [expandedResources, setExpandedResources] = useState<Resource[]>([]);
+  const [expandedLoading, setExpandedLoading] = useState(false);
 
-  // Fetch counts on mount / when the inputs change.
+  // Fetch counts
   useEffect(() => {
-    if (patientLinkedTypes.length === 0) {
-      setCounts({});
-      return;
-    }
-
-    // Initialise every type to 'loading' so the UI can show skeletons.
+    if (patientLinkedTypes.length === 0) { setCounts({}); return; }
     const initial: Record<string, CountState> = {};
     for (const t of patientLinkedTypes) initial[t] = 'loading';
     setCounts(initial);
 
     let cancelled = false;
-
     for (const type of patientLinkedTypes) {
       const param = paramByType.get(type) ?? 'patient';
-      const query = `${param}=Patient/${patientId}&_summary=count`;
-      client
-        .search(type, query)
-        .then((bundle: Bundle) => {
+      const url = `${type}?${param}=Patient/${patientId}&_summary=count&_count=0`;
+      client.get(client.fhirUrl(url).toString())
+        .then((raw) => {
           if (cancelled) return;
-          setCounts((prev) => ({
-            ...prev,
-            [type]: typeof bundle.total === 'number' ? bundle.total : 0,
-          }));
+          const bundle: Bundle = typeof raw === 'string' ? JSON.parse(raw) : raw;
+          setCounts((prev) => ({ ...prev, [type]: bundle.total ?? 0 }));
         })
         .catch(() => {
           if (cancelled) return;
           setCounts((prev) => ({ ...prev, [type]: 'error' }));
         });
     }
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [client, patientId, patientLinkedTypes, paramByType]);
 
-  const handleClick = useCallback(
-    (e: SearchClickEvent) => {
-      const resource = e.resource;
-      if (resource.resourceType && resource.id) {
-        navigate(
-          `/patients/${patientId}/${resource.resourceType}/${resource.id}`
+  // Fetch resources when a type is expanded
+  const handleExpand = useCallback((type: string) => {
+    if (expandedType === type) {
+      setExpandedType(null);
+      return;
+    }
+    setExpandedType(type);
+    setExpandedLoading(true);
+    setExpandedResources([]);
+
+    const param = paramByType.get(type) ?? 'patient';
+    const url = `${type}?${param}=Patient/${patientId}&_count=20&_sort=-date`;
+    client.get(client.fhirUrl(url).toString())
+      .then((raw) => {
+        const bundle: Bundle = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        setExpandedResources(
+          (bundle.entry ?? []).map((e) => e.resource).filter(Boolean) as Resource[]
         );
-      }
-    },
-    [navigate, patientId]
-  );
+        setExpandedLoading(false);
+      })
+      .catch(() => {
+        setExpandedResources([]);
+        setExpandedLoading(false);
+      });
+  }, [client, expandedType, paramByType, patientId]);
 
-  const stillLoading = patientLinkedTypes.some(
-    (t) => counts[t] === 'loading'
-  );
-
-  // A type is "visible" if it has a positive count, is loading, or errored.
-  // Types with a known count of 0 are hidden per D-09 (don't show empty).
+  const stillLoading = patientLinkedTypes.some((t) => counts[t] === 'loading');
   const visibleTypes = patientLinkedTypes.filter((t) => {
     const c = counts[t];
     if (c === 'loading' || c === 'error') return true;
     return typeof c === 'number' && c > 0;
   });
 
-  // True empty state: every count is known and zero.
   const allKnownAndEmpty =
-    !stillLoading &&
-    patientLinkedTypes.length > 0 &&
+    !stillLoading && patientLinkedTypes.length > 0 &&
     patientLinkedTypes.every((t) => counts[t] === 0);
 
-  if (patientLinkedTypes.length === 0) {
-    return (
-      <Center py="xl">
-        <Text c="dimmed">
-          No linked resources found for this patient.
-        </Text>
-      </Center>
-    );
-  }
-
-  if (allKnownAndEmpty) {
+  if (patientLinkedTypes.length === 0 || allKnownAndEmpty) {
     return (
       <Center py="xl">
         <Text c="dimmed">No linked resources found for this patient.</Text>
@@ -182,60 +174,68 @@ export function FhirResourcesView({
 
       {visibleTypes.map((type) => {
         const count = counts[type];
-        const param = paramByType.get(type) ?? 'patient';
-        const search: SearchRequest = {
-          resourceType: type as SearchRequest['resourceType'],
-          filters: [
-            {
-              code: param,
-              operator: 'eq',
-              value: `Patient/${patientId}`,
-            },
-          ],
-          count: 10,
-        };
         const isExpanded = expandedType === type;
 
         return (
           <Paper key={type} p="sm" withBorder>
-            <UnstyledButton
-              onClick={() =>
-                setExpandedType((prev) => (prev === type ? null : type))
-              }
-              style={{ width: '100%' }}
-            >
+            <UnstyledButton onClick={() => handleExpand(type)} style={{ width: '100%' }}>
               <Group justify="space-between" wrap="nowrap">
                 <Group gap="sm">
-                  {isExpanded ? (
-                    <IconChevronDown size={16} />
-                  ) : (
-                    <IconChevronRight size={16} />
-                  )}
-                  <Text fw={600} size="sm">
-                    {type}
-                  </Text>
+                  {isExpanded ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
+                  <Text fw={600} size="sm">{type}</Text>
                 </Group>
                 {count === 'loading' && <Skeleton height={22} width={40} />}
-                {count === 'error' && (
-                  <Badge color="red" variant="light">
-                    Error
-                  </Badge>
-                )}
-                {typeof count === 'number' && (
-                  <Badge color="blue" variant="light">
-                    {count}
-                  </Badge>
-                )}
+                {count === 'error' && <Badge color="red" variant="light">Error</Badge>}
+                {typeof count === 'number' && <Badge color="blue" variant="light">{count}</Badge>}
               </Group>
             </UnstyledButton>
             <Collapse in={isExpanded}>
               <Stack pt="sm">
-                <SearchControl
-                  search={search}
-                  hideToolbar={true}
-                  hideFilters={true}
-                  onClick={handleClick}
-                />
+                {expandedLoading && (
+                  <Stack gap="xs">
+                    <Skeleton height={28} />
+                    <Skeleton height={28} />
+                  </Stack>
+                )}
+                {!expandedLoading && expandedResources.length > 0 && (
+                  <Table striped highlightOnHover withTableBorder>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Summary</Table.Th>
+                        <Table.Th>Date</Table.Th>
+                        <Table.Th>ID</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {expandedResources.map((r) => (
+                        <Table.Tr
+                          key={r.id}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => navigate(`/patients/${patientId}/${r.resourceType}/${r.id}`)}
+                        >
+                          <Table.Td>
+                            <Anchor
+                              size="sm"
+                              href={`/patients/${patientId}/${r.resourceType}/${r.id}`}
+                              onClick={(e) => e.preventDefault()}
+                            >
+                              {getSummary(r)}
+                            </Anchor>
+                          </Table.Td>
+                          <Table.Td><Text size="sm">{getDate(r)}</Text></Table.Td>
+                          <Table.Td>
+                            <Text size="sm" ff="monospace" c="dimmed" truncate style={{ maxWidth: 150 }}>
+                              {r.id}
+                            </Text>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                )}
+                {!expandedLoading && expandedResources.length === 0 && (
+                  <Text size="sm" c="dimmed" ta="center" py="sm">No resources found.</Text>
+                )}
               </Stack>
             </Collapse>
           </Paper>

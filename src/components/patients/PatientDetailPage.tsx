@@ -10,8 +10,8 @@ import {
   Text,
 } from '@mantine/core';
 import { useMedplum } from '@medplum/react-hooks';
-import { PatientHeader } from '@medplum/react';
 import type { Patient } from '@medplum/fhirtypes';
+import { PatientHeaderCard } from './PatientHeaderCard';
 import { MiiModuleTabs } from './MiiModuleTabs';
 import { FhirResourcesView } from './FhirResourcesView';
 import { PatientTimeline } from './PatientTimeline';
@@ -142,7 +142,7 @@ export function PatientDetailPage() {
 
       {!loading && !error && patient && (
         <>
-          <PatientHeader patient={patient} />
+          <PatientHeaderCard patient={patient} />
 
           <PatientTimeline patientId={patientId} />
 
