@@ -308,6 +308,14 @@ export function SearchResultsPage() {
       <SearchFilterPanel
         resourceType={resourceType}
         allSearchParams={currentTypeData?.searchParams ?? []}
+        activeFilters={useMemo(
+          () => Object.fromEntries(
+            (searchRequest.filters ?? [])
+              .filter((f) => f.value)
+              .map((f) => [f.code, f.value])
+          ),
+          [searchRequest.filters]
+        )}
         onSearch={handleSearch}
       />
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import {
   Alert,
   Badge,
@@ -46,23 +46,25 @@ function getPatientIdentifier(patient: Patient): string {
 export function PatientListPage() {
   const { client } = useOutletContext<PatientsOutletContext>();
   const navigate = useNavigate();
+  const [urlParams, setUrlParams] = useSearchParams();
 
-  const [searchParams, setSearchParams] = useState<PatientSearchParams>({
-    name: '',
-    identifier: '',
-    birthDate: '',
-  });
+  // Initialize from URL params (bookmark restore)
+  const initialFromUrl = useMemo<PatientSearchParams>(() => ({
+    name: urlParams.get('name') ?? '',
+    identifier: urlParams.get('identifier') ?? '',
+    birthDate: urlParams.get('birthdate') ?? '',
+  }), []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const [searchParams, setSearchParams] = useState<PatientSearchParams>(initialFromUrl);
   const [bundle, setBundle] = useState<Bundle | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [count, setCount] = useState<number>(DEFAULT_COUNT);
+  const [count, setCount] = useState<number>(
+    parseInt(urlParams.get('_count') ?? '', 10) || DEFAULT_COUNT
+  );
 
   // Active search = what's actually been submitted (not live typing)
-  const [activeSearch, setActiveSearch] = useState<PatientSearchParams>({
-    name: '',
-    identifier: '',
-    birthDate: '',
-  });
+  const [activeSearch, setActiveSearch] = useState<PatientSearchParams>(initialFromUrl);
   const [searchVersion, setSearchVersion] = useState(0);
 
   // Execute search whenever activeSearch or count changes
@@ -159,7 +161,14 @@ export function PatientListPage() {
   const handleSearch = useCallback(() => {
     setActiveSearch(searchParams);
     setSearchVersion((v) => v + 1);
-  }, [searchParams]);
+    // Sync to URL for bookmarkability
+    const params = new URLSearchParams();
+    if (searchParams.name) params.set('name', searchParams.name);
+    if (searchParams.identifier) params.set('identifier', searchParams.identifier);
+    if (searchParams.birthDate) params.set('birthdate', searchParams.birthDate);
+    if (count !== DEFAULT_COUNT) params.set('_count', String(count));
+    setUrlParams(params);
+  }, [searchParams, count, setUrlParams]);
 
   const handlePageChange = useCallback(
     (url: string) => {

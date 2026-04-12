@@ -5,6 +5,8 @@ import { getCuratedParams } from '../../utils/curated-params';
 interface SearchFilterPanelProps {
   resourceType: string;
   allSearchParams: string[];
+  /** Active filters from URL state — used to pre-fill inputs on bookmark restore */
+  activeFilters?: Record<string, string>;
   onSearch: (
     filters: Record<string, string>,
     includes?: { include?: string[]; revinclude?: string[] }
@@ -16,18 +18,18 @@ interface SearchFilterPanelProps {
  * Shows curated params by default, "Show all filters" reveals full CapabilityStatement params.
  * Includes _include/_revinclude multi-selects in advanced mode.
  */
-export function SearchFilterPanel({ resourceType, allSearchParams, onSearch }: SearchFilterPanelProps) {
+export function SearchFilterPanel({ resourceType, allSearchParams, activeFilters, onSearch }: SearchFilterPanelProps) {
   const [showAllFilters, setShowAllFilters] = useState(false);
   const [filterValues, setFilterValues] = useState<Record<string, string>>({});
   const [includeValues, setIncludeValues] = useState<string[]>([]);
   const [revincludeValues, setRevincludeValues] = useState<string[]>([]);
 
-  // Reset filter state when resource type changes (WR-02)
+  // Initialize filter inputs from URL state (bookmark restore) or reset on type change
   useEffect(() => {
-    setFilterValues({});
+    setFilterValues(activeFilters ?? {});
     setIncludeValues([]);
     setRevincludeValues([]);
-  }, [resourceType]);
+  }, [resourceType, activeFilters]);
 
   const curatedParams = getCuratedParams(resourceType, allSearchParams);
   const visibleParams = showAllFilters ? allSearchParams : curatedParams;
