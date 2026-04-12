@@ -116,7 +116,10 @@ Plans:
   2. "Back to results" button from patient-scoped detail navigates to the previous patient context, not `/explorer`
   3. `NavigationBreadcrumbs` root anchor honors the patient basePath when present
   4. REQUIREMENTS.md traceability table and checkboxes reconciled for all Phase 1 (CONN-01..05) shipments
-**Plans:** TBD
+**Plans:** 2 plans
+Plans:
+- [x] 06-01-PLAN.md — Make ResourceDetailPage + NavigationBreadcrumbs patient-aware; add integration tests (BRWS-07, PTNT-04, PTNT-05)
+- [ ] 06-02-PLAN.md — Reconcile REQUIREMENTS.md traceability: flip CONN-01..05 to Complete (CONN-01..05)
 **UI hint**: no (bug fix in existing components)
 
 ### Phase 7: v1.0 Gap Closure — Code Review Fixes
@@ -158,6 +161,6 @@ Phases 6-8 are gap-closure phases added after the v1.0 milestone audit (2026-04-
 | 3. Patient-Centric Browsing & MII Modules | 3/3 | Complete | 2026-04-12 |
 | 4. Terminology Resolution | 5/5 | Complete | 2026-04-12 |
 | 5. Data Quality Dashboard | 5/5 | Complete | 2026-04-12 |
-| 6. v1.0 Gap Closure — Patient-aware Reference Navigation | 0/0 | Planned | - |
+| 6. v1.0 Gap Closure — Patient-aware Reference Navigation | 0/2 | Planned | - |
 | 7. v1.0 Gap Closure — Code Review Fixes | 0/0 | Planned | - |
 | 8. v1.0 Gap Closure — Retroactive Nyquist Compliance | 0/0 | Planned | - |

@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: verifying
-stopped_at: Completed 05-05-PLAN.md
-last_updated: "2026-04-12T10:31:39.615Z"
+milestone_name: Gap Closure — Patient-aware Reference Navigation
+status: executing
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-04-12T11:20:22.863Z"
 last_activity: 2026-04-12
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 5
-  total_plans: 21
-  completed_plans: 21
-  percent: 100
+  total_plans: 23
+  completed_plans: 22
+  percent: 96
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-11)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 05 — data-quality-dashboard
+**Current focus:** Phase 06 — v1-gap-closure-patient-navigation
 
 ## Current Position
 
-Phase: 05
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 06 (v1-gap-closure-patient-navigation) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-04-12
 
 Progress: [██████████] 100%
@@ -73,6 +73,7 @@ Progress: [██████████] 100%
 | Phase 05-data-quality-dashboard P03 | 523 | 2 tasks | 15 files |
 | Phase 05-data-quality-dashboard P04 | 7min | 2 tasks | 7 files |
 | Phase 05 P05 | 7min | 2 tasks | 10 files |
+| Phase 06-v1-gap-closure-patient-navigation P01 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -130,6 +131,8 @@ Recent decisions affecting current work:
 - [Phase 05]: ValidationBackend composition: resolveBackends returns structural (always) + remote (optional via settings.validation.validatorUrl); dedupeIssues merges by severity|code|expression|diagnostics key
 - [Phase 05]: T-05-05-02 mitigation: remote validator constructs MedplumClient from validatorUrl alone with no shared state with Blaze client; regression test asserts fetch URL never resolves to Blaze base URL
 - [Phase 05]: Banner dismissal key scoped per (serverUrl, validatorUrl) — changing either flag re-shows the PHI-outbound warning banner
+- [Phase 06-v1-gap-closure-patient-navigation]: basePath threaded from ResourceDetailPage (route-aware parent) into useBreadcrumbTrail and NavigationBreadcrumbs siblings; closes MC-1/BF-1
+- [Phase 06-v1-gap-closure-patient-navigation]: NavigationBreadcrumbs discriminates root label via basePath.startsWith('/patients/') check; basePath itself never reaches navigate() (T-06-02 mitigation)
 
 ### Pending Todos
 
@@ -142,6 +145,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-12T10:02:51.651Z
-Stopped at: Completed 05-05-PLAN.md
+Last session: 2026-04-12T11:20:22.861Z
+Stopped at: Completed 06-01-PLAN.md
 Resume file: None

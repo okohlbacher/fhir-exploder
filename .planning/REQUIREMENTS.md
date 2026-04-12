@@ -23,7 +23,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **BRWS-04**: User can view an individual resource as pretty-printed JSON with syntax highlighting
 - [x] **BRWS-05**: User can view an individual resource in a human-readable rendered form (via Medplum components)
 - [x] **BRWS-06**: User can toggle between three display modes: human-readable (default), clinical+raw, and developer/FHIR-structure view
-- [ ] **BRWS-07**: User can click Reference fields to navigate to the referenced resource (partial — BF-1 eject from patient subtree; Phase 6 closes)
+- [x] **BRWS-07**: User can click Reference fields to navigate to the referenced resource (partial — BF-1 eject from patient subtree; Phase 6 closes)
 - [x] **BRWS-08**: User can use _include/_revinclude to fetch related resources in a single query
 
 ### Patient-Centric Browsing
@@ -31,8 +31,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **PTNT-01**: User can view a list of patients with search by name, identifier, and birthDate
 - [x] **PTNT-02**: User can view a patient detail page showing all clinical data organized by category
 - [x] **PTNT-03**: User can navigate a patient's clinical data using MII Kerndatensatz module tabs (Diagnose/Condition, Prozedur/Procedure, Laborbefund/Observation, Medikation/MedicationStatement, Fall/Encounter, Consent)
-- [ ] **PTNT-04**: User can view a chronological clinical timeline of a patient's encounters, conditions, procedures, and observations (partial — BF-1 ejects from patient context on Reference click; Phase 6 closes)
-- [ ] **PTNT-05**: MII Kerndatensatz modules are available as an optional navigation lens alongside raw FHIR resource type browsing (partial — BF-1; Phase 6 closes)
+- [x] **PTNT-04**: User can view a chronological clinical timeline of a patient's encounters, conditions, procedures, and observations (partial — BF-1 ejects from patient context on Reference click; Phase 6 closes)
+- [x] **PTNT-05**: MII Kerndatensatz modules are available as an optional navigation lens alongside raw FHIR resource type browsing (partial — BF-1; Phase 6 closes)
 
 ### Terminology
 
@@ -91,13 +91,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BRWS-04 | Phase 2 | Complete |
 | BRWS-05 | Phase 2 | Complete |
 | BRWS-06 | Phase 2 | Complete |
-| BRWS-07 | Phase 2, Phase 6 (gap closure) | Pending |
+| BRWS-07 | Phase 2, Phase 6 (gap closure) | Complete |
 | BRWS-08 | Phase 2 | Complete |
 | PTNT-01 | Phase 3 | Complete |
 | PTNT-02 | Phase 3 | Complete |
 | PTNT-03 | Phase 3 | Complete |
-| PTNT-04 | Phase 3, Phase 6 (gap closure) | Pending |
-| PTNT-05 | Phase 3, Phase 6 (gap closure) | Pending |
+| PTNT-04 | Phase 3, Phase 6 (gap closure) | Complete |
+| PTNT-05 | Phase 3, Phase 6 (gap closure) | Complete |
 | TERM-01 | Phase 4 | Complete |
 | TERM-02 | Phase 4 | Complete |
 | TERM-03 | Phase 4 | Complete |
