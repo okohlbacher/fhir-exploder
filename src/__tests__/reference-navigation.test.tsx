@@ -1,5 +1,200 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor, act } from '@testing-library/react';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { MantineProvider } from '@mantine/core';
 import { NavigationBreadcrumbs } from '../components/explorer/NavigationBreadcrumbs';
+
+// Polyfill ResizeObserver for jsdom (required by Mantine components)
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+(globalThis as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver =
+  MockResizeObserver as unknown as typeof ResizeObserver;
+
+// Polyfill matchMedia for jsdom (required by Mantine)
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+// --- Mocks --------------------------------------------------------------
+
+// Mock Medplum client: readResource always resolves to a minimal Condition
+const mockReadResource = vi.fn();
+const mockClient = { readResource: mockReadResource };
+
+vi.mock('@medplum/react-hooks', () => ({
+  useMedplum: () => mockClient,
+}));
+
+// Stub heavy Medplum React components so they don't drag in schema requirements.
+vi.mock('@medplum/react', () => ({
+  ResourceTable: (_props: Record<string, unknown>) => (
+    <div data-testid="resource-table" />
+  ),
+}));
+
+// Stub the three display-mode subcomponents so we don't need to render their
+// full FHIR-aware internals; instead embed a deterministic anchor that mimics
+// a Medplum ReferenceDisplay <a href> pointing at the FHIR server.
+vi.mock('../components/explorer/HumanReadableView', () => ({
+  HumanReadableView: () => (
+    <div data-testid="human-readable-view">
+      <a href="http://localhost:8080/fhir/Observation/obs-9" data-testid="ref-anchor">
+        Observation/obs-9
+      </a>
+    </div>
+  ),
+}));
+
+vi.mock('../components/explorer/ClinicalRawView', () => ({
+  ClinicalRawView: () => <div data-testid="clinical-raw-view" />,
+}));
+
+vi.mock('../components/explorer/DeveloperJsonView', () => ({
+  DeveloperJsonView: () => <div data-testid="developer-json-view" />,
+}));
+
+import { ResourceDetailPage } from '../components/explorer/ResourceDetailPage';
+
+// --- Helpers ------------------------------------------------------------
+
+function LocationProbe() {
+  const location = useLocation();
+  return <div data-testid="location-pathname">{location.pathname}</div>;
+}
+
+function renderAt(initialEntry: string) {
+  return render(
+    <MantineProvider>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <Routes>
+          <Route
+            path="/patients/:patientId/:resourceType/:id"
+            element={<ResourceDetailPage />}
+          />
+          <Route path="/explorer/:resourceType/:id" element={<ResourceDetailPage />} />
+          <Route path="/explorer/:resourceType" element={<div data-testid="explorer-landing" />} />
+          <Route path="/explorer" element={<div data-testid="explorer-root" />} />
+          <Route path="/patients/:patientId" element={<div data-testid="patient-detail" />} />
+          <Route path="/patients" element={<div data-testid="patients-landing" />} />
+        </Routes>
+        <LocationProbe />
+      </MemoryRouter>
+    </MantineProvider>
+  );
+}
+
+beforeEach(() => {
+  mockReadResource.mockReset();
+  mockReadResource.mockResolvedValue({ resourceType: 'Condition', id: 'cond-1' });
+});
+
+// --- Patient-aware reference navigation --------------------------------
+
+describe('Reference navigation within patient subtree', () => {
+  it('Test A: reference click inside /patients/:patientId stays inside /patients/:patientId (targets /patients/pat-123/Observation/obs-9)', async () => {
+    await act(async () => {
+      renderAt('/patients/pat-123/Condition/cond-1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('ref-anchor')).toBeDefined();
+    });
+
+    await act(async () => {
+      screen.getByTestId('ref-anchor').click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-pathname').textContent).toBe(
+        '/patients/pat-123/Observation/obs-9'
+      );
+    });
+    // Must NOT leak into /explorer subtree
+    expect(screen.getByTestId('location-pathname').textContent).not.toMatch(
+      /^\/explorer\//
+    );
+  });
+
+  it('Test B: reference click inside /explorer still navigates inside /explorer (regression guard)', async () => {
+    await act(async () => {
+      renderAt('/explorer/Condition/cond-1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('ref-anchor')).toBeDefined();
+    });
+
+    await act(async () => {
+      screen.getByTestId('ref-anchor').click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-pathname').textContent).toBe(
+        '/explorer/Observation/obs-9'
+      );
+    });
+  });
+
+  it('Test E: breadcrumbs root anchor reads "Patients" linking to /patients when inside patient subtree', async () => {
+    await act(async () => {
+      renderAt('/patients/pat-123/Condition/cond-1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('ref-anchor')).toBeDefined();
+    });
+
+    // Root anchor text is "Patients", not "Explorer"
+    const rootAnchor = screen.getByText('Patients');
+    expect(rootAnchor).toBeDefined();
+    expect(screen.queryByText('Explorer')).toBeNull();
+
+    await act(async () => {
+      rootAnchor.click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-pathname').textContent).toBe('/patients');
+    });
+  });
+
+  it('Test F: breadcrumbs root anchor reads "Explorer" linking to /explorer when inside /explorer subtree (regression guard)', async () => {
+    await act(async () => {
+      renderAt('/explorer/Condition/cond-1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('ref-anchor')).toBeDefined();
+    });
+
+    const rootAnchor = screen.getByText('Explorer');
+    expect(rootAnchor).toBeDefined();
+    expect(screen.queryByText('Patients')).toBeNull();
+
+    await act(async () => {
+      rootAnchor.click();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-pathname').textContent).toBe('/explorer');
+    });
+  });
+});
+
+// --- Legacy scaffold tests (unchanged) ---------------------------------
 
 describe('Reference click interception', () => {
   it('intercepts click on anchor with FHIR reference href', () => {
