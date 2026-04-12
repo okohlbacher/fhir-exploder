@@ -14,7 +14,7 @@
  * Empty state: when the type has no bundled MII profile AND no
  * min>=1 paths, we surface the spec's fallback copy.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -40,8 +40,10 @@ export function CompletenessDrillDown() {
   const [sampleSize] = useSampleSize();
   const backRef = useRef<HTMLAnchorElement | null>(null);
 
-  // Scope to a single type — same hook, single-element array.
-  const singleTypeList = [type];
+  // Scope to a single type — same hook, single-element array. Memoise the
+  // array so its identity is stable across renders (parity with
+  // CodingDrillDown).
+  const singleTypeList = useMemo(() => [type], [type]);
   const reports = useCompletenessReport(client, singleTypeList, sampleSize);
   const state = reports[type];
 
@@ -85,10 +87,18 @@ export function CompletenessDrillDown() {
           Failed to sample {type}. Return to the Completeness tab and recompute metrics.
         </Alert>
       ) : (
-        <DrillDownList
-          perPath={state.perPath}
-          sampleSize={state.sampleSize}
-        />
+        <>
+          <DrillDownList
+            perPath={state.perPath}
+            sampleSize={state.sampleSize}
+          />
+          <Text size="xs" c="dimmed">
+            Note: for array-valued paths, only the first element is
+            inspected. A path counts as populated when the first entry in
+            the array is non-empty. Slice-level gaps are surfaced in the
+            Coding Coverage tab.
+          </Text>
+        </>
       )}
     </Stack>
   );
