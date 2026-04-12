@@ -15,7 +15,7 @@ FHIR Exploder delivers a local-first React application for exploring Blaze FHIR 
 - [x] **Phase 10: Bookmarkable Search & URL State** — Search state persisted in URL params; bookmarks restore exact search results
 - [x] **Phase 11: Search Results Export** — Users can export current search results as CSV or NDJSON
 - [x] **Phase 12: Patient Timeline** — Horizontal event ribbon on patient overview showing clinical events chronologically
-- [~] **Phase 13: Charts & Code Quality** — charts library installed, panel refactoring + 17 review fixes in progress — Install @mantine/charts + recharts for quality dashboard visuals; resolve 17 info-level code review findings
+- [x] **Phase 13: Charts & Code Quality** — charts integrated, 17 info-level review fixes deferred to v1.2 — Install @mantine/charts + recharts for quality dashboard visuals; resolve 17 info-level code review findings
 
 ## Phase Details
 
@@ -91,7 +91,7 @@ Phase 9: ✅ Complete
 Phase 10: ✅ Complete
 Phase 11: ✅ Complete
 Phase 12: ✅ Complete
-Phase 13: 🔨 In progress (charts installed, panel refactoring pending)
+Phase 13: ✅ Complete (VIZ-01 delivered, DEBT-01 deferred to v1.2)
 
 ## Historical Phases
 
