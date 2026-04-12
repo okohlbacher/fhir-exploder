@@ -29,9 +29,14 @@ Integrate the MII Terminology Server to resolve CodeableConcept display values t
 - **D-07:** [auto] When the terminology server is unreachable, display the raw code value (system|code) without errors or broken UI. No error toast — silent fallback with a subtle indicator (e.g., monospace font or tooltip "unresolved code").
 - **D-08:** [auto] Terminology server health check on app connect — show terminology server status alongside FHIR server status in the sidebar indicator.
 
+### Resolved post-research (locked)
+- **D-09:** [user] v1 scope: resolve CodeableConcepts in **detail/clinical views only** (HumanReadableView, ClinicalRawView). SearchControl tables show raw codes in v1 — documented limitation, not a bug. Table enrichment deferred to a follow-up phase.
+- **D-10:** [user] Dev default terminology server: `https://r4.ontoserver.csiro.au/fhir` (public, CORS-enabled, FHIR R4 $lookup). MII URL `https://terminology.medizininformatik-initiative.de/fhir` ships in `public/settings.yaml` as a commented example with an mTLS note.
+- **D-11:** [user] Cache policy: bounded LRU — 10,000 entries in-memory, 2,000 entries mirrored to localStorage. Evict oldest on overflow. "Clear terminology cache" settings action clears both layers.
+- **D-12:** [user] Resolution UX: progressive enhancement. Render raw code immediately; swap to resolved display text when $lookup resolves. No spinner, no layout shift (reserve line height).
+
 ### Claude's Discretion
-- Batch vs individual resolution strategy for lists of resources
-- Cache size limits and eviction policy
+- Batch vs individual resolution strategy for lists of resources (researcher recommends sequential with in-flight dedup for v1; revisit with profiling data)
 - Whether to prefetch common code systems on connect
 
 </decisions>
