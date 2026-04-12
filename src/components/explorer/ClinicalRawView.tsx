@@ -1,8 +1,8 @@
-import { ResourceTable } from '@medplum/react';
 import { Grid, ScrollArea } from '@mantine/core';
 import type { Resource } from '@medplum/fhirtypes';
 import { JsonSyntaxHighlight } from './JsonSyntaxHighlight';
 import { useResolvedResource } from '../../hooks/useResolvedResource';
+import { ResourcePropertyTable } from './ResourcePropertyTable';
 
 export interface ClinicalRawViewProps {
   resource: Resource;
@@ -11,7 +11,7 @@ export interface ClinicalRawViewProps {
 /**
  * Clinical + Raw split display mode.
  *
- * Left panel: Medplum ResourceTable rendering (human-friendly), wrapped
+ * Left panel: Custom ResourcePropertyTable rendering (human-friendly), wrapped
  *   in {@link useResolvedResource} so Coding.display values resolve to
  *   terminology-server displays (German designations preferred).
  * Right panel: Syntax-highlighted JSON of the **unenriched** resource
@@ -25,7 +25,7 @@ export function ClinicalRawView({ resource }: ClinicalRawViewProps) {
     <Grid>
       <Grid.Col span={6}>
         <ScrollArea h="calc(100vh - 250px)">
-          <ResourceTable value={resolved ?? resource} />
+          <ResourcePropertyTable resource={resolved ?? resource} />
         </ScrollArea>
       </Grid.Col>
       <Grid.Col span={6}>

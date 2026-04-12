@@ -3,7 +3,10 @@ import type { AppSettings } from '../config/types';
 
 export function createFhirClient(settings: AppSettings): MedplumClient {
   const url = new URL(settings.fhir.serverUrl);
-  const baseUrl = `${url.protocol}//${url.host}`;
+  // Use the page's own origin as baseUrl so requests go through the Vite
+  // dev proxy (which forwards /fhir → the real FHIR server), avoiding CORS.
+  const baseUrl =
+    typeof window !== 'undefined' ? window.location.origin : `${url.protocol}//${url.host}`;
   const fhirUrlPath = url.pathname.replace(/^\//, '').replace(/\/?$/, '/');
 
   const options: Record<string, unknown> = {

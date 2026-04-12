@@ -20,7 +20,7 @@ export async function probeTerminologyHealth(
 
   const { signal, cancel } = buildTimeoutSignal(timeoutMs);
   try {
-    await client.get('metadata', signal ? { signal } : undefined);
+    await client.get(client.fhirUrl('metadata').toString(), signal ? { signal } : undefined);
     return 'ok';
   } catch {
     return 'unreachable';

@@ -1,19 +1,22 @@
-import { Badge, Group, Loader, Select, Stack, Title, Text } from '@mantine/core';
+import { Badge, Button, Group, Loader, Select, Stack, Title, Text } from '@mantine/core';
+import { IconEye, IconEyeOff } from '@tabler/icons-react';
 import { useMedplum } from '@medplum/react-hooks';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import type { ExplorerOutletContext } from './ExplorerLayout';
 import { parseResourceTypes } from '../../fhir/capability';
 import { groupByCategory, CATEGORY_ORDER } from '../../utils/fhir-categories';
 import { useResourceCounts } from '../../hooks/useResourceCounts';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 /**
  * Landing page for /explorer index.
  * Shows resource type selector and grouped resource type list.
+ * Empty resource types are hidden by default; a toggle reveals them.
  */
 export function ResourceTypeLanding() {
   const { capability } = useOutletContext<ExplorerOutletContext>();
   const navigate = useNavigate();
+  const [showEmpty, setShowEmpty] = useState(false);
 
   const client = useMedplum();
   const parsedTypes = useMemo(() => parseResourceTypes(capability), [capability]);
@@ -26,6 +29,13 @@ export function ResourceTypeLanding() {
   );
 
   const grouped = useMemo(() => groupByCategory(parsedTypes), [parsedTypes]);
+
+  // Count how many types are still loading
+  const loadingCount = useMemo(
+    () => typeNames.filter((t) => counts[t] === 'loading').length,
+    [typeNames, counts]
+  );
+  const countsReady = loadingCount === 0;
 
   const orderedCategories = useMemo(() => {
     const ordered = CATEGORY_ORDER.filter((cat) => grouped.has(cat));
@@ -57,15 +67,36 @@ export function ResourceTypeLanding() {
         label="Resource Type"
       />
 
-      <Title order={4} mt="md">Available Resource Types</Title>
+      <Group justify="space-between" align="center" mt="md">
+        <Title order={4}>Available Resource Types</Title>
+        {countsReady && (
+          <Button
+            variant="subtle"
+            size="xs"
+            leftSection={showEmpty ? <IconEyeOff size={14} /> : <IconEye size={14} />}
+            onClick={() => setShowEmpty((v) => !v)}
+          >
+            {showEmpty ? 'Hide empty' : 'Show empty'}
+          </Button>
+        )}
+      </Group>
       <Stack gap="sm">
         {orderedCategories.map((category) => {
           const types = grouped.get(category)!;
+
+          // Filter types: when hiding empty, only show types with count > 0 or still loading
+          const visibleTypes = countsReady && !showEmpty
+            ? types.filter((t) => typeof counts[t.type] === 'number' && (counts[t.type] as number) > 0)
+            : types;
+
+          // Skip entire category if no visible types
+          if (visibleTypes.length === 0) return null;
+
           return (
             <div key={category}>
               <Text fw={600} size="sm" c="dimmed" mb="xs">{category}</Text>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {types.map((t) => (
+                {visibleTypes.map((t) => (
                   <Group
                     key={t.type}
                     gap="xs"

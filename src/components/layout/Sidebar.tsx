@@ -1,5 +1,6 @@
 import { AppShell, Box, Group, NavLink, Stack, Text } from '@mantine/core';
 import {
+  IconDashboard,
   IconDatabase,
   IconUsers,
   IconChartBar,
@@ -26,6 +27,7 @@ const STATUS_CONFIG: Record<
 };
 
 const NAV_ITEMS = [
+  { label: 'Dashboard', icon: IconDashboard, to: '/' },
   { label: 'Explorer', icon: IconDatabase, to: '/explorer' },
   { label: 'Patients', icon: IconUsers, to: '/patients' },
   { label: 'Quality', icon: IconChartBar, to: '/quality' },

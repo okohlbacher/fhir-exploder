@@ -77,6 +77,13 @@ export function SearchFilterPanel({ resourceType, allSearchParams, onSearch }: S
             <TextInput
               key={param}
               label={param}
+              placeholder={
+                ['patient', 'subject'].includes(param)
+                  ? 'ID or prefix* for wildcard'
+                  : param === 'identifier'
+                    ? 'ID, prefix*, or system|value'
+                    : undefined
+              }
               value={filterValues[param] ?? ''}
               onChange={(e) => handleFilterChange(param, e.currentTarget.value)}
               onKeyDown={handleKeyDown}

@@ -20,8 +20,12 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
     setState({ status: 'connecting' });
     try {
       const client = createFhirClient(settings);
-      // Fetch CapabilityStatement to verify connection
-      const capability = await client.get('metadata') as CapabilityStatement;
+      // Use fhirUrl() so the request includes the fhirUrlPath prefix (e.g. /fhir/).
+      // client.get() is a raw HTTP call that doesn't prepend the FHIR path.
+      // MedplumClient may return a raw string for non-Medplum servers, so parse both.
+      const raw = await client.get(client.fhirUrl('metadata').toString());
+      const capability: CapabilityStatement =
+        typeof raw === 'string' ? JSON.parse(raw) : (raw as CapabilityStatement);
       if (!capability || capability.resourceType !== 'CapabilityStatement') {
         throw { status: 0, message: 'Invalid CapabilityStatement response' };
       }

@@ -1,6 +1,7 @@
 import { AppShell } from '@mantine/core';
 import { Outlet } from 'react-router-dom';
 import { Sidebar, type ConnectionStatus } from './Sidebar';
+import { FeedbackButton } from '../feedback/FeedbackButton';
 
 interface AppLayoutProps {
   connectionStatus: ConnectionStatus;
@@ -18,6 +19,7 @@ export function AppLayout({ connectionStatus }: AppLayoutProps) {
       <AppShell.Main>
         <Outlet />
       </AppShell.Main>
+      {import.meta.env.DEV && <FeedbackButton />}
     </AppShell>
   );
 }

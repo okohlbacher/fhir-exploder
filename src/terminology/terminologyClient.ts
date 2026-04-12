@@ -30,8 +30,16 @@ export function createTerminologyClient(settings: AppSettings): MedplumClient | 
   // forgetting the scheme sees the "not-configured" health state, not a crash.
   if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
 
+  // In dev, route through the Vite proxy to avoid CORS / redirect issues.
+  // The proxy rewrites /ontoserver/* → the real Ontoserver /fhir/* path.
+  const pageOrigin =
+    typeof window !== 'undefined' ? window.location.origin : `${u.protocol}//${u.host}`;
+  const isSameOrigin = `${u.protocol}//${u.host}` === pageOrigin;
+
   return new MedplumClient({
-    baseUrl: `${u.protocol}//${u.host}`,
-    fhirUrlPath: u.pathname.replace(/^\//, '').replace(/\/?$/, '/'),
+    baseUrl: isSameOrigin ? pageOrigin : pageOrigin,
+    fhirUrlPath: isSameOrigin
+      ? u.pathname.replace(/^\//, '').replace(/\/?$/, '/')
+      : 'ontoserver/',
   });
 }

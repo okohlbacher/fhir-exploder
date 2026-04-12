@@ -9,6 +9,7 @@ import { NavigationBreadcrumbs } from './NavigationBreadcrumbs';
 import { HumanReadableView } from './HumanReadableView';
 import { ClinicalRawView } from './ClinicalRawView';
 import { DeveloperJsonView } from './DeveloperJsonView';
+import { PatientRelatedResources } from './PatientRelatedResources';
 
 /**
  * Validate that an extracted reference matches the FHIR resource pattern.
@@ -171,6 +172,10 @@ export function ResourceDetailPage() {
         <Alert color="red" title={error.startsWith('Resource not found') ? 'Resource not found' : 'Error'}>
           {error}
         </Alert>
+      )}
+
+      {resource && resourceType === 'Patient' && id && (
+        <PatientRelatedResources patientId={id} />
       )}
 
       {resource && (
