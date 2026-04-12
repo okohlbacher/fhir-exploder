@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { Alert, Anchor, Breadcrumbs, Skeleton, Stack, Table, Text, Badge } from '@mantine/core';
+import { Alert, Anchor, Breadcrumbs, Button, Group, Menu, Skeleton, Stack, Table, Text, Badge } from '@mantine/core';
+import { IconDownload, IconFileTypeCsv, IconFileCode } from '@tabler/icons-react';
 import { useMedplum } from '@medplum/react-hooks';
 import type { Bundle, Resource } from '@medplum/fhirtypes';
 import type { ExplorerOutletContext } from './ExplorerLayout';
@@ -9,6 +10,7 @@ import { useSearchState } from '../../hooks/useSearchState';
 import { ResourceTypeSelector } from './ResourceTypeSelector';
 import { SearchFilterPanel } from './SearchFilterPanel';
 import { PaginationControls } from './PaginationControls';
+import { resourcesToCSV, resourcesToNDJSON, downloadString } from '../../utils/export';
 
 /**
  * Extracts a human-readable summary of a resource for table display.
@@ -333,6 +335,38 @@ export function SearchResultsPage() {
           <Skeleton height={36} />
           <Skeleton height={36} />
         </Stack>
+      )}
+
+      {!loading && resources.length > 0 && (
+        <Group justify="flex-end">
+          <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <Button variant="light" size="xs" leftSection={<IconDownload size={14} />}>
+                Export
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconFileTypeCsv size={16} />}
+                onClick={() => {
+                  const csv = resourcesToCSV(resources);
+                  downloadString(csv, `${resourceType}.csv`, 'text/csv');
+                }}
+              >
+                Export as CSV
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconFileCode size={16} />}
+                onClick={() => {
+                  const ndjson = resourcesToNDJSON(resources);
+                  downloadString(ndjson, `${resourceType}.ndjson`, 'application/x-ndjson');
+                }}
+              >
+                Export as NDJSON
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </Group>
       )}
 
       {!loading && resources.length > 0 && (
