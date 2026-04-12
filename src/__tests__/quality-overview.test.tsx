@@ -67,7 +67,13 @@ const mockCapability: CapabilityStatement = {
     },
   ],
 };
-const mockClient = { search: vi.fn() } as unknown as MedplumClient;
+const mockClient = {
+  search: vi.fn(),
+  // Plan 05-03 replaced the CompletenessPanel stub with a real implementation
+  // that consumes useCompletenessReport, which calls client.getBaseUrl().
+  getBaseUrl: () => 'http://localhost:8080/fhir',
+  searchResources: vi.fn(async () => []),
+} as unknown as MedplumClient;
 const mockOutletContext = { capability: mockCapability, client: mockClient };
 
 vi.mock('react-router-dom', async (importOriginal) => {
@@ -82,6 +88,16 @@ vi.mock('react-router-dom', async (importOriginal) => {
 const mockNotificationsShow = vi.fn();
 vi.mock('@mantine/notifications', () => ({
   notifications: { show: (...args: unknown[]) => mockNotificationsShow(...args) },
+}));
+
+// ----- CompletenessPanel mock -----
+// Plan 05-03 replaces the stub with a real sampling panel. For the
+// QualityOverviewPage shell tests we only care that the panel mounts
+// inside the Tabs; sampling behavior is verified in completeness-hook.
+vi.mock('../components/quality/CompletenessPanel', () => ({
+  CompletenessPanel: () => (
+    <div data-testid="mock-CompletenessPanel">Mock Completeness Panel</div>
+  ),
 }));
 
 // ----- Imports AFTER mocks are configured -----
@@ -162,12 +178,12 @@ describe('QualityOverviewPage (QUAL-01)', () => {
     expect(sortableHeaders.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('tab panels mount with keepMounted — clicking Completeness reveals the Plan 05-03 placeholder', () => {
+  it('tab panels mount with keepMounted — Completeness (05-03) is mocked, 05-04/05 stubs still present', () => {
     mockUseResourceCounts.mockReturnValue({ Patient: 120 });
     renderPage();
-    // keepMounted means all panels are in the DOM at once. Query the
-    // stub copy text which exists in the CompletenessPanel stub.
-    expect(screen.getByText(/Coming in Plan 05-03/)).toBeDefined();
+    // Plan 05-03 replaced the CompletenessPanel stub; tests mock it out.
+    expect(screen.getByTestId('mock-CompletenessPanel')).toBeDefined();
+    // 05-04 and 05-05 stubs still present.
     expect(screen.getByText(/Coming in Plan 05-04/)).toBeDefined();
     expect(screen.getByText(/Coming in Plan 05-05/)).toBeDefined();
   });
