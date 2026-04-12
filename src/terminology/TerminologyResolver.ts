@@ -54,11 +54,12 @@ export class TerminologyResolver {
   readonly cache: TerminologyCache;
   private inflight = new Map<string, Promise<string | null>>();
   private readonly serverUrl: string;
+  private readonly client: MedplumClient | null;
+  private readonly opts: ResolverOptions;
 
-  constructor(
-    private client: MedplumClient | null,
-    private opts: ResolverOptions = {},
-  ) {
+  constructor(client: MedplumClient | null, opts: ResolverOptions = {}) {
+    this.client = client;
+    this.opts = opts;
     this.serverUrl = opts.serverUrl ?? '__unconfigured__';
     this.cache = new TerminologyCache({
       serverUrl: this.serverUrl,
