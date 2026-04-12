@@ -29,10 +29,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Patient-Centric Browsing
 
 - [x] **PTNT-01**: User can view a list of patients with search by name, identifier, and birthDate
-- [ ] **PTNT-02**: User can view a patient detail page showing all clinical data organized by category
-- [ ] **PTNT-03**: User can navigate a patient's clinical data using MII Kerndatensatz module tabs (Diagnose/Condition, Prozedur/Procedure, Laborbefund/Observation, Medikation/MedicationStatement, Fall/Encounter, Consent)
+- [x] **PTNT-02**: User can view a patient detail page showing all clinical data organized by category
+- [x] **PTNT-03**: User can navigate a patient's clinical data using MII Kerndatensatz module tabs (Diagnose/Condition, Prozedur/Procedure, Laborbefund/Observation, Medikation/MedicationStatement, Fall/Encounter, Consent)
 - [ ] **PTNT-04**: User can view a chronological clinical timeline of a patient's encounters, conditions, procedures, and observations
-- [ ] **PTNT-05**: MII Kerndatensatz modules are available as an optional navigation lens alongside raw FHIR resource type browsing
+- [x] **PTNT-05**: MII Kerndatensatz modules are available as an optional navigation lens alongside raw FHIR resource type browsing
 
 ### Terminology
 
@@ -94,10 +94,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BRWS-07 | Phase 2 | Complete |
 | BRWS-08 | Phase 2 | Complete |
 | PTNT-01 | Phase 3 | Complete |
-| PTNT-02 | Phase 3 | Pending |
-| PTNT-03 | Phase 3 | Pending |
+| PTNT-02 | Phase 3 | Complete |
+| PTNT-03 | Phase 3 | Complete |
 | PTNT-04 | Phase 3 | Pending |
-| PTNT-05 | Phase 3 | Pending |
+| PTNT-05 | Phase 3 | Complete |
 | TERM-01 | Phase 4 | Pending |
 | TERM-02 | Phase 4 | Pending |
 | TERM-03 | Phase 4 | Pending |
