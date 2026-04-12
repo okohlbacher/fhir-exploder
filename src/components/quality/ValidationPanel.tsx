@@ -63,8 +63,11 @@ export interface ValidationPanelProps {
 }
 
 const BANNER_KEY_PREFIX = 'quality.validation.bannerDismissed.v1';
+const PHI_ACK_KEY_PREFIX = 'quality.validation.phiAcknowledged.v1';
 const BANNER_COPY =
   'This server does not implement $validate on resources. Phase 5 runs structural validation locally against bundled MII profiles. To run full FHIR validation, set validation.validatorUrl in settings.yaml to a validator that supports $validate (e.g. validator.fhir.org/validator).';
+const PHI_BANNER_COPY =
+  'Running validation POSTs full resource payloads (including patient identifiers and other PHI) to the configured external validator. The remote validator is an independent service outside this application — review the validator URL in settings.yaml and confirm that sharing PHI with it is permitted by your data governance policy before proceeding.';
 
 // Placate TS on the NumberFormatter no-op usage (kept for potential re-use).
 void NumberFormatter;
@@ -78,9 +81,24 @@ export function ValidationPanel(_props: ValidationPanelProps) {
 
   // Banner dismissal is scoped per (serverUrl, validatorUrl) so a user who
   // changes their validator URL sees the warning again.
-  const bannerKey = `${BANNER_KEY_PREFIX}:${serverUrl}|${validatorUrl ?? 'none'}`;
+  const bannerKey = useMemo(
+    () => `${BANNER_KEY_PREFIX}:${serverUrl}|${validatorUrl ?? 'none'}`,
+    [serverUrl, validatorUrl],
+  );
   const [bannerDismissed, setBannerDismissed] = useLocalStorage<boolean>({
     key: bannerKey,
+    defaultValue: false,
+  });
+
+  // PHI acknowledgement is independent from the info-banner dismissal and
+  // is scoped per (serverUrl, validatorUrl) so a user who switches
+  // validator URLs must re-acknowledge before the next remote run.
+  const phiAckKey = useMemo(
+    () => `${PHI_ACK_KEY_PREFIX}:${serverUrl}|${validatorUrl ?? 'none'}`,
+    [serverUrl, validatorUrl],
+  );
+  const [phiAcknowledged, setPhiAcknowledged] = useLocalStorage<boolean>({
+    key: phiAckKey,
     defaultValue: false,
   });
 
@@ -152,19 +170,50 @@ export function ValidationPanel(_props: ValidationPanelProps) {
     URL.revokeObjectURL(url);
   };
 
+  // PHI gating only applies when a remote validator is configured — if the
+  // run is structural-only (local), no PHI leaves the browser so no
+  // acknowledgement is required. T-05-05-01 mitigation.
+  const requiresPhiAck = hasRemote && !phiAcknowledged;
+
   return (
     <Stack gap="md">
       {!bannerDismissed && (
         <Alert
           variant="light"
-          color="orange"
-          icon={<IconAlertTriangle size={20} />}
+          color="blue"
+          icon={<IconInfoCircle size={20} />}
           title="Blaze $validate unsupported"
           withCloseButton
           closeButtonLabel="Dismiss"
           onClose={() => setBannerDismissed(true)}
         >
           <Text size="sm">{BANNER_COPY}</Text>
+        </Alert>
+      )}
+
+      {hasRemote && !phiAcknowledged && (
+        <Alert
+          variant="light"
+          color="orange"
+          icon={<IconAlertTriangle size={20} />}
+          title="PHI will be sent to an external validator"
+        >
+          <Stack gap="xs">
+            <Text size="sm">{PHI_BANNER_COPY}</Text>
+            <Text size="sm" fw={500}>
+              Validator URL: <code>{validatorUrl}</code>
+            </Text>
+            <Group>
+              <Button
+                variant="filled"
+                color="orange"
+                size="xs"
+                onClick={() => setPhiAcknowledged(true)}
+              >
+                I acknowledge and want to proceed
+              </Button>
+            </Group>
+          </Stack>
         </Alert>
       )}
 
@@ -185,7 +234,12 @@ export function ValidationPanel(_props: ValidationPanelProps) {
             <Button
               variant="filled"
               onClick={run.start}
-              disabled={run.status === 'running'}
+              disabled={run.status === 'running' || requiresPhiAck}
+              title={
+                requiresPhiAck
+                  ? 'Acknowledge the PHI notice above to enable remote validation'
+                  : undefined
+              }
             >
               Validate sample
             </Button>
