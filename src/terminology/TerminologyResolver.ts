@@ -52,9 +52,15 @@ function isExpired(entry: TerminologyCacheEntry): boolean {
  */
 export class TerminologyResolver {
   readonly cache: TerminologyCache;
+  /**
+   * Underlying MedplumClient bound to the terminology server, or null when
+   * no terminology URL is configured. Exposed read-only so hooks like
+   * {@link useTerminologyHealth} can reuse the resolver's client for probes
+   * instead of constructing a second one per effect run (WR-02).
+   */
+  readonly client: MedplumClient | null;
   private inflight = new Map<string, Promise<string | null>>();
   private readonly serverUrl: string;
-  private readonly client: MedplumClient | null;
   private readonly opts: ResolverOptions;
 
   constructor(client: MedplumClient | null, opts: ResolverOptions = {}) {
