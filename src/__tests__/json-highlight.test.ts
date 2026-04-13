@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { tokenize, TOKEN_COLORS } from '../components/explorer/JsonSyntaxHighlight';
-import type { JsonToken } from '../components/explorer/JsonSyntaxHighlight';
 
 describe('tokenize', () => {
   it('tokenizes a simple object with all value types', () => {

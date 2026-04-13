@@ -2,13 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { HumanReadableView } from '../components/explorer/HumanReadableView';
 import { ClinicalRawView } from '../components/explorer/ClinicalRawView';
 import { DeveloperJsonView } from '../components/explorer/DeveloperJsonView';
-import type { Patient } from '@medplum/fhirtypes';
-
-const mockPatient: Patient = {
-  resourceType: 'Patient',
-  id: '123',
-  name: [{ given: ['Test'], family: 'User' }],
-};
 
 describe('HumanReadableView', () => {
   it('renders ResourceTable with the provided resource', () => {

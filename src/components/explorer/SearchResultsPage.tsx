@@ -238,7 +238,7 @@ export function SearchResultsPage() {
   const handleSearch = useCallback(
     (
       filters: Record<string, string>,
-      includes?: { include?: string[]; revinclude?: string[] }
+      _includes?: { include?: string[]; revinclude?: string[] }
     ) => {
       setSearch({
         ...searchRequest,
