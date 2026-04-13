@@ -63,6 +63,7 @@ export function ResourceIssueTable({
   useEffect(() => {
     if (initialFieldFilter !== undefined) {
       setFieldFilter(initialFieldFilter);
+      setPage(1);
     }
   }, [initialFieldFilter]);
 
