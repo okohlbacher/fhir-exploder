@@ -41,6 +41,12 @@ export interface PerTypeCompletenessReport {
   totalForType: number | null;
   /** Canonical URL of the MII StructureDefinition used, or null for min>=1 fallback. */
   profileUrl: string | null;
+  /** Per-resource missing-path data for drill-down (Phase 15). */
+  perResource?: Array<{
+    resourceId: string;
+    resourceType: string;
+    missingPaths: string[];
+  }>;
 }
 
 /** Coverage classifier output for a single CodeableConcept field. */
@@ -64,6 +70,24 @@ export interface PerTypeCoverageReport {
   /** Per-path breakdown for drill-down UI. */
   perPath: Record<string, { systemCode: number; textOnly: number; empty: number }>;
   sampleSize: number;
+  /** Per-resource coding issues for drill-down (Phase 15). */
+  perResource?: Array<{
+    resourceId: string;
+    resourceType: string;
+    issues: Array<{ path: string; classification: CodedClassification }>;
+  }>;
+}
+
+/** Severity levels for normalized quality issues (Phase 15 drill-down). */
+export type IssueSeverity = 'error' | 'warning' | 'info';
+
+/** Common issue format that all quality panels normalize into for ResourceIssueTable (D-05). */
+export interface NormalizedIssue {
+  resourceId: string;
+  resourceType: string;
+  field: string;
+  description: string;
+  severity: IssueSeverity;
 }
 
 /** Validation backend kind — structural runs offline, remote POSTs $validate. */
