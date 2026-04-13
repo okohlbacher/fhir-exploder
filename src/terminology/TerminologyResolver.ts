@@ -7,7 +7,7 @@ import type {
 } from '@medplum/fhirtypes';
 import type { ResolverOptions, TerminologyCacheEntry } from './types';
 import { TerminologyCache } from './TerminologyCache';
-import { makeTerminologyKey } from './terminologyKey';
+import { makeTerminologyKey, UNCONFIGURED_SERVER } from './terminologyKey';
 import { collectCodings } from './walker';
 
 const DEFAULT_NEGATIVE_TTL_MS = 5 * 60_000;
@@ -22,6 +22,7 @@ const DEFAULT_LOOKUP_TIMEOUT_MS = 5000;
  */
 export function extractDisplay(params: Parameters, lang?: string): string | null {
   if (!params || params.resourceType !== 'Parameters') return null;
+  if (!Array.isArray(params.parameter)) return null;
   if (lang) {
     const desigs = params.parameter?.filter((p) => p.name === 'designation') ?? [];
     for (const d of desigs) {
@@ -66,7 +67,7 @@ export class TerminologyResolver {
   constructor(client: MedplumClient | null, opts: ResolverOptions = {}) {
     this.client = client;
     this.opts = opts;
-    this.serverUrl = opts.serverUrl ?? '__unconfigured__';
+    this.serverUrl = opts.serverUrl ?? UNCONFIGURED_SERVER;
     this.cache = new TerminologyCache({
       serverUrl: this.serverUrl,
       persistToLocalStorage: opts.persistToLocalStorage !== false,

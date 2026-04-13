@@ -27,7 +27,8 @@ export function collectCodings(value: unknown, out: Coding[] = []): Coding[] {
     out.push(v as Coding);
   }
   for (const key of Object.keys(v)) {
-    collectCodings(v[key], out);
+    const child = v[key];
+    if (child && typeof child === 'object') collectCodings(child, out);
   }
   return out;
 }

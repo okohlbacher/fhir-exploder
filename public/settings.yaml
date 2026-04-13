@@ -2,9 +2,8 @@ fhir:
   serverUrl: "http://localhost:8080/fhir"
   auth:
     mode: open
-    # username: admin   # for basic auth
-    # password: secret  # for basic auth
-    # token: "eyJ..."  # for bearer auth
+    # username / password: for basic auth
+    # token: for bearer auth
 
 terminology:
   # Default: public CSIRO Ontoserver R4 sandbox (CORS-enabled, anonymous).

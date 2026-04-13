@@ -2,6 +2,7 @@ import { createContext, useMemo, type ReactNode } from 'react';
 import type { AppSettings } from '../config/types';
 import { createTerminologyClient } from '../terminology/terminologyClient';
 import { TerminologyResolver } from '../terminology/TerminologyResolver';
+import { UNCONFIGURED_SERVER } from '../terminology/terminologyKey';
 
 /**
  * Shared instance of a {@link TerminologyResolver} for the app. Exposed
@@ -37,7 +38,7 @@ export function TerminologyProvider({ settings, children }: TerminologyProviderP
   const terminologyKey = JSON.stringify(settings?.terminology ?? null);
   const resolver = useMemo(() => {
     const terminology = JSON.parse(terminologyKey) as AppSettings['terminology'] | null;
-    const serverUrl = terminology?.serverUrl ?? '__unconfigured__';
+    const serverUrl = terminology?.serverUrl ?? UNCONFIGURED_SERVER;
     // createTerminologyClient only reads settings.terminology — pass a
     // minimal synthetic AppSettings so we don't need the full `settings`
     // identity in deps.

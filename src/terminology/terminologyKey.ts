@@ -7,6 +7,7 @@
  */
 
 export const LOCAL_STORAGE_PREFIX = 'tx-cache:v1:';
+export const UNCONFIGURED_SERVER = '__unconfigured__';
 
 export function makeTerminologyKey(
   serverUrl: string,

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import type { Condition, Parameters } from '@medplum/fhirtypes';
 import { TerminologyContext } from '../contexts/TerminologyContext';
 import { TerminologyResolver } from '../terminology/TerminologyResolver';
@@ -32,7 +32,7 @@ function ConditionProbe({
   captured: { current: Condition | undefined };
 }) {
   const resolved = useResolvedResource(resource);
-  captured.current = resolved;
+  useEffect(() => { captured.current = resolved; }, [resolved]);
   const display = resolved?.code?.coding?.[0]?.display ?? '(none)';
   return <div data-testid="display">{display}</div>;
 }
