@@ -145,8 +145,8 @@ export function ValidationPanel(_props: ValidationPanelProps) {
 
   const normalizedIssues = useMemo((): NormalizedIssue[] => {
     return run.issues.map((issue) => ({
-      resourceId: issue._resourceId ?? '',
-      resourceType: (issue._resourceId ?? '').split('/')[0],
+      resourceId: issue._resourceId ?? 'unknown/unknown',
+      resourceType: (issue._resourceId ?? 'unknown').split('/')[0],
       field: issue.expression?.[0] ?? issue.location?.[0] ?? '',
       description: `${issue.code ?? ''} -- ${issue.diagnostics ?? issue.details?.text ?? ''}`,
       severity: (issue.severity === 'fatal' || issue.severity === 'error'
