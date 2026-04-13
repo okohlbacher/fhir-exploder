@@ -20,6 +20,7 @@ import {
   Skeleton,
   Stack,
   Table,
+  Tabs,
   Text,
   Title,
 } from '@mantine/core';
@@ -32,7 +33,8 @@ import { useSampleSize } from './SampleSizeControl';
 import type { QualityOutletContext } from './QualityLayout';
 import { sampleResources } from '../../quality/sampling';
 import { classifyCodedFields } from '../../quality/codingCoverageWalker';
-import type { ClassifiedCodedField } from '../../quality/types';
+import { ResourceIssueTable } from './ResourceIssueTable';
+import type { ClassifiedCodedField, NormalizedIssue } from '../../quality/types';
 
 /**
  * Fetch a sample and collect per-path example CodeableConcepts.
@@ -109,6 +111,29 @@ export function CodingDrillDown() {
   // simple rather than reusing the cached sample.
   const examplesByPath = useExamplesByPath(client, type, sampleSize);
 
+  const [activeTab, setActiveTab] = useState<string | null>('fields');
+  const [fieldFilter, setFieldFilter] = useState('');
+
+  const normalizedIssues = useMemo((): NormalizedIssue[] => {
+    if (!state || state === 'loading' || state === 'error' || !state.perResource) return [];
+    return state.perResource.flatMap((r) =>
+      r.issues.map((issue) => ({
+        resourceId: r.resourceId,
+        resourceType: r.resourceType,
+        field: issue.path,
+        description: issue.classification === 'empty'
+          ? 'CodeableConcept field is empty (no coding or text)'
+          : 'CodeableConcept field has text only (no system+code)',
+        severity: issue.classification === 'empty' ? 'warning' as const : 'info' as const,
+      }))
+    );
+  }, [state]);
+
+  const handleFieldClick = (path: string) => {
+    setFieldFilter(path);
+    setActiveTab('resources');
+  };
+
   useEffect(() => {
     backRef.current?.focus();
   }, []);
@@ -145,7 +170,22 @@ export function CodingDrillDown() {
           {type} resources.
         </Alert>
       ) : (
-        <DrillDownTable perPath={state.perPath} examplesByPath={examplesByPath} />
+        <Tabs value={activeTab} onChange={setActiveTab}>
+          <Tabs.List>
+            <Tabs.Tab value="fields">Fields</Tabs.Tab>
+            <Tabs.Tab value="resources">Resources</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="fields" pt="md">
+            <DrillDownTable
+              perPath={state.perPath}
+              examplesByPath={examplesByPath}
+              onFieldClick={handleFieldClick}
+            />
+          </Tabs.Panel>
+          <Tabs.Panel value="resources" pt="md">
+            <ResourceIssueTable issues={normalizedIssues} initialFieldFilter={fieldFilter} />
+          </Tabs.Panel>
+        </Tabs>
       )}
     </Stack>
   );
@@ -154,9 +194,10 @@ export function CodingDrillDown() {
 interface DrillDownTableProps {
   perPath: Record<string, { systemCode: number; textOnly: number; empty: number }>;
   examplesByPath: Record<string, CodeableConcept | undefined>;
+  onFieldClick?: (path: string) => void;
 }
 
-function DrillDownTable({ perPath, examplesByPath }: DrillDownTableProps) {
+function DrillDownTable({ perPath, examplesByPath, onFieldClick }: DrillDownTableProps) {
   const paths = Object.keys(perPath).sort();
   if (paths.length === 0) {
     return (
@@ -185,9 +226,16 @@ function DrillDownTable({ perPath, examplesByPath }: DrillDownTableProps) {
           const emp = pct(row.empty, total);
           const example = examplesByPath[path];
           return (
-            <Table.Tr key={path}>
+            <Table.Tr
+              key={path}
+              onClick={() => onFieldClick?.(path)}
+              style={{ cursor: onFieldClick ? 'pointer' : undefined }}
+              role={onFieldClick ? 'button' : undefined}
+              tabIndex={onFieldClick ? 0 : undefined}
+              onKeyDown={onFieldClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFieldClick(path); } } : undefined}
+            >
               <Table.Td>
-                <Code>{path}</Code>
+                <Code c={onFieldClick ? 'blue.6' : undefined}>{path}</Code>
               </Table.Td>
               <Table.Td>
                 <Text c="blue.6" size="sm">
