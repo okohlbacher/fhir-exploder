@@ -41,7 +41,11 @@ Last activity: 2026-04-12 — Milestone v1.1 started
 
 ### Pending Todos
 
-None yet.
+4 todos (from deferred items in phases 05/06):
+- Fix readResource type-widening TS2345 errors (ui)
+- Fix unused variable warnings in tests (testing)
+- Fix global not found in resource-type-landing-counts test (testing)
+- Fix SearchRequest coercion warning TS2352 (ui)
 
 ### Blockers/Concerns
 
