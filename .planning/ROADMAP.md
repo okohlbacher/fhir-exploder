@@ -48,7 +48,11 @@ Plans:
   1. User can click a quality metric (completeness, coding coverage, validation) to open a drill-down view listing the specific resources and fields involved
   2. Each entry in the drill-down view links to the resource detail view for further inspection
   3. Drill-down works for all existing quality panels (completeness, coding coverage, profile validation)
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 15-01-PLAN.md -- Add NormalizedIssue type and extend completeness/coding walkers to return per-resource issue data
+- [ ] 15-02-PLAN.md -- Build shared ResourceIssueTable component with pagination, filters, severity badges, and resource links
+- [ ] 15-03-PLAN.md -- Wire ResourceIssueTable into all 3 drill-down pages with Tabs and cross-filtering
 **UI hint**: yes
 
 ### Phase 16: Conformance & Plausibility Checks
@@ -106,7 +110,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 14. Tech Debt Cleanup | v1.2 | 2/2 | Complete    | 2026-04-13 |
-| 15. Quality Check Engine & Drill-Down | v1.2 | 0/0 | Not started | - |
+| 15. Quality Check Engine & Drill-Down | v1.2 | 0/3 | Planned | - |
 | 16. Conformance & Plausibility Checks | v1.2 | 0/0 | Not started | - |
 | 17. Duplicate Detection & Relational Integrity | v1.2 | 0/0 | Not started | - |
 | 18. Quality Alerting & Thresholds | v1.2 | 0/0 | Not started | - |
