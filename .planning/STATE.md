@@ -1,13 +1,13 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: UX Polish & Data Export
+milestone: v1.2
+milestone_name: Tech Debt & Quality Trends
 status: planning
 stopped_at: Defining requirements
-last_updated: "2026-04-12T13:30:00.000Z"
-last_activity: 2026-04-12
+last_updated: "2026-04-13T10:30:00.000Z"
+last_activity: 2026-04-13
 progress:
-  total_phases: 5
+  total_phases: 0
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,22 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-12)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Milestone v1.1 — defining requirements
+**Current focus:** Milestone v1.2 — defining requirements
 
 ## Current Position
 
 Phase: Not started (defining requirements)
 Plan: —
 Status: Defining requirements
-Last activity: 2026-04-12 — Milestone v1.1 started
+Last activity: 2026-04-13 — Milestone v1.2 started
 
 ## Accumulated Context
 
 ### Decisions
 
-- v1.1 scope: bookmark URLs, CSV/NDJSON export, charts library, patient timeline, inline settings editing, 17 code review fixes
-- Deferred QUAL-05 (trends) and QUAL-06 (PDF reports) to v2
-- Patient timeline inspired by EyeMatics horizontal ribbon design, generalized for any FHIR resource type
+- v1.2 scope: DEBT-01 (17 code review fixes), TypeScript build errors, QUAL-05 (trends), QUAL-06 (PDF reports)
 - Medplum SearchControl/ResourceTable replaced with custom components in v1.1-dev (Blaze compatibility)
 
 ### Pending Todos
@@ -53,6 +51,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-12
-Stopped at: Defining v1.1 requirements
+Last session: 2026-04-13
+Stopped at: Defining v1.2 requirements
 Resume file: None

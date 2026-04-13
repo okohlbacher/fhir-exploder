@@ -30,20 +30,13 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 **v1.1-dev** tagged with Blaze compatibility fixes, dev feedback system, and 8 user-feedback-driven UI improvements (custom search table, ResourcePropertyTable, collapsible JSON tree, dashboard tiles, wildcard search, patient related resources).
 
-## Current Milestone: v1.1 — UX Polish & Data Export
+## Current Milestone: v1.2 — Tech Debt & Quality Trends
 
-**Goal:** Improve daily usability with bookmarkable searches, data export, a visual patient timeline, inline server settings editing, and chart-based quality visuals.
+**Goal:** Resolve all accumulated tech debt and TypeScript build errors, then add quality metric trends and PDF report generation.
 
 **Target features:**
-- Bookmark + share search URLs (persisted search state in URL params)
-- Export search results as CSV/NDJSON
-- Charts library integration (`@mantine/charts` + `recharts`) for quality dashboard visuals
-- Generic patient timeline on patient overview (horizontal event ribbon, any FHIR resource type with dates)
-- Inline server settings editing (click FHIR/Terminology status in sidebar to edit URL/auth)
-- 17 info-level code review fixes from v1.0
-
-### Deferred to v2
-
+- DEBT-01: 17 info-level code review fixes from v1.0 phases 4+5
+- Fix TypeScript build errors (readResource type-widening, SearchRequest coercion, unused vars, global not found)
 - QUAL-05: Quality metric trends over time
 - QUAL-06: PDF quality reports
 
@@ -104,4 +97,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-12 — v1.1 milestone started. See `.planning/milestones/v1.0-ROADMAP.md` for v1.0 archive.*
+*Last updated: 2026-04-13 — v1.2 milestone started*
