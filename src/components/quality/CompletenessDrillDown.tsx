@@ -14,7 +14,7 @@
  * Empty state: when the type has no bundled MII profile AND no
  * min>=1 paths, we surface the spec's fallback copy.
  */
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -24,6 +24,7 @@ import {
   Progress,
   Skeleton,
   Stack,
+  Tabs,
   Text,
   Title,
 } from '@mantine/core';
@@ -33,6 +34,8 @@ import { useCompletenessReport } from '../../hooks/useCompletenessReport';
 import { useSampleSize } from './SampleSizeControl';
 import type { QualityOutletContext } from './QualityLayout';
 import { getProfileForType } from '../../quality/profiles';
+import { ResourceIssueTable } from './ResourceIssueTable';
+import type { NormalizedIssue } from '../../quality/types';
 
 export function CompletenessDrillDown() {
   const { type = '' } = useParams<{ type: string }>();
@@ -46,6 +49,27 @@ export function CompletenessDrillDown() {
   const singleTypeList = useMemo(() => [type], [type]);
   const reports = useCompletenessReport(client, singleTypeList, sampleSize);
   const state = reports[type];
+
+  const [activeTab, setActiveTab] = useState<string | null>('fields');
+  const [fieldFilter, setFieldFilter] = useState('');
+
+  const normalizedIssues = useMemo((): NormalizedIssue[] => {
+    if (!state || state === 'loading' || state === 'error' || !state.perResource) return [];
+    return state.perResource.flatMap((r) =>
+      r.missingPaths.map((path) => ({
+        resourceId: r.resourceId,
+        resourceType: r.resourceType,
+        field: path,
+        description: `Required field is missing or empty`,
+        severity: (state.perPath[path] === 0 ? 'error' : 'warning') as NormalizedIssue['severity'],
+      }))
+    );
+  }, [state]);
+
+  const handleFieldClick = (path: string) => {
+    setFieldFilter(path);
+    setActiveTab('resources');
+  };
 
   useEffect(() => {
     // Auto-focus the back button on mount per accessibility spec.
@@ -88,16 +112,28 @@ export function CompletenessDrillDown() {
         </Alert>
       ) : (
         <>
-          <DrillDownList
-            perPath={state.perPath}
-            sampleSize={state.sampleSize}
-          />
-          <Text size="xs" c="dimmed">
-            Note: for array-valued paths, only the first element is
-            inspected. A path counts as populated when the first entry in
-            the array is non-empty. Slice-level gaps are surfaced in the
-            Coding Coverage tab.
-          </Text>
+          <Tabs value={activeTab} onChange={setActiveTab}>
+            <Tabs.List>
+              <Tabs.Tab value="fields">Fields</Tabs.Tab>
+              <Tabs.Tab value="resources">Resources</Tabs.Tab>
+            </Tabs.List>
+            <Tabs.Panel value="fields" pt="md">
+              <DrillDownList
+                perPath={state.perPath}
+                sampleSize={state.sampleSize}
+                onFieldClick={handleFieldClick}
+              />
+              <Text size="xs" c="dimmed" mt="sm">
+                Note: for array-valued paths, only the first element is
+                inspected. A path counts as populated when the first entry in
+                the array is non-empty. Slice-level gaps are surfaced in the
+                Coding Coverage tab.
+              </Text>
+            </Tabs.Panel>
+            <Tabs.Panel value="resources" pt="md">
+              <ResourceIssueTable issues={normalizedIssues} initialFieldFilter={fieldFilter} />
+            </Tabs.Panel>
+          </Tabs>
         </>
       )}
     </Stack>
@@ -107,9 +143,10 @@ export function CompletenessDrillDown() {
 interface DrillDownListProps {
   perPath: Record<string, number>;
   sampleSize: number;
+  onFieldClick?: (path: string) => void;
 }
 
-function DrillDownList({ perPath, sampleSize }: DrillDownListProps) {
+function DrillDownList({ perPath, sampleSize, onFieldClick }: DrillDownListProps) {
   const paths = Object.keys(perPath);
   if (paths.length === 0 || sampleSize === 0) {
     return (
@@ -125,8 +162,17 @@ function DrillDownList({ perPath, sampleSize }: DrillDownListProps) {
         const count = perPath[path];
         const pct = sampleSize > 0 ? Math.round((count / sampleSize) * 100) : 0;
         return (
-          <Group key={path} justify="space-between" wrap="nowrap">
-            <Code>{path}</Code>
+          <Group
+            key={path}
+            justify="space-between"
+            wrap="nowrap"
+            onClick={() => onFieldClick?.(path)}
+            style={{ cursor: onFieldClick ? 'pointer' : undefined }}
+            role={onFieldClick ? 'button' : undefined}
+            tabIndex={onFieldClick ? 0 : undefined}
+            onKeyDown={onFieldClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFieldClick(path); } } : undefined}
+          >
+            <Code c={onFieldClick ? 'blue.6' : undefined}>{path}</Code>
             <Group gap="sm" wrap="nowrap" style={{ minWidth: 240 }}>
               <Progress value={pct} style={{ flex: 1 }} />
               <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
