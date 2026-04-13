@@ -159,6 +159,40 @@ describe('aggregateCoverage (QUAL-03)', () => {
     );
   });
 
+  it('returns perResource with textOnly/empty issues', () => {
+    const sample: Resource[] = [
+      codingSamples.conditionTextOnly,
+      codingSamples.conditionEmpty,
+    ];
+    const report = aggregateCoverage(sample);
+    expect(report.perResource).toBeDefined();
+    expect(report.perResource).toHaveLength(2);
+    const textOnlyEntry = report.perResource!.find(
+      (r) => r.resourceId === `Condition/${(codingSamples.conditionTextOnly as unknown as Record<string, unknown>).id ?? 'unknown'}`,
+    );
+    expect(textOnlyEntry).toBeDefined();
+    expect(textOnlyEntry!.issues.length).toBeGreaterThan(0);
+    expect(textOnlyEntry!.issues[0].classification).toBe('textOnly');
+  });
+
+  it('excludes resources with only systemCode from perResource', () => {
+    const sample: Resource[] = [codingSamples.conditionSystemCode];
+    const report = aggregateCoverage(sample);
+    expect(report.perResource).toEqual([]);
+  });
+
+  it('returns empty perResource for empty sample', () => {
+    const report = aggregateCoverage([]);
+    expect(report.perResource).toEqual([]);
+  });
+
+  it('resource without id uses unknown in resourceId', () => {
+    const noIdResource = { resourceType: 'Condition', code: { text: 'test' } } as Resource;
+    const report = aggregateCoverage([noIdResource]);
+    expect(report.perResource).toHaveLength(1);
+    expect(report.perResource![0].resourceId).toBe('Condition/unknown');
+  });
+
   it('excludes Identifier from coverage counts (Pitfall 5 regression)', () => {
     // patientWithIdentifiers has a name (array, not CC), gender (string),
     // birthDate (string), and identifier[0].type (CC with SNOMED-like

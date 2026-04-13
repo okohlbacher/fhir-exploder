@@ -149,10 +149,17 @@ export function aggregateCoverage(sample: Resource[]): PerTypeCoverageReport {
   let systemCode = 0;
   let textOnly = 0;
   let empty = 0;
+  const perResource: Array<{
+    resourceId: string;
+    resourceType: string;
+    issues: Array<{ path: string; classification: CodedClassification }>;
+  }> = [];
 
   for (const r of sample) {
     const fields = classifyCodedFields(r);
     const typePrefix = r.resourceType ? `${r.resourceType}.` : '';
+    const resourceIssues: Array<{ path: string; classification: CodedClassification }> = [];
+
     for (const f of fields) {
       const stripped = typePrefix && f.path.startsWith(typePrefix)
         ? f.path.slice(typePrefix.length)
@@ -169,6 +176,19 @@ export function aggregateCoverage(sample: Resource[]): PerTypeCoverageReport {
       if (f.classification === 'systemCode') systemCode++;
       else if (f.classification === 'textOnly') textOnly++;
       else empty++;
+
+      // Collect non-systemCode fields as issues for drill-down
+      if (f.classification !== 'systemCode') {
+        resourceIssues.push({ path: aggregationPath, classification: f.classification });
+      }
+    }
+
+    if (resourceIssues.length > 0) {
+      perResource.push({
+        resourceId: `${r.resourceType}/${(r as unknown as Record<string, unknown>).id ?? 'unknown'}`,
+        resourceType: r.resourceType ?? '',
+        issues: resourceIssues,
+      });
     }
   }
 
@@ -180,5 +200,6 @@ export function aggregateCoverage(sample: Resource[]): PerTypeCoverageReport {
     totalCodedFields,
     perPath,
     sampleSize: sample.length,
+    perResource,
   };
 }
