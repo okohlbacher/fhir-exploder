@@ -30,15 +30,20 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 **v1.1-dev** tagged with Blaze compatibility fixes, dev feedback system, and 8 user-feedback-driven UI improvements (custom search table, ResourcePropertyTable, collapsible JSON tree, dashboard tiles, wildcard search, patient related resources).
 
-## Current Milestone: v1.2 — Tech Debt & Quality Trends
+## Current Milestone: v1.2 — Tech Debt & Quality Monitoring
 
-**Goal:** Resolve all accumulated tech debt and TypeScript build errors, then add quality metric trends and PDF report generation.
+**Goal:** Resolve all accumulated tech debt, then build comprehensive data quality monitoring inspired by Kahn et al. framework (conformance, completeness, plausibility) as applied in Spengler (2021).
 
 **Target features:**
-- DEBT-01: 17 info-level code review fixes from v1.0 phases 4+5
-- Fix TypeScript build errors (readResource type-widening, SearchRequest coercion, unused vars, global not found)
+- DEBT-01/02: 17 info-level code review fixes + zero TypeScript build errors
+- DQ-01/02: Quality issue drill-down (click metric to see specific resources/fields, link to detail view)
+- DQ-03/04: Conformance checks (value set validation, cardinality rules)
+- DQ-05/06: Plausibility checks (temporal plausibility, lab reference ranges)
+- DQ-07/08: Duplicate detection (patient matching, content hash deduplication)
+- DQ-09/10: Relational integrity (broken references, orphan resources)
+- DQ-11/12: Quality alerting (configurable thresholds, visual breach indicators)
 - QUAL-05: Quality metric trends over time
-- QUAL-06: PDF quality reports
+- QUAL-06: PDF quality report generation
 
 ### Out of Scope
 
@@ -97,4 +102,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-13 — v1.2 milestone started*
+*Last updated: 2026-04-13 — v1.2 scope expanded with Kahn/Spengler DQ monitoring features*

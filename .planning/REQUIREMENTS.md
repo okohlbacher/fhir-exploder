@@ -1,7 +1,9 @@
-# Requirements: FHIR Exploder v1.2 — Tech Debt & Quality Trends
+# Requirements: FHIR Exploder v1.2 — Tech Debt & Quality Monitoring
 
 **Defined:** 2026-04-13
 **Core Value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
+
+**Theoretical foundation:** Kahn et al. data quality framework (conformance, completeness, plausibility) as applied in Spengler (2021) "Improving Data Quality in Medical Research: A Monitoring Architecture for Clinical and Translational Data Warehouses."
 
 ## v1.2 Requirements
 
@@ -10,9 +12,39 @@
 - [ ] **DEBT-01**: All 17 info-level code review findings from v1.0 phases 4+5 are resolved
 - [ ] **DEBT-02**: `npm run build` (tsc -b) completes with zero errors
 
-### Data Quality Visualization
+### Quality Issue Drill-Down
 
-- [ ] **QUAL-05**: User can view quality metric trends over time (how completeness/coverage changes across measurement points)
+- [ ] **DQ-01**: User can click a quality metric on the dashboard to see the specific resources and fields causing that issue
+- [ ] **DQ-02**: Each drill-down entry links to the resource detail view for inspection
+
+### Conformance Checks
+
+- [ ] **DQ-03**: Dashboard checks resources against expected value sets and flags non-conforming coded values
+- [ ] **DQ-04**: Dashboard checks cardinality rules (required fields present, no unexpected repeats) per resource type
+
+### Plausibility Checks
+
+- [ ] **DQ-05**: Dashboard flags implausible temporal values (dates in the future, encounter end before start, negative age)
+- [ ] **DQ-06**: Dashboard flags lab observations with values outside configurable reference ranges
+
+### Duplicate Detection
+
+- [ ] **DQ-07**: Dashboard detects potential duplicate patients by matching on name + date of birth
+- [ ] **DQ-08**: Dashboard detects potential duplicate resources (same content hash, different IDs)
+
+### Relational Integrity
+
+- [ ] **DQ-09**: Dashboard checks for broken references (dangling pointers to non-existent resources)
+- [ ] **DQ-10**: Dashboard checks for orphan resources (resources that should reference a parent but don't)
+
+### Quality Alerting
+
+- [ ] **DQ-11**: User can configure quality thresholds per metric (e.g., "alert if completeness < 80%")
+- [ ] **DQ-12**: Dashboard visually highlights metrics that breach configured thresholds
+
+### Quality Trends
+
+- [ ] **QUAL-05**: User can view a chart showing how quality metrics (completeness, coding coverage) change across multiple measurement points
 - [ ] **QUAL-06**: User can generate and download a PDF quality report for the current dashboard state
 
 ## Future Requirements (v2+)
@@ -28,21 +60,35 @@ None currently deferred.
 | Multi-server simultaneous browsing | Complexity vs value |
 | Mobile-responsive design | Desktop-only, optimize for 1200px+ |
 | Internationalization (i18n) | English UI; German clinical terms via terminology server |
+| ETL-integrated quality screening | FHIR Exploder is a browser, not an ETL tool — quality checks run against loaded data |
+| External quality event ingestion API | No external ETL pipelines feed into this tool |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEBT-01 | Phase 14 | Pending |
-| DEBT-02 | Phase 14 | Pending |
-| QUAL-05 | Phase 15 | Pending |
-| QUAL-06 | Phase 15 | Pending |
+| DEBT-01 | TBD | Pending |
+| DEBT-02 | TBD | Pending |
+| DQ-01 | TBD | Pending |
+| DQ-02 | TBD | Pending |
+| DQ-03 | TBD | Pending |
+| DQ-04 | TBD | Pending |
+| DQ-05 | TBD | Pending |
+| DQ-06 | TBD | Pending |
+| DQ-07 | TBD | Pending |
+| DQ-08 | TBD | Pending |
+| DQ-09 | TBD | Pending |
+| DQ-10 | TBD | Pending |
+| DQ-11 | TBD | Pending |
+| DQ-12 | TBD | Pending |
+| QUAL-05 | TBD | Pending |
+| QUAL-06 | TBD | Pending |
 
 **Coverage:**
-- v1.2 requirements: 4 total
-- Mapped to phases: 4
-- Unmapped: 0
+- v1.2 requirements: 16 total
+- Mapped to phases: 0
+- Unmapped: 16
 
 ---
 *Requirements defined: 2026-04-13*
-*Last updated: 2026-04-13 after roadmap creation*
+*Last updated: 2026-04-13 after Spengler dissertation review*
