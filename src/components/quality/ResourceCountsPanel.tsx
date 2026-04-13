@@ -1,17 +1,8 @@
 /**
- * ResourceCountsPanel — sortable table of resource types + counts + an
- * inline Progress-bar distribution column.
+ * ResourceCountsPanel — sortable, filterable table of resource types + counts
+ * with inline Progress-bar distribution.
  *
- * Behavior per UI-SPEC Counts tab:
- *   - Columns: Resource type (linked to /explorer/{type}), Count, Distribution
- *   - Column headers toggle sort on click; aria-sort reflects state
- *   - "Show empty types" Switch toggles includeEmpty on sortCounts
- *   - Per-row rendering:
- *       loading → <Loader size="xs" />
- *       error   → <Badge color="red" variant="light">Error</Badge>
- *       number  → right-aligned bold text + <Progress value={count/max*100} />
- *   - Default sort: count DESC (worst-first mirrors UI-SPEC)
- *   - maxCount = max numeric count across rows (ignores loading/error)
+ * Default: sorted by count DESC (most frequent on top), empty types hidden.
  */
 import { useMemo, useState } from 'react';
 import {
@@ -24,9 +15,10 @@ import {
   Switch,
   Table,
   Text,
+  TextInput,
   UnstyledButton,
 } from '@mantine/core';
-import { IconArrowDown, IconArrowUp, IconArrowsSort } from '@tabler/icons-react';
+import { IconArrowDown, IconArrowUp, IconArrowsSort, IconSearch } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import type { CountValue } from '../../quality/types';
 import { sortCounts } from '../../quality/counts';
@@ -42,11 +34,27 @@ export function ResourceCountsPanel({ counts }: ResourceCountsPanelProps) {
   const [sortKey, setSortKey] = useState<SortKey>('count');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [includeEmpty, setIncludeEmpty] = useState(false);
+  const [filter, setFilter] = useState('');
 
-  const rows = useMemo(
-    () => sortCounts(counts, sortKey, sortDir, includeEmpty),
-    [counts, sortKey, sortDir, includeEmpty],
-  );
+  const rows = useMemo(() => {
+    let sorted = sortCounts(counts, sortKey, sortDir, includeEmpty);
+
+    // When hiding empty, also hide loading rows (they clutter the view
+    // while counts are being fetched)
+    if (!includeEmpty) {
+      sorted = sorted.filter(
+        (r) => typeof r.count === 'number' && r.count > 0
+      );
+    }
+
+    // Apply text filter
+    if (filter.trim()) {
+      const lc = filter.toLowerCase();
+      sorted = sorted.filter((r) => r.type.toLowerCase().includes(lc));
+    }
+
+    return sorted;
+  }, [counts, sortKey, sortDir, includeEmpty, filter]);
 
   const maxCount = useMemo(() => {
     let m = 0;
@@ -55,6 +63,11 @@ export function ResourceCountsPanel({ counts }: ResourceCountsPanelProps) {
     }
     return m;
   }, [counts]);
+
+  const totalNonEmpty = useMemo(
+    () => Object.values(counts).filter((v) => typeof v === 'number' && v > 0).length,
+    [counts]
+  );
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) {
@@ -70,15 +83,25 @@ export function ResourceCountsPanel({ counts }: ResourceCountsPanelProps) {
 
   return (
     <Stack gap="md">
-      <Group justify="space-between">
-        <Text size="xs" c="dimmed">
-          {rows.length} {rows.length === 1 ? 'row' : 'rows'}
-        </Text>
-        <Switch
-          label="Show empty types"
-          checked={includeEmpty}
-          onChange={(e) => setIncludeEmpty(e.currentTarget.checked)}
+      <Group justify="space-between" wrap="wrap">
+        <TextInput
+          placeholder="Filter resource types..."
+          leftSection={<IconSearch size={14} />}
+          value={filter}
+          onChange={(e) => setFilter(e.currentTarget.value)}
+          size="sm"
+          style={{ minWidth: 250 }}
         />
+        <Group gap="md">
+          <Text size="xs" c="dimmed">
+            {rows.length} of {totalNonEmpty} types with data
+          </Text>
+          <Switch
+            label="Show empty types"
+            checked={includeEmpty}
+            onChange={(e) => setIncludeEmpty(e.currentTarget.checked)}
+          />
+        </Group>
       </Group>
 
       <Table striped highlightOnHover>
@@ -147,7 +170,7 @@ export function ResourceCountsPanel({ counts }: ResourceCountsPanelProps) {
 
       {rows.length === 0 && (
         <Text size="sm" c="dimmed" ta="center" py="xl">
-          No resource types to display.
+          {filter ? `No resource types matching "${filter}".` : 'No resource types to display.'}
         </Text>
       )}
     </Stack>
