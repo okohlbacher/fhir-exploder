@@ -18,7 +18,7 @@ None currently deferred.
 
 ## Phases
 
-- [ ] **Phase 14: Tech Debt Cleanup** - Resolve code review findings and TypeScript build errors for a clean, warning-free codebase
+- [x] **Phase 14: Tech Debt Cleanup** - Resolve code review findings and TypeScript build errors for a clean, warning-free codebase (completed 2026-04-13)
 - [ ] **Phase 15: Quality Check Engine & Drill-Down** - Build the foundational drill-down UI so users can click any quality metric and see the specific resources causing issues
 - [ ] **Phase 16: Conformance & Plausibility Checks** - Add value set conformance, cardinality validation, temporal plausibility, and lab range checks
 - [ ] **Phase 17: Duplicate Detection & Relational Integrity** - Detect duplicate patients and resources, find broken references and orphan resources
@@ -35,10 +35,10 @@ None currently deferred.
   1. All 17 info-level code review findings from v1.0 phases 4+5 are addressed (each fix verifiable in the diff)
   2. `npm run build` (tsc -b) completes with zero errors and zero warnings
   3. `npm run dev` starts without TypeScript or runtime errors in the browser console
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 14-01-PLAN.md -- Eliminate all 54 TypeScript build errors (install @testing-library/dom, create fhir-helpers utility, migrate casts)
-- [ ] 14-02-PLAN.md -- Address all 17 info-level code review findings from phases 4+5
+- [x] 14-01-PLAN.md -- Eliminate all 54 TypeScript build errors (install @testing-library/dom, create fhir-helpers utility, migrate casts)
+- [x] 14-02-PLAN.md -- Address all 17 info-level code review findings from phases 4+5
 
 ### Phase 15: Quality Check Engine & Drill-Down
 **Goal**: Users can click any quality metric on the dashboard and see exactly which resources and fields are causing that issue
@@ -105,7 +105,7 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 14. Tech Debt Cleanup | v1.2 | 0/2 | Planned | - |
+| 14. Tech Debt Cleanup | v1.2 | 2/2 | Complete    | 2026-04-13 |
 | 15. Quality Check Engine & Drill-Down | v1.2 | 0/0 | Not started | - |
 | 16. Conformance & Plausibility Checks | v1.2 | 0/0 | Not started | - |
 | 17. Duplicate Detection & Relational Integrity | v1.2 | 0/0 | Not started | - |
