@@ -24,6 +24,7 @@ import {
 } from '@tabler/icons-react';
 import { useMedplum } from '@medplum/react-hooks';
 import type { Bundle, Resource } from '@medplum/fhirtypes';
+import { toRecord } from '../../utils/fhir-helpers';
 
 interface PatientTimelineProps {
   patientId: string;
@@ -55,7 +56,7 @@ const TIMELINE_RESOURCE_TYPES = [
 
 /** Extract the best date from a FHIR resource */
 function extractDate(resource: Resource): string | null {
-  const r = resource as Record<string, unknown>;
+  const r = toRecord(resource);
   for (const field of [
     'effectiveDateTime', 'performedDateTime', 'recordedDate', 'onsetDateTime',
     'authoredOn', 'date', 'issued', 'started',
@@ -72,7 +73,7 @@ function extractDate(resource: Resource): string | null {
 
 /** Extract a short summary for display */
 function extractSummary(resource: Resource): string {
-  const r = resource as Record<string, unknown>;
+  const r = toRecord(resource);
   // CodeableConcept: code, type, category
   for (const field of ['code', 'type', 'category', 'class']) {
     const cc = r[field];

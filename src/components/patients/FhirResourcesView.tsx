@@ -16,6 +16,7 @@ import {
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { useMedplum } from '@medplum/react-hooks';
 import type { Bundle, CapabilityStatement, Resource } from '@medplum/fhirtypes';
+import { toRecord } from '../../utils/fhir-helpers';
 
 type CountState = number | 'loading' | 'error';
 
@@ -48,7 +49,7 @@ function usePatientLinkedTypes(capability: CapabilityStatement): {
 }
 
 function getSummary(r: Resource): string {
-  const obj = r as Record<string, unknown>;
+  const obj = toRecord(r);
   for (const field of ['code', 'type', 'category']) {
     const cc = obj[field];
     if (cc && typeof cc === 'object') {
@@ -67,7 +68,7 @@ function getSummary(r: Resource): string {
 }
 
 function getDate(r: Resource): string {
-  const obj = r as Record<string, unknown>;
+  const obj = toRecord(r);
   for (const field of [
     'effectiveDateTime', 'performedDateTime', 'recordedDate', 'onsetDateTime',
     'authoredOn', 'date', 'issued',

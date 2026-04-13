@@ -4,6 +4,7 @@ import { Anchor, Center, Skeleton, Stack, Table, Text } from '@mantine/core';
 import { useMedplum } from '@medplum/react-hooks';
 import type { Bundle, Resource } from '@medplum/fhirtypes';
 import type { MiiModule } from '../../utils/mii-modules';
+import { toRecord } from '../../utils/fhir-helpers';
 
 interface MiiModuleTabProps {
   module: MiiModule;
@@ -11,7 +12,7 @@ interface MiiModuleTabProps {
 }
 
 function getSummary(r: Resource): string {
-  const obj = r as Record<string, unknown>;
+  const obj = toRecord(r);
   for (const field of ['code', 'type', 'category']) {
     const cc = obj[field];
     if (cc && typeof cc === 'object') {
@@ -31,7 +32,7 @@ function getSummary(r: Resource): string {
 }
 
 function getDate(r: Resource): string {
-  const obj = r as Record<string, unknown>;
+  const obj = toRecord(r);
   for (const field of [
     'effectiveDateTime', 'performedDateTime', 'recordedDate', 'onsetDateTime',
     'authoredOn', 'date', 'issued',
@@ -126,7 +127,7 @@ export function MiiModuleTab({ module, patientId }: MiiModuleTabProps) {
             <Table.Td><Text size="sm">{getDate(r)}</Text></Table.Td>
             <Table.Td>
               <Text size="sm" c="dimmed">
-                {(r as Record<string, unknown>).status as string ?? ''}
+                {toRecord(r).status as string ?? ''}
               </Text>
             </Table.Td>
             <Table.Td>

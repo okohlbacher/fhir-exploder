@@ -6,6 +6,7 @@ import type {
   Procedure,
   Resource,
 } from '@medplum/fhirtypes';
+import { toRecord } from './fhir-helpers';
 
 /**
  * Normalized timeline entry used by the ClinicalTimeline component.
@@ -61,7 +62,7 @@ export function extractDate(resource: Resource): string | undefined {
       return o.effectiveDateTime ?? o.effectivePeriod?.start ?? o.issued;
     }
     default:
-      return (resource as unknown as Record<string, unknown>).date as
+      return toRecord(resource).date as
         | string
         | undefined;
   }

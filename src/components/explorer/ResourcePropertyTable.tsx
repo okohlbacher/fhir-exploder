@@ -1,5 +1,6 @@
 import { Anchor, Badge, Code, Group, Stack, Table, Text } from '@mantine/core';
 import type { Resource } from '@medplum/fhirtypes';
+import { toRecord } from '../../utils/fhir-helpers';
 
 interface ResourcePropertyTableProps {
   resource: Resource;
@@ -201,8 +202,8 @@ export function ResourcePropertyTable({ resource }: ResourcePropertyTableProps) 
       {/* Resource type + meta header */}
       <Group gap="sm">
         <Badge size="lg" variant="light" color="blue">{resource.resourceType}</Badge>
-        {(resource as Record<string, unknown>).id && (
-          <Code>{(resource as Record<string, unknown>).id as string}</Code>
+        {toRecord(resource).id && (
+          <Code>{toRecord(resource).id as string}</Code>
         )}
         {resource.meta?.lastUpdated && (
           <Text size="xs" c="dimmed">Last updated: {resource.meta.lastUpdated}</Text>
@@ -223,7 +224,7 @@ export function ResourcePropertyTable({ resource }: ResourcePropertyTableProps) 
                 <Text size="sm" fw={500}>{key}</Text>
               </Table.Td>
               <Table.Td>
-                <RenderValue value={(resource as Record<string, unknown>)[key]} />
+                <RenderValue value={toRecord(resource)[key]} />
               </Table.Td>
             </Table.Tr>
           ))}

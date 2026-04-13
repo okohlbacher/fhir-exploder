@@ -1,4 +1,5 @@
 import type { Resource } from '@medplum/fhirtypes';
+import { toRecord } from './fhir-helpers';
 
 /**
  * Convert FHIR resources to CSV string.
@@ -24,7 +25,7 @@ export function resourcesToCSV(resources: Resource[]): string {
   // Data rows
   for (const r of resources) {
     const row = keys.map((key) => {
-      const val = (r as Record<string, unknown>)[key];
+      const val = toRecord(r)[key];
       if (val === undefined || val === null) return '';
       if (typeof val === 'string') return escapeCSV(val);
       if (typeof val === 'number' || typeof val === 'boolean') return String(val);

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useMedplum } from '@medplum/react-hooks';
 import { Tabs, Stack, Title, Alert, Skeleton, Button, Group } from '@mantine/core';
 import { IconArrowLeft } from '@tabler/icons-react';
-import type { Resource } from '@medplum/fhirtypes';
+import type { Resource, ResourceType } from '@medplum/fhirtypes';
 import { useBreadcrumbTrail } from '../../hooks/useBreadcrumbTrail';
 import { NavigationBreadcrumbs } from './NavigationBreadcrumbs';
 import { HumanReadableView } from './HumanReadableView';
@@ -59,7 +59,7 @@ export function ResourceDetailPage() {
     setResource(undefined);
 
     client
-      .readResource(resourceType, id)
+      .readResource(resourceType as ResourceType, id)
       .then((res: Resource) => {
         setResource(res);
         setLoading(false);

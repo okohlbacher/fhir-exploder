@@ -11,13 +11,14 @@ import { ResourceTypeSelector } from './ResourceTypeSelector';
 import { SearchFilterPanel } from './SearchFilterPanel';
 import { PaginationControls } from './PaginationControls';
 import { resourcesToCSV, resourcesToNDJSON, downloadString } from '../../utils/export';
+import { toRecord } from '../../utils/fhir-helpers';
 
 /**
  * Extracts a human-readable summary of a resource for table display.
  * Tries common fields: name, code, identifier, then falls back to id.
  */
 function getResourceSummary(resource: Resource): string {
-  const r = resource as Record<string, unknown>;
+  const r = toRecord(resource);
 
   // HumanName (Patient, Practitioner, etc.)
   if (Array.isArray(r.name) && r.name.length > 0) {
@@ -57,7 +58,7 @@ function getResourceSummary(resource: Resource): string {
 }
 
 function getResourceDate(resource: Resource): string {
-  const r = resource as Record<string, unknown>;
+  const r = toRecord(resource);
   for (const field of [
     'effectiveDateTime', 'performedDateTime', 'dateTime', 'date',
     'issued', 'recordedDate', 'onsetDateTime', 'authoredOn',
@@ -419,18 +420,18 @@ export function SearchResultsPage() {
                   <Text size="sm">{getResourceDate(r)}</Text>
                 </Table.Td>
                 <Table.Td>
-                  {(r as Record<string, unknown>).status && (
+                  {toRecord(r).status && (
                     <Badge
                       size="sm"
                       variant="light"
                       color={
-                        (r as Record<string, unknown>).status === 'active' ||
-                        (r as Record<string, unknown>).status === 'completed'
+                        toRecord(r).status === 'active' ||
+                        toRecord(r).status === 'completed'
                           ? 'green'
                           : 'gray'
                       }
                     >
-                      {String((r as Record<string, unknown>).status)}
+                      {String(toRecord(r).status)}
                     </Badge>
                   )}
                 </Table.Td>
