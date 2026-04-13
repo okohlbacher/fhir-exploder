@@ -52,12 +52,18 @@ Progress: [░░░░░░░░░░] 0%
 
 ### Pending Todos
 
-4 todos (from deferred items in phases 05/06):
+1 todo:
 
-- Fix readResource type-widening TS2345 errors (ui)
-- Fix unused variable warnings in tests (testing)
-- Fix global not found in resource-type-landing-counts test (testing)
-- Fix SearchRequest coercion warning TS2352 (ui)
+- Add cohort selection for scoped data quality analysis (ui)
+
+### Completed Todos
+
+4 todos resolved in Phase 14:
+
+- ~~Fix readResource type-widening TS2345 errors~~ (ui)
+- ~~Fix unused variable warnings in tests~~ (testing)
+- ~~Fix global not found in resource-type-landing-counts test~~ (testing)
+- ~~Fix SearchRequest coercion warning TS2352~~ (ui)
 
 ### Blockers/Concerns
 
