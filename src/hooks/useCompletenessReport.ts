@@ -36,6 +36,10 @@ const DEBOUNCE_MS = 500;
 // Module-scoped cache, one per server URL. Plan 04's coverage hook should
 // follow the same pattern (separate cache instance) — keyed by metric in
 // buildMetricsKey so 'completeness' and 'coverage' entries never collide.
+//
+// Known limitation: switching server URLs discards the previous server's cache.
+// A Map<string, QualityMetricsCache> would preserve both, but adds memory pressure
+// for a use case (multi-server switching) that is rare in local-first usage.
 let cacheInstance: QualityMetricsCache | null = null;
 let cacheServerUrl: string | null = null;
 function getCache(serverUrl: string): QualityMetricsCache {
