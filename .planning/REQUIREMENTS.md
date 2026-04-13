@@ -1,4 +1,4 @@
-# Requirements: FHIR Exploder v1.2 — Tech Debt & Quality Monitoring
+# Requirements: FHIR Exploder v1.2 -- Tech Debt & Quality Monitoring
 
 **Defined:** 2026-04-13
 **Core Value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
@@ -60,35 +60,35 @@ None currently deferred.
 | Multi-server simultaneous browsing | Complexity vs value |
 | Mobile-responsive design | Desktop-only, optimize for 1200px+ |
 | Internationalization (i18n) | English UI; German clinical terms via terminology server |
-| ETL-integrated quality screening | FHIR Exploder is a browser, not an ETL tool — quality checks run against loaded data |
+| ETL-integrated quality screening | FHIR Exploder is a browser, not an ETL tool -- quality checks run against loaded data |
 | External quality event ingestion API | No external ETL pipelines feed into this tool |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEBT-01 | TBD | Pending |
-| DEBT-02 | TBD | Pending |
-| DQ-01 | TBD | Pending |
-| DQ-02 | TBD | Pending |
-| DQ-03 | TBD | Pending |
-| DQ-04 | TBD | Pending |
-| DQ-05 | TBD | Pending |
-| DQ-06 | TBD | Pending |
-| DQ-07 | TBD | Pending |
-| DQ-08 | TBD | Pending |
-| DQ-09 | TBD | Pending |
-| DQ-10 | TBD | Pending |
-| DQ-11 | TBD | Pending |
-| DQ-12 | TBD | Pending |
-| QUAL-05 | TBD | Pending |
-| QUAL-06 | TBD | Pending |
+| DEBT-01 | Phase 14 | Pending |
+| DEBT-02 | Phase 14 | Pending |
+| DQ-01 | Phase 15 | Pending |
+| DQ-02 | Phase 15 | Pending |
+| DQ-03 | Phase 16 | Pending |
+| DQ-04 | Phase 16 | Pending |
+| DQ-05 | Phase 16 | Pending |
+| DQ-06 | Phase 16 | Pending |
+| DQ-07 | Phase 17 | Pending |
+| DQ-08 | Phase 17 | Pending |
+| DQ-09 | Phase 17 | Pending |
+| DQ-10 | Phase 17 | Pending |
+| DQ-11 | Phase 18 | Pending |
+| DQ-12 | Phase 18 | Pending |
+| QUAL-05 | Phase 19 | Pending |
+| QUAL-06 | Phase 19 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 16 total
-- Mapped to phases: 0
-- Unmapped: 16
+- Mapped to phases: 16
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-13*
-*Last updated: 2026-04-13 after Spengler dissertation review*
+*Last updated: 2026-04-13 -- roadmap phase assignments complete*

@@ -2,9 +2,9 @@
 
 ## Milestones
 
-- ✅ **v1.0 — MVP (shipped 2026-04-12)** — [Archive](milestones/v1.0-ROADMAP.md) · [Requirements](milestones/v1.0-REQUIREMENTS.md)
-- ✅ **v1.1 — UX Polish & Data Export (shipped 2026-04-12)** — [Archive](milestones/v1.1-ROADMAP.md) · [Requirements](milestones/v1.1-REQUIREMENTS.md)
-- 🚧 **v1.2 — Tech Debt & Quality Trends** — Phases 14-15
+- ✅ **v1.0 -- MVP (shipped 2026-04-12)** -- [Archive](milestones/v1.0-ROADMAP.md) . [Requirements](milestones/v1.0-REQUIREMENTS.md)
+- ✅ **v1.1 -- UX Polish & Data Export (shipped 2026-04-12)** -- [Archive](milestones/v1.1-ROADMAP.md) . [Requirements](milestones/v1.1-REQUIREMENTS.md)
+- 🚧 **v1.2 -- Tech Debt & Quality Monitoring** -- Phases 14-19
 
 ## Deferred Items
 
@@ -12,14 +12,18 @@ None currently deferred.
 
 ---
 
-### 🚧 v1.2 — Tech Debt & Quality Trends (In Progress)
+### 🚧 v1.2 -- Tech Debt & Quality Monitoring (In Progress)
 
-**Milestone Goal:** Resolve all accumulated tech debt and TypeScript build errors, then add quality metric trends and PDF report generation to the data quality dashboard.
+**Milestone Goal:** Resolve all accumulated tech debt, then build comprehensive data quality monitoring with drill-down, conformance/plausibility checks, duplicate detection, relational integrity, alerting, trend visualization, and PDF reporting.
 
 ## Phases
 
 - [ ] **Phase 14: Tech Debt Cleanup** - Resolve code review findings and TypeScript build errors for a clean, warning-free codebase
-- [ ] **Phase 15: Quality Trends & PDF Reports** - Add trend visualization and downloadable PDF reports to the data quality dashboard
+- [ ] **Phase 15: Quality Check Engine & Drill-Down** - Build the foundational drill-down UI so users can click any quality metric and see the specific resources causing issues
+- [ ] **Phase 16: Conformance & Plausibility Checks** - Add value set conformance, cardinality validation, temporal plausibility, and lab range checks
+- [ ] **Phase 17: Duplicate Detection & Relational Integrity** - Detect duplicate patients and resources, find broken references and orphan resources
+- [ ] **Phase 18: Quality Alerting & Thresholds** - Let users configure quality thresholds and visually flag breaches on the dashboard
+- [ ] **Phase 19: Quality Trends & PDF Reports** - Track quality metrics over time and generate downloadable PDF reports
 
 ## Phase Details
 
@@ -33,16 +37,64 @@ None currently deferred.
   3. `npm run dev` starts without TypeScript or runtime errors in the browser console
 **Plans**: TBD
 
-### Phase 15: Quality Trends & PDF Reports
-**Goal**: Users can track how data quality changes over time and export quality reports as PDF
+### Phase 15: Quality Check Engine & Drill-Down
+**Goal**: Users can click any quality metric on the dashboard and see exactly which resources and fields are causing that issue
 **Depends on**: Phase 14
+**Requirements**: DQ-01, DQ-02
+**Success Criteria** (what must be TRUE):
+  1. User can click a quality metric (completeness, coding coverage, validation) to open a drill-down view listing the specific resources and fields involved
+  2. Each entry in the drill-down view links to the resource detail view for further inspection
+  3. Drill-down works for all existing quality panels (completeness, coding coverage, profile validation)
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 16: Conformance & Plausibility Checks
+**Goal**: Dashboard detects and reports value set violations, cardinality errors, implausible dates, and out-of-range lab values
+**Depends on**: Phase 15
+**Requirements**: DQ-03, DQ-04, DQ-05, DQ-06
+**Success Criteria** (what must be TRUE):
+  1. Dashboard flags coded values that do not belong to the expected value set for their field
+  2. Dashboard flags resources missing required fields or containing unexpected repeated values per resource type
+  3. Dashboard flags implausible temporal values (future dates, encounter end before start, negative age)
+  4. Dashboard flags lab observations with values outside configurable reference ranges
+  5. All conformance and plausibility findings are accessible via the Phase 15 drill-down (clickable to resource detail)
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 17: Duplicate Detection & Relational Integrity
+**Goal**: Dashboard surfaces potential duplicate records and broken/orphan references across the FHIR dataset
+**Depends on**: Phase 15
+**Requirements**: DQ-07, DQ-08, DQ-09, DQ-10
+**Success Criteria** (what must be TRUE):
+  1. Dashboard identifies potential duplicate patients by matching on name + date of birth
+  2. Dashboard identifies potential duplicate resources by detecting same content hash with different IDs
+  3. Dashboard reports broken references (dangling pointers to non-existent resources)
+  4. Dashboard reports orphan resources (resources that should reference a parent but have no such reference)
+  5. All duplicate and integrity findings are accessible via the Phase 15 drill-down (clickable to resource detail)
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 18: Quality Alerting & Thresholds
+**Goal**: Users can set quality thresholds and the dashboard visually flags any metrics that breach them
+**Depends on**: Phase 16, Phase 17
+**Requirements**: DQ-11, DQ-12
+**Success Criteria** (what must be TRUE):
+  1. User can configure a quality threshold per metric (e.g., "alert if completeness < 80%")
+  2. Threshold configuration persists across page reloads (browser storage)
+  3. Dashboard visually highlights metrics that breach their configured threshold (distinct color/icon)
+  4. Alerting covers both existing metrics (completeness, coding) and new metrics (conformance, plausibility, duplicates, integrity)
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 19: Quality Trends & PDF Reports
+**Goal**: Users can track how data quality changes over time and export quality reports as PDF
+**Depends on**: Phase 18
 **Requirements**: QUAL-05, QUAL-06
 **Success Criteria** (what must be TRUE):
-  1. User can view a chart showing how quality metrics (completeness, coding coverage) change across multiple measurement points
+  1. User can view a chart showing how quality metrics change across multiple measurement points
   2. User can trigger a new measurement snapshot that gets added to the trend history
-  3. User can generate a PDF report reflecting the current quality dashboard state
-  4. User can download the generated PDF to their local machine
-  5. Trend data persists in browser storage so it survives page reloads
+  3. Trend data persists in browser storage so it survives page reloads
+  4. User can generate and download a PDF quality report reflecting the current dashboard state
 **Plans**: TBD
 **UI hint**: yes
 
@@ -51,4 +103,8 @@ None currently deferred.
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 14. Tech Debt Cleanup | v1.2 | 0/0 | Not started | - |
-| 15. Quality Trends & PDF Reports | v1.2 | 0/0 | Not started | - |
+| 15. Quality Check Engine & Drill-Down | v1.2 | 0/0 | Not started | - |
+| 16. Conformance & Plausibility Checks | v1.2 | 0/0 | Not started | - |
+| 17. Duplicate Detection & Relational Integrity | v1.2 | 0/0 | Not started | - |
+| 18. Quality Alerting & Thresholds | v1.2 | 0/0 | Not started | - |
+| 19. Quality Trends & PDF Reports | v1.2 | 0/0 | Not started | - |
