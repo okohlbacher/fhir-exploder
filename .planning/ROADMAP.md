@@ -35,7 +35,10 @@ None currently deferred.
   1. All 17 info-level code review findings from v1.0 phases 4+5 are addressed (each fix verifiable in the diff)
   2. `npm run build` (tsc -b) completes with zero errors and zero warnings
   3. `npm run dev` starts without TypeScript or runtime errors in the browser console
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 14-01-PLAN.md -- Eliminate all 54 TypeScript build errors (install @testing-library/dom, create fhir-helpers utility, migrate casts)
+- [ ] 14-02-PLAN.md -- Address all 17 info-level code review findings from phases 4+5
 
 ### Phase 15: Quality Check Engine & Drill-Down
 **Goal**: Users can click any quality metric on the dashboard and see exactly which resources and fields are causing that issue
@@ -102,7 +105,7 @@ None currently deferred.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 14. Tech Debt Cleanup | v1.2 | 0/0 | Not started | - |
+| 14. Tech Debt Cleanup | v1.2 | 0/2 | Planned | - |
 | 15. Quality Check Engine & Drill-Down | v1.2 | 0/0 | Not started | - |
 | 16. Conformance & Plausibility Checks | v1.2 | 0/0 | Not started | - |
 | 17. Duplicate Detection & Relational Integrity | v1.2 | 0/0 | Not started | - |
