@@ -81,18 +81,36 @@ function isNonEmpty(v: unknown): boolean {
 export function computeCompleteness(
   sample: Resource[],
   requiredPaths: string[],
-): { populated: number; total: number; perPath: Record<string, number> } {
+): {
+  populated: number;
+  total: number;
+  perPath: Record<string, number>;
+  perResource: Array<{ resourceId: string; resourceType: string; missingPaths: string[] }>;
+} {
   if (sample.length === 0 || requiredPaths.length === 0) {
-    return { populated: 0, total: 0, perPath: {} };
+    return { populated: 0, total: 0, perPath: {}, perResource: [] };
   }
   const perPath: Record<string, number> = {};
   for (const p of requiredPaths) perPath[p] = 0;
+  const perResource: Array<{ resourceId: string; resourceType: string; missingPaths: string[] }> = [];
   for (const r of sample) {
+    const missing: string[] = [];
     for (const p of requiredPaths) {
-      if (isPathPopulated(r, p)) perPath[p]++;
+      if (isPathPopulated(r, p)) {
+        perPath[p]++;
+      } else {
+        missing.push(p);
+      }
+    }
+    if (missing.length > 0) {
+      perResource.push({
+        resourceId: `${r.resourceType}/${(r as Record<string, unknown>).id ?? 'unknown'}`,
+        resourceType: r.resourceType ?? '',
+        missingPaths: missing,
+      });
     }
   }
   const populated = Object.values(perPath).reduce((a, b) => a + b, 0);
   const total = sample.length * requiredPaths.length;
-  return { populated, total, perPath };
+  return { populated, total, perPath, perResource };
 }

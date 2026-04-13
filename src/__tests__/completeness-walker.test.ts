@@ -160,13 +160,13 @@ describe('computeCompleteness (QUAL-02)', () => {
   it('returns zero-populated, zero-total for empty sample', () => {
     expect(
       computeCompleteness([], ['Condition.code']),
-    ).toEqual({ populated: 0, total: 0, perPath: {} });
+    ).toEqual({ populated: 0, total: 0, perPath: {}, perResource: [] });
   });
 
   it('returns zero-populated, zero-total for empty requiredPaths', () => {
     expect(
       computeCompleteness(sampleResourcesByType.Condition, []),
-    ).toEqual({ populated: 0, total: 0, perPath: {} });
+    ).toEqual({ populated: 0, total: 0, perPath: {}, perResource: [] });
   });
 
   it('total equals sample.length * requiredPaths.length', () => {
@@ -209,5 +209,41 @@ describe('computeCompleteness (QUAL-02)', () => {
     ]);
     const sum = Object.values(result.perPath).reduce((a, b) => a + b, 0);
     expect(result.populated).toBe(sum);
+  });
+
+  it('returns perResource with missing paths for resources that have gaps', () => {
+    const sample = [
+      { resourceType: 'Patient', id: 'p1', name: [{ family: 'Smith' }] } as Resource,
+    ];
+    const result = computeCompleteness(sample, ['Patient.name', 'Patient.birthDate']);
+    expect(result.perResource).toBeDefined();
+    expect(result.perResource).toHaveLength(1);
+    expect(result.perResource[0]).toEqual({
+      resourceId: 'Patient/p1',
+      resourceType: 'Patient',
+      missingPaths: ['Patient.birthDate'],
+    });
+  });
+
+  it('returns empty perResource when all paths are populated', () => {
+    const sample = [
+      { resourceType: 'Patient', id: 'p2', name: [{ family: 'Doe' }], birthDate: '1990-01-01' } as Resource,
+    ];
+    const result = computeCompleteness(sample, ['Patient.name', 'Patient.birthDate']);
+    expect(result.perResource).toEqual([]);
+  });
+
+  it('returns empty perResource for empty sample', () => {
+    const result = computeCompleteness([], ['Patient.name']);
+    expect(result.perResource).toEqual([]);
+  });
+
+  it('resource without id uses unknown in resourceId', () => {
+    const sample = [
+      { resourceType: 'Patient' } as Resource,
+    ];
+    const result = computeCompleteness(sample, ['Patient.name']);
+    expect(result.perResource).toHaveLength(1);
+    expect(result.perResource[0].resourceId).toBe('Patient/unknown');
   });
 });

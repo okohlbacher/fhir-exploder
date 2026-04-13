@@ -154,11 +154,12 @@ async function computeForType(
   const profile = getProfileForType(resourceType);
   const requiredPaths = profile ? requiredElementPaths(profile) : [];
   const sample = await sampleResources(client, resourceType, sampleSize);
-  const { populated, total, perPath } = computeCompleteness(sample, requiredPaths);
+  const { populated, total, perPath, perResource } = computeCompleteness(sample, requiredPaths);
   return {
     populated,
     total,
     perPath,
+    perResource,
     sampleSize: sample.length,
     totalForType: null, // joined by useResourceCounts elsewhere; left unjoined here
     profileUrl: profile?.url ?? null,
