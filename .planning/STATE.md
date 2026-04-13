@@ -52,9 +52,10 @@ Progress: [░░░░░░░░░░] 0%
 
 ### Pending Todos
 
-1 todo:
+2 todos:
 
-- Add cohort selection for scoped data quality analysis (ui)
+- Add cohort selection for scoped data quality analysis (ui) — interactive UI filtering
+- Define cohorts via FHIRPath query or MII FDPG format (ui) — programmatic definition, import/export, deletion
 
 ### Completed Todos
 
