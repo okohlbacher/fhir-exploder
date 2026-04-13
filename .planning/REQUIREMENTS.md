@@ -33,16 +33,16 @@ None currently deferred.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEBT-01 | TBD | Pending |
-| DEBT-02 | TBD | Pending |
-| QUAL-05 | TBD | Pending |
-| QUAL-06 | TBD | Pending |
+| DEBT-01 | Phase 14 | Pending |
+| DEBT-02 | Phase 14 | Pending |
+| QUAL-05 | Phase 15 | Pending |
+| QUAL-06 | Phase 15 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 4 total
-- Mapped to phases: 0
-- Unmapped: 4
+- Mapped to phases: 4
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-13*
-*Last updated: 2026-04-13 after initial definition*
+*Last updated: 2026-04-13 after roadmap creation*
