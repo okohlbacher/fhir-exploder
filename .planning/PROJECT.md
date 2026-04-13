@@ -30,6 +30,8 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 **v1.1-dev** tagged with Blaze compatibility fixes, dev feedback system, and 8 user-feedback-driven UI improvements (custom search table, ResourcePropertyTable, collapsible JSON tree, dashboard tiles, wildcard search, patient related resources).
 
+**Phase 14 complete (2026-04-13)** — All 17 info-level code review findings resolved, zero TypeScript build errors. New `fhir-helpers.ts` utility with `toRecord()` and `getCodeDisplay()` helpers.
+
 ## Current Milestone: v1.2 — Tech Debt & Quality Monitoring
 
 **Goal:** Resolve all accumulated tech debt, then build comprehensive data quality monitoring inspired by Kahn et al. framework (conformance, completeness, plausibility) as applied in Spengler (2021).
@@ -102,4 +104,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-13 — v1.2 scope expanded with Kahn/Spengler DQ monitoring features*
+*Last updated: 2026-04-13 — Phase 14 tech debt cleanup complete, v1.2 scope expanded with Kahn/Spengler DQ monitoring features*
