@@ -35,6 +35,7 @@ import {
   Progress,
   Select,
   Stack,
+  Tabs,
   Text,
 } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
@@ -55,6 +56,8 @@ import { parseResourceTypes } from '../../fhir/capability';
 import { resolveBackends } from '../../quality/validationBackends';
 import { useValidationRun } from '../../hooks/useValidationRun';
 import { ValidationIssueList } from './ValidationIssueList';
+import { ResourceIssueTable } from './ResourceIssueTable';
+import type { NormalizedIssue } from '../../quality/types';
 
 export interface ValidationPanelProps {
   client: MedplumClient;
@@ -139,6 +142,20 @@ export function ValidationPanel(_props: ValidationPanelProps) {
       : 0;
 
   const canExport = run.status === 'complete' || run.status === 'cancelled';
+
+  const normalizedIssues = useMemo((): NormalizedIssue[] => {
+    return run.issues.map((issue) => ({
+      resourceId: issue._resourceId ?? '',
+      resourceType: (issue._resourceId ?? '').split('/')[0],
+      field: issue.expression?.[0] ?? issue.location?.[0] ?? '',
+      description: `${issue.code ?? ''} -- ${issue.diagnostics ?? issue.details?.text ?? ''}`,
+      severity: (issue.severity === 'fatal' || issue.severity === 'error'
+        ? 'error'
+        : issue.severity === 'warning'
+          ? 'warning'
+          : 'info') as NormalizedIssue['severity'],
+    }));
+  }, [run.issues]);
 
   const handleExport = () => {
     const payload = {
@@ -321,7 +338,18 @@ export function ValidationPanel(_props: ValidationPanelProps) {
               {run.issues.length} issues across{' '}
               {Object.keys(run.byResource).length} resources
             </Text>
-            <ValidationIssueList issues={run.issues} />
+            <Tabs defaultValue="issues">
+              <Tabs.List>
+                <Tabs.Tab value="issues">Issue List</Tabs.Tab>
+                <Tabs.Tab value="resources">Resources</Tabs.Tab>
+              </Tabs.List>
+              <Tabs.Panel value="issues" pt="md">
+                <ValidationIssueList issues={run.issues} />
+              </Tabs.Panel>
+              <Tabs.Panel value="resources" pt="md">
+                <ResourceIssueTable issues={normalizedIssues} />
+              </Tabs.Panel>
+            </Tabs>
           </Stack>
         )}
 
