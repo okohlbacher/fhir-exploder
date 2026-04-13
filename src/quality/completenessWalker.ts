@@ -73,10 +73,7 @@ function isNonEmpty(v: unknown): boolean {
     // An object is "populated" if it has at least one own key.
     // This preserves existing behaviour for resource graph nodes where
     // a nested reference/object counts as present.
-    for (const _ in v as Record<string, unknown>) {
-      return true;
-    }
-    return false;
+    return Object.keys(v as Record<string, unknown>).length > 0;
   }
   return true;
 }

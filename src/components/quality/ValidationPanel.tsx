@@ -31,7 +31,6 @@ import {
   Badge,
   Button,
   Group,
-  NumberFormatter,
   Paper,
   Progress,
   Select,
@@ -68,9 +67,6 @@ const BANNER_COPY =
   'This server does not implement $validate on resources. Phase 5 runs structural validation locally against bundled MII profiles. To run full FHIR validation, set validation.validatorUrl in settings.yaml to a validator that supports $validate (e.g. validator.fhir.org/validator).';
 const PHI_BANNER_COPY =
   'Running validation POSTs full resource payloads (including patient identifiers and other PHI) to the configured external validator. The remote validator is an independent service outside this application — review the validator URL in settings.yaml and confirm that sharing PHI with it is permitted by your data governance policy before proceeding.';
-
-// Placate TS on the NumberFormatter no-op usage (kept for potential re-use).
-void NumberFormatter;
 
 export function ValidationPanel(_props: ValidationPanelProps) {
   const { capability, client } = useOutletContext<QualityOutletContext>();
@@ -132,11 +128,10 @@ export function ValidationPanel(_props: ValidationPanelProps) {
     settings: settings ?? null,
   });
 
-  const { backends, hasRemote, hasProfile } = resolveBackends(
+  const { hasRemote, hasProfile } = resolveBackends(
     settings ?? null,
     resourceType,
   );
-  void backends;
 
   const pct =
     run.progress.total > 0
@@ -163,7 +158,7 @@ export function ValidationPanel(_props: ValidationPanelProps) {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `quality-report-${new Date().toISOString()}.json`;
+    anchor.download = `quality-report-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);

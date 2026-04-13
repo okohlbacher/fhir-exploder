@@ -11,7 +11,7 @@
  *   Back button (auto-focused) → Title → Table rows of
  *     Field path | system+code % | text-only % | empty % | Example coded value
  */
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -32,7 +32,6 @@ import { useSampleSize } from './SampleSizeControl';
 import type { QualityOutletContext } from './QualityLayout';
 import { sampleResources } from '../../quality/sampling';
 import { classifyCodedFields } from '../../quality/codingCoverageWalker';
-import { useState } from 'react';
 import type { ClassifiedCodedField } from '../../quality/types';
 
 /**
@@ -103,6 +102,7 @@ export function CodingDrillDown() {
   const reports = useCodingCoverage(client, singleTypeList, sampleSize);
   const state = reports[type];
 
+  // TODO: Consider shared sample cache to avoid double-fetching when switching between drill-down views (Phase 5 IN-08)
   // Fetch examples in parallel so the drill-down can show a
   // CodeableConceptDisplay per path. Cached via QualityMetricsCache by
   // virtue of useCodingCoverage — this parallel fetch is intentionally

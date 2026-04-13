@@ -49,7 +49,10 @@ export function SampleSizeControl({ value, onChange }: SampleSizeControlProps) {
       max={MAX}
       step={10}
       value={value}
-      onChange={(v) => onChange(typeof v === 'number' ? v : Number(v) || DEFAULT)}
+      onChange={(v) => {
+        const n = typeof v === 'number' ? v : Number(v);
+        onChange(Number.isFinite(n) && n >= MIN ? n : MIN);
+      }}
       aria-label="Sample size"
     />
   );

@@ -86,6 +86,7 @@ export function useValidationRun({
     setIssues([]);
     setByResource({});
     setProgress({ current: 0, total: 0 });
+    // Clear previous error on new run start — user sees fresh state
     setErrorMessage(undefined);
 
     void (async () => {
@@ -104,49 +105,12 @@ export function useValidationRun({
         const { backends } = resolveBackends(settings, resourceType);
         const effectiveBatchSize = Math.max(1, batchSize);
 
-        for (let i = 0; i < sample.length; i += effectiveBatchSize) {
-          if (cancelledRef.current) {
-            setStatus('cancelled');
-            return;
-          }
-          const batch = sample.slice(i, i + effectiveBatchSize);
-          const results = await Promise.all(
-            batch.map(async (r) => {
-              const perBackend = await Promise.all(
-                backends.map((b) => b.validate(r)),
-              );
-              const flat = perBackend.flat();
-              const deduped = dedupeIssues(flat);
-              return { resource: r, issues: deduped };
-            }),
-          );
-          if (cancelledRef.current) {
-            setStatus('cancelled');
-            // Still surface already-computed results before the cancel check
-            setIssues((prev) => [
-              ...prev,
-              ...results.flatMap((r) =>
-                r.issues.map((issue) => ({
-                  ...issue,
-                  _resourceId: `${r.resource.resourceType}/${r.resource.id ?? 'unknown'}`,
-                })),
-              ),
-            ]);
-            setByResource((prev) => {
-              const next = { ...prev };
-              for (const r of results) {
-                const key = `${r.resource.resourceType}/${r.resource.id ?? 'unknown'}`;
-                next[key] = { resourceId: r.resource.id ?? 'unknown', issues: r.issues };
-              }
-              return next;
-            });
-            setProgress({
-              current: Math.min(i + batch.length, sample.length),
-              total: sample.length,
-            });
-            return;
-          }
-
+        /** Accumulate batch results into state (issues, byResource, progress). */
+        function commitBatchResults(
+          results: { resource: Resource; issues: OperationOutcomeIssue[] }[],
+          batchEnd: number,
+          total: number,
+        ) {
           setIssues((prev) => [
             ...prev,
             ...results.flatMap((r) =>
@@ -165,9 +129,33 @@ export function useValidationRun({
             return next;
           });
           setProgress({
-            current: Math.min(i + batch.length, sample.length),
-            total: sample.length,
+            current: Math.min(batchEnd, total),
+            total,
           });
+        }
+
+        for (let i = 0; i < sample.length; i += effectiveBatchSize) {
+          if (cancelledRef.current) {
+            setStatus('cancelled');
+            return;
+          }
+          const batch = sample.slice(i, i + effectiveBatchSize);
+          const results = await Promise.all(
+            batch.map(async (r) => {
+              const perBackend = await Promise.all(
+                backends.map((b) => b.validate(r)),
+              );
+              const flat = perBackend.flat();
+              const deduped = dedupeIssues(flat);
+              return { resource: r, issues: deduped };
+            }),
+          );
+          // Surface already-computed results even on cancellation
+          commitBatchResults(results, i + batch.length, sample.length);
+          if (cancelledRef.current) {
+            setStatus('cancelled');
+            return;
+          }
         }
 
         if (!cancelledRef.current) {

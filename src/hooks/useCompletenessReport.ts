@@ -84,6 +84,7 @@ export function useCompletenessReport(
     let active = 0;
 
     function next() {
+      // Early return: effect cleanup set cancelled=true, abort remaining pages
       if (cancelled) return;
       while (active < CONCURRENCY && queue.length > 0) {
         const t = queue.shift()!;
