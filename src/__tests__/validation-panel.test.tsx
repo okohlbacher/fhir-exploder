@@ -205,9 +205,9 @@ describe('ValidationPanel (QUAL-04) — backend indicator', () => {
     expect(screen.getByText(/Remote \(configured\)/i)).toBeDefined();
   });
 
-  it('always shows the Structural badge', () => {
+  it('always shows the Conformance badge', () => {
     renderPanel();
-    expect(screen.getByText(/^Structural$/)).toBeDefined();
+    expect(screen.getByText(/^Conformance$/)).toBeDefined();
   });
 });
 

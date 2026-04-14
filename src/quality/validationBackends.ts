@@ -14,12 +14,13 @@
  * the UI does not double-render the same "Condition.code is required"
  * from both structural and remote backends.
  */
-import type { OperationOutcomeIssue } from '@medplum/fhirtypes';
+import type { OperationOutcomeIssue, Resource, StructureDefinition } from '@medplum/fhirtypes';
 import type { AppSettings } from '../config/types';
-import type { ValidationBackend } from './types';
+import type { ValidationBackend, ValidationBackendKind } from './types';
 import { createStructuralBackend } from './structuralValidator';
 import { createRemoteBackend } from './remoteValidator';
 import { getProfileForType } from './profiles';
+import { validateConformance } from './profileConformanceChecker';
 
 export interface BackendResolution {
   backends: ValidationBackend[];
@@ -44,6 +45,28 @@ export function resolveBackends(
   }
 
   return { backends, hasRemote, hasProfile, validatorUrl };
+}
+
+/**
+ * Create a conformance backend that wraps the profileConformanceChecker
+ * into the ValidationBackend interface for composition with existing backends.
+ */
+export function createConformanceBackend(
+  getProfile: (resourceType: string) => StructureDefinition | null,
+  expandedValueSets: Map<string, Set<string>>,
+): ValidationBackend {
+  return {
+    kind: 'structural' as ValidationBackendKind,
+    async validate(resource: Resource): Promise<OperationOutcomeIssue[]> {
+      const issues = validateConformance(resource, getProfile(resource.resourceType), expandedValueSets);
+      return issues.map((i) => ({
+        severity: i.severity === 'info' ? 'information' : i.severity,
+        code: i.code === 'required' ? 'required' : 'structure',
+        expression: [i.path],
+        diagnostics: i.diagnostics,
+      }));
+    },
+  };
 }
 
 /**

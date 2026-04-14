@@ -54,7 +54,8 @@ import { useSettings } from '../../hooks/useSettings';
 import { BUNDLED_PROFILE_TYPES } from '../../quality/profiles';
 import { parseResourceTypes } from '../../fhir/capability';
 import { resolveBackends } from '../../quality/validationBackends';
-import { useValidationRun } from '../../hooks/useValidationRun';
+import { useConformanceRun } from '../../hooks/useConformanceRun';
+import { createTerminologyClient } from '../../terminology/terminologyClient';
 import { ValidationIssueList } from './ValidationIssueList';
 import { ResourceIssueTable } from './ResourceIssueTable';
 import type { NormalizedIssue } from '../../quality/types';
@@ -66,6 +67,7 @@ export interface ValidationPanelProps {
 
 const BANNER_KEY_PREFIX = 'quality.validation.bannerDismissed.v1';
 const PHI_ACK_KEY_PREFIX = 'quality.validation.phiAcknowledged.v1';
+const TERM_BANNER_KEY_PREFIX = 'quality.validation.termBannerDismissed.v1';
 const BANNER_COPY =
   'This server does not implement $validate on resources. Phase 5 runs structural validation locally against bundled MII profiles. To run full FHIR validation, set validation.validatorUrl in settings.yaml to a validator that supports $validate (e.g. validator.fhir.org/validator).';
 const PHI_BANNER_COPY =
@@ -120,11 +122,27 @@ export function ValidationPanel(_props: ValidationPanelProps) {
     return firstMatch ?? BUNDLED_PROFILE_TYPES[0] ?? 'Condition';
   });
 
+  // Terminology banner dismissal (scoped per server)
+  const termBannerKey = useMemo(
+    () => `${TERM_BANNER_KEY_PREFIX}:${serverUrl}`,
+    [serverUrl],
+  );
+  const [termBannerDismissed, setTermBannerDismissed] = useLocalStorage<boolean>({
+    key: termBannerKey,
+    defaultValue: false,
+  });
+
   const sampleSize = _props.sampleSize;
   const batchSize = settings?.validation?.batchSize ?? 25;
 
-  const run = useValidationRun({
+  const terminologyClient = useMemo(
+    () => (settings ? createTerminologyClient(settings) : null),
+    [settings],
+  );
+
+  const run = useConformanceRun({
     client,
+    terminologyClient,
     resourceType,
     sampleSize,
     batchSize,
@@ -143,8 +161,12 @@ export function ValidationPanel(_props: ValidationPanelProps) {
 
   const canExport = run.status === 'complete' || run.status === 'cancelled';
 
-  const normalizedIssues = useMemo((): NormalizedIssue[] => {
-    return run.issues.map((issue) => ({
+  // Normalized issues from conformance checker (already NormalizedIssue[])
+  const conformanceIssues = run.issues;
+
+  // Normalized issues from legacy backends for the Resources tab
+  const legacyNormalizedIssues = useMemo((): NormalizedIssue[] => {
+    return run.legacyIssues.map((issue) => ({
       resourceId: issue._resourceId ?? 'unknown/unknown',
       resourceType: (issue._resourceId ?? 'unknown').split('/')[0],
       field: issue.expression?.[0] ?? issue.location?.[0] ?? '',
@@ -155,7 +177,22 @@ export function ValidationPanel(_props: ValidationPanelProps) {
           ? 'warning'
           : 'info') as NormalizedIssue['severity'],
     }));
-  }, [run.issues]);
+  }, [run.legacyIssues]);
+
+  // Merge conformance + legacy normalized issues for the Resources tab
+  const allNormalizedIssues = useMemo((): NormalizedIssue[] => {
+    // Dedupe by resourceId + field + description
+    const seen = new Set<string>();
+    const merged: NormalizedIssue[] = [];
+    for (const issue of [...conformanceIssues, ...legacyNormalizedIssues]) {
+      const key = `${issue.resourceId}|${issue.field}|${issue.description}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(issue);
+      }
+    }
+    return merged;
+  }, [conformanceIssues, legacyNormalizedIssues]);
 
   const handleExport = () => {
     const payload = {
@@ -166,7 +203,7 @@ export function ValidationPanel(_props: ValidationPanelProps) {
       computedAt: new Date().toISOString(),
       status: run.status,
       progress: run.progress,
-      issues: run.issues,
+      issues: run.legacyIssues,
       byResource: run.byResource,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -200,6 +237,23 @@ export function ValidationPanel(_props: ValidationPanelProps) {
           onClose={() => setBannerDismissed(true)}
         >
           <Text size="sm">{BANNER_COPY}</Text>
+        </Alert>
+      )}
+
+      {run.status !== 'idle' && !run.terminologyAvailable && !termBannerDismissed && (
+        <Alert
+          variant="light"
+          color="orange"
+          icon={<IconAlertTriangle size={20} />}
+          title="Terminology server unavailable"
+          withCloseButton
+          closeButtonLabel="Dismiss"
+          onClose={() => setTermBannerDismissed(true)}
+        >
+          <Text size="sm">
+            Value set conformance checks skipped. Other conformance checks
+            (cardinality, type constraints) ran normally.
+          </Text>
         </Alert>
       )}
 
@@ -269,8 +323,17 @@ export function ValidationPanel(_props: ValidationPanelProps) {
 
           <Group gap="xs">
             <Badge color="blue" variant="light" size="sm">
-              Structural
+              Conformance
             </Badge>
+            {run.terminologyAvailable ? (
+              <Badge color="green" variant="light" size="sm">
+                Terminology
+              </Badge>
+            ) : (
+              <Badge color="gray" variant="light" size="sm">
+                Terminology (unavailable)
+              </Badge>
+            )}
             {hasRemote ? (
               <Badge color="green" variant="light" size="sm">
                 Remote (configured)
@@ -324,7 +387,7 @@ export function ValidationPanel(_props: ValidationPanelProps) {
         </Alert>
       )}
 
-      {run.status === 'complete' && run.issues.length === 0 && (
+      {run.status === 'complete' && allNormalizedIssues.length === 0 && run.legacyIssues.length === 0 && (
         <Alert variant="light" color="green" icon={<IconCheck size={20} />}>
           No conformance issues found in the sampled {run.progress.total}{' '}
           resources.
@@ -332,10 +395,10 @@ export function ValidationPanel(_props: ValidationPanelProps) {
       )}
 
       {(run.status === 'complete' || run.status === 'cancelled') &&
-        run.issues.length > 0 && (
+        (allNormalizedIssues.length > 0 || run.legacyIssues.length > 0) && (
           <Stack gap="xs">
             <Text size="sm" c="dimmed">
-              {run.issues.length} issues across{' '}
+              {allNormalizedIssues.length} issues across{' '}
               {Object.keys(run.byResource).length} resources
             </Text>
             <Tabs defaultValue="issues">
@@ -344,10 +407,10 @@ export function ValidationPanel(_props: ValidationPanelProps) {
                 <Tabs.Tab value="resources">Resources</Tabs.Tab>
               </Tabs.List>
               <Tabs.Panel value="issues" pt="md">
-                <ValidationIssueList issues={run.issues} />
+                <ValidationIssueList issues={run.legacyIssues} />
               </Tabs.Panel>
               <Tabs.Panel value="resources" pt="md">
-                <ResourceIssueTable issues={normalizedIssues} />
+                <ResourceIssueTable issues={allNormalizedIssues} />
               </Tabs.Panel>
             </Tabs>
           </Stack>
