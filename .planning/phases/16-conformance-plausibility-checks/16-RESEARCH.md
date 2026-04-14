@@ -483,22 +483,22 @@ function isImplausibleAge(birthDate: string, maxAge: number): boolean {
 | A4 | Blaze does not serialize max=1 elements as arrays | Pitfall 7 | Would produce false positive cardinality errors; LOW risk -- Blaze follows FHIR JSON spec |
 | A5 | Example LOINC codes and reference ranges in settings.yaml schema are illustrative only | Architecture Pattern 6 | User must configure their own ranges; no risk |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Full MII StructureDefinition access for enrichment**
    - What we know: Current profile JSONs are trimmed to `{path, min, mustSupport}`. We need `{max, type, binding}`.
    - What's unclear: Whether the enrichment should be done manually from Simplifier downloads or via a script.
-   - Recommendation: Manual enrichment of the 7 existing profile JSONs during implementation. Document the source StructureDefinition URLs. The update instructions in `profiles/index.ts` already describe the trimming process -- extend those instructions.
+   - RESOLVED: Manual enrichment of the 7 existing profile JSONs during implementation. Document the source StructureDefinition URLs. The update instructions in `profiles/index.ts` already describe the trimming process -- extend those instructions.
 
 2. **Cohort selection scope and complexity**
    - What we know: Two folded todos require cohort selection UI and FHIRPath-based cohort definition.
    - What's unclear: How deep the FHIRPath integration should go -- full FHIRPath engine vs simple filter expressions.
-   - Recommendation: Start with a simple resource-type + search parameter filter (e.g., "Condition where onset >= 2020"). FHIRPath is a complex spec; a full engine (like `fhirpath.js`) is likely overkill for v1. The cohort selector should filter the `sampleResources()` call with additional search parameters.
+   - RESOLVED: Start with a simple resource-type + search parameter filter (e.g., "Condition where onset >= 2020"). FHIRPath is a complex spec; a full engine (like `fhirpath.js`) is likely overkill for v1. The cohort selector should filter the `sampleResources()` call with additional search parameters.
 
 3. **Value set binding strength behavior**
    - What we know: FHIR defines 4 binding strengths: required, extensible, preferred, example.
    - What's unclear: Whether to flag `extensible` bindings as errors or warnings.
-   - Recommendation: `required` = error, `extensible` = warning, `preferred` = info, `example` = skip. This follows the FHIR conformance spec.
+   - RESOLVED: `required` = error, `extensible` = warning, `preferred` = info, `example` = skip. This follows the FHIR conformance spec.
 
 ## Validation Architecture
 
