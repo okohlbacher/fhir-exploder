@@ -76,7 +76,7 @@ Inherits the 4-size / 2-weight system from prior phases. Phase 19 uses the full 
 | Label | 14px | 600 | 1.55 | `size="sm"` + `fw={600}` | Toolbar button labels ("Capture snapshot", "Export PDF", "Clear history"), mini-chart metric labels (inside each card header), tab label ("Trends"), Switch labels when emphasized |
 | Value | 20px | 600 | 1.2 | `size="xl"` + `fw={600}` | PDF Overview section: `{value}%` inside ring (unchanged — reuses `SummaryCard`); PDF header: capture timestamp; PDF trends grid: metric label inside each mini-card |
 | Heading | 20px | 600 | 1.2 | `<Title order={2}>` | Trends tab empty-state heading ("No snapshots yet"); PDF section headings ("Overview", "Trends") |
-| PDF Display | 28px | 700 | 1.2 | `<Title order={1}>` with explicit `fz={28}` | PDF cover-page title line `FHIR Exploder — Quality Report` (live Trends tab does NOT use this size) |
+| PDF Display | 28px | 600 | 1.2 | `<Title order={1}>` with explicit `fz={28}` | PDF cover-page title line `FHIR Exploder — Quality Report` (live Trends tab does NOT use this size) |
 
 **Tooltip text** (hover on a data point) uses `size="xs"` (12px) `c="dimmed"` for the threshold line ("Threshold: 80%") so score text (14px) is visually primary. Breach callout in tooltip uses `size="xs"` `c="red.6"` `fw={600}`.
 
@@ -524,7 +524,7 @@ Same layout as empty state, but:
 +--------------------------------------------------+
 | 48px padding                                     |
 |                                                  |
-|  FHIR Exploder — Quality Report                  |  <- Title order={1} fz={28} fw={700}
+|  FHIR Exploder — Quality Report                  |  <- Title order={1} fz={28} fw={600}
 |  ─────────────────────────────────────           |  <- 1px Divider, full content width
 |                                                  |
 |  Captured: {locale timestamp}                    |  <- Text size="sm"
