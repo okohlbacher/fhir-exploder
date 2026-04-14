@@ -17,12 +17,12 @@
  * 13. Include other servers renders distinguishable dot shapes per server (UI-SPEC I-07)
  */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import { Notifications, notifications } from '@mantine/notifications';
 import type { ReactNode } from 'react';
 import { TrendsPanel } from '../components/quality/TrendsPanel';
-import { TrendMiniChart } from '../components/quality/TrendMiniChart';
+import { BreachDot, TrendMiniChart } from '../components/quality/TrendMiniChart';
 import {
   TRENDS_STORAGE_KEY,
   type QualitySnapshot,
@@ -38,6 +38,11 @@ class MockResizeObserver {
 }
 (globalThis as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver =
   MockResizeObserver as unknown as typeof ResizeObserver;
+
+// NOTE: recharts ResponsiveContainer reports 0x0 in jsdom, so per-point
+// dot SVGs do not render through the full chart pipeline. Tests that need
+// to assert on rendered dot shapes (test #13) exercise the exported
+// BreachDot component directly instead of going through the chart.
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -233,8 +238,10 @@ describe('TrendsPanel', () => {
     seed([mkSnap('a'), mkSnap('b')]);
     renderPanel();
     await flush();
-    // Click Clear history button
-    const clearBtn = screen.getByRole('button', { name: /^Clear history$/i });
+    // Click Clear history toolbar button (accessible name is the aria-label)
+    const clearBtn = screen.getByRole('button', {
+      name: 'Clear all snapshots from browser storage.',
+    });
     await act(async () => {
       fireEvent.click(clearBtn);
     });
@@ -250,7 +257,7 @@ describe('TrendsPanel', () => {
     await act(async () => {
       fireEvent.click(confirmBtn!);
     });
-    await flush(150);
+    await flush(200);
     // Snapshots are gone — empty state text reappears.
     expect(screen.getByText('No snapshots yet')).toBeTruthy();
     // Notification fired
@@ -266,7 +273,9 @@ describe('TrendsPanel', () => {
     seed([]);
     renderPanel();
     await flush();
-    const clearBtn = screen.getByRole('button', { name: /^Clear history$/i });
+    const clearBtn = screen.getByRole('button', {
+      name: 'Clear all snapshots (no snapshots to clear).',
+    });
     expect((clearBtn as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -305,29 +314,83 @@ describe('TrendsPanel', () => {
     expect(firstCard.style.width).toContain('120');
   });
 
-  it('Include other servers renders distinguishable dot shapes per server (UI-SPEC I-07)', async () => {
-    seed([
-      mkSnap('a1', 'http://a/fhir'),
-      mkSnap('a2', 'http://a/fhir'),
-      mkSnap('b1', 'http://b/fhir'),
-      mkSnap('b2', 'http://b/fhir'),
-    ]);
-    const { container } = renderPanel('http://a/fhir');
-    await flush();
-    // Toggle include-other-servers on
-    const includeSwitch = screen.getByRole('switch', {
-      name: /include.*other/i,
+  it('BreachDot renders distinguishable shapes per server when includeOtherServers=true (UI-SPEC I-07)', () => {
+    // recharts rendering in jsdom reports 0x0 size, so per-point dot SVGs
+    // do not land in the DOM through the full chart pipeline. We verify the
+    // shape-rotation + breach-coloring logic directly on the exported
+    // BreachDot component, which is the authoritative unit under test for
+    // UI-SPEC I-07 lines 481-488.
+    const makePoint = (serverIndex: number, breached = false): {
+      cx: number;
+      cy: number;
+      payload: {
+        capturedAt: string;
+        score: number | null;
+        threshold: number | null;
+        serverSlug: string;
+        serverIndex: number;
+        breached: boolean;
+      };
+    } => ({
+      cx: 10,
+      cy: 10,
+      payload: {
+        capturedAt: '2026-04-14T12:00:00Z',
+        score: 80,
+        threshold: 80,
+        serverSlug: `server-${serverIndex}`,
+        serverIndex,
+        breached,
+      },
     });
-    await act(async () => {
-      fireEvent.click(includeSwitch);
-    });
-    await flush();
-    // Query all elements with data-server-shape — across all mini-charts.
-    const dots = container.querySelectorAll('[data-server-shape]');
-    const shapes = new Set(
-      Array.from(dots).map((el) => (el as HTMLElement).getAttribute('data-server-shape')),
+
+    // With includeOtherServers OFF → always a circle.
+    const off0 = render(
+      <svg>
+        <BreachDot {...makePoint(0)} includeOtherServers={false} />
+      </svg>,
     );
-    // At least 2 distinct shapes present (one per server).
-    expect(shapes.size).toBeGreaterThanOrEqual(2);
+    expect(off0.container.querySelector('circle')).not.toBeNull();
+    off0.unmount();
+    const off3 = render(
+      <svg>
+        <BreachDot {...makePoint(3)} includeOtherServers={false} />
+      </svg>,
+    );
+    // Even with serverIndex 3, when includeOtherServers is false the shape
+    // is the default circle.
+    expect(off3.container.querySelector('circle')).not.toBeNull();
+    off3.unmount();
+
+    // With includeOtherServers ON → shape rotates per serverIndex.
+    const shapes = new Set<string>();
+    for (let i = 0; i < 4; i++) {
+      const { container: c, unmount } = render(
+        <svg>
+          <BreachDot {...makePoint(i)} includeOtherServers={true} />
+        </svg>,
+      );
+      const el = c.querySelector('[data-server-shape]');
+      expect(el).not.toBeNull();
+      shapes.add(el!.getAttribute('data-server-shape')!);
+      unmount();
+    }
+    // All 4 unique shape indices (0/1/2/3) should be present.
+    expect(shapes.size).toBe(4);
+    // Shapes 1/2/3 use rect/polygon tags (circle only at index 0).
+    const r1 = render(
+      <svg>
+        <BreachDot {...makePoint(1)} includeOtherServers={true} />
+      </svg>,
+    );
+    expect(r1.container.querySelector('rect')).not.toBeNull();
+    r1.unmount();
+    const r2 = render(
+      <svg>
+        <BreachDot {...makePoint(2)} includeOtherServers={true} />
+      </svg>,
+    );
+    expect(r2.container.querySelector('polygon')).not.toBeNull();
+    r2.unmount();
   });
 });

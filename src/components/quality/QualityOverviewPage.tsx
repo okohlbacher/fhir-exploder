@@ -30,6 +30,7 @@ import { LabRangesPanel } from './LabRangesPanel';
 import { DuplicatesPanel } from './DuplicatesPanel';
 import { ReferencesPanel } from './ReferencesPanel';
 import { CohortSelector } from './CohortSelector';
+import { TrendsPanel } from './TrendsPanel';
 
 const VALID_TABS = new Set([
   'counts',
@@ -40,6 +41,7 @@ const VALID_TABS = new Set([
   'lab-ranges',
   'duplicates',
   'references',
+  'trends',
 ] as const);
 const DEFAULT_TAB = 'counts';
 
@@ -140,6 +142,7 @@ export function QualityOverviewPage() {
           <Tabs.Tab value="lab-ranges">Lab Ranges</Tabs.Tab>
           <Tabs.Tab value="duplicates">Duplicates</Tabs.Tab>
           <Tabs.Tab value="references">References</Tabs.Tab>
+          <Tabs.Tab value="trends">Trends</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="counts" pt="md" keepMounted>
@@ -165,6 +168,9 @@ export function QualityOverviewPage() {
         </Tabs.Panel>
         <Tabs.Panel value="references" pt="md" keepMounted>
           <ReferencesPanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
+        </Tabs.Panel>
+        <Tabs.Panel value="trends" pt="md" keepMounted>
+          <TrendsPanel serverUrl={client.getBaseUrl()} />
         </Tabs.Panel>
       </Tabs>
     </Stack>
