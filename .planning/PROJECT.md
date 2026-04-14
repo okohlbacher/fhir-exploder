@@ -36,6 +36,8 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 **Phase 19 complete (2026-04-14)** — Quality trends & PDF reports (QUAL-05, QUAL-06): `quality.trends.v1` localStorage-persisted snapshot history with server filter, 9th "Trends" tab on `/quality` with 7 per-metric mini-charts + overlay mode + breach-colored points (historical thresholds preserved per D-11), and `Capture snapshot` + `Export PDF` toolbar buttons. PDF pipeline (`html-to-image → jsPDF`) produces a deterministic 816×1056 multi-page report with font-readiness gate. 77 new tests, human UAT approved, 4/4 must-haves verified.
 
+**Phase 20 complete (2026-04-14)** — v1.2 milestone gap closure: DEBT-02 closed by widening 7 TS2352 cast sites in `profileConformanceChecker.ts` + `temporalPlausibilityWalker.ts` (`tsc -b --noEmit` and `npm run build` both exit 0). Retrospective `15-VERIFICATION.md` (DQ-01/DQ-02) and `18-VERIFICATION.md` (DQ-11/DQ-12) authored with full evidence traceability. `REQUIREMENTS.md` traceability flipped to 16/16 Complete. v1.2 milestone ready to ship — 4/4 must-haves verified.
+
 ## Current Milestone: v1.2 — Tech Debt & Quality Monitoring
 
 **Goal:** Resolve all accumulated tech debt, then build comprehensive data quality monitoring inspired by Kahn et al. framework (conformance, completeness, plausibility) as applied in Spengler (2021).
@@ -108,4 +110,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-14 — Phase 17 duplicate detection & relational integrity complete (DQ-07, DQ-08, DQ-09, DQ-10 validated)*
+*Last updated: 2026-04-14 — Phase 20 v1.2 milestone gap closure complete; all 16 v1.2 requirements satisfied (DEBT-01/02, DQ-01..DQ-12, QUAL-05, QUAL-06)*
