@@ -52,6 +52,7 @@ import type { MedplumClient } from '@medplum/core';
 import type { QualityOutletContext } from './QualityLayout';
 import { useSettings } from '../../hooks/useSettings';
 import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import { percentClean } from '../../quality/percent';
 import { BUNDLED_PROFILE_TYPES } from '../../quality/profiles';
 import { parseResourceTypes } from '../../fhir/capability';
 import { resolveBackends } from '../../quality/validationBackends';
@@ -202,12 +203,8 @@ export function ValidationPanel(_props: ValidationPanelProps) {
   const { setOverallValidation } = useQualityMetrics();
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
-    if (run.progress.total === 0) {
-      setOverallValidation(undefined);
-      return;
-    }
     const affected = new Set(allNormalizedIssues.map((i) => i.resourceId)).size;
-    setOverallValidation(Math.round((1 - affected / run.progress.total) * 100));
+    setOverallValidation(percentClean(affected, run.progress.total));
   }, [run.status, run.progress.total, allNormalizedIssues, setOverallValidation]);
 
   const handleExport = () => {

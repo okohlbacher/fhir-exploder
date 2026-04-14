@@ -25,6 +25,7 @@ import {
 } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
 import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import { percentClean } from '../../quality/percent';
 import { useReferenceReport } from '../../hooks/useReferenceReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
 import type { NormalizedIssue } from '../../quality/types';
@@ -71,12 +72,8 @@ export function ReferencesPanel({ types, client, sampleSize }: ReferencesPanelPr
   const { setOverallReferences } = useQualityMetrics();
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
-    if (!sampleSize || sampleSize === 0) {
-      setOverallReferences(undefined);
-      return;
-    }
     const affected = new Set(run.issues.map((i) => i.resourceId)).size;
-    setOverallReferences(Math.round((1 - affected / sampleSize) * 100));
+    setOverallReferences(percentClean(affected, sampleSize));
   }, [run.status, run.issues, sampleSize, setOverallReferences]);
 
   const typeOptions = useMemo(

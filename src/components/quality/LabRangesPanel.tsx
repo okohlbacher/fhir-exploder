@@ -26,6 +26,7 @@ import {
 import type { MedplumClient } from '@medplum/core';
 import { useSettings } from '../../hooks/useSettings';
 import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import { percentClean } from '../../quality/percent';
 import { useLabRangesReport } from '../../hooks/useLabRangesReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
 
@@ -55,11 +56,13 @@ export function LabRangesPanel({ client, sampleSize }: LabRangesPanelProps) {
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
     const summary = run.summary;
-    if (!summary || summary.checked === 0 || summary.noRange === summary.checked) {
+    // noRange === checked → no ranges configured; push undefined (NOT 0)
+    // so the tile shows em-dash rather than falsely "100% clean" (pitfall 7).
+    if (!summary || summary.noRange === summary.checked) {
       setOverallLabRanges(undefined);
       return;
     }
-    setOverallLabRanges(Math.round((1 - summary.outOfRange / summary.checked) * 100));
+    setOverallLabRanges(percentClean(summary.outOfRange, summary.checked));
   }, [run.status, run.summary, setOverallLabRanges]);
 
   // Per-LOINC table data sorted by % OOR descending

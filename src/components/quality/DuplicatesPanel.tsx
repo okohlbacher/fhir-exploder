@@ -28,6 +28,7 @@ import {
 } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
 import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import { percentClean } from '../../quality/percent';
 import { useDuplicateReport } from '../../hooks/useDuplicateReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
 import type { NormalizedIssue } from '../../quality/types';
@@ -105,11 +106,14 @@ export function DuplicatesPanel({ types, client, sampleSize }: DuplicatesPanelPr
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
     if (!sampleSize || sampleSize <= 0) return;
-    const patientPercentClean = Math.round((1 - patientsInvolved / sampleSize) * 100);
-    const hashPercentClean = Math.round((1 - hashResourcesInvolved / sampleSize) * 100);
+    const patientPercentClean = percentClean(patientsInvolved, sampleSize);
+    const hashPercentClean = percentClean(hashResourcesInvolved, sampleSize);
     setDuplicatesContribution({
       patient: patientPercentClean,
-      hashType: { resourceType, percentClean: hashPercentClean },
+      hashType:
+        hashPercentClean !== undefined
+          ? { resourceType, percentClean: hashPercentClean }
+          : undefined,
     });
   }, [
     run.status,

@@ -26,6 +26,7 @@ import {
 import type { MedplumClient } from '@medplum/core';
 import { useSettings } from '../../hooks/useSettings';
 import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import { percentClean } from '../../quality/percent';
 import { usePlausibilityReport } from '../../hooks/usePlausibilityReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
 import type { NormalizedIssue } from '../../quality/types';
@@ -111,12 +112,8 @@ export function PlausibilityPanel({ types, client, sampleSize }: PlausibilityPan
   const { setOverallPlausibility } = useQualityMetrics();
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
-    if (run.progress.total === 0) {
-      setOverallPlausibility(undefined);
-      return;
-    }
     const affected = new Set(run.issues.map((i) => i.resourceId)).size;
-    setOverallPlausibility(Math.round((1 - affected / run.progress.total) * 100));
+    setOverallPlausibility(percentClean(affected, run.progress.total));
   }, [run.status, run.progress.total, run.issues, setOverallPlausibility]);
 
   const typeOptions = useMemo(
