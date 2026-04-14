@@ -22,7 +22,7 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { IconRestore, IconX } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   DEFAULT_THRESHOLDS,
@@ -56,15 +56,24 @@ function ThresholdRow({
   onClear,
   onUnset,
 }: ThresholdRowProps) {
-  // Local state: initialized from storedValue OR default.
+  // Local state tracks the in-progress edit value; it commits to storage on blur.
+  // We re-sync from storedValue whenever it changes externally (e.g. after
+  // useLocalStorage hydration, a resetAll() call, or another row mutation).
+  //
   // null (explicitly disabled) → empty input; undefined (absent) → default; number → number.
-  const initial: number | string =
+  const externalValue: number | string =
     storedValue === null
       ? ''
       : typeof storedValue === 'number'
         ? storedValue
         : DEFAULT_THRESHOLDS[metric];
-  const [localValue, setLocalValue] = useState<number | string>(initial);
+  const [localValue, setLocalValue] = useState<number | string>(externalValue);
+
+  useEffect(() => {
+    setLocalValue(externalValue);
+    // Intentionally keyed off the externally-derived scalar, not the object
+    // reference — this avoids re-running on every parent re-render.
+  }, [externalValue]);
 
   // Determine the Active badge state from stored value.
   let badge: { label: string; color: string; variant: 'light' | 'outline' };
