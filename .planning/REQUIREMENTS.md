@@ -9,23 +9,23 @@
 
 ### Code Quality
 
-- [ ] **DEBT-01**: All 17 info-level code review findings from v1.0 phases 4+5 are resolved
-- [ ] **DEBT-02**: `npm run build` (tsc -b) completes with zero errors
+- [x] **DEBT-01**: All 17 info-level code review findings from v1.0 phases 4+5 are resolved
+- [x] **DEBT-02**: `npm run build` (tsc -b) completes with zero errors
 
 ### Quality Issue Drill-Down
 
-- [ ] **DQ-01**: User can click a quality metric on the dashboard to see the specific resources and fields causing that issue
-- [ ] **DQ-02**: Each drill-down entry links to the resource detail view for inspection
+- [x] **DQ-01**: User can click a quality metric on the dashboard to see the specific resources and fields causing that issue
+- [x] **DQ-02**: Each drill-down entry links to the resource detail view for inspection
 
 ### Conformance Checks
 
-- [ ] **DQ-03**: Dashboard checks resources against expected value sets and flags non-conforming coded values
-- [ ] **DQ-04**: Dashboard checks cardinality rules (required fields present, no unexpected repeats) per resource type
+- [x] **DQ-03**: Dashboard checks resources against expected value sets and flags non-conforming coded values
+- [x] **DQ-04**: Dashboard checks cardinality rules (required fields present, no unexpected repeats) per resource type
 
 ### Plausibility Checks
 
-- [ ] **DQ-05**: Dashboard flags implausible temporal values (dates in the future, encounter end before start, negative age)
-- [ ] **DQ-06**: Dashboard flags lab observations with values outside configurable reference ranges
+- [x] **DQ-05**: Dashboard flags implausible temporal values (dates in the future, encounter end before start, negative age)
+- [x] **DQ-06**: Dashboard flags lab observations with values outside configurable reference ranges
 
 ### Duplicate Detection
 
@@ -34,18 +34,18 @@
 
 ### Relational Integrity
 
-- [ ] **DQ-09**: Dashboard checks for broken references (dangling pointers to non-existent resources)
-- [ ] **DQ-10**: Dashboard checks for orphan resources (resources that should reference a parent but don't)
+- [x] **DQ-09**: Dashboard checks for broken references (dangling pointers to non-existent resources)
+- [x] **DQ-10**: Dashboard checks for orphan resources (resources that should reference a parent but don't)
 
 ### Quality Alerting
 
-- [ ] **DQ-11**: User can configure quality thresholds per metric (e.g., "alert if completeness < 80%")
-- [ ] **DQ-12**: Dashboard visually highlights metrics that breach configured thresholds
+- [x] **DQ-11**: User can configure quality thresholds per metric (e.g., "alert if completeness < 80%")
+- [x] **DQ-12**: Dashboard visually highlights metrics that breach configured thresholds
 
 ### Quality Trends
 
-- [ ] **QUAL-05**: User can view a chart showing how quality metrics (completeness, coding coverage) change across multiple measurement points
-- [ ] **QUAL-06**: User can generate and download a PDF quality report for the current dashboard state
+- [x] **QUAL-05**: User can view a chart showing how quality metrics (completeness, coding coverage) change across multiple measurement points
+- [x] **QUAL-06**: User can generate and download a PDF quality report for the current dashboard state
 
 ## Future Requirements (v2+)
 
