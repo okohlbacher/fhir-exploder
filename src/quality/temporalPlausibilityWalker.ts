@@ -436,7 +436,7 @@ export function normalizeTemporalIssues(
   resource: Resource,
 ): NormalizedIssue[] {
   return issues.map((i) => ({
-    resourceId: `${resource.resourceType}/${(resource as Record<string, unknown>).id ?? 'unknown'}`,
+    resourceId: `${resource.resourceType}/${(resource as unknown as Record<string, unknown>).id ?? 'unknown'}`,
     resourceType: resource.resourceType ?? '',
     field: i.path,
     description: `[${i.checkType}] ${i.diagnostics}`,
