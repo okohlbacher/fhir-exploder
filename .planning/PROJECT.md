@@ -34,6 +34,8 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 **Phase 16 complete (2026-04-14)** — Conformance & plausibility checks: profile conformance checker (cardinality, types, value set bindings), temporal plausibility walker (future dates, period consistency, age/duration limits), lab reference range checker. All wired into 6-tab quality dashboard with drill-downs and cohort selector. 43 new tests, build clean.
 
+**Phase 19 complete (2026-04-14)** — Quality trends & PDF reports (QUAL-05, QUAL-06): `quality.trends.v1` localStorage-persisted snapshot history with server filter, 9th "Trends" tab on `/quality` with 7 per-metric mini-charts + overlay mode + breach-colored points (historical thresholds preserved per D-11), and `Capture snapshot` + `Export PDF` toolbar buttons. PDF pipeline (`html-to-image → jsPDF`) produces a deterministic 816×1056 multi-page report with font-readiness gate. 77 new tests, human UAT approved, 4/4 must-haves verified.
+
 ## Current Milestone: v1.2 — Tech Debt & Quality Monitoring
 
 **Goal:** Resolve all accumulated tech debt, then build comprehensive data quality monitoring inspired by Kahn et al. framework (conformance, completeness, plausibility) as applied in Spengler (2021).
