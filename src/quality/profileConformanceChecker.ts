@@ -136,15 +136,15 @@ export function validateConformance(
   const issues: ConformanceIssue[] = [];
 
   for (const el of elements) {
-    const path = (el as Record<string, unknown>).path as string | undefined;
+    const path = (el as unknown as Record<string, unknown>).path as string | undefined;
     if (!path || !path.includes('.')) continue; // skip root element
 
-    const min = (el as Record<string, unknown>).min as number | undefined;
-    const max = (el as Record<string, unknown>).max as string | undefined;
-    const elTypes = (el as Record<string, unknown>).type as
+    const min = (el as unknown as Record<string, unknown>).min as number | undefined;
+    const max = (el as unknown as Record<string, unknown>).max as string | undefined;
+    const elTypes = (el as unknown as Record<string, unknown>).type as
       | Array<{ code: string }>
       | undefined;
-    const binding = (el as Record<string, unknown>).binding as
+    const binding = (el as unknown as Record<string, unknown>).binding as
       | { strength: string; valueSet: string }
       | undefined;
 
@@ -293,7 +293,7 @@ export function normalizeConformanceIssues(
   resource: Resource,
 ): NormalizedIssue[] {
   return issues.map((issue) => ({
-    resourceId: `${resource.resourceType}/${(resource as Record<string, unknown>).id ?? 'unknown'}`,
+    resourceId: `${resource.resourceType}/${(resource as unknown as Record<string, unknown>).id ?? 'unknown'}`,
     resourceType: resource.resourceType,
     field: issue.path,
     description: `[${issue.code}] ${issue.diagnostics}`,
