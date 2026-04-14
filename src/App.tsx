@@ -12,6 +12,7 @@ import { PatientListPage } from './components/patients/PatientListPage';
 import { PatientDetailPage } from './components/patients/PatientDetailPage';
 import { QualityLayout } from './components/quality/QualityLayout';
 import { QualityOverviewPage } from './components/quality/QualityOverviewPage';
+import { ThresholdsPage } from './components/quality/ThresholdsPage';
 import { CompletenessDrillDown } from './components/quality/CompletenessDrillDown';
 import { CodingDrillDown } from './components/quality/CodingDrillDown';
 import { PlausibilityDrillDown } from './components/quality/PlausibilityDrillDown';
@@ -70,6 +71,7 @@ function AppRoutes() {
           </Route>
           <Route path="/quality" element={<QualityLayout />}>
             <Route index element={<QualityOverviewPage />} />
+            <Route path="thresholds" element={<ThresholdsPage />} />
             <Route path="completeness/:type" element={<CompletenessDrillDown />} />
             <Route path="coding/:type" element={<CodingDrillDown />} />
             <Route path="plausibility/:type" element={<PlausibilityDrillDown />} />

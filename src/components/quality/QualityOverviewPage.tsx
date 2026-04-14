@@ -12,9 +12,9 @@
  */
 import { Button, Group, Stack, Tabs, Text, Title } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
-import { IconRefresh } from '@tabler/icons-react';
+import { IconAdjustmentsAlt, IconRefresh } from '@tabler/icons-react';
 import { useMemo } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { notifications } from '@mantine/notifications';
 import type { QualityOutletContext } from './QualityLayout';
 import { parseResourceTypes } from '../../fhir/capability';
@@ -44,6 +44,7 @@ function formatRelative(d: Date | null): string {
 export function QualityOverviewPage() {
   const { client, capability } = useOutletContext<QualityOutletContext>();
   const [sampleSize, setSampleSize] = useSampleSize();
+  const navigate = useNavigate();
 
   const types = useMemo(
     () => parseResourceTypes(capability).map((t) => t.type),
@@ -84,6 +85,13 @@ export function QualityOverviewPage() {
           <Text size="sm" c="dimmed">
             Last computed {formatRelative(lastComputed)}
           </Text>
+          <Button
+            variant="light"
+            leftSection={<IconAdjustmentsAlt size={16} />}
+            onClick={() => navigate('/quality/thresholds')}
+          >
+            Configure thresholds
+          </Button>
           <Button
             variant="light"
             leftSection={<IconRefresh size={16} />}
