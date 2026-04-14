@@ -76,11 +76,16 @@ const mockClient = {
 } as unknown as MedplumClient;
 const mockOutletContext = { capability: mockCapability, client: mockClient };
 
+// Plan 18-04 wires every metric tile in OverviewStrip to navigate to
+// /quality?tab=<route>. Capture those navigations via a spy so tests can
+// assert tile-click behavior.
+const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
   return {
     ...actual,
     useOutletContext: () => mockOutletContext,
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -161,6 +166,10 @@ function renderPage() {
 beforeEach(() => {
   mockUseResourceCounts.mockReset();
   mockNotificationsShow.mockReset();
+  mockNavigate.mockReset();
+  // Plan 18-04: useThresholds is backed by localStorage. Clear it per test
+  // so isBreached / getActiveThreshold see DEFAULT_THRESHOLDS.
+  window.localStorage.clear();
 });
 
 describe('QualityOverviewPage (QUAL-01)', () => {
@@ -177,8 +186,14 @@ describe('QualityOverviewPage (QUAL-01)', () => {
     renderPage();
     expect(screen.getByText('Total resources')).toBeDefined();
     expect(screen.getByText('Resource types')).toBeDefined();
-    expect(screen.getByText('Overall completeness')).toBeDefined();
-    expect(screen.getByText('Overall coding coverage')).toBeDefined();
+    // Plan 18-04 expanded the strip from 4 tiles to 9 tiles; the labels for
+    // the metric tiles now come from METRIC_LABELS in src/quality/thresholds.ts.
+    // Note: "Completeness" appears in BOTH the SummaryCard label AND the
+    // Tabs.Tab label, so getAllByText is required.
+    expect(screen.getAllByText('Completeness').length).toBeGreaterThanOrEqual(1);
+    // "Coding coverage" only appears in the SummaryCard (Tab label is
+    // "Coding Coverage" — different casing), so getByText is unique.
+    expect(screen.getByText('Coding coverage')).toBeDefined();
     // 120 + 250 = 370, formatted with toLocaleString. Locale in test is typically 'en-US' → "370".
     expect(screen.getByText('370')).toBeDefined();
     // typeCount: Patient + Condition = 2 (Observation is loading → excluded)
@@ -234,44 +249,92 @@ describe('QualityOverviewPage (QUAL-01)', () => {
   });
 });
 
-describe('OverviewStrip context consumption', () => {
-  function ContextFillerHarness({
-    completeness,
-    coverage,
-  }: {
+// Hoisted to module scope so both the v1.0 context-consumption tests
+// AND the Plan 18-04 9-tile expansion tests can use them.
+function ContextFillerHarness({
+  completeness,
+  coverage,
+  validation,
+  plausibility,
+  labRanges,
+  duplicates,
+  references,
+}: {
+  completeness?: number;
+  coverage?: number;
+  validation?: number;
+  plausibility?: number;
+  labRanges?: number;
+  /**
+   * `duplicates` here is a convenience shorthand used only by these tests.
+   * It seeds the context `duplicatesBreakdown.patient` so the derived
+   * `overallDuplicates` equals exactly this number in single-component
+   * scenarios (the common case for these tile-rendering tests). For
+   * multi-component averaging behavior, test DuplicatesPanel directly.
+   */
+  duplicates?: number;
+  references?: number;
+}) {
+  const ctx = useQualityMetricsContext();
+  useEffect(() => {
+    if (completeness !== undefined) ctx.setCompleteness(completeness);
+    if (coverage !== undefined) ctx.setCoverage(coverage);
+    if (validation !== undefined) ctx.setOverallValidation(validation);
+    if (plausibility !== undefined) ctx.setOverallPlausibility(plausibility);
+    if (labRanges !== undefined) ctx.setOverallLabRanges(labRanges);
+    if (duplicates !== undefined) {
+      // Seed only the patient component; un-seeded hash types stay excluded
+      // so overallDuplicates === duplicates exactly.
+      ctx.setDuplicatesContribution({ patient: duplicates });
+    }
+    if (references !== undefined) ctx.setOverallReferences(references);
+    // ctx is stable per provider; safe to omit from deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completeness, coverage, validation, plausibility, labRanges, duplicates, references]);
+  return null;
+}
+
+function renderStrip(
+  opts: {
     completeness?: number;
     coverage?: number;
-  }) {
-    const { setCompleteness, setCoverage } = useQualityMetricsContext();
-    useEffect(() => {
-      if (completeness !== undefined) setCompleteness(completeness);
-      if (coverage !== undefined) setCoverage(coverage);
-    }, [completeness, coverage, setCompleteness, setCoverage]);
-    return null;
-  }
+    validation?: number;
+    plausibility?: number;
+    labRanges?: number;
+    duplicates?: number;
+    references?: number;
+  } = {},
+) {
+  return render(
+    <MantineProvider>
+      <MemoryRouter>
+        <QualityMetricsProvider>
+          <ContextFillerHarness
+            completeness={opts.completeness}
+            coverage={opts.coverage}
+            validation={opts.validation}
+            plausibility={opts.plausibility}
+            labRanges={opts.labRanges}
+            duplicates={opts.duplicates}
+            references={opts.references}
+          />
+          <OverviewStrip
+            summary={{ total: 1000, typeCount: 10, loadingCount: 0, errorCount: 0 }}
+            isLoading={false}
+          />
+        </QualityMetricsProvider>
+      </MemoryRouter>
+    </MantineProvider>,
+  );
+}
 
-  function renderStrip(opts: { completeness?: number; coverage?: number } = {}) {
-    return render(
-      <MantineProvider>
-        <MemoryRouter>
-          <QualityMetricsProvider>
-            <ContextFillerHarness
-              completeness={opts.completeness}
-              coverage={opts.coverage}
-            />
-            <OverviewStrip
-              summary={{ total: 1000, typeCount: 10, loadingCount: 0, errorCount: 0 }}
-              isLoading={false}
-            />
-          </QualityMetricsProvider>
-        </MemoryRouter>
-      </MantineProvider>,
-    );
-  }
-
+describe('OverviewStrip context consumption', () => {
   it('renders em-dash when overallCompleteness / overallCoverage are undefined', () => {
     renderStrip();
-    // There should be at least 2 em-dashes (for completeness + coverage cards)
+    // There should be at least 2 em-dashes (for completeness + coverage cards).
+    // Plan 18-04 expands to 7 metric tiles; with no metrics seeded we expect
+    // at least 7 em-dashes, but >=2 keeps backward compatibility with the
+    // original assertion intent.
     const dashes = screen.getAllByText('—');
     expect(dashes.length).toBeGreaterThanOrEqual(2);
   });
@@ -306,6 +369,109 @@ describe('OverviewStrip props shape (regression guard)', () => {
     // Em-dash for both overall cards (undefined from fallback)
     const dashes = screen.getAllByText('—');
     expect(dashes.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe('OverviewStrip 9-tile expansion (DQ-12 / Plan 18-04)', () => {
+  it('renders exactly 9 SummaryCard tiles when context is fully populated', () => {
+    renderStrip({
+      completeness: 90,
+      coverage: 80,
+      validation: 99,
+      plausibility: 99,
+      labRanges: 96,
+      duplicates: 99,
+      references: 98,
+    });
+    // The 9 tiles by label
+    expect(screen.getByText('Total resources')).toBeDefined();
+    expect(screen.getByText('Resource types')).toBeDefined();
+    expect(screen.getByText('Completeness')).toBeDefined();
+    expect(screen.getByText('Coding coverage')).toBeDefined();
+    expect(screen.getByText('Validation')).toBeDefined();
+    expect(screen.getByText('Plausibility')).toBeDefined();
+    expect(screen.getByText('Lab ranges')).toBeDefined();
+    expect(screen.getByText('Duplicates')).toBeDefined();
+    expect(screen.getByText('References')).toBeDefined();
+  });
+
+  it('renders em-dash for metrics whose context value is undefined (e.g., labRanges never set)', () => {
+    renderStrip({ completeness: 90, coverage: 80 });
+    // 5 metrics undefined → 5 em-dashes from metric tiles. (Plus none from
+    // informational tiles, which always have values.)
+    const dashes = screen.getAllByText('—');
+    expect(dashes.length).toBeGreaterThanOrEqual(5);
+  });
+
+  it('renders 7 metric tiles (each labeled per METRIC_LABELS) plus 2 informational tiles', () => {
+    renderStrip({
+      completeness: 90,
+      coverage: 80,
+      validation: 99,
+      plausibility: 99,
+      labRanges: 96,
+      duplicates: 99,
+      references: 98,
+    });
+    const metricLabels = [
+      'Completeness',
+      'Coding coverage',
+      'Validation',
+      'Plausibility',
+      'Lab ranges',
+      'Duplicates',
+      'References',
+    ];
+    metricLabels.forEach((label) => {
+      expect(screen.getByText(label)).toBeDefined();
+    });
+  });
+
+  it('marks Completeness tile as breached when value (72) < default threshold (80)', () => {
+    renderStrip({ completeness: 72 });
+    // SummaryCard renders the threshold annotation (`threshold: 80%`) only
+    // when breached AND threshold set.
+    expect(screen.getByText(/threshold:\s*80%/)).toBeDefined();
+  });
+
+  it('clicking the Completeness metric tile calls navigate with /quality?tab=completeness', () => {
+    renderStrip({ completeness: 85 });
+    // SummaryCard with onClick renders as a button (Card component="button"
+    // per Plan 03 contract). The aria-label starts with "Completeness:".
+    const tile = screen.getByRole('button', { name: /Completeness:/ });
+    fireEvent.click(tile);
+    expect(mockNavigate).toHaveBeenCalledWith('/quality?tab=completeness');
+  });
+
+  it('initial entry "/quality?tab=duplicates" activates the Duplicates tab', () => {
+    mockUseResourceCounts.mockReturnValue({ Patient: 5 });
+    render(
+      <MantineProvider>
+        <MemoryRouter initialEntries={['/quality?tab=duplicates']}>
+          <QualityMetricsProvider>
+            <QualityOverviewPage />
+          </QualityMetricsProvider>
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+    // Mantine Tabs sets aria-selected="true" on the active tab button.
+    const duplicatesTab = screen.getByRole('tab', { name: /Duplicates/ });
+    expect(duplicatesTab.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('falls back to Counts tab when ?tab= is missing or invalid', () => {
+    mockUseResourceCounts.mockReturnValue({ Patient: 5 });
+    render(
+      <MantineProvider>
+        <MemoryRouter initialEntries={['/quality?tab=bogus']}>
+          <QualityMetricsProvider>
+            <QualityOverviewPage />
+          </QualityMetricsProvider>
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+    const countsTab = screen.getByRole('tab', { name: /Counts/ });
+    expect(countsTab.getAttribute('aria-selected')).toBe('true');
   });
 });
 
