@@ -88,8 +88,9 @@ None currently deferred.
 - v1.2 requirements: 16 total
 - Mapped to phases: 16
 - Unmapped: 0
+- Satisfied: 16/16 (after Phase 20 gap closure — all checkboxes flipped 2026-04-14)
 - Gap closure reassignments (2026-04-14, from v1.2-MILESTONE-AUDIT): DEBT-02, DQ-01, DQ-02, DQ-11, DQ-12 → Phase 20
 
 ---
 *Requirements defined: 2026-04-13*
-*Last updated: 2026-04-14 -- gap closure reassignments to Phase 20 per v1.2-MILESTONE-AUDIT*
+*Last updated: 2026-04-14 -- Phase 20 gap closure complete: all 16 v1.2 requirements satisfied (DEBT-02 fix + retrospective 15/18 VERIFICATION.md + traceability sync)*
