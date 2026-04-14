@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-04-14
+updated: 2026-04-14
 ---
 
 # Phase 16 — UI Design Contract
@@ -36,7 +37,7 @@ Inherits Mantine default spacing tokens (multiples of 4) from prior phases. Use 
 | Token | Value | Usage in Phase 16 |
 |-------|-------|-------------------|
 | xs | 4px | Gap between severity badge and issue code badge; inline icon gaps in cohort selector |
-| sm | 8px | Gap between toolbar controls (CohortSelector, SampleSizeControl); gap between banner close button and text; gap between check-type badges in Plausibility/Lab Ranges panels |
+| sm | 8px | Gap between toolbar controls (CohortSelector, SampleSizeControl); gap between banner close button and text; gap between check-type badges in Plausibility/Lab Ranges panels; gap between backend indicator badges |
 | md | 16px | Default gap inside new tab panels (PlausibilityPanel, LabRangesPanel); padding inside warning banners; gap between controls row and results area |
 | lg | 24px | Gap between main sections within each new panel (controls, summary, drill-down table); consistent with existing panel `<Stack gap="md">` outer pattern |
 | xl | 32px | Outer page padding (inherited from existing `<Stack gap="lg" p="xl">` pattern in QualityOverviewPage) |
@@ -53,7 +54,7 @@ Inherits the 4-size / 2-weight system from prior phases. No new sizes or weights
 
 | Role | Size | Weight | Line Height | Mantine Token | Usage |
 |------|------|--------|-------------|---------------|-------|
-| Body | 14px | 400 | 1.55 | `size="sm"` | Table cell text, issue descriptions, banner body text, summary counts ("N issues across M resources"), cohort selector label text |
+| Body | 14px | 400 | 1.55 | `size="sm"` | Table cell text, issue descriptions, banner body text, summary counts ("N issues across M resources"), cohort selector label text, progress text ("Checking Patient (15/50)...") |
 | Label | 14px | 600 | 1.55 | `size="sm"` + `fw={600}` | Tab labels ("Plausibility", "Lab Ranges"), controls labels ("Resource type", "Check type"), table column headers, Badge text for check categories |
 | Heading | 20px | 600 | 1.2 | `<Title order={2}>` | Not directly used in new components (inherited from QualityOverviewPage "Data Quality" title) |
 | Display | 28px | 600 | 1.2 | Not used in this phase | N/A |
@@ -76,8 +77,8 @@ Inherits Mantine default light theme from prior phases. No new colors introduced
 **Accent (blue.6) reserved for:**
 - Resource ID links in ResourceIssueTable (clickable `<Anchor>` to `/explorer/:type/:id`)
 - Active tab indicator underline in the 6-tab Tabs component
-- "Run checks" / "Validate sample" primary buttons
-- Structural/Conformance backend indicator badge (`color="blue"`)
+- "Run checks" / "Run lab range checks" / "Validate sample" primary buttons
+- Conformance backend indicator badge (`color="blue"`)
 - Cohort selector active state indicator
 
 Accent is **NOT** applied to: severity badges (use semantic colors), filter controls (neutral styling), warning banners (use `orange`), pagination controls (Mantine default).
@@ -86,13 +87,13 @@ Accent is **NOT** applied to: severity badges (use semantic colors), filter cont
 
 | Severity | Badge color | Mantine Token | Usage |
 |----------|-------------|---------------|-------|
-| `error` | red | `red` | Missing required fields, max cardinality violations, type mismatches, future dates |
-| `warning` | yellow | `yellow` | Value set non-conformance (extensible bindings), out-of-range lab values, inverted periods |
+| `error` | red | `red` | Missing required fields, max cardinality violations, type mismatches, future dates, inverted periods, implausible age |
+| `warning` | yellow | `yellow` | Value set non-conformance (extensible bindings), out-of-range lab values, long encounters |
 | `info` | blue | `blue` | Preferred binding mismatches, informational plausibility notes |
 
 Badge variant: `light` with `size="sm"` -- matching existing ResourceIssueTable pattern.
 
-**Conformance issue severity mapping (resolves RESEARCH.md Open Question 3):**
+**Conformance issue severity mapping (from RESEARCH.md Open Question 3 resolution):**
 
 | Check Type | Condition | Assigned Severity |
 |------------|-----------|-------------------|
@@ -129,20 +130,29 @@ Badge variant: `light` with `size="sm"` -- matching existing ResourceIssueTable 
 | `LabRangesPanel` | `src/components/quality/LabRangesPanel.tsx` | `client: MedplumClient`, `sampleSize: number` | Lab reference range tab. Runs only on Observation resources. Summary of in-range/out-of-range/no-range counts, per-LOINC-code breakdown table, clickable rows to drill-down. |
 | `PlausibilityDrillDown` | `src/components/quality/PlausibilityDrillDown.tsx` | N/A (uses `useParams` + `useOutletContext`) | Per-type temporal plausibility drill-down. Renders `ResourceIssueTable` with normalized temporal issues. Back button to Plausibility tab. |
 | `LabRangesDrillDown` | `src/components/quality/LabRangesDrillDown.tsx` | N/A (uses `useParams` + `useOutletContext`) | Observation lab range drill-down. Renders `ResourceIssueTable` with normalized lab range issues. Back button to Lab Ranges tab. |
-| `CohortSelector` | `src/components/quality/CohortSelector.tsx` | `value: CohortFilter`, `onChange: (filter: CohortFilter) => void` | Dashboard-level filter control. Resource type multi-select + date range filter. Scopes which resources are sampled for all quality checks. Positioned in toolbar row next to SampleSizeControl. |
+| `CohortSelector` | `src/components/quality/CohortSelector.tsx` | `types: string[]`, `value: string[]`, `onChange: (types: string[]) => void` | Dashboard-level filter control. Resource type multi-select. Scopes which resources are sampled for all quality checks. Positioned in toolbar row next to SampleSizeControl. |
+
+### New Hooks
+
+| Hook | File | Returns | Description |
+|------|------|---------|-------------|
+| `useConformanceRun` | `src/hooks/useConformanceRun.ts` | `{ status, progress, issues: NormalizedIssue[], terminologyAvailable: boolean, start, cancel }` | Wraps `validateConformance` + `ValueSetCache` + existing backends. Replaces `useValidationRun` as primary validation runner in ValidationPanel. |
+| `usePlausibilityReport` | `src/hooks/usePlausibilityReport.ts` | `{ status, progress, issues: NormalizedIssue[], start, cancel }` | Wraps `checkTemporalPlausibility` with sampling, batching, cancellation. |
+| `useLabRangesReport` | `src/hooks/useLabRangesReport.ts` | `{ status, progress, issues: NormalizedIssue[], summary: LabRangeSummary \| null, start, cancel }` | Wraps `checkLabRanges` with sampling. |
 
 ### Modified Components
 
 | Component | File | Change |
 |-----------|------|--------|
 | `QualityOverviewPage` | `src/components/quality/QualityOverviewPage.tsx` | Add 2 new `Tabs.Tab` entries ("Plausibility", "Lab Ranges") and their `Tabs.Panel` wrappers. Add `CohortSelector` to toolbar row. Pass cohort filter down to all panels. |
-| `ValidationPanel` | `src/components/quality/ValidationPanel.tsx` | Add terminology-unavailable warning banner (D-02). Enhanced conformance checker replaces structural-only validation. New backend indicator badge changes from "Structural" to "Conformance" (blue badge). |
+| `ValidationPanel` | `src/components/quality/ValidationPanel.tsx` | Replace `useValidationRun` with `useConformanceRun`. Add terminology-unavailable warning banner (D-02). Update "Structural" badge to "Conformance" badge. Add "Terminology" / "Terminology (unavailable)" badge. |
 | `QualityLayout` | `src/components/quality/QualityLayout.tsx` | Add routes for `/quality/plausibility/:type` and `/quality/lab-ranges` drill-down pages. |
 | `App.tsx` | `src/App.tsx` | Add route entries for PlausibilityDrillDown and LabRangesDrillDown. |
 
 ### Unchanged Components (no modifications)
 
 - `ResourceIssueTable.tsx` -- reused as-is for all new drill-down views
+- `ValidationIssueList.tsx` -- reused as-is in the Validation panel "Issue List" sub-tab
 - `OverviewStrip.tsx` -- summary strip is not modified in this phase
 - `SummaryCard.tsx` -- not modified
 - `SampleSizeControl.tsx` -- reused as-is
@@ -165,70 +175,91 @@ Badge variant: `light` with `size="sm"` -- matching existing ResourceIssueTable 
 2. All tabs use `keepMounted` to preserve computed state when switching.
 3. Tab order matches the Kahn et al. framework progression: structural counts, then conformance (completeness, coding, validation), then plausibility, then lab ranges.
 4. New tabs render their panels identically to existing tabs -- `<Tabs.Panel value="..." pt="md" keepMounted>`.
+5. Tab value identifiers: `counts`, `completeness`, `coverage`, `validation`, `plausibility`, `lab-ranges`.
 
 **Mantine API:** Extend existing `<Tabs defaultValue="counts" keepMounted>` with two additional `<Tabs.Tab>` and `<Tabs.Panel>` entries.
 
 ### I-02: Terminology Unavailable Banner (Validation Panel)
 
-**Trigger:** Conformance checker detects that the terminology server is unreachable during value set `$expand`.
+**Trigger:** `useConformanceRun` sets `terminologyAvailable` to `false` after a validation run where value set `$expand` failed.
 
-**Default state:** Banner is hidden. Appears only when terminology server fails.
+**Default state:** Banner is hidden. Appears only after a run completes with terminology unavailable.
 
 **Behavior:**
-1. `Alert` with `variant="light"` `color="orange"` appears at the top of the Validation panel, above the controls row.
+1. `Alert` with `variant="light"` `color="orange"` appears at the top of the Validation panel, after the existing Blaze $validate info banner and PHI acknowledgement banner, but before the controls `Paper`.
 2. Icon: `IconAlertTriangle` at size 20.
-3. Copy: "Terminology server unavailable -- value set conformance checks skipped. Other conformance checks (cardinality, type constraints) ran normally."
-4. Banner is dismissible with `withCloseButton`. Dismissal persists in localStorage scoped to `quality.validation.termBannerDismissed.v1:{serverUrl}`.
-5. Banner reappears on next validation run if terminology server is still unreachable.
+3. Title: "Terminology server unavailable"
+4. Body: "Value set conformance checks skipped. Other conformance checks (cardinality, type constraints) ran normally."
+5. Banner is dismissible with `withCloseButton`. Dismissal persists in localStorage scoped to `quality.validation.termBannerDismissed.v1:{serverUrl}`.
+6. Banner reappears on next validation run if terminology server is still unreachable (dismiss state resets when a new run starts with terminology still unavailable).
 
 ### I-03: Plausibility Panel Interaction
 
 **Trigger:** User clicks the "Plausibility" tab.
 
-**Default state:** Panel shows a resource type selector (defaulting to first bundled profile type), a "Run checks" button, and empty results area.
+**Default state:** Panel shows a resource type selector (defaulting to first bundled profile type that exists on the server), a check-type filter set to "All checks", a "Run checks" button, and empty results area.
 
 **Behavior:**
-1. Resource type `Select` (searchable, `minWidth: 240`) -- same pattern as ValidationPanel.
-2. "Run checks" `Button` (variant="filled") triggers temporal plausibility analysis on sampled resources of the selected type.
-3. While running: `Progress` bar with "Checking {type} ({current}/{total})..." text, plus a "Stop plausibility check" button.
-4. On completion: summary line ("N issues across M resources") followed by check-type breakdown badges showing counts per category (future dates, inverted periods, age, duration).
-5. Below summary: `ResourceIssueTable` with all normalized temporal issues.
-6. Each issue row in the table links to `/explorer/{type}/{id}` via the standard ResourceIssueTable pattern.
-7. Clicking a resource type row in the summary table navigates to `/quality/plausibility/:type` drill-down.
+1. Resource type `Select` (searchable, `style={{ minWidth: 240 }}`) -- same pattern as ValidationPanel. Data source: `BUNDLED_PROFILE_TYPES` union with server types, sorted alphabetically.
+2. Check-type filter `Select` with options: "All checks", "Future dates", "Period consistency", "Age plausibility", "Clinical duration". Filters `NormalizedIssue[]` by matching check-type prefix in the description field before passing to `ResourceIssueTable`.
+3. "Run checks" `Button` (variant="filled"). Disabled when `status === 'running'`.
+4. While running: `Progress` bar (animated) with "Checking {type} ({current}/{total})..." text above, plus a "Stop plausibility check" cancel `Button` (`variant="subtle"` `color="red"` `leftSection={<IconX size={14} />}`).
+5. On completion: summary line ("N issues across M resources", `Text size="sm" c="dimmed"`) followed by check-type breakdown badges showing counts per category.
+6. Below summary: `ResourceIssueTable` with all normalized temporal issues (filtered by check-type if not "All checks").
+7. Each issue row in the table links to `/explorer/{type}/{id}` via the standard ResourceIssueTable pattern.
 
-**Check-type filter:**
-- `Select` with options: "All checks", "Future dates", "Period consistency", "Age plausibility", "Clinical duration".
-- Filters the `NormalizedIssue[]` array by matching issue description prefix before passing to `ResourceIssueTable`.
+**Check-type breakdown badges:**
+
+| Check Type | Badge Color | Badge Variant |
+|------------|-------------|---------------|
+| Future dates | `orange` | `light` |
+| Period consistency (inverted) | `red` | `light` |
+| Age plausibility | `red` | `light` |
+| Clinical duration | `yellow` | `light` |
+
+All badges: `size="sm"`, rendered in a `Group gap="xs"`.
+
+**Controls layout:** `Group` with `align="flex-end"` `gap="md"`, wrapping the Select, filter, and Button. Same pattern as ValidationPanel controls row, wrapped in a `Paper withBorder p="md" radius="sm"`.
 
 ### I-04: Lab Ranges Panel Interaction
 
 **Trigger:** User clicks the "Lab Ranges" tab.
 
-**Default state:** Panel shows a "Run checks" button and empty results area. No resource type selector needed (lab ranges only apply to Observation).
+**Default state:** Panel shows a "Run lab range checks" button and empty results area. No resource type selector needed (lab ranges only apply to Observation).
 
 **Behavior:**
-1. "Run lab range checks" `Button` (variant="filled") triggers lab range analysis on sampled Observation resources.
-2. While running: `Progress` bar with "Checking Observations ({current}/{total})..." text, plus a "Stop lab range check" button.
+1. "Run lab range checks" `Button` (variant="filled"). Disabled when `status === 'running'`.
+2. While running: `Progress` bar (animated) with "Checking Observations ({current}/{total})..." text, plus a "Stop lab range check" cancel `Button` (`variant="subtle"` `color="red"` `leftSection={<IconX size={14} />}`).
 3. On completion: summary showing total Observations checked, in-range count, out-of-range count, no-range-available count.
-4. Summary renders as 3 inline `Badge` components: green for in-range, yellow for out-of-range, gray for no-range.
-5. Below summary: per-LOINC-code breakdown `Table` (sortable) with columns: LOINC Code, Display Name, Checked, Out of Range, % Out of Range.
+4. Summary renders as inline text "Checked: {N}" followed by 3 `Badge` components in a `Group gap="sm"`: green for in-range, yellow for out-of-range, gray for no-range.
+5. Below summary: per-LOINC-code breakdown `Table` with `striped highlightOnHover`, columns: LOINC Code, Display Name, Checked, Out of Range, % Out of Range. Default sort by "% Out of Range" column descending.
 6. Below per-LOINC table: `ResourceIssueTable` with all normalized lab range issues.
-7. If no reference ranges are configured in settings.yaml AND no observations have embedded `referenceRange`, show an orange `Alert`: "No reference ranges available. Configure ranges in settings.yaml or ensure Observation resources include referenceRange data."
+7. If no reference ranges are configured in settings.yaml AND no observations have embedded `referenceRange`, show an orange `Alert` with the "No reference ranges available" copy (see Copywriting Contract).
+
+**Summary badge colors:**
+
+| Metric | Badge Color | Badge Variant |
+|--------|-------------|---------------|
+| In range | `green` | `light` |
+| Out of range | `yellow` | `light` |
+| No range available | `gray` | `light` |
+
+**Controls layout:** Single "Run lab range checks" `Button` in a `Paper withBorder p="md" radius="sm"`, consistent with other panels.
 
 ### I-05: Cohort Selector
 
 **Trigger:** User interacts with the CohortSelector control in the quality dashboard toolbar.
 
-**Default state:** "All resources" (no filtering applied). Renders as a compact control inline with SampleSizeControl.
+**Default state:** Empty selection (equivalent to "All resource types" -- no filtering applied). Renders as a compact control inline with SampleSizeControl.
 
 **Behavior:**
 1. `MultiSelect` for resource types -- allows scoping quality checks to specific resource types (e.g., only Patient + Condition).
-2. Default: all types selected (equivalent to current behavior).
-3. Changing the cohort does NOT auto-recompute metrics. User must click "Recompute metrics" to apply.
+2. Default: no types selected (all types analyzed, equivalent to current behavior).
+3. Changing the cohort does NOT auto-recompute metrics. User must click "Recompute metrics" to re-fetch counts, or click "Run checks" on individual panels to re-run analysis with the new scope.
 4. Cohort selection persists in localStorage under `quality.cohort.v1`.
 5. A `Text` summary below the selector shows active filter: "Scoped to: Patient, Condition" or "All resource types".
 
-**Layout:** Positioned in the toolbar `Group` between `SampleSizeControl` and the "Last computed" / "Recompute" controls. Uses `style={{ maxWidth: 320 }}` to prevent excessive width.
+**Layout:** Positioned in the toolbar `Group` between the page title and `SampleSizeControl`. Uses `style={{ maxWidth: 320 }}` to prevent excessive width.
 
 **Mantine API:** `<MultiSelect data={types} value={selectedTypes} onChange={setSelectedTypes} label="Cohort" placeholder="All resource types" searchable clearable size="sm" />`.
 
@@ -238,20 +269,34 @@ Badge variant: `light` with `size="sm"` -- matching existing ResourceIssueTable 
 
 **Behavior:**
 1. Backend indicator badges update to reflect the enhanced conformance checker:
-   - `Conformance` badge (blue, variant="light"): replaces "Structural" badge. Indicates min/max cardinality, type constraints, and value set checking.
+   - `Conformance` badge (`color="blue"` `variant="light"` `size="sm"`): replaces the current "Structural" badge. Indicates min/max cardinality, type constraints, and value set checking.
    - `Remote (configured)` / `Remote (not configured)` badges: unchanged from current behavior.
-2. When terminology server is available: an additional `Terminology` badge (green, variant="light") appears.
-3. When terminology server is unavailable: `Terminology` badge shows as gray with text "Terminology (unavailable)".
+2. When terminology server is available (after a run): an additional `Terminology` badge (`color="green"` `variant="light"` `size="sm"`) appears.
+3. When terminology server is unavailable (after a run): `Terminology` badge shows with `color="gray"` and text "Terminology (unavailable)".
+4. Before any run has executed, only `Conformance` and `Remote` badges are shown (no Terminology badge since availability is unknown).
+
+**Badge order:** Conformance | Terminology (if shown) | Remote status.
 
 ### I-07: Drill-Down Navigation (Plausibility / Lab Ranges)
 
-**Trigger:** User clicks a resource type row in the Plausibility panel summary table, or clicks "View details" in Lab Ranges panel.
+**Trigger:** User clicks a resource type row in the Plausibility panel summary, or clicks "View details" in Lab Ranges panel.
 
 **Behavior:**
-1. Navigates to `/quality/plausibility/:type` or `/quality/lab-ranges` (lab ranges has no type parameter since it is Observation-only).
-2. Drill-down page layout matches existing pattern: back button (variant="subtle"), title, `ResourceIssueTable`.
+1. Plausibility navigates to `/quality/plausibility/:type`. Lab Ranges navigates to `/quality/lab-ranges`.
+2. Drill-down page layout matches existing CompletenessDrillDown pattern: back button (`variant="subtle"` `leftSection={<IconArrowLeft />}`), title, then `ResourceIssueTable`.
 3. Back button copy: "Back to Plausibility" or "Back to Lab Ranges".
-4. Browser back button returns to the dashboard with tab state preserved.
+4. Drill-down title: "{type} -- Plausibility drill-down" or "Observation -- Lab Range drill-down".
+5. Browser back button returns to the dashboard with tab state preserved (React Router handles this).
+6. Drill-down pages access `QualityOutletContext` via `useOutletContext()` and run their respective hooks to generate issues for the target type.
+
+### I-08: Enhanced Validation Panel Cancel Button
+
+**Trigger:** User starts a validation run on the Validation panel.
+
+**Behavior:**
+1. During a running validation, the cancel button label is "Stop validation" (updated from the current "Cancel" label for consistency with the new panels).
+2. Cancel button: `Button` with `variant="subtle"` `color="red"` `leftSection={<IconX size={14} />}`.
+3. Clicking cancel sets status to `'cancelled'` and shows the existing yellow cancellation `Alert`.
 
 ---
 
@@ -277,32 +322,30 @@ Badge variant: `light` with `size="sm"` -- matching existing ResourceIssueTable 
 
 ```
 +------------------------------------------------------------------+
-| [Resource type v]  [Check type filter v]  [Run checks]           |  <- Group gap="md"
+| Paper withBorder p="md" radius="sm"                              |
+| [Resource type v]  [Check type filter v]  [Run checks]           |  <- Group gap="md" align="flex-end"
 +------------------------------------------------------------------+
-| [Progress bar: Checking Patient (15/50)...]  [Stop plausibility check]            |  <- only during run
+| [Progress: Checking Patient (15/50)...]  [Stop plausibility check]|  <- only during run
 +------------------------------------------------------------------+
 | 12 issues across 8 resources                                      |  <- Text size="sm" c="dimmed"
-| [future dates: 5] [inverted periods: 3] [age: 2] [duration: 2]  |  <- Badge group
+| [future dates: 5] [inverted periods: 3] [age: 2] [duration: 2]  |  <- Group gap="xs", Badge size="sm" variant="light"
 +------------------------------------------------------------------+
 | {ResourceIssueTable with temporal issues}                         |
 +------------------------------------------------------------------+
 ```
 
-- Controls row: `Group` with `align="flex-end"` `gap="md"`.
-- Check-type badges: `Group` with `gap="xs"`, each badge is `Badge` with `variant="light"` `size="sm"`.
-- Badge colors by check type: future dates = `orange`, inverted periods = `red`, age = `red`, duration = `yellow`.
-
 ### LabRangesPanel Internal Layout
 
 ```
 +------------------------------------------------------------------+
-| [Run lab range checks]                                            |  <- Button
+| Paper withBorder p="md" radius="sm"                              |
+| [Run lab range checks]                                            |  <- Button variant="filled"
 +------------------------------------------------------------------+
-| [Progress bar: Checking Observations (25/100)...]                |  <- only during run
+| [Progress: Checking Observations (25/100)...]  [Stop lab range check] |  <- only during run
 +------------------------------------------------------------------+
-| Checked: 100  [In range: 82] [Out of range: 14] [No range: 4]   |  <- summary badges
+| Checked: 100  [In range: 82] [Out of range: 14] [No range: 4]   |  <- Text + Badge group
 +------------------------------------------------------------------+
-| LOINC Code | Display Name  | Checked | Out of Range | % OOR     |  <- per-LOINC table
+| LOINC Code | Display Name  | Checked | Out of Range | % OOR     |  <- Table striped highlightOnHover
 |------------|---------------|---------|--------------|-----------|
 | 2093-3     | Total Chol.   | 50      | 7            | 14%       |
 | 2571-8     | Triglycerides | 30      | 5            | 17%       |
@@ -311,22 +354,25 @@ Badge variant: `light` with `size="sm"` -- matching existing ResourceIssueTable 
 +------------------------------------------------------------------+
 ```
 
-- Summary badges: green (`color="green"`) for in-range, yellow (`color="yellow"`) for out-of-range, gray (`color="gray"`) for no-range.
-- Per-LOINC table: `Table` with `striped highlightOnHover`, sortable by "% Out of Range" column (default sort: descending).
-
 ### Terminology Unavailable Banner (Validation Panel)
 
 ```
 +------------------------------------------------------------------+
-| [!] Terminology server unavailable                           [X] |  <- Alert color="orange"
+| [i] Blaze $validate unsupported                             [X]  |  <- existing blue Alert
++------------------------------------------------------------------+
+| [!] PHI will be sent to an external validator                     |  <- existing orange Alert (if remote configured + not acked)
++------------------------------------------------------------------+
+| [!] Terminology server unavailable                           [X]  |  <- NEW orange Alert
 |     Value set conformance checks skipped. Other conformance       |
 |     checks (cardinality, type constraints) ran normally.          |
 +------------------------------------------------------------------+
-| {Existing Validation panel content}                               |
+| Paper withBorder p="md" radius="sm"                              |
+|   [Resource type v]  Sample size: 50  [Validate sample]          |
+|   [Conformance] [Terminology] [Remote (configured)]              |  <- Badge row
++------------------------------------------------------------------+
+| {Validation results: Tabs with Issue List / Resources sub-tabs}  |
 +------------------------------------------------------------------+
 ```
-
-Positioned above all other Validation panel content, below the existing Blaze $validate info banner.
 
 ### CohortSelector in Toolbar
 
@@ -350,15 +396,19 @@ Positioned above all other Validation panel content, below the existing Blaze $v
 | Lab Ranges tab label | "Lab Ranges" |
 | Plausibility primary CTA | "Run checks" |
 | Lab Ranges primary CTA | "Run lab range checks" |
+| Validation primary CTA | "Validate sample" (unchanged) |
 | Plausibility progress text | "Checking {type} ({current}/{total})..." |
 | Lab Ranges progress text | "Checking Observations ({current}/{total})..." |
+| Validation progress text | "Validating {type} ({current}/{total})..." (unchanged) |
 | Plausibility summary | "{N} issues across {M} resources" |
+| Lab Ranges summary - checked | "Checked: {N}" |
 | Lab Ranges summary - in range | "In range: {N}" |
 | Lab Ranges summary - out of range | "Out of range: {N}" |
 | Lab Ranges summary - no range | "No range: {N}" |
 | Terminology unavailable banner title | "Terminology server unavailable" |
 | Terminology unavailable banner body | "Value set conformance checks skipped. Other conformance checks (cardinality, type constraints) ran normally." |
-| No reference ranges alert | "No reference ranges available. Configure ranges in settings.yaml or ensure Observation resources include referenceRange data." |
+| No reference ranges alert title | "No reference ranges available" |
+| No reference ranges alert body | "No reference ranges available. Configure ranges in settings.yaml or ensure Observation resources include referenceRange data." |
 | Cohort selector label | "Cohort" |
 | Cohort selector placeholder | "All resource types" |
 | Cohort active summary (filtered) | "Scoped to: {type1}, {type2}" |
@@ -373,12 +423,16 @@ Positioned above all other Validation panel content, below the existing Blaze $v
 | Error state (lab range check failure) | "Failed to run lab range checks. Check your FHIR server connection and try again." |
 | Back button (plausibility drill-down) | "Back to Plausibility" |
 | Back button (lab ranges drill-down) | "Back to Lab Ranges" |
+| Plausibility drill-down title | "{type} -- Plausibility drill-down" |
+| Lab ranges drill-down title | "Observation -- Lab Range drill-down" |
 | Conformance badge label | "Conformance" |
 | Terminology available badge | "Terminology" |
 | Terminology unavailable badge | "Terminology (unavailable)" |
 | Cancel button (plausibility) | "Stop plausibility check" |
 | Cancel button (lab ranges) | "Stop lab range check" |
+| Cancel button (validation) | "Stop validation" |
 | Validation panel no-issues (updated) | "No conformance issues found in the sampled {N} resources." |
+| Validation cancelled | "Validation cancelled at {current}/{total}. Results below reflect completed resources only." (unchanged) |
 
 No destructive actions in this phase.
 
@@ -388,7 +442,7 @@ No destructive actions in this phase.
 
 ### Empty State: No Plausibility Issues
 
-**When:** Temporal plausibility walker returns zero issues for the selected resource type.
+**When:** Temporal plausibility walker returns zero issues for the selected resource type after a run completes.
 
 **Render:** Mantine `Alert` with `color="green"` `variant="light"`.
 - Icon: `IconCheck` from `@tabler/icons-react`.
@@ -397,7 +451,7 @@ No destructive actions in this phase.
 
 ### Empty State: No Out-of-Range Lab Values
 
-**When:** Lab range checker returns zero out-of-range findings.
+**When:** Lab range checker returns zero out-of-range findings after a run completes.
 
 **Render:** Mantine `Alert` with `color="green"` `variant="light"`.
 - Icon: `IconCheck`.
@@ -406,7 +460,7 @@ No destructive actions in this phase.
 
 ### Empty State: No Observations on Server
 
-**When:** Server has no Observation resources (or cohort filter excludes them).
+**When:** Server has no Observation resources (or cohort filter excludes Observation and lab ranges panel runs).
 
 **Render:** Mantine `Alert` with `color="blue"` `variant="light"`.
 - Icon: `IconInfoCircle`.
@@ -415,7 +469,7 @@ No destructive actions in this phase.
 
 ### Empty State: No Reference Ranges Available
 
-**When:** No ranges configured in settings.yaml AND observations lack embedded `referenceRange`.
+**When:** No ranges configured in settings.yaml AND sampled observations lack embedded `referenceRange`. This means out-of-range checking cannot be performed.
 
 **Render:** Mantine `Alert` with `color="orange"` `variant="light"`.
 - Icon: `IconInfoCircle`.
@@ -428,13 +482,27 @@ No destructive actions in this phase.
 
 **Render:** Mantine `Alert` with `color="red"` `variant="light"`.
 - Icon: `IconAlertTriangle`.
-- Copy: "Failed to run {plausibility checks for {type} / lab range checks}. Check your FHIR server connection and try again."
+- Copy (plausibility): "Failed to run plausibility checks for {type}. Check your FHIR server connection and try again."
+- Copy (lab ranges): "Failed to run lab range checks. Check your FHIR server connection and try again."
 
 ### Loading State
 
-**When:** Check is in progress.
+**When:** Check is in progress (`status === 'running'`).
 
-**Render:** Mantine `Progress` bar (animated) with descriptive text above it, plus a cancel `Button` (`variant="subtle"` `color="red"`): labeled "Stop plausibility check" in PlausibilityPanel, "Stop lab range check" in LabRangesPanel. Same pattern as existing ValidationPanel.
+**Render:** `Paper withBorder p="sm" radius="sm"` containing a `Stack gap="xs"` with `aria-live="polite"`:
+- `Text size="sm"` with progress message (panel-specific, see Copywriting Contract)
+- `Progress` bar (animated, `value={pct}`)
+- Cancel `Button` to the right of the progress text (`variant="subtle"` `color="red"` `leftSection={<IconX size={14} />}`)
+
+Same pattern as existing ValidationPanel progress section.
+
+### Cancellation State
+
+**When:** User cancels a running check (`status === 'cancelled'`).
+
+**Render:** Mantine `Alert` with `color="yellow"` `variant="light"` `icon={<IconInfoCircle size={20} />}`.
+- Copy: "{Check type} cancelled at {current}/{total}. Results below reflect completed resources only."
+- Followed by partial results in `ResourceIssueTable` (if any issues were found before cancellation).
 
 ---
 
@@ -450,10 +518,11 @@ No destructive actions in this phase.
 
 - New tabs ("Plausibility", "Lab Ranges") inherit Mantine Tabs ARIA semantics (`role="tab"`, `role="tabpanel"`, keyboard navigation) automatically.
 - CohortSelector uses Mantine `MultiSelect` which provides built-in ARIA combobox semantics, keyboard navigation, and screen reader announcements.
-- Warning banners use Mantine `Alert` with `role="alert"` semantics (implicit via Mantine). Dismissible banners have labeled close buttons via `closeButtonLabel`.
+- Warning banners use Mantine `Alert` with `role="alert"` semantics (implicit via Mantine). Dismissible banners have labeled close buttons via `closeButtonLabel="Dismiss"`.
 - Progress indicators use `aria-live="polite"` (match existing ValidationPanel pattern).
-- All filter controls use `aria-label` props when no visible label is rendered.
+- All filter controls (`Select`, `MultiSelect`) have explicit `label` props that serve as accessible names.
 - Check-type badges are decorative summaries and do not require interactive ARIA roles.
+- Per-LOINC table in Lab Ranges panel uses native Mantine `Table` which renders `<table>` with proper `<thead>` / `<tbody>` semantics.
 
 ---
 
