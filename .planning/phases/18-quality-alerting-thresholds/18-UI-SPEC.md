@@ -57,15 +57,14 @@ Exceptions: none. OverviewStrip uses `spacing="sm"` (8px) instead of the previou
 
 ## Typography
 
-Inherits the 4-size / 2-weight system from prior phases. No new sizes or weights introduced.
+Inherits the 4-size / 2-weight system from prior phases. No new sizes or weights introduced. Phase 18 actively uses the 4 sizes below; the broader theme Display (28px) size is not used in this phase.
 
 | Role | Size | Weight | Line Height | Mantine Token | Usage |
 |------|------|--------|-------------|---------------|-------|
 | Body | 14px | 400 | 1.55 | `size="sm"` | Table cell text, threshold input values, tile subtitle ("threshold: 80%"), empty/error copy |
 | Label | 14px | 600 | 1.55 | `size="sm"` + `fw={600}` | Metric name in tile label + table row label, table column headers, toolbar button text |
-| Value | 20px | 700 | 1.2 | `size="xl"` + `fw={700}` | Big numeric % value inside each SummaryCard (unchanged from existing) |
+| Value | 20px | 600 | 1.2 | `size="xl"` + `fw={600}` | Big numeric % value inside each SummaryCard |
 | Heading | 20px | 600 | 1.2 | `<Title order={2}>` | Page title ("Configure Quality Thresholds") |
-| Display | 28px | 600 | 1.2 | Not used in this phase | N/A |
 
 Threshold-annotation text ("threshold: 80%") uses `size="xs"` `c="dimmed"` (12px, color gray.6) — NOT red, even when the tile is breached. The red signal lives on the ring + numeric value; the annotation is context, not signal.
 
@@ -110,7 +109,7 @@ Inherits Mantine default light theme from prior phases. No new colors introduced
 |-----------|------|-------|-------------|
 | `ThresholdsPage` | `src/components/quality/ThresholdsPage.tsx` | N/A (route element; reads `useThresholds()` hook) | `/quality/thresholds` route page. Renders `<Title order={2}>Configure Quality Thresholds</Title>`, intro text, back link, Mantine `Table` with one row per metric (label, default, threshold input, clear), and a "Reset to defaults" button that opens a confirmation Modal. |
 | `ThresholdsTable` | inlined in ThresholdsPage | `thresholds: Thresholds`, `setThreshold(key, value)`, `clearThreshold(key)` | Internal presentation piece. One `<Table.Tr>` per metric key. Columns: Metric, Default (`%` or "no default"), Threshold (< % — NumberInput), Active (Badge), Actions (Clear ActionIcon). |
-| `ResetConfirmModal` | inlined in ThresholdsPage | `opened`, `onClose`, `onConfirm` | Mantine `Modal` with title "Reset thresholds to defaults?", body copy, Cancel button + "Reset to defaults" destructive button. |
+| `ResetConfirmModal` | inlined in ThresholdsPage | `opened`, `onClose`, `onConfirm` | Mantine `Modal` with title "Reset thresholds to defaults?", body copy, "Keep current thresholds" dismiss button + "Reset to defaults" destructive button. |
 
 ### New Hooks
 
@@ -202,11 +201,11 @@ Inherits Mantine default light theme from prior phases. No new colors introduced
 2. Modal title: **"Reset thresholds to defaults?"**
 3. Modal body: `<Text size="sm">This will clear all custom thresholds and restore every metric to its shipped default. This cannot be undone from the UI — you will need to re-enter any custom values.</Text>`
 4. Modal footer: `<Group justify="flex-end" gap="sm">` with:
-   - `<Button variant="default" onClick={close}>Cancel</Button>`
+   - `<Button variant="default" onClick={close}>Keep current thresholds</Button>`
    - `<Button color="red" onClick={confirm}>Reset to defaults</Button>`
 5. Confirm action: writes `{}` to `quality.thresholds.v1` (empty overrides object). Modal closes. Page re-renders — all NumberInputs show `DEFAULT_THRESHOLDS[key]`, all Active badges return to `default`.
 6. Notification: `notifications.show({ color: 'blue', title: 'Thresholds reset', message: 'All metrics restored to shipped defaults.' })`.
-7. Keyboard: `Esc` closes the modal (cancel semantics). `Enter` focuses the destructive button but does NOT auto-submit.
+7. Keyboard: `Esc` closes the modal (dismiss semantics, same as "Keep current thresholds"). `Enter` focuses the destructive button but does NOT auto-submit.
 
 ### I-04: Breach Visual Treatment on OverviewStrip
 
@@ -214,7 +213,7 @@ Inherits Mantine default light theme from prior phases. No new colors introduced
 
 **Behavior:**
 1. **Ok state** (value ≥ threshold, or no active threshold): RingProgress `sections=[{value, color: 'blue.6'}]`. Numeric value rendered in default Text color (black / gray.9). No threshold annotation.
-2. **Breached state**: RingProgress `sections=[{value, color: 'red.6'}]`. Numeric value rendered in `c="red.6"` `fw={700}`. Subtitle line appears directly below the value: `<Text size="xs" c="dimmed">threshold: {threshold}%</Text>`.
+2. **Breached state**: RingProgress `sections=[{value, color: 'red.6'}]`. Numeric value rendered in `c="red.6"` `fw={600}`. Subtitle line appears directly below the value: `<Text size="xs" c="dimmed">threshold: {threshold}%</Text>`.
 3. **No-data state** (`value === 0` for an issue-count metric AND `sampledResources === 0`, per D-17): RingProgress `sections=[{value: 0, color: 'gray.3'}]`. Numeric value rendered as `—` (em-dash) in `c="dimmed"`. No threshold annotation. `aria-label="{label}: no data"`.
 4. **Not-run state** (D-18, metric not yet computed in this session): same as no-data — gray ring, em-dash, no annotation, `aria-label="{label}: not yet run"`.
 5. Transitions (ok ↔ breached) are NOT animated — Mantine default color change. Avoids drawing undue attention on every recompute.
@@ -334,6 +333,8 @@ Ok state:                                   Breached state:
 |                            |              | threshold: 80%             |  <- dimmed xs
 +---------------------------+              +---------------------------+
 
+Numeric value uses fw={600} in both ok and breached states; only the color changes.
+
 Not-run / no-data state:
 
 +---------------------------+
@@ -367,7 +368,7 @@ Not-run / no-data state:
 | Reset button | `Reset to defaults` |
 | Reset confirmation title | `Reset thresholds to defaults?` |
 | Reset confirmation body | `This will clear all custom thresholds and restore every metric to its shipped default. This cannot be undone from the UI — you will need to re-enter any custom values.` |
-| Reset confirmation cancel | `Cancel` |
+| Reset confirmation dismiss | `Keep current thresholds` |
 | Reset confirmation confirm | `Reset to defaults` |
 | Reset success notification title | `Thresholds reset` |
 | Reset success notification body | `All metrics restored to shipped defaults.` |
