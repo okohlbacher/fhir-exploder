@@ -27,6 +27,8 @@ import { CodingCoveragePanel } from './CodingCoveragePanel';
 import { ValidationPanel } from './ValidationPanel';
 import { PlausibilityPanel } from './PlausibilityPanel';
 import { LabRangesPanel } from './LabRangesPanel';
+import { DuplicatesPanel } from './DuplicatesPanel';
+import { ReferencesPanel } from './ReferencesPanel';
 import { CohortSelector } from './CohortSelector';
 
 function formatRelative(d: Date | null): string {
@@ -102,6 +104,8 @@ export function QualityOverviewPage() {
           <Tabs.Tab value="validation">Validation</Tabs.Tab>
           <Tabs.Tab value="plausibility">Plausibility</Tabs.Tab>
           <Tabs.Tab value="lab-ranges">Lab Ranges</Tabs.Tab>
+          <Tabs.Tab value="duplicates">Duplicates</Tabs.Tab>
+          <Tabs.Tab value="references">References</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="counts" pt="md" keepMounted>
@@ -121,6 +125,12 @@ export function QualityOverviewPage() {
         </Tabs.Panel>
         <Tabs.Panel value="lab-ranges" pt="md" keepMounted>
           <LabRangesPanel client={client} sampleSize={sampleSize} />
+        </Tabs.Panel>
+        <Tabs.Panel value="duplicates" pt="md" keepMounted>
+          <DuplicatesPanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
+        </Tabs.Panel>
+        <Tabs.Panel value="references" pt="md" keepMounted>
+          <ReferencesPanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
         </Tabs.Panel>
       </Tabs>
     </Stack>

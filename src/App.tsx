@@ -16,6 +16,8 @@ import { CompletenessDrillDown } from './components/quality/CompletenessDrillDow
 import { CodingDrillDown } from './components/quality/CodingDrillDown';
 import { PlausibilityDrillDown } from './components/quality/PlausibilityDrillDown';
 import { LabRangesDrillDown } from './components/quality/LabRangesDrillDown';
+import { DuplicatesDrillDown } from './components/quality/DuplicatesDrillDown';
+import { ReferencesDrillDown } from './components/quality/ReferencesDrillDown';
 import { ConnectionProvider } from './contexts/ConnectionContext';
 import { TerminologyProvider } from './contexts/TerminologyContext';
 import { SettingsProvider } from './contexts/SettingsContext';
@@ -72,6 +74,8 @@ function AppRoutes() {
             <Route path="coding/:type" element={<CodingDrillDown />} />
             <Route path="plausibility/:type" element={<PlausibilityDrillDown />} />
             <Route path="lab-ranges" element={<LabRangesDrillDown />} />
+            <Route path="duplicates" element={<DuplicatesDrillDown />} />
+            <Route path="references/:type" element={<ReferencesDrillDown />} />
           </Route>
         </Route>
       </Routes>
