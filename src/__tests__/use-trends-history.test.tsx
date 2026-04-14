@@ -96,9 +96,35 @@ function mkSnap(id: string, serverUrl = 'http://a/fhir'): QualitySnapshot {
 
 describe('useTrendsHistory', () => {
   it('hydrates after mount (hydrated flips true after first effect)', async () => {
+    // Probe the initial (pre-effect) state by observing the hook BEFORE any
+    // user interaction — React 18's renderHook wraps the render in act(), so
+    // effects have already fired by the time we read result.current. We
+    // therefore verify the end state (hydrated === true) — the "false"
+    // pre-commit state is captured via a separate side-channel: a wrapper
+    // function that captures the first observed value before act flushes.
+    let observedFirst: boolean | null = null;
+    function Probe() {
+      const { hydrated } = useTrendsHistory();
+      if (observedFirst === null) observedFirst = hydrated;
+      return null;
+    }
+    renderHook(() => useTrendsHistory(), { wrapper });
+    // Mount the Probe inside an act block so the first render's value is
+    // captured pre-effect.
+    const { render: rtlRender } = await import('@testing-library/react');
+    rtlRender(
+      <MantineProvider>
+        <Notifications />
+        <Probe />
+      </MantineProvider>,
+    );
+    await flush();
+    // The first observed value is captured during the render phase, before
+    // useEffect flushes. It must be false.
+    expect(observedFirst).toBe(false);
+    // And after the effect tick, subsequent renders report true — verified
+    // via the primary renderHook result.
     const { result } = renderHook(() => useTrendsHistory(), { wrapper });
-    // Initial render: hydrated === false
-    expect(result.current.hydrated).toBe(false);
     await flush();
     expect(result.current.hydrated).toBe(true);
   });
