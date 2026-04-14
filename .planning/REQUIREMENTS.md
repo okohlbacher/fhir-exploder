@@ -68,9 +68,9 @@ None currently deferred.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | DEBT-01 | Phase 14 | Pending |
-| DEBT-02 | Phase 14 | Pending |
-| DQ-01 | Phase 15 | Pending |
-| DQ-02 | Phase 15 | Pending |
+| DEBT-02 | Phase 14 → Phase 20 | Pending |
+| DQ-01 | Phase 15 → Phase 20 | Pending |
+| DQ-02 | Phase 15 → Phase 20 | Pending |
 | DQ-03 | Phase 16 | Pending |
 | DQ-04 | Phase 16 | Pending |
 | DQ-05 | Phase 16 | Pending |
@@ -79,8 +79,8 @@ None currently deferred.
 | DQ-08 | Phase 17 | Complete |
 | DQ-09 | Phase 17 | Pending |
 | DQ-10 | Phase 17 | Pending |
-| DQ-11 | Phase 18 | Pending |
-| DQ-12 | Phase 18 | Pending |
+| DQ-11 | Phase 18 → Phase 20 | Pending |
+| DQ-12 | Phase 18 → Phase 20 | Pending |
 | QUAL-05 | Phase 19 | Pending |
 | QUAL-06 | Phase 19 | Pending |
 
@@ -88,7 +88,8 @@ None currently deferred.
 - v1.2 requirements: 16 total
 - Mapped to phases: 16
 - Unmapped: 0
+- Gap closure reassignments (2026-04-14, from v1.2-MILESTONE-AUDIT): DEBT-02, DQ-01, DQ-02, DQ-11, DQ-12 → Phase 20
 
 ---
 *Requirements defined: 2026-04-13*
-*Last updated: 2026-04-13 -- roadmap phase assignments complete*
+*Last updated: 2026-04-14 -- gap closure reassignments to Phase 20 per v1.2-MILESTONE-AUDIT*

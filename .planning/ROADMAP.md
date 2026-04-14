@@ -4,8 +4,8 @@
 
 - ✅ **v1.0 -- MVP (shipped 2026-04-12)** -- [Archive](milestones/v1.0-ROADMAP.md) . [Requirements](milestones/v1.0-REQUIREMENTS.md)
 - ✅ **v1.1 -- UX Polish & Data Export (shipped 2026-04-12)** -- [Archive](milestones/v1.1-ROADMAP.md) . [Requirements](milestones/v1.1-REQUIREMENTS.md)
-- 🚧 **v1.2 -- Tech Debt & Quality Monitoring** -- Phases 14-19
-- 🔜 **v1.3 -- Cohort Definition & Storage** -- Phases 20-21 . [Requirements](milestones/v1.3-REQUIREMENTS.md)
+- 🚧 **v1.2 -- Tech Debt & Quality Monitoring** -- Phases 14-20
+- 🔜 **v1.3 -- Cohort Definition & Storage** -- Phases 21-22 . [Requirements](milestones/v1.3-REQUIREMENTS.md)
 
 ## Deferred Items
 
@@ -25,6 +25,7 @@ None currently deferred.
 - [x] **Phase 17: Duplicate Detection & Relational Integrity** - Detect duplicate patients and resources, find broken references and orphan resources (gap closure in progress) (completed 2026-04-14)
 - [x] **Phase 18: Quality Alerting & Thresholds** - Let users configure quality thresholds and visually flag breaches on the dashboard (completed 2026-04-14)
 - [x] **Phase 19: Quality Trends & PDF Reports** - Track quality metrics over time and generate downloadable PDF reports (completed 2026-04-14)
+- [ ] **Phase 20: v1.2 Milestone Gap Closure** - Close all gaps from v1.2-MILESTONE-AUDIT: fix DEBT-02 build regression, write retrospective verifications for Phase 15/18, sync REQUIREMENTS.md traceability
 
 ## Phase Details
 
@@ -123,6 +124,22 @@ Plans:
   - [x] 19-03-PLAN.md — PDF export + human UAT: PdfReportLayout off-screen portal, pdfExport.ts orchestration (document.fonts.ready + 2× rAF + html-to-image + jsPDF multi-page), /quality toolbar wiring (Capture + Export buttons), human UAT script covering 5 scenarios including breach-coloring provenance (D-11)
 **UI hint**: yes
 
+### Phase 20: v1.2 Milestone Gap Closure
+**Goal**: Close all gaps identified by `/gsd-audit-milestone v1.2` so the milestone can ship cleanly
+**Depends on**: Phase 19
+**Requirements**: DEBT-02, DQ-01, DQ-02, DQ-11, DQ-12
+**Gap Closure**: Closes gaps from `.planning/v1.2-MILESTONE-AUDIT.md` (2026-04-14) — 1 unsatisfied (DEBT-02 + Flow D), 4 partial (verification artifacts missing for Phase 15 and Phase 18), plus REQUIREMENTS.md traceability drift
+**Success Criteria** (what must be TRUE):
+  1. `npx tsc -b --noEmit` and `npm run build` both exit 0 (closes DEBT-02 + Flow D "Clean Build")
+  2. `.planning/phases/15-quality-check-engine-drill-down/15-VERIFICATION.md` exists with status `passed` (closes DQ-01, DQ-02 partial)
+  3. `.planning/phases/18-quality-alerting-thresholds/18-VERIFICATION.md` exists with status `passed` (closes DQ-11, DQ-12 partial)
+  4. REQUIREMENTS.md traceability table reflects reality: all 16 v1.2 requirements are `[x]` and marked `Complete`; coverage count updated
+**Plans**: TBD (target 3 plans)
+  - 20-01-PLAN — Fix 7 TS2352 sites in `profileConformanceChecker.ts` + `temporalPlausibilityWalker.ts` (single-cast → `as unknown as` double-cast); verify clean build
+  - 20-02-PLAN — Write retrospective 15-VERIFICATION.md and 18-VERIFICATION.md against existing code + UAT + VALIDATION artifacts
+  - 20-03-PLAN — Sync REQUIREMENTS.md traceability table and checkboxes
+**UI hint**: no
+
 ---
 
 ### 🔜 v1.3 -- Cohort Definition & Storage (Upcoming)
@@ -133,14 +150,14 @@ Plans:
 
 ## Phases (v1.3)
 
-- [ ] **Phase 20: Interactive Cohort Builder + Rename** -- Ship the interactive cohort builder UI with localStorage persistence; rename the existing "Cohort" control to "Resource types" so both controls coexist clearly
-- [ ] **Phase 21: Programmatic Cohort Definition (FHIRPath + FDPG)** -- Extend cohort system with FHIRPath query definitions and MII FDPG JSON import/export
+- [ ] **Phase 21: Interactive Cohort Builder + Rename** -- Ship the interactive cohort builder UI with localStorage persistence; rename the existing "Cohort" control to "Resource types" so both controls coexist clearly
+- [ ] **Phase 22: Programmatic Cohort Definition (FHIRPath + FDPG)** -- Extend cohort system with FHIRPath query definitions and MII FDPG JSON import/export
 
 ## Phase Details (v1.3)
 
-### Phase 20: Interactive Cohort Builder + Rename
+### Phase 21: Interactive Cohort Builder + Rename
 **Goal**: Users can define a patient/encounter cohort via interactive UI (date range, condition code, reference list), persist it across sessions, and scope quality analyses to that cohort -- with the "Cohort" / "Resource types" UX mismatch resolved
-**Depends on**: Phase 19 (v1.2 shipped) -- no hard code dependency, but milestone ordering
+**Depends on**: Phase 20 (v1.2 shipped) -- no hard code dependency, but milestone ordering
 **Requirements**: CHRT-01, CHRT-02, CHRT-03, CHRT-04
 **Success Criteria** (what must be TRUE):
   1. User can define a patient cohort through an interactive builder with at minimum: date range filter, condition code filter, and explicit reference-list inclusion
@@ -150,15 +167,15 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 21: Programmatic Cohort Definition (FHIRPath + FDPG)
+### Phase 22: Programmatic Cohort Definition (FHIRPath + FDPG)
 **Goal**: Users can define cohorts programmatically via FHIRPath query expressions, import/export cohort definitions in MII FDPG JSON format, and manage (edit, duplicate, delete) their saved cohorts
-**Depends on**: Phase 20
+**Depends on**: Phase 21
 **Requirements**: CHRT-05, CHRT-06, CHRT-07
 **Success Criteria** (what must be TRUE):
   1. User can define a cohort by writing a FHIRPath query expression (validated before save)
   2. User can import and export cohort definitions in MII FDPG JSON format for interop with other MII tooling
   3. User can edit, duplicate, and delete saved cohorts from a management view
-  4. FHIRPath cohorts and interactive-builder cohorts share the same storage + scoping contract established in Phase 20
+  4. FHIRPath cohorts and interactive-builder cohorts share the same storage + scoping contract established in Phase 21
 **Plans**: TBD
 **UI hint**: yes
 
@@ -172,5 +189,6 @@ Plans:
 | 17. Duplicate Detection & Relational Integrity | v1.2 | 3/3 | Complete    | 2026-04-14 |
 | 18. Quality Alerting & Thresholds | v1.2 | 4/4 | Complete   | 2026-04-14 |
 | 19. Quality Trends & PDF Reports | v1.2 | 3/3 | Complete    | 2026-04-14 |
-| 20. Interactive Cohort Builder + Rename | v1.3 | 0/0 | Not started | - |
-| 21. Programmatic Cohort Definition (FHIRPath + FDPG) | v1.3 | 0/0 | Not started | - |
+| 20. v1.2 Milestone Gap Closure | v1.2 | 0/0 | Not started | - |
+| 21. Interactive Cohort Builder + Rename | v1.3 | 0/0 | Not started | - |
+| 22. Programmatic Cohort Definition (FHIRPath + FDPG) | v1.3 | 0/0 | Not started | - |
