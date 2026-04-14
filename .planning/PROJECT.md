@@ -32,6 +32,8 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 **Phase 14 complete (2026-04-13)** — All 17 info-level code review findings resolved, zero TypeScript build errors. New `fhir-helpers.ts` utility with `toRecord()` and `getCodeDisplay()` helpers.
 
+**Phase 16 complete (2026-04-14)** — Conformance & plausibility checks: profile conformance checker (cardinality, types, value set bindings), temporal plausibility walker (future dates, period consistency, age/duration limits), lab reference range checker. All wired into 6-tab quality dashboard with drill-downs and cohort selector. 43 new tests, build clean.
+
 ## Current Milestone: v1.2 — Tech Debt & Quality Monitoring
 
 **Goal:** Resolve all accumulated tech debt, then build comprehensive data quality monitoring inspired by Kahn et al. framework (conformance, completeness, plausibility) as applied in Spengler (2021).
@@ -104,4 +106,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-13 — Phase 14 tech debt cleanup complete, v1.2 scope expanded with Kahn/Spengler DQ monitoring features*
+*Last updated: 2026-04-14 — Phase 16 conformance & plausibility checks complete*
