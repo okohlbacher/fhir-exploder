@@ -48,6 +48,7 @@ Let users configure per-metric quality thresholds (stored in browser `localStora
 - **D-12:** Applied consistently in both places the metric appears:
   - Dashboard `OverviewStrip` summary tile
   - Each panel's internal summary (per-type rows in CompletenessPanel/CodingCoveragePanel retain their current per-type semantics; only the panel-level aggregate turns red when the aggregate breaches)
+- **D-12a (amendment, 2026-04-14):** For Phase 18, the breach visual applies **only to the 9 OverviewStrip tiles**. Panel-aggregate breach coloring is deferred. CompletenessPanel and CodingCoveragePanel keep their current per-type rings unchanged; the other 5 panels have no panel-level aggregate ring to color. Rationale: the OverviewStrip tiles are the canonical breach surface (always visible without tab switching), and adding panel-level rings is a larger UI change better owned by a dedicated phase.
 - **D-13:** No toast notifications, tab-header badges, or breach-summary banners in this phase. Visual-only per DQ-12 wording.
 
 ### Dashboard Layout

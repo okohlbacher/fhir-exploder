@@ -751,22 +751,18 @@ No "state of the art" shift — Phase 18 uses the same Mantine 8 + React 18 + re
 
 All other factual claims in this research are `[VERIFIED: source file line-range]` against the installed codebase.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Duplicates rollup aggregation strategy** (D-03 literal interpretation)
-   - What we know: D-03 says "applied per resource type then averaged." Current `DuplicatesPanel` runs one type at a time; averaging across types would require either (a) the panel iterates, (b) the OverviewStrip orchestrates across types, or (c) we accept the single-type-at-a-time simplification.
-   - What's unclear: Which of (a)/(b)/(c) the user wants.
-   - Recommendation: Planner raises this in plan-check or discuss-phase if still live. Conservative default: option (c) — document the simplification in the plan, flag it visibly, ship. Phase 19+ can widen if needed.
+1. **Duplicates rollup aggregation strategy** (D-03 literal interpretation) — **RESOLVED 2026-04-14: widen to true per-type averaging.**
+   - User decision: Plan 02 must compute `overallDuplicates` as the average of per-resource-type "% clean" scores (patient cluster + each content-hash resource type that has been run), matching D-03's literal wording. Single-type conservative rollup rejected.
+   - Implementation direction: `QualityMetricsContext` tracks `overallDuplicates` as an aggregate; `DuplicatesPanel` pushes per-type "% clean" on each run; the aggregate is `(patientClean + mean(hashCleanByType)) / 2` when both patient and at least one hash type have run, or the single available component when only one has. Types not yet run are excluded from the average (they contribute `undefined`, not 0).
 
-2. **Tile click — new URL or reuse `useState`?**
-   - What we know: UI-SPEC prefers `?tab=X` query string; marks `useLocation().state` as fallback.
-   - What's unclear: Whether the existing tests would break if `<Tabs>` changes from uncontrolled to controlled. (A5 above.)
-   - Recommendation: Start with `?tab=X` (deep-linkable, robust). Update `quality-overview.test.tsx` test if needed — the test mocks panel components so behavior should be unchanged.
+2. **Tile click — new URL or reuse `useState`?** — **RESOLVED: `?tab=X` query string (controlled Tabs).**
+   - Per A5, flipping `<Tabs>` to controlled satisfies existing tests; Plan 04 implements the deep-linkable URL approach.
 
-3. **Breach in panel summary vs. only in OverviewStrip (D-12 edge)**
-   - What we know: D-12 says breach applies in "both places the metric appears" — OverviewStrip + each panel's internal summary.
-   - What's unclear: For panels where the "internal summary" is a set of Mantine Badges (e.g., Plausibility's check-type badges, Duplicates' patient/hash lines), is "breached" even meaningful? CompletenessPanel has per-type RingProgress with no panel-level aggregate ring.
-   - Recommendation: Interpret D-12 narrowly — the breach visual applies only where a panel-level aggregate value exists. For Plausibility/Duplicates/References, the panels currently show an Alert banner when issues are found and badges for counts; the "aggregate ring" in these panels does not exist. Phase 18 can either (a) add a panel-level aggregate ring that mirrors the tile (extra scope), or (b) interpret D-12 as "only tiles turn red; panels are unchanged." Recommend (b) for Phase 18 scope and document in plan.
+3. **Breach in panel summary vs. only in OverviewStrip (D-12 edge)** — **RESOLVED 2026-04-14: tiles only (codify as D-12a in CONTEXT.md).**
+   - User decision: Breach visual lives on OverviewStrip tiles only for Phase 18. Panel-aggregate breach coloring is deferred. CompletenessPanel/CodingCoveragePanel keep their current per-type rings unchanged.
+   - CONTEXT.md has been amended with D-12a to codify this narrow reading.
 
 ## Environment Availability
 
