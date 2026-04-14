@@ -6,7 +6,7 @@
  * selected type. Results are shown as check-type breakdown badges and
  * drilled down via ResourceIssueTable.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Badge,
@@ -25,6 +25,7 @@ import {
 } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
 import { useSettings } from '../../hooks/useSettings';
+import { useQualityMetrics } from '../../quality/QualityMetricsContext';
 import { usePlausibilityReport } from '../../hooks/usePlausibilityReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
 import type { NormalizedIssue } from '../../quality/types';
@@ -103,6 +104,20 @@ export function PlausibilityPanel({ types, client, sampleSize }: PlausibilityPan
     const ids = new Set(run.issues.map((i) => i.resourceId));
     return ids.size;
   }, [run.issues]);
+
+  // Phase 18 / Plan 18-02: push overallPlausibility rollup to QualityMetricsContext
+  // on terminal status. Gate prevents mid-run flicker (pitfall 2). Numerator is
+  // unique issue resourceIds; denominator is run.progress.total (sample length).
+  const { setOverallPlausibility } = useQualityMetrics();
+  useEffect(() => {
+    if (run.status !== 'complete' && run.status !== 'cancelled') return;
+    if (run.progress.total === 0) {
+      setOverallPlausibility(undefined);
+      return;
+    }
+    const affected = new Set(run.issues.map((i) => i.resourceId)).size;
+    setOverallPlausibility(Math.round((1 - affected / run.progress.total) * 100));
+  }, [run.status, run.progress.total, run.issues, setOverallPlausibility]);
 
   const typeOptions = useMemo(
     () => types.map((t) => ({ value: t, label: t })),

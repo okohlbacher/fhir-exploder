@@ -46,11 +46,12 @@ import {
   IconInfoCircle,
   IconX,
 } from '@tabler/icons-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import type { MedplumClient } from '@medplum/core';
 import type { QualityOutletContext } from './QualityLayout';
 import { useSettings } from '../../hooks/useSettings';
+import { useQualityMetrics } from '../../quality/QualityMetricsContext';
 import { BUNDLED_PROFILE_TYPES } from '../../quality/profiles';
 import { parseResourceTypes } from '../../fhir/capability';
 import { resolveBackends } from '../../quality/validationBackends';
@@ -193,6 +194,21 @@ export function ValidationPanel(_props: ValidationPanelProps) {
     }
     return merged;
   }, [conformanceIssues, legacyNormalizedIssues]);
+
+  // Phase 18 / Plan 18-02: push overallValidation rollup to QualityMetricsContext
+  // on terminal status (complete|cancelled). Gate prevents mid-run flicker
+  // (pitfall 2 in 18-RESEARCH.md). Numerator uses allNormalizedIssues (conformance
+  // + legacy dedup) per pitfall 6.
+  const { setOverallValidation } = useQualityMetrics();
+  useEffect(() => {
+    if (run.status !== 'complete' && run.status !== 'cancelled') return;
+    if (run.progress.total === 0) {
+      setOverallValidation(undefined);
+      return;
+    }
+    const affected = new Set(allNormalizedIssues.map((i) => i.resourceId)).size;
+    setOverallValidation(Math.round((1 - affected / run.progress.total) * 100));
+  }, [run.status, run.progress.total, allNormalizedIssues, setOverallValidation]);
 
   const handleExport = () => {
     const payload = {
