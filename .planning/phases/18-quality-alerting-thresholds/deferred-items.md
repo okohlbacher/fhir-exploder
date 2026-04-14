@@ -24,3 +24,14 @@ Out-of-scope discoveries logged while executing plans. Not fixed — these preda
 **Impact:** Pre-existing flake in `ResourceCountsPanel` row rendering / mock data. Does NOT block Plan 18 work. SummaryCard extension does not consume or affect this panel.
 
 **Recommendation:** Triage under DEBT-04 (test suite hygiene) alongside any other known-flaky tests. Out of scope for Phase 18.
+
+## Connection state lost on page reload / direct-URL navigation (discovered during 18 UAT Test 10)
+
+**Source:** Manual UAT 2026-04-14, Test 10 ("Direct URL with ?tab= selects the right tab"). User reported: "That lands on 'server not connected'."
+
+**Root cause:** `src/contexts/ConnectionContext.tsx` initializes to `{ status: 'idle' }` on every mount. No `useEffect` auto-connects from persisted settings; the MedplumClient + CapabilityStatement live in in-memory React state only. All three route subtrees (`/quality/*`, `/explorer/*`, `/patients/*`) gate rendering on `state.status === 'connected'` (see `QualityLayout.tsx`, `ExplorerLayout.tsx`, `PatientsLayout.tsx` — all render a "Not connected" Alert when not connected). Result: any cold-start deep URL into these routes (bookmarks, pasted links, refresh) shows the alert until the user manually navigates to `/` and clicks Connect.
+
+**Impact:** Cross-cutting limitation affecting ALL gated routes, not specific to Phase 18. The Phase 18 tab-routing code (`useSearchParams()` → `activeTab` in `QualityOverviewPage.tsx`) is correct and was proven end-to-end by Test 9 (in-session click navigation). Test 10 could not exercise it because the upstream connection gate blocked access.
+
+**Recommendation:** Open a dedicated phase for connection persistence/auto-reconnect (localStorage hydration of minimal connection metadata, silent re-issue of the `metadata` probe on app boot, stale-TTL handling, error recovery when the server is unreachable on restart). Out of scope for Phase 18 (alerting/thresholds feature). Phase 18 UAT Test 10 waived as "blocked by pre-existing DEBT, not a phase regression".
+

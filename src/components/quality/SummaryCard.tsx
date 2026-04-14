@@ -11,6 +11,15 @@
  * so the whole tile is clickable — per UI-SPEC I-05 for the 7 metric tiles
  * in OverviewStrip. Informational tiles (Total/Types) omit onClick and
  * remain plain Cards.
+ *
+ * Layout (Phase 18 gap-closure — Option C):
+ *   Vertical stack. Top = icon + label. Middle = either the RingProgress
+ *   (with the numeric value rendered INSIDE the ring via the `label` slot)
+ *   OR a large-text value when no ring is requested. Bottom = subtitle
+ *   and/or breach-threshold annotation. Vertical stacking keeps the ring
+ *   visible even at the 9-column `xl` breakpoint where tiles are ~130px
+ *   wide — the old horizontal `Group wrap="nowrap"` layout clipped the
+ *   80px ring via the Card's default `overflow: hidden`.
  */
 import { Card, Group, RingProgress, Stack, Text } from '@mantine/core';
 import type { ReactNode } from 'react';
@@ -19,7 +28,7 @@ export interface SummaryCardProps {
   label: string;
   value: string | number;
   icon: ReactNode;
-  /** 0-100 — if provided, draws an 80px RingProgress. */
+  /** 0-100 — if provided, draws an 80px RingProgress with the value as its centered label. */
   ringValue?: number;
   subtitle?: string;
   /** When true, ring + value turn red.6 (Phase 18 / DQ-12). */
@@ -56,38 +65,48 @@ export function SummaryCard({
       } as const)
     : {};
 
+  const hasRing = ringValue !== undefined;
+
   return (
     <Card padding="md" withBorder radius="sm" {...cardProps}>
-      <Group justify="space-between" align="flex-start" wrap="nowrap">
-        <Stack gap={4}>
-          <Group gap="xs">
-            {icon}
-            <Text size="sm" fw={600}>
-              {label}
-            </Text>
+      <Stack gap="xs" align="stretch">
+        <Group gap="xs" wrap="nowrap">
+          {icon}
+          <Text size="sm" fw={600}>
+            {label}
+          </Text>
+        </Group>
+
+        {hasRing ? (
+          <Group justify="center">
+            <RingProgress
+              size={80}
+              thickness={6}
+              sections={[{ value: ringValue, color: ringColor }]}
+              label={
+                <Text ta="center" size="sm" fw={700} c={valueColor}>
+                  {value}
+                </Text>
+              }
+            />
           </Group>
+        ) : (
           <Text size="xl" fw={700} c={valueColor}>
             {value}
           </Text>
-          {subtitle && (
-            <Text size="xs" c="dimmed">
-              {subtitle}
-            </Text>
-          )}
-          {breached && threshold !== undefined && (
-            <Text size="xs" c="dimmed">
-              threshold: {threshold}%
-            </Text>
-          )}
-        </Stack>
-        {ringValue !== undefined && (
-          <RingProgress
-            size={80}
-            thickness={6}
-            sections={[{ value: ringValue, color: ringColor }]}
-          />
         )}
-      </Group>
+
+        {subtitle && (
+          <Text size="xs" c="dimmed" ta={hasRing ? 'center' : 'left'}>
+            {subtitle}
+          </Text>
+        )}
+        {breached && threshold !== undefined && (
+          <Text size="xs" c="dimmed" ta={hasRing ? 'center' : 'left'}>
+            threshold: {threshold}%
+          </Text>
+        )}
+      </Stack>
     </Card>
   );
 }
