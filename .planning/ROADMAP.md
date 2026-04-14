@@ -24,7 +24,7 @@ None currently deferred.
 - [x] **Phase 16: Conformance & Plausibility Checks** - Add value set conformance, cardinality validation, temporal plausibility, and lab range checks (completed 2026-04-14)
 - [x] **Phase 17: Duplicate Detection & Relational Integrity** - Detect duplicate patients and resources, find broken references and orphan resources (gap closure in progress) (completed 2026-04-14)
 - [x] **Phase 18: Quality Alerting & Thresholds** - Let users configure quality thresholds and visually flag breaches on the dashboard (completed 2026-04-14)
-- [ ] **Phase 19: Quality Trends & PDF Reports** - Track quality metrics over time and generate downloadable PDF reports
+- [x] **Phase 19: Quality Trends & PDF Reports** - Track quality metrics over time and generate downloadable PDF reports (completed 2026-04-14)
 
 ## Phase Details
 
@@ -118,9 +118,9 @@ Plans:
   3. Trend data persists in browser storage so it survives page reloads
   4. User can generate and download a PDF quality report reflecting the current dashboard state
 **Plans**: 3 plans
-  - [ ] 19-01-PLAN.md — Trends foundation: install @mantine/charts 8.3.18 + jspdf 4.2.1, create trendsHistory.ts pure-data module (snapshot capture, localStorage persistence, cross-server filter, breach computation, PDF filename utility) with full vitest coverage
-  - [ ] 19-02-PLAN.md — Trends UI: useTrendsHistory hook with hydration gate + QuotaExceeded handling, TrendMiniChart + TrendOverlayChart Recharts components with per-snapshot breach coloring, TrendsPanel container (9th Quality tab) with overlay mode + cross-server filter + Clear history
-  - [ ] 19-03-PLAN.md — PDF export + human UAT: PdfReportLayout off-screen portal, pdfExport.ts orchestration (document.fonts.ready + 2× rAF + html-to-image + jsPDF multi-page), /quality toolbar wiring (Capture + Export buttons), human UAT script covering 5 scenarios including breach-coloring provenance (D-11)
+  - [x] 19-01-PLAN.md — Trends foundation: install @mantine/charts 8.3.18 + jspdf 4.2.1, create trendsHistory.ts pure-data module (snapshot capture, localStorage persistence, cross-server filter, breach computation, PDF filename utility) with full vitest coverage
+  - [x] 19-02-PLAN.md — Trends UI: useTrendsHistory hook with hydration gate + QuotaExceeded handling, TrendMiniChart + TrendOverlayChart Recharts components with per-snapshot breach coloring, TrendsPanel container (9th Quality tab) with overlay mode + cross-server filter + Clear history
+  - [x] 19-03-PLAN.md — PDF export + human UAT: PdfReportLayout off-screen portal, pdfExport.ts orchestration (document.fonts.ready + 2× rAF + html-to-image + jsPDF multi-page), /quality toolbar wiring (Capture + Export buttons), human UAT script covering 5 scenarios including breach-coloring provenance (D-11)
 **UI hint**: yes
 
 ---
@@ -171,6 +171,6 @@ Plans:
 | 16. Conformance & Plausibility Checks | v1.2 | 4/4 | Complete    | 2026-04-14 |
 | 17. Duplicate Detection & Relational Integrity | v1.2 | 3/3 | Complete    | 2026-04-14 |
 | 18. Quality Alerting & Thresholds | v1.2 | 4/4 | Complete   | 2026-04-14 |
-| 19. Quality Trends & PDF Reports | v1.2 | 0/0 | Not started | - |
+| 19. Quality Trends & PDF Reports | v1.2 | 3/3 | Complete    | 2026-04-14 |
 | 20. Interactive Cohort Builder + Rename | v1.3 | 0/0 | Not started | - |
 | 21. Programmatic Cohort Definition (FHIRPath + FDPG) | v1.3 | 0/0 | Not started | - |
