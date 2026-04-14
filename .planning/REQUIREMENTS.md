@@ -29,8 +29,8 @@
 
 ### Duplicate Detection
 
-- [ ] **DQ-07**: Dashboard detects potential duplicate patients by matching on name + date of birth
-- [ ] **DQ-08**: Dashboard detects potential duplicate resources (same content hash, different IDs)
+- [x] **DQ-07**: Dashboard detects potential duplicate patients by matching on name + date of birth
+- [x] **DQ-08**: Dashboard detects potential duplicate resources (same content hash, different IDs)
 
 ### Relational Integrity
 
@@ -75,8 +75,8 @@ None currently deferred.
 | DQ-04 | Phase 16 | Pending |
 | DQ-05 | Phase 16 | Pending |
 | DQ-06 | Phase 16 | Pending |
-| DQ-07 | Phase 17 | Pending |
-| DQ-08 | Phase 17 | Pending |
+| DQ-07 | Phase 17 | Complete |
+| DQ-08 | Phase 17 | Complete |
 | DQ-09 | Phase 17 | Pending |
 | DQ-10 | Phase 17 | Pending |
 | DQ-11 | Phase 18 | Pending |

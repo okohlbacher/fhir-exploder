@@ -21,7 +21,7 @@ None currently deferred.
 - [x] **Phase 14: Tech Debt Cleanup** - Resolve code review findings and TypeScript build errors for a clean, warning-free codebase (completed 2026-04-13)
 - [x] **Phase 15: Quality Check Engine & Drill-Down** - Build the foundational drill-down UI so users can click any quality metric and see the specific resources causing issues (completed 2026-04-13)
 - [x] **Phase 16: Conformance & Plausibility Checks** - Add value set conformance, cardinality validation, temporal plausibility, and lab range checks (completed 2026-04-14)
-- [ ] **Phase 17: Duplicate Detection & Relational Integrity** - Detect duplicate patients and resources, find broken references and orphan resources (gap closure in progress)
+- [x] **Phase 17: Duplicate Detection & Relational Integrity** - Detect duplicate patients and resources, find broken references and orphan resources (gap closure in progress) (completed 2026-04-14)
 - [ ] **Phase 18: Quality Alerting & Thresholds** - Let users configure quality thresholds and visually flag breaches on the dashboard
 - [ ] **Phase 19: Quality Trends & PDF Reports** - Track quality metrics over time and generate downloadable PDF reports
 
@@ -83,11 +83,11 @@ Plans:
   3. Dashboard reports broken references (dangling pointers to non-existent resources)
   4. Dashboard reports orphan resources (resources that should reference a parent but have no such reference)
   5. All duplicate and integrity findings are accessible via the Phase 15 drill-down (clickable to resource detail)
-**Plans:** 2/3 plans complete (gap closure in progress)
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 17-01-PLAN.md -- Engine layer: pure functions for duplicate detection + reference integrity, orchestrating hooks, unit tests
 - [x] 17-02-PLAN.md -- UI layer: DuplicatesPanel, ReferencesPanel, drill-down pages, dashboard wiring (8 tabs)
-- [ ] 17-03-PLAN.md -- Gap closure: fix DuplicatesPanel c.members field mismatch (CR-01 / SC-1 / SC-2) + regression test
+- [x] 17-03-PLAN.md -- Gap closure: fix DuplicatesPanel c.members field mismatch (CR-01 / SC-1 / SC-2) + regression test
 **UI hint**: yes
 
 ### Phase 18: Quality Alerting & Thresholds
@@ -121,6 +121,6 @@ Plans:
 | 14. Tech Debt Cleanup | v1.2 | 2/2 | Complete    | 2026-04-13 |
 | 15. Quality Check Engine & Drill-Down | v1.2 | 3/3 | Complete   | 2026-04-13 |
 | 16. Conformance & Plausibility Checks | v1.2 | 4/4 | Complete    | 2026-04-14 |
-| 17. Duplicate Detection & Relational Integrity | v1.2 | 2/3 | In progress | -          |
+| 17. Duplicate Detection & Relational Integrity | v1.2 | 3/3 | Complete   | 2026-04-14 |
 | 18. Quality Alerting & Thresholds | v1.2 | 0/0 | Not started | - |
 | 19. Quality Trends & PDF Reports | v1.2 | 0/0 | Not started | - |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: -- Tech Debt & Quality Monitoring
 status: executing
-stopped_at: Phase 17 context gathered
-last_updated: "2026-04-14T07:27:27.340Z"
+stopped_at: Completed 17-03-PLAN.md
+last_updated: "2026-04-14T09:05:32.680Z"
 last_activity: 2026-04-14
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  completed_phases: 4
+  total_plans: 12
+  completed_plans: 12
   percent: 100
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Milestone v1.2 Phase 14 -- Tech Debt Cleanup
+**Current focus:** Phase 17 — duplicate-detection-relational-integrity
 
 ## Current Position
 
-Phase: 17 of 19 (duplicate detection & relational integrity)
-Plan: Not started
+Phase: 17 (duplicate-detection-relational-integrity) — EXECUTING
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-14
 
@@ -49,6 +49,7 @@ Progress: [░░░░░░░░░░] 0%
 - Phases 16 and 17 are independent of each other (both depend on 15)
 - Phase 18 (alerting) depends on both 16 and 17 being complete
 - Phase 14 before all DQ work: clean codebase before adding new features
+- [Phase 17]: 17-03 gap closure: two one-word edits to DuplicatesPanel summary memos (members -> patients/resources) plus 3-test regression suite that fails on broken code; closes SC-1 / SC-2 / DQ-07 / DQ-08
 
 ### Pending Todos
 
@@ -72,6 +73,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-14T07:27:27.337Z
-Stopped at: Phase 17 context gathered
-Resume file: .planning/phases/17-duplicate-detection-relational-integrity/17-CONTEXT.md
+Last session: 2026-04-14T09:05:32.678Z
+Stopped at: Completed 17-03-PLAN.md
+Resume file: None
