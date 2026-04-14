@@ -121,6 +121,6 @@ Plans:
 | 14. Tech Debt Cleanup | v1.2 | 2/2 | Complete    | 2026-04-13 |
 | 15. Quality Check Engine & Drill-Down | v1.2 | 3/3 | Complete   | 2026-04-13 |
 | 16. Conformance & Plausibility Checks | v1.2 | 4/4 | Complete    | 2026-04-14 |
-| 17. Duplicate Detection & Relational Integrity | v1.2 | 3/3 | Complete   | 2026-04-14 |
+| 17. Duplicate Detection & Relational Integrity | v1.2 | 3/3 | Complete    | 2026-04-14 |
 | 18. Quality Alerting & Thresholds | v1.2 | 0/0 | Not started | - |
 | 19. Quality Trends & PDF Reports | v1.2 | 0/0 | Not started | - |
