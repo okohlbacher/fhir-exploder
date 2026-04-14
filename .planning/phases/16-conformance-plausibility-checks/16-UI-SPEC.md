@@ -190,7 +190,7 @@ Badge variant: `light` with `size="sm"` -- matching existing ResourceIssueTable 
 **Behavior:**
 1. Resource type `Select` (searchable, `minWidth: 240`) -- same pattern as ValidationPanel.
 2. "Run checks" `Button` (variant="filled") triggers temporal plausibility analysis on sampled resources of the selected type.
-3. While running: `Progress` bar with "Checking {type} ({current}/{total})..." text, plus a Cancel button.
+3. While running: `Progress` bar with "Checking {type} ({current}/{total})..." text, plus a "Stop plausibility check" button.
 4. On completion: summary line ("N issues across M resources") followed by check-type breakdown badges showing counts per category (future dates, inverted periods, age, duration).
 5. Below summary: `ResourceIssueTable` with all normalized temporal issues.
 6. Each issue row in the table links to `/explorer/{type}/{id}` via the standard ResourceIssueTable pattern.
@@ -208,7 +208,7 @@ Badge variant: `light` with `size="sm"` -- matching existing ResourceIssueTable 
 
 **Behavior:**
 1. "Run lab range checks" `Button` (variant="filled") triggers lab range analysis on sampled Observation resources.
-2. While running: `Progress` bar with "Checking Observations ({current}/{total})..." text.
+2. While running: `Progress` bar with "Checking Observations ({current}/{total})..." text, plus a "Stop lab range check" button.
 3. On completion: summary showing total Observations checked, in-range count, out-of-range count, no-range-available count.
 4. Summary renders as 3 inline `Badge` components: green for in-range, yellow for out-of-range, gray for no-range.
 5. Below summary: per-LOINC-code breakdown `Table` (sortable) with columns: LOINC Code, Display Name, Checked, Out of Range, % Out of Range.
@@ -279,7 +279,7 @@ Badge variant: `light` with `size="sm"` -- matching existing ResourceIssueTable 
 +------------------------------------------------------------------+
 | [Resource type v]  [Check type filter v]  [Run checks]           |  <- Group gap="md"
 +------------------------------------------------------------------+
-| [Progress bar: Checking Patient (15/50)...]  [Cancel]            |  <- only during run
+| [Progress bar: Checking Patient (15/50)...]  [Stop plausibility check]            |  <- only during run
 +------------------------------------------------------------------+
 | 12 issues across 8 resources                                      |  <- Text size="sm" c="dimmed"
 | [future dates: 5] [inverted periods: 3] [age: 2] [duration: 2]  |  <- Badge group
@@ -376,7 +376,8 @@ Positioned above all other Validation panel content, below the existing Blaze $v
 | Conformance badge label | "Conformance" |
 | Terminology available badge | "Terminology" |
 | Terminology unavailable badge | "Terminology (unavailable)" |
-| Cancel button | "Cancel" |
+| Cancel button (plausibility) | "Stop plausibility check" |
+| Cancel button (lab ranges) | "Stop lab range check" |
 | Validation panel no-issues (updated) | "No conformance issues found in the sampled {N} resources." |
 
 No destructive actions in this phase.
@@ -433,7 +434,7 @@ No destructive actions in this phase.
 
 **When:** Check is in progress.
 
-**Render:** Mantine `Progress` bar (animated) with descriptive text above it, plus a Cancel `Button` (`variant="subtle"` `color="red"`). Same pattern as existing ValidationPanel.
+**Render:** Mantine `Progress` bar (animated) with descriptive text above it, plus a cancel `Button` (`variant="subtle"` `color="red"`): labeled "Stop plausibility check" in PlausibilityPanel, "Stop lab range check" in LabRangesPanel. Same pattern as existing ValidationPanel.
 
 ---
 
