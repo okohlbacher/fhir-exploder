@@ -170,3 +170,198 @@ describe('DuplicatesPanel (gap-closure regression for CR-01 / SC-1 / SC-2)', () 
     expect(screen.getByText(/No duplicates detected/)).toBeDefined();
   });
 });
+
+// =========================================================================
+// Phase 18, Plan 18-02 — DuplicatesPanel per-type averaging contribution.
+// =========================================================================
+//
+// Validates the RESOLVED 2026-04-14 RESEARCH Q1 behavior:
+//   - DuplicatesPanel pushes setDuplicatesContribution({ patient, hashType })
+//     on every terminal-status run with sampleSize > 0.
+//   - QualityMetricsContext accumulates contributions in duplicatesBreakdown
+//     and derives overallDuplicates as round(mean(definedComponents)).
+//   - Switching the type and re-running ADDS a new entry to hashByType
+//     (organic widening; prior types are NOT overwritten).
+//   - sampleSize === 0 → no contribution → overallDuplicates stays undefined.
+//   - mid-run → no contribution.
+import { waitFor as waitForRollup } from '@testing-library/react';
+import { QualityMetricsProvider, useQualityMetrics } from '../quality/QualityMetricsContext';
+
+function ProviderWrapper({ children }: { children: ReactNode }) {
+  return (
+    <MantineProvider>
+      <MemoryRouter>
+        <QualityMetricsProvider>{children}</QualityMetricsProvider>
+      </MemoryRouter>
+    </MantineProvider>
+  );
+}
+
+function RollupConsumer() {
+  const { overallDuplicates, duplicatesBreakdown } = useQualityMetrics();
+  return (
+    <>
+      <div data-testid="overallDuplicates">
+        {overallDuplicates === undefined ? '—' : overallDuplicates}
+      </div>
+      <div data-testid="patientPart">
+        {duplicatesBreakdown.patient === undefined ? '—' : duplicatesBreakdown.patient}
+      </div>
+      <div data-testid="hashTypes">
+        {Object.keys(duplicatesBreakdown.hashByType).join(',')}
+      </div>
+    </>
+  );
+}
+
+describe('DuplicatesPanel per-type averaging contribution (DQ-12 / Plan 18-02 RESOLVED Q1)', () => {
+  it('with patient-only run (no content-hash duplicates), overallDuplicates = mean(patient, hashType=100)', async () => {
+    // 5 patients in a single duplicate cluster, no content-hash clusters.
+    // Expected per-type contributions:
+    //   patient = round((1 - 5/100) * 100) = 95
+    //   hashType[Patient] = round((1 - 0/100) * 100) = 100
+    //   overallDuplicates = round((95 + 100) / 2) = 98 (97.5 → V8 rounds to 98)
+    currentRun = {
+      ...emptyRun,
+      duplicateClusters: [
+        {
+          key: 'doe|jane|1990-01-01',
+          patients: [
+            { id: 'Patient/p1', resourceType: 'Patient' },
+            { id: 'Patient/p2', resourceType: 'Patient' },
+            { id: 'Patient/p3', resourceType: 'Patient' },
+            { id: 'Patient/p4', resourceType: 'Patient' },
+            { id: 'Patient/p5', resourceType: 'Patient' },
+          ],
+        },
+      ],
+      contentHashClusters: [],
+    };
+    render(
+      <ProviderWrapper>
+        <DuplicatesPanel types={['Patient']} client={fakeClient} sampleSize={100} />
+        <RollupConsumer />
+      </ProviderWrapper>,
+    );
+    await waitForRollup(() => {
+      expect(screen.getByTestId('patientPart').textContent).toBe('95');
+      expect(screen.getByTestId('hashTypes').textContent).toBe('Patient');
+      expect(screen.getByTestId('overallDuplicates').textContent).toBe('98');
+    });
+  });
+
+  it('after running a different resourceType, overallDuplicates is the mean of all defined components', async () => {
+    // The panel's internal `resourceType` useState defaults to types[0] and is
+    // not re-initialized on prop change. To exercise the per-type widening
+    // (Observation contribution + Encounter contribution accumulated in the
+    // SAME provider), we render TWO sibling panels inside one provider with
+    // different types[0] and let each push its own contribution.
+    //
+    // First panel (Observation): 5 patient duplicates + 2 obs in content-hash cluster.
+    //   patient = 95, hashType[Observation] = round((1 - 2/100) * 100) = 98
+    // Second panel (Encounter): SAME patient duplicates (mock provides the same
+    //   `currentRun` to both panels, since the hook is mocked at module level —
+    //   both will see Encounter cluster though). To get DIFFERENT contributions,
+    //   we use the dynamic `currentRun` factory pattern: keep the patient set
+    //   constant but include BOTH Observation AND Encounter content-hash clusters
+    //   in the mock; each panel filters by its own selected resourceType.
+    //
+    //   patient = 95 (overwritten with same value),
+    //   hashByType = { Observation: 98 (from panel 1), Encounter: round((1 - 1/100) * 100) = 99 (from panel 2) }
+    //   overallDuplicates = round((95 + 98 + 99) / 3) = round(97.333) = 97
+    currentRun = {
+      ...emptyRun,
+      duplicateClusters: [
+        {
+          key: 'patientPass',
+          patients: [
+            { id: 'Patient/q1', resourceType: 'Patient' },
+            { id: 'Patient/q2', resourceType: 'Patient' },
+            { id: 'Patient/q3', resourceType: 'Patient' },
+            { id: 'Patient/q4', resourceType: 'Patient' },
+            { id: 'Patient/q5', resourceType: 'Patient' },
+          ],
+        },
+      ],
+      contentHashClusters: [
+        {
+          hash: 'a'.repeat(64),
+          resourceType: 'Observation',
+          resources: [
+            { id: 'Observation/o1', resourceType: 'Observation' },
+            { id: 'Observation/o2', resourceType: 'Observation' },
+          ],
+        },
+        {
+          hash: 'b'.repeat(64),
+          resourceType: 'Encounter',
+          resources: [{ id: 'Encounter/e1', resourceType: 'Encounter' }],
+        },
+      ],
+    };
+    render(
+      <ProviderWrapper>
+        <DuplicatesPanel types={['Observation']} client={fakeClient} sampleSize={100} />
+        <DuplicatesPanel types={['Encounter']} client={fakeClient} sampleSize={100} />
+        <RollupConsumer />
+      </ProviderWrapper>,
+    );
+    await waitForRollup(() => {
+      // Both Observation AND Encounter should be in hashByType (organic widening).
+      const hashTypes = screen.getByTestId('hashTypes').textContent ?? '';
+      expect(hashTypes.split(',').sort().join(',')).toBe('Encounter,Observation');
+      expect(screen.getByTestId('patientPart').textContent).toBe('95');
+      // (95 + 98 + 99) / 3 = 97.333 → 97
+      expect(screen.getByTestId('overallDuplicates').textContent).toBe('97');
+    });
+  });
+
+  it('with sampleSize === 0, no contribution is pushed (overallDuplicates stays undefined)', async () => {
+    currentRun = {
+      ...emptyRun,
+      duplicateClusters: [
+        {
+          key: 'foo',
+          patients: [{ id: 'Patient/x', resourceType: 'Patient' }],
+        },
+      ],
+    };
+    render(
+      <ProviderWrapper>
+        <DuplicatesPanel types={['Patient']} client={fakeClient} sampleSize={0} />
+        <RollupConsumer />
+      </ProviderWrapper>,
+    );
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByTestId('overallDuplicates').textContent).toBe('—');
+    expect(screen.getByTestId('patientPart').textContent).toBe('—');
+    expect(screen.getByTestId('hashTypes').textContent).toBe('');
+  });
+
+  it('mid-run (status === "running") does NOT push a contribution', async () => {
+    currentRun = {
+      ...emptyRun,
+      status: 'running' as unknown as typeof emptyRun.status,
+      progress: { current: 30, total: 100 },
+      duplicateClusters: [
+        {
+          key: 'inflight',
+          patients: [
+            { id: 'Patient/r1', resourceType: 'Patient' },
+            { id: 'Patient/r2', resourceType: 'Patient' },
+          ],
+        },
+      ],
+    };
+    render(
+      <ProviderWrapper>
+        <DuplicatesPanel types={['Patient']} client={fakeClient} sampleSize={100} />
+        <RollupConsumer />
+      </ProviderWrapper>,
+    );
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByTestId('overallDuplicates').textContent).toBe('—');
+    expect(screen.getByTestId('patientPart').textContent).toBe('—');
+    expect(screen.getByTestId('hashTypes').textContent).toBe('');
+  });
+});
