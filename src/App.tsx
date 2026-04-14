@@ -14,6 +14,8 @@ import { QualityLayout } from './components/quality/QualityLayout';
 import { QualityOverviewPage } from './components/quality/QualityOverviewPage';
 import { CompletenessDrillDown } from './components/quality/CompletenessDrillDown';
 import { CodingDrillDown } from './components/quality/CodingDrillDown';
+import { PlausibilityDrillDown } from './components/quality/PlausibilityDrillDown';
+import { LabRangesDrillDown } from './components/quality/LabRangesDrillDown';
 import { ConnectionProvider } from './contexts/ConnectionContext';
 import { TerminologyProvider } from './contexts/TerminologyContext';
 import { SettingsProvider } from './contexts/SettingsContext';
@@ -68,6 +70,8 @@ function AppRoutes() {
             <Route index element={<QualityOverviewPage />} />
             <Route path="completeness/:type" element={<CompletenessDrillDown />} />
             <Route path="coding/:type" element={<CodingDrillDown />} />
+            <Route path="plausibility/:type" element={<PlausibilityDrillDown />} />
+            <Route path="lab-ranges" element={<LabRangesDrillDown />} />
           </Route>
         </Route>
       </Routes>

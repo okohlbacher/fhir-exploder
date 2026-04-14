@@ -11,6 +11,7 @@
  * CodingCoveragePanel, ValidationPanel) without editing this file again.
  */
 import { Button, Group, Stack, Tabs, Text, Title } from '@mantine/core';
+import { useLocalStorage } from '@mantine/hooks';
 import { IconRefresh } from '@tabler/icons-react';
 import { useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
@@ -24,6 +25,9 @@ import { ResourceCountsPanel } from './ResourceCountsPanel';
 import { CompletenessPanel } from './CompletenessPanel';
 import { CodingCoveragePanel } from './CodingCoveragePanel';
 import { ValidationPanel } from './ValidationPanel';
+import { PlausibilityPanel } from './PlausibilityPanel';
+import { LabRangesPanel } from './LabRangesPanel';
+import { CohortSelector } from './CohortSelector';
 
 function formatRelative(d: Date | null): string {
   if (!d) return 'Never';
@@ -43,6 +47,12 @@ export function QualityOverviewPage() {
     () => parseResourceTypes(capability).map((t) => t.type),
     [capability],
   );
+
+  const [cohortTypes, setCohortTypes] = useLocalStorage<string[]>({
+    key: 'quality.cohort.v1',
+    defaultValue: [],
+  });
+  const effectiveTypes = cohortTypes.length > 0 ? cohortTypes : types;
 
   const { counts, summary, lastComputed, recompute } = useQualityMetrics(client, types);
 
@@ -64,7 +74,10 @@ export function QualityOverviewPage() {
       <Title order={2}>Data Quality</Title>
 
       <Group justify="space-between" align="flex-end">
-        <SampleSizeControl value={sampleSize} onChange={setSampleSize} />
+        <Group gap="md" align="flex-end">
+          <CohortSelector types={types} value={cohortTypes} onChange={setCohortTypes} />
+          <SampleSizeControl value={sampleSize} onChange={setSampleSize} />
+        </Group>
         <Group gap="sm">
           <Text size="sm" c="dimmed">
             Last computed {formatRelative(lastComputed)}
@@ -87,19 +100,27 @@ export function QualityOverviewPage() {
           <Tabs.Tab value="completeness">Completeness</Tabs.Tab>
           <Tabs.Tab value="coverage">Coding Coverage</Tabs.Tab>
           <Tabs.Tab value="validation">Validation</Tabs.Tab>
+          <Tabs.Tab value="plausibility">Plausibility</Tabs.Tab>
+          <Tabs.Tab value="lab-ranges">Lab Ranges</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="counts" pt="md" keepMounted>
           <ResourceCountsPanel counts={counts} />
         </Tabs.Panel>
         <Tabs.Panel value="completeness" pt="md" keepMounted>
-          <CompletenessPanel types={types} client={client} sampleSize={sampleSize} />
+          <CompletenessPanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
         </Tabs.Panel>
         <Tabs.Panel value="coverage" pt="md" keepMounted>
-          <CodingCoveragePanel types={types} client={client} sampleSize={sampleSize} />
+          <CodingCoveragePanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
         </Tabs.Panel>
         <Tabs.Panel value="validation" pt="md" keepMounted>
           <ValidationPanel client={client} sampleSize={sampleSize} />
+        </Tabs.Panel>
+        <Tabs.Panel value="plausibility" pt="md" keepMounted>
+          <PlausibilityPanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
+        </Tabs.Panel>
+        <Tabs.Panel value="lab-ranges" pt="md" keepMounted>
+          <LabRangesPanel client={client} sampleSize={sampleSize} />
         </Tabs.Panel>
       </Tabs>
     </Stack>

@@ -120,6 +120,22 @@ vi.mock('../components/quality/ValidationPanel', () => ({
   ),
 }));
 
+// ----- PlausibilityPanel mock -----
+// Phase 16 Plan 04 adds Plausibility and Lab Ranges tabs. Same rationale
+// as above — behavior is verified in dedicated panel tests.
+vi.mock('../components/quality/PlausibilityPanel', () => ({
+  PlausibilityPanel: () => (
+    <div data-testid="mock-PlausibilityPanel">Mock Plausibility Panel</div>
+  ),
+}));
+
+// ----- LabRangesPanel mock -----
+vi.mock('../components/quality/LabRangesPanel', () => ({
+  LabRangesPanel: () => (
+    <div data-testid="mock-LabRangesPanel">Mock Lab Ranges Panel</div>
+  ),
+}));
+
 // ----- Imports AFTER mocks are configured -----
 import { MemoryRouter } from 'react-router-dom';
 import { QualityOverviewPage } from '../components/quality/QualityOverviewPage';
