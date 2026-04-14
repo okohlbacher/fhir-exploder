@@ -83,7 +83,10 @@ Plans:
   3. Dashboard reports broken references (dangling pointers to non-existent resources)
   4. Dashboard reports orphan resources (resources that should reference a parent but have no such reference)
   5. All duplicate and integrity findings are accessible via the Phase 15 drill-down (clickable to resource detail)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 17-01-PLAN.md -- Engine layer: pure functions for duplicate detection + reference integrity, orchestrating hooks, unit tests
+- [ ] 17-02-PLAN.md -- UI layer: DuplicatesPanel, ReferencesPanel, drill-down pages, dashboard wiring (8 tabs)
 **UI hint**: yes
 
 ### Phase 18: Quality Alerting & Thresholds
@@ -117,6 +120,6 @@ Plans:
 | 14. Tech Debt Cleanup | v1.2 | 2/2 | Complete    | 2026-04-13 |
 | 15. Quality Check Engine & Drill-Down | v1.2 | 3/3 | Complete   | 2026-04-13 |
 | 16. Conformance & Plausibility Checks | v1.2 | 4/4 | Complete    | 2026-04-14 |
-| 17. Duplicate Detection & Relational Integrity | v1.2 | 0/0 | Not started | - |
+| 17. Duplicate Detection & Relational Integrity | v1.2 | 0/2 | Planning complete | - |
 | 18. Quality Alerting & Thresholds | v1.2 | 0/0 | Not started | - |
 | 19. Quality Trends & PDF Reports | v1.2 | 0/0 | Not started | - |
