@@ -20,7 +20,7 @@ None currently deferred.
 
 - [x] **Phase 14: Tech Debt Cleanup** - Resolve code review findings and TypeScript build errors for a clean, warning-free codebase (completed 2026-04-13)
 - [x] **Phase 15: Quality Check Engine & Drill-Down** - Build the foundational drill-down UI so users can click any quality metric and see the specific resources causing issues (completed 2026-04-13)
-- [ ] **Phase 16: Conformance & Plausibility Checks** - Add value set conformance, cardinality validation, temporal plausibility, and lab range checks
+- [x] **Phase 16: Conformance & Plausibility Checks** - Add value set conformance, cardinality validation, temporal plausibility, and lab range checks (completed 2026-04-14)
 - [ ] **Phase 17: Duplicate Detection & Relational Integrity** - Detect duplicate patients and resources, find broken references and orphan resources
 - [ ] **Phase 18: Quality Alerting & Thresholds** - Let users configure quality thresholds and visually flag breaches on the dashboard
 - [ ] **Phase 19: Quality Trends & PDF Reports** - Track quality metrics over time and generate downloadable PDF reports
@@ -65,12 +65,12 @@ Plans:
   3. Dashboard flags implausible temporal values (future dates, encounter end before start, negative age)
   4. Dashboard flags lab observations with values outside configurable reference ranges
   5. All conformance and plausibility findings are accessible via the Phase 15 drill-down (clickable to resource detail)
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 Plans:
-- [ ] 16-01-PLAN.md -- Profile conformance checker + value set cache (enrich profiles, DQ-03/DQ-04 engine)
-- [ ] 16-02-PLAN.md -- Temporal plausibility walker (auto-discover temporal fields, 4 check types, DQ-05 engine)
-- [ ] 16-03-PLAN.md -- Lab range checker + settings extension (reference range validation, DQ-06 engine)
-- [ ] 16-04-PLAN.md -- Wire all checkers into dashboard UI (6 tabs, panels, drill-downs, cohort selector)
+- [x] 16-01-PLAN.md -- Profile conformance checker + value set cache (enrich profiles, DQ-03/DQ-04 engine)
+- [x] 16-02-PLAN.md -- Temporal plausibility walker (auto-discover temporal fields, 4 check types, DQ-05 engine)
+- [x] 16-03-PLAN.md -- Lab range checker + settings extension (reference range validation, DQ-06 engine)
+- [x] 16-04-PLAN.md -- Wire all checkers into dashboard UI (6 tabs, panels, drill-downs, cohort selector)
 **UI hint**: yes
 
 ### Phase 17: Duplicate Detection & Relational Integrity
@@ -116,7 +116,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 14. Tech Debt Cleanup | v1.2 | 2/2 | Complete    | 2026-04-13 |
 | 15. Quality Check Engine & Drill-Down | v1.2 | 3/3 | Complete   | 2026-04-13 |
-| 16. Conformance & Plausibility Checks | v1.2 | 0/4 | Planned | - |
+| 16. Conformance & Plausibility Checks | v1.2 | 4/4 | Complete    | 2026-04-14 |
 | 17. Duplicate Detection & Relational Integrity | v1.2 | 0/0 | Not started | - |
 | 18. Quality Alerting & Thresholds | v1.2 | 0/0 | Not started | - |
 | 19. Quality Trends & PDF Reports | v1.2 | 0/0 | Not started | - |
