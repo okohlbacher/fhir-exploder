@@ -22,4 +22,20 @@ export interface AppSettings {
     /** Batch size for Plan 05's batch validator. Defaults to 25. */
     batchSize?: number;
   };
+  /** Plausibility check thresholds (D-08). */
+  plausibility?: {
+    /** Maximum plausible patient age in years. Defaults to 150. */
+    maxAge?: number;
+    /** Maximum plausible encounter duration in days. Defaults to 365. */
+    maxEncounterDays?: number;
+  };
+  /**
+   * Lab reference ranges keyed by LOINC code (D-13).
+   * Config ranges override Observation.referenceRange from FHIR data (D-10).
+   */
+  referenceRanges?: Record<string, {
+    low?: number;
+    high?: number;
+    unit?: string;
+  }>;
 }

@@ -15,6 +15,11 @@ export const DEFAULTS: AppSettings = {
     // No default validatorUrl — structural-only mode unless user opts in.
     batchSize: 25,
   },
+  plausibility: {
+    maxAge: 150,
+    maxEncounterDays: 365,
+  },
+  referenceRanges: {},
 };
 
 export interface LoadSettingsResult {
@@ -70,6 +75,32 @@ function deepMerge(defaults: AppSettings, partial: Record<string, unknown>): App
           ? validation.batchSize
           : (defaults.validation?.batchSize ?? 25),
     };
+  }
+
+  if (partial.plausibility && typeof partial.plausibility === 'object') {
+    const plaus = partial.plausibility as Record<string, unknown>;
+    result.plausibility = {
+      maxAge: typeof plaus.maxAge === 'number' && Number.isFinite(plaus.maxAge) && plaus.maxAge > 0
+        ? plaus.maxAge : (defaults.plausibility?.maxAge ?? 150),
+      maxEncounterDays: typeof plaus.maxEncounterDays === 'number' && Number.isFinite(plaus.maxEncounterDays) && plaus.maxEncounterDays > 0
+        ? plaus.maxEncounterDays : (defaults.plausibility?.maxEncounterDays ?? 365),
+    };
+  }
+
+  if (partial.referenceRanges && typeof partial.referenceRanges === 'object') {
+    const ranges = partial.referenceRanges as Record<string, unknown>;
+    const validated: Record<string, { low?: number; high?: number; unit?: string }> = {};
+    for (const [code, val] of Object.entries(ranges)) {
+      if (val && typeof val === 'object') {
+        const v = val as Record<string, unknown>;
+        const entry: { low?: number; high?: number; unit?: string } = {};
+        if (typeof v.low === 'number' && Number.isFinite(v.low)) entry.low = v.low;
+        if (typeof v.high === 'number' && Number.isFinite(v.high)) entry.high = v.high;
+        if (typeof v.unit === 'string') entry.unit = v.unit;
+        validated[code] = entry;
+      }
+    }
+    result.referenceRanges = validated;
   }
 
   return result;

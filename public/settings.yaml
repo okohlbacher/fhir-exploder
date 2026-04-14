@@ -14,3 +14,20 @@ terminology:
   # Browser SPAs cannot authenticate directly — operators must front-terminate
   # TLS via a reverse proxy or use a local Ontoserver mirror.
   # serverUrl: "https://terminology.medizininformatik-initiative.de/fhir"
+
+# Plausibility check thresholds
+# plausibility:
+#   maxAge: 150
+#   maxEncounterDays: 365
+
+# Lab reference ranges (keyed by LOINC code)
+# Config ranges override Observation.referenceRange from FHIR data
+# referenceRanges:
+#   "2093-3":    # Total Cholesterol
+#     low: 0
+#     high: 300
+#     unit: "mg/dL"
+#   "2571-8":    # Triglycerides
+#     low: 0
+#     high: 500
+#     unit: "mg/dL"
