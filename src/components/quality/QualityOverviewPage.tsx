@@ -12,8 +12,13 @@
  */
 import { Button, Group, Stack, Tabs, Text, Title } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
-import { IconAdjustmentsAlt, IconRefresh } from '@tabler/icons-react';
-import { useMemo } from 'react';
+import {
+  IconAdjustmentsAlt,
+  IconCamera,
+  IconFileDownload,
+  IconRefresh,
+} from '@tabler/icons-react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { notifications } from '@mantine/notifications';
 import type { QualityOutletContext } from './QualityLayout';
@@ -31,6 +36,12 @@ import { DuplicatesPanel } from './DuplicatesPanel';
 import { ReferencesPanel } from './ReferencesPanel';
 import { CohortSelector } from './CohortSelector';
 import { TrendsPanel } from './TrendsPanel';
+import { useThresholds } from '../../hooks/useThresholds';
+import { useTrendsHistory } from '../../hooks/useTrendsHistory';
+import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import { captureSnapshot } from '../../quality/trendsHistory';
+import { exportQualityPdf } from '../../quality/pdfExport';
+import type { MetricKey } from '../../quality/thresholds';
 
 const VALID_TABS = new Set([
   'counts',
@@ -87,6 +98,12 @@ export function QualityOverviewPage() {
 
   const { counts, summary, lastComputed, recompute } = useResourceCountsMetrics(client, types);
 
+  // Plan 19-03: capture snapshot + export PDF handlers.
+  const metrics = useQualityMetrics();
+  const { getActiveThreshold } = useThresholds();
+  const { snapshots, append } = useTrendsHistory();
+  const [exporting, setExporting] = useState(false);
+
   const handleRecompute = () => {
     recompute();
     notifications.show({
@@ -95,6 +112,91 @@ export function QualityOverviewPage() {
       message: 'Re-fetching counts…',
     });
   };
+
+  const handleCapture = useCallback(() => {
+    const snap = captureSnapshot({
+      metrics,
+      serverUrl: client.getBaseUrl(),
+      sampleSize,
+      cohort: cohortTypes,
+      getActiveThreshold,
+    });
+    append(snap);
+    notifications.show({
+      color: 'blue',
+      title: 'Snapshot captured',
+      message: 'Added to trend history.',
+      autoClose: 2500,
+    });
+  }, [metrics, client, sampleSize, cohortTypes, getActiveThreshold, append]);
+
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+    try {
+      const METRIC_KEYS: MetricKey[] = [
+        'completeness',
+        'coverage',
+        'validation',
+        'plausibility',
+        'labRanges',
+        'duplicates',
+        'references',
+      ];
+      const thresholds = Object.fromEntries(
+        METRIC_KEYS.map((k) => [k, getActiveThreshold(k)]),
+      ) as Record<MetricKey, number | null>;
+      await exportQualityPdf({
+        snapshots,
+        summary: {
+          totalResources: summary.total,
+          distinctTypes: summary.typeCount,
+          totals: {
+            completeness: metrics.overallCompleteness,
+            coverage: metrics.overallCoverage,
+            validation: metrics.overallValidation,
+            plausibility: metrics.overallPlausibility,
+            labRanges: metrics.overallLabRanges,
+            duplicates: metrics.overallDuplicates,
+            references: metrics.overallReferences,
+          },
+        },
+        sampleSize,
+        cohort: cohortTypes,
+        thresholds,
+        serverUrl: client.getBaseUrl(),
+        capturedAt: new Date(),
+        appVersion:
+          ((import.meta as unknown as { env?: { VITE_APP_VERSION?: string } })
+            .env?.VITE_APP_VERSION) ?? '0.0.0',
+      });
+      notifications.show({
+        color: 'blue',
+        title: 'Report downloaded',
+        message:
+          'Your browser saved the PDF to its default downloads folder.',
+        autoClose: 4000,
+      });
+    } catch (err) {
+      console.error(err);
+      notifications.show({
+        color: 'red',
+        title: 'Export failed',
+        message: 'Could not generate PDF. See browser console for details.',
+        autoClose: 6000,
+      });
+    } finally {
+      setExporting(false);
+    }
+  }, [
+    snapshots,
+    metrics,
+    sampleSize,
+    cohortTypes,
+    client,
+    getActiveThreshold,
+    summary.total,
+    summary.typeCount,
+  ]);
 
   const typesLoaded =
     Object.keys(counts).length > 0 &&
@@ -119,6 +221,25 @@ export function QualityOverviewPage() {
             onClick={() => navigate('/quality/thresholds')}
           >
             Configure thresholds
+          </Button>
+          <Button
+            variant="light"
+            color="blue"
+            leftSection={<IconCamera size={16} />}
+            onClick={handleCapture}
+            aria-label="Capture snapshot. Records current quality metrics to trend history."
+          >
+            Capture snapshot
+          </Button>
+          <Button
+            variant="filled"
+            color="blue"
+            leftSection={<IconFileDownload size={16} />}
+            loading={exporting}
+            onClick={handleExport}
+            aria-label="Export PDF report of current quality dashboard state."
+          >
+            Export PDF
           </Button>
           <Button
             variant="light"
@@ -170,7 +291,10 @@ export function QualityOverviewPage() {
           <ReferencesPanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
         </Tabs.Panel>
         <Tabs.Panel value="trends" pt="md" keepMounted>
-          <TrendsPanel serverUrl={client.getBaseUrl()} />
+          <TrendsPanel
+            serverUrl={client.getBaseUrl()}
+            onCapture={handleCapture}
+          />
         </Tabs.Panel>
       </Tabs>
     </Stack>
