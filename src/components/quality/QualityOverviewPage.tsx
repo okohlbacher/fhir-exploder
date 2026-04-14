@@ -18,7 +18,7 @@ import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom
 import { notifications } from '@mantine/notifications';
 import type { QualityOutletContext } from './QualityLayout';
 import { parseResourceTypes } from '../../fhir/capability';
-import { useQualityMetrics } from '../../hooks/useQualityMetrics';
+import { useResourceCountsMetrics } from '../../hooks/useResourceCountsMetrics';
 import { useSampleSize, SampleSizeControl } from './SampleSizeControl';
 import { OverviewStrip } from './OverviewStrip';
 import { ResourceCountsPanel } from './ResourceCountsPanel';
@@ -83,7 +83,7 @@ export function QualityOverviewPage() {
     setSearchParams(next, { replace: true });
   };
 
-  const { counts, summary, lastComputed, recompute } = useQualityMetrics(client, types);
+  const { counts, summary, lastComputed, recompute } = useResourceCountsMetrics(client, types);
 
   const handleRecompute = () => {
     recompute();

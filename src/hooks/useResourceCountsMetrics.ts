@@ -1,5 +1,11 @@
 /**
- * useQualityMetrics — thin orchestrator above `useResourceCounts`.
+ * useResourceCountsMetrics — thin orchestrator above `useResourceCounts`.
+ *
+ * Renamed from `useQualityMetrics` in Phase 18 to avoid a name collision
+ * with the rollup-context hook in `src/quality/QualityMetricsContext.tsx`
+ * (REVIEW-FIX WR-02). The two hooks are unrelated in purpose: this one
+ * drives the per-type resource counts on the /quality landing page; the
+ * other exposes the panel→OverviewStrip rollup rendezvous.
  *
  * Wraps the Phase 1 `useResourceCounts` hook (verbatim reuse — same worker
  * pool, same concurrency limit, same cancellation) and layers:
@@ -22,7 +28,7 @@ import { useResourceCounts } from './useResourceCounts';
 import { summarizeCounts, type CountSummary } from '../quality/counts';
 import type { CountValue } from '../quality/types';
 
-export interface QualityMetrics {
+export interface ResourceCountsMetrics {
   counts: Record<string, CountValue>;
   summary: CountSummary;
   /** Date when all counts last finished loading (transitioned out of 'loading'). */
@@ -33,10 +39,10 @@ export interface QualityMetrics {
   version: number;
 }
 
-export function useQualityMetrics(
+export function useResourceCountsMetrics(
   client: MedplumClient | null,
   types: string[],
-): QualityMetrics {
+): ResourceCountsMetrics {
   const [version, setVersion] = useState(0);
   const [lastComputed, setLastComputed] = useState<Date | null>(null);
 

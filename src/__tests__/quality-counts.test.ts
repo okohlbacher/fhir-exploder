@@ -2,11 +2,13 @@
  * QUAL-01 — counts aggregation logic (Wave 2 Plan 02).
  *
  * Tests the pure aggregation/sort helpers in `src/quality/counts.ts`
- * plus a sanity check on `useQualityMetrics` exporting from its hook file.
+ * plus a sanity check on `useResourceCountsMetrics` exporting from its
+ * hook file (renamed from `useQualityMetrics` in Phase 18 REVIEW-FIX
+ * WR-02 to avoid collision with the rollup context hook).
  */
 import { describe, it, expect } from 'vitest';
 import { summarizeCounts, sortCounts } from '../quality/counts';
-import { useQualityMetrics } from '../hooks/useQualityMetrics';
+import { useResourceCountsMetrics } from '../hooks/useResourceCountsMetrics';
 import type { CountValue } from '../quality/types';
 
 describe('summarizeCounts (QUAL-01)', () => {
@@ -165,8 +167,8 @@ describe('sortCounts (QUAL-01)', () => {
   });
 });
 
-describe('useQualityMetrics (QUAL-01)', () => {
+describe('useResourceCountsMetrics (QUAL-01)', () => {
   it('is exported as a function', () => {
-    expect(typeof useQualityMetrics).toBe('function');
+    expect(typeof useResourceCountsMetrics).toBe('function');
   });
 });
