@@ -5,7 +5,7 @@
  * Shows summary badges, per-LOINC breakdown table, and full issue list
  * via ResourceIssueTable.
  */
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   Alert,
   Badge,
@@ -25,6 +25,7 @@ import {
 } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
 import { useSettings } from '../../hooks/useSettings';
+import { useQualityMetrics } from '../../quality/QualityMetricsContext';
 import { useLabRangesReport } from '../../hooks/useLabRangesReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
 
@@ -46,6 +47,20 @@ export function LabRangesPanel({ client, sampleSize }: LabRangesPanelProps) {
     run.progress.total > 0
       ? Math.round((run.progress.current / run.progress.total) * 100)
       : 0;
+
+  // Phase 18 / Plan 18-02: push overallLabRanges rollup to QualityMetricsContext
+  // on terminal status. Special case: noRange === checked → push undefined
+  // (no ranges configured → not-applicable tile, NOT "100% clean" — pitfall 7).
+  const { setOverallLabRanges } = useQualityMetrics();
+  useEffect(() => {
+    if (run.status !== 'complete' && run.status !== 'cancelled') return;
+    const summary = run.summary;
+    if (!summary || summary.checked === 0 || summary.noRange === summary.checked) {
+      setOverallLabRanges(undefined);
+      return;
+    }
+    setOverallLabRanges(Math.round((1 - summary.outOfRange / summary.checked) * 100));
+  }, [run.status, run.summary, setOverallLabRanges]);
 
   // Per-LOINC table data sorted by % OOR descending
   const loincRows = useMemo(() => {

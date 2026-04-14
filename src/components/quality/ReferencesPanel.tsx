@@ -6,7 +6,7 @@
  * sampled resources of a selected type. Results are shown as check-category
  * summary lines with badges and drilled down via ResourceIssueTable.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Badge,
@@ -24,6 +24,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
+import { useQualityMetrics } from '../../quality/QualityMetricsContext';
 import { useReferenceReport } from '../../hooks/useReferenceReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
 import type { NormalizedIssue } from '../../quality/types';
@@ -63,6 +64,20 @@ export function ReferencesPanel({ types, client, sampleSize }: ReferencesPanelPr
       issue.description.startsWith(`[${categoryFilter}]`),
     );
   }, [run.issues, categoryFilter]);
+
+  // Phase 18 / Plan 18-02: push overallReferences rollup to QualityMetricsContext
+  // on terminal status. Uses `sampleSize` prop (resource count) as denominator,
+  // NOT `run.progress.total` (which is batch count — see useReferenceReport.ts:117).
+  const { setOverallReferences } = useQualityMetrics();
+  useEffect(() => {
+    if (run.status !== 'complete' && run.status !== 'cancelled') return;
+    if (!sampleSize || sampleSize === 0) {
+      setOverallReferences(undefined);
+      return;
+    }
+    const affected = new Set(run.issues.map((i) => i.resourceId)).size;
+    setOverallReferences(Math.round((1 - affected / sampleSize) * 100));
+  }, [run.status, run.issues, sampleSize, setOverallReferences]);
 
   const typeOptions = useMemo(
     () => types.map((t) => ({ value: t, label: t })),
