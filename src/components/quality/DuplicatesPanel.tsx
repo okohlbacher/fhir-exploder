@@ -9,7 +9,7 @@
  * Patient duplicate detection always runs against Patient resources; the
  * resource type selector scopes content hash checks only.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Badge,
@@ -27,6 +27,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
+import { useQualityMetrics } from '../../quality/QualityMetricsContext';
 import { useDuplicateReport } from '../../hooks/useDuplicateReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
 import type { NormalizedIssue } from '../../quality/types';
@@ -88,6 +89,36 @@ export function DuplicatesPanel({ types, client, sampleSize }: DuplicatesPanelPr
       run.contentHashClusters.filter((c) => c.resourceType === resourceType).length,
     [run.contentHashClusters, resourceType],
   );
+
+  // Phase 18 / Plan 18-02: push per-type "% clean" contribution to QualityMetricsContext
+  // on terminal status. RESOLVED 2026-04-14 (RESEARCH Q1) — true per-type averaging:
+  //   - patient: round((1 - patientsInvolved/sampleSize) * 100)  (patient pass always runs)
+  //   - hashType: { resourceType: currentType, percentClean: ... }  (current selected type)
+  // Single setDuplicatesContribution call merges both into duplicatesBreakdown.
+  // Switching the Select and re-running adds a new entry to hashByType keyed by
+  // the new type — prior entries are preserved (widens the average). When
+  // sampleSize <= 0, skip push entirely (tile stays em-dash; do NOT push 0).
+  // Mid-run is gated out (pitfall 2 — no flicker). NO direct setter for
+  // overallDuplicates exists; the value is DERIVED in QualityMetricsContext
+  // via deriveOverallDuplicates(duplicatesBreakdown).
+  const { setDuplicatesContribution } = useQualityMetrics();
+  useEffect(() => {
+    if (run.status !== 'complete' && run.status !== 'cancelled') return;
+    if (!sampleSize || sampleSize <= 0) return;
+    const patientPercentClean = Math.round((1 - patientsInvolved / sampleSize) * 100);
+    const hashPercentClean = Math.round((1 - hashResourcesInvolved / sampleSize) * 100);
+    setDuplicatesContribution({
+      patient: patientPercentClean,
+      hashType: { resourceType, percentClean: hashPercentClean },
+    });
+  }, [
+    run.status,
+    patientsInvolved,
+    hashResourcesInvolved,
+    resourceType,
+    sampleSize,
+    setDuplicatesContribution,
+  ]);
 
   const typeOptions = useMemo(
     () => types.map((t) => ({ value: t, label: t })),
