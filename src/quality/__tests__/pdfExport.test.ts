@@ -20,20 +20,24 @@ import type { QualitySnapshot } from '../../quality/trendsHistory';
 // Collect spies on a stable object so tests can reset between runs.
 const toPngMock = vi.fn<(el: Element, opts?: unknown) => Promise<string>>();
 vi.mock('html-to-image', () => ({
-  toPng: (...args: Parameters<typeof toPngMock>) => toPngMock(...args),
+  toPng: (el: Element, opts?: unknown) => toPngMock(el, opts),
 }));
 
 const addImageMock = vi.fn();
 const addPageMock = vi.fn();
 const saveMock = vi.fn();
-const jsPDFCtor = vi.fn(() => ({
+const jsPDFCtor = vi.fn<(...args: unknown[]) => {
+  addImage: typeof addImageMock;
+  addPage: typeof addPageMock;
+  save: typeof saveMock;
+}>(() => ({
   addImage: addImageMock,
   addPage: addPageMock,
   save: saveMock,
 }));
 vi.mock('jspdf', () => ({
-  jsPDF: function (this: unknown, ...args: unknown[]) {
-    return jsPDFCtor(...args);
+  jsPDF: function (this: unknown, ..._args: unknown[]) {
+    return jsPDFCtor();
   },
 }));
 
