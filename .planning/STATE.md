@@ -4,8 +4,8 @@ milestone: v1.2
 milestone_name: -- Tech Debt & Quality Monitoring
 status: executing
 stopped_at: Phase 18 UI-SPEC approved
-last_updated: "2026-04-14T21:27:49.577Z"
-last_activity: 2026-04-14 -- Phase 20 planning complete
+last_updated: "2026-04-14T21:49:31.327Z"
+last_activity: 2026-04-14
 progress:
   total_phases: 6
   completed_phases: 6
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-13)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 17 — duplicate-detection-relational-integrity
+**Current focus:** Phase 20 — v12-gap-closure
 
 ## Current Position
 
-Phase: 19
+Phase: 20
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-14 -- Phase 20 planning complete
+Status: Executing Phase 20
+Last activity: 2026-04-14
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -36,7 +36,7 @@ Progress: [░░░░░░░░░░] 0%
 
 **Velocity:**
 
-- Total plans completed: 12
+- Total plans completed: 15
 - Average duration: --
 - Total execution time: --
 

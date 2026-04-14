@@ -25,7 +25,7 @@ None currently deferred.
 - [x] **Phase 17: Duplicate Detection & Relational Integrity** - Detect duplicate patients and resources, find broken references and orphan resources (gap closure in progress) (completed 2026-04-14)
 - [x] **Phase 18: Quality Alerting & Thresholds** - Let users configure quality thresholds and visually flag breaches on the dashboard (completed 2026-04-14)
 - [x] **Phase 19: Quality Trends & PDF Reports** - Track quality metrics over time and generate downloadable PDF reports (completed 2026-04-14)
-- [ ] **Phase 20: v1.2 Milestone Gap Closure** - Close all gaps from v1.2-MILESTONE-AUDIT: fix DEBT-02 build regression, write retrospective verifications for Phase 15/18, sync REQUIREMENTS.md traceability
+- [x] **Phase 20: v1.2 Milestone Gap Closure** - Close all gaps from v1.2-MILESTONE-AUDIT: fix DEBT-02 build regression, write retrospective verifications for Phase 15/18, sync REQUIREMENTS.md traceability (completed 2026-04-14)
 
 ## Phase Details
 
@@ -189,6 +189,6 @@ Plans:
 | 17. Duplicate Detection & Relational Integrity | v1.2 | 3/3 | Complete    | 2026-04-14 |
 | 18. Quality Alerting & Thresholds | v1.2 | 4/4 | Complete   | 2026-04-14 |
 | 19. Quality Trends & PDF Reports | v1.2 | 3/3 | Complete    | 2026-04-14 |
-| 20. v1.2 Milestone Gap Closure | v1.2 | 0/0 | Not started | - |
+| 20. v1.2 Milestone Gap Closure | v1.2 | 3/3 | Complete    | 2026-04-14 |
 | 21. Interactive Cohort Builder + Rename | v1.3 | 0/0 | Not started | - |
 | 22. Programmatic Cohort Definition (FHIRPath + FDPG) | v1.3 | 0/0 | Not started | - |
