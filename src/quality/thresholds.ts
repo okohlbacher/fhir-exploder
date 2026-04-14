@@ -59,7 +59,14 @@ export const STORAGE_KEY = 'quality.thresholds.v1';
 export type Thresholds = Partial<Record<MetricKey, number | null>>;
 
 export function resolveThreshold(key: MetricKey, stored: Thresholds): number | null {
-  if (key in stored) return stored[key] ?? null;
+  if (!(key in stored)) return DEFAULT_THRESHOLDS[key];
+  const v = stored[key];
+  if (v === null) return null;
+  if (typeof v === 'number') return v;
+  // Present but neither null nor number (e.g. a stale localStorage payload
+  // where the value is literally `undefined`) — treat as absent and fall
+  // back to the default. Keeps the three-state contract from the module
+  // header honest: undefined means "no opinion", not "disabled".
   return DEFAULT_THRESHOLDS[key];
 }
 

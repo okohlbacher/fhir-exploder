@@ -44,6 +44,14 @@ describe('resolveThreshold', () => {
     const stored: Thresholds = { coverage: 42 };
     expect(resolveThreshold('coverage', stored)).toBe(42);
   });
+  it('returns default when stored[key] is present but undefined (defensive)', () => {
+    // Simulates a stale localStorage payload where a key survived a migration
+    // with a literal `undefined` value. Per the three-state contract,
+    // undefined means "no opinion" and should fall back to the default,
+    // NOT be treated as disabled.
+    const stored = { completeness: undefined } as unknown as Thresholds;
+    expect(resolveThreshold('completeness', stored)).toBe(80);
+  });
 });
 
 describe('isBreached', () => {
