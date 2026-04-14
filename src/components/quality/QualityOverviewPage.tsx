@@ -14,7 +14,7 @@ import { Button, Group, Stack, Tabs, Text, Title } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
 import { IconAdjustmentsAlt, IconRefresh } from '@tabler/icons-react';
 import { useMemo } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { notifications } from '@mantine/notifications';
 import type { QualityOutletContext } from './QualityLayout';
 import { parseResourceTypes } from '../../fhir/capability';
@@ -30,6 +30,18 @@ import { LabRangesPanel } from './LabRangesPanel';
 import { DuplicatesPanel } from './DuplicatesPanel';
 import { ReferencesPanel } from './ReferencesPanel';
 import { CohortSelector } from './CohortSelector';
+
+const VALID_TABS = new Set([
+  'counts',
+  'completeness',
+  'coverage',
+  'validation',
+  'plausibility',
+  'lab-ranges',
+  'duplicates',
+  'references',
+] as const);
+const DEFAULT_TAB = 'counts';
 
 function formatRelative(d: Date | null): string {
   if (!d) return 'Never';
@@ -56,6 +68,20 @@ export function QualityOverviewPage() {
     defaultValue: [],
   });
   const effectiveTypes = cohortTypes.length > 0 ? cohortTypes : types;
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const activeTab =
+    tabParam && VALID_TABS.has(tabParam as never) ? tabParam : DEFAULT_TAB;
+
+  const handleTabChange = (value: string | null) => {
+    if (!value) return;
+    // Preserve other params (none today, but defensive). `replace: true` so
+    // the back button skips intra-tab navigation.
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', value);
+    setSearchParams(next, { replace: true });
+  };
 
   const { counts, summary, lastComputed, recompute } = useQualityMetrics(client, types);
 
@@ -104,7 +130,7 @@ export function QualityOverviewPage() {
 
       <OverviewStrip summary={summary} isLoading={!typesLoaded} />
 
-      <Tabs defaultValue="counts" keepMounted>
+      <Tabs value={activeTab} onChange={handleTabChange} keepMounted>
         <Tabs.List>
           <Tabs.Tab value="counts">Counts</Tabs.Tab>
           <Tabs.Tab value="completeness">Completeness</Tabs.Tab>
