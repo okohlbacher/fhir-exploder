@@ -19,7 +19,7 @@ None currently deferred.
 ## Phases
 
 - [x] **Phase 14: Tech Debt Cleanup** - Resolve code review findings and TypeScript build errors for a clean, warning-free codebase (completed 2026-04-13)
-- [ ] **Phase 15: Quality Check Engine & Drill-Down** - Build the foundational drill-down UI so users can click any quality metric and see the specific resources causing issues
+- [x] **Phase 15: Quality Check Engine & Drill-Down** - Build the foundational drill-down UI so users can click any quality metric and see the specific resources causing issues (completed 2026-04-13)
 - [ ] **Phase 16: Conformance & Plausibility Checks** - Add value set conformance, cardinality validation, temporal plausibility, and lab range checks
 - [ ] **Phase 17: Duplicate Detection & Relational Integrity** - Detect duplicate patients and resources, find broken references and orphan resources
 - [ ] **Phase 18: Quality Alerting & Thresholds** - Let users configure quality thresholds and visually flag breaches on the dashboard
@@ -48,11 +48,11 @@ Plans:
   1. User can click a quality metric (completeness, coding coverage, validation) to open a drill-down view listing the specific resources and fields involved
   2. Each entry in the drill-down view links to the resource detail view for further inspection
   3. Drill-down works for all existing quality panels (completeness, coding coverage, profile validation)
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 Plans:
-- [ ] 15-01-PLAN.md -- Add NormalizedIssue type and extend completeness/coding walkers to return per-resource issue data
-- [ ] 15-02-PLAN.md -- Build shared ResourceIssueTable component with pagination, filters, severity badges, and resource links
-- [ ] 15-03-PLAN.md -- Wire ResourceIssueTable into all 3 drill-down pages with Tabs and cross-filtering
+- [x] 15-01-PLAN.md -- Add NormalizedIssue type and extend completeness/coding walkers to return per-resource issue data
+- [x] 15-02-PLAN.md -- Build shared ResourceIssueTable component with pagination, filters, severity badges, and resource links
+- [x] 15-03-PLAN.md -- Wire ResourceIssueTable into all 3 drill-down pages with Tabs and cross-filtering
 **UI hint**: yes
 
 ### Phase 16: Conformance & Plausibility Checks
@@ -65,7 +65,12 @@ Plans:
   3. Dashboard flags implausible temporal values (future dates, encounter end before start, negative age)
   4. Dashboard flags lab observations with values outside configurable reference ranges
   5. All conformance and plausibility findings are accessible via the Phase 15 drill-down (clickable to resource detail)
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 16-01-PLAN.md -- Profile conformance checker + value set cache (enrich profiles, DQ-03/DQ-04 engine)
+- [ ] 16-02-PLAN.md -- Temporal plausibility walker (auto-discover temporal fields, 4 check types, DQ-05 engine)
+- [ ] 16-03-PLAN.md -- Lab range checker + settings extension (reference range validation, DQ-06 engine)
+- [ ] 16-04-PLAN.md -- Wire all checkers into dashboard UI (6 tabs, panels, drill-downs, cohort selector)
 **UI hint**: yes
 
 ### Phase 17: Duplicate Detection & Relational Integrity
@@ -110,8 +115,8 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 14. Tech Debt Cleanup | v1.2 | 2/2 | Complete    | 2026-04-13 |
-| 15. Quality Check Engine & Drill-Down | v1.2 | 0/3 | Planned | - |
-| 16. Conformance & Plausibility Checks | v1.2 | 0/0 | Not started | - |
+| 15. Quality Check Engine & Drill-Down | v1.2 | 3/3 | Complete   | 2026-04-13 |
+| 16. Conformance & Plausibility Checks | v1.2 | 0/4 | Planned | - |
 | 17. Duplicate Detection & Relational Integrity | v1.2 | 0/0 | Not started | - |
 | 18. Quality Alerting & Thresholds | v1.2 | 0/0 | Not started | - |
 | 19. Quality Trends & PDF Reports | v1.2 | 0/0 | Not started | - |
