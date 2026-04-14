@@ -70,7 +70,7 @@ export function DuplicatesPanel({ types, client, sampleSize }: DuplicatesPanelPr
 
   // Count patients involved in patient duplicate clusters
   const patientsInvolved = useMemo(
-    () => run.duplicateClusters.reduce((sum, c) => sum + c.members.length, 0),
+    () => run.duplicateClusters.reduce((sum, c) => sum + c.patients.length, 0),
     [run.duplicateClusters],
   );
 
@@ -79,7 +79,7 @@ export function DuplicatesPanel({ types, client, sampleSize }: DuplicatesPanelPr
     () =>
       run.contentHashClusters
         .filter((c) => c.resourceType === resourceType)
-        .reduce((sum, c) => sum + c.members.length, 0),
+        .reduce((sum, c) => sum + c.resources.length, 0),
     [run.contentHashClusters, resourceType],
   );
 
