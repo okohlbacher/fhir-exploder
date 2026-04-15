@@ -108,3 +108,34 @@ describe('QualitySnapshot serialization round-trip', () => {
     expect(restored[0].thresholds.validation).toBeNull();
   });
 });
+
+/**
+ * Legacy snapshot reader (Plan 21-01 Wave 0 stub).
+ *
+ * Phase 21 renames the snapshot `cohort: string[]` field (which actually
+ * holds the dashboard resource-type filter list) to `resourceTypes: string[]`
+ * — see CHRT-04. Existing on-disk snapshots written before the rename must
+ * keep loading correctly: the reader MUST treat a legacy `cohort` field as
+ * the new `resourceTypes` field.
+ *
+ * These tests are stubs — the reader/migrator they'll assert against lands
+ * in Plan 21-04. Marked `it.skip` so this Wave 0 file still runs green.
+ * The `-t "legacy snapshot"` filter in 21-VALIDATION.md resolves here.
+ */
+describe('legacy snapshot', () => {
+  it.skip('treats legacy `cohort` field as `resourceTypes` (pending Plan 21-04)', () => {
+    // TODO(Plan 21-04): Import migrateSnapshot (not yet implemented) from
+    // ../trendsHistory and assert it promotes `cohort` → `resourceTypes`.
+    //
+    // Expected behaviour:
+    //   Input:  { cohort: ['Patient','Observation'], resourceTypes: undefined }
+    //   Output: { resourceTypes: ['Patient','Observation'] }  // legacy field dropped
+    expect(true).toBe(true);
+  });
+
+  it.skip('leaves modern snapshots (with resourceTypes) untouched (pending Plan 21-04)', () => {
+    // TODO(Plan 21-04): assert migrateSnapshot is idempotent — a snapshot
+    // that already has `resourceTypes` is returned unchanged.
+    expect(true).toBe(true);
+  });
+});
