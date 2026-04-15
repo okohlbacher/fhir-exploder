@@ -115,6 +115,49 @@ export function findActiveCohort(storage: CohortsStorage): CohortDefinition | nu
 }
 
 /**
+ * One-shot legacy-key migration invoked from `QualityLayout.tsx` on first
+ * mount (Plan 21-04, CHRT-04). Copies `quality.cohort.v1` → `quality.resourceTypes.v1`
+ * exactly once per tab session and then removes the legacy key so future
+ * mounts no-op.
+ *
+ * Semantics (21-RESEARCH.md §"Pattern 3" + §Pitfall 5):
+ *   1. If legacy key is absent → no-op.
+ *   2. If new key already has a value → do NOT overwrite (idempotency;
+ *      prevents clobbering a user's post-rename selection). The legacy
+ *      key is still removed so subsequent mounts find nothing to migrate.
+ *   3. Wrapped in try/catch so localStorage unavailability (private mode,
+ *      quota full, sandboxed iframe) fails closed — the dashboard still
+ *      renders, the user keeps the legacy key, and migration can succeed
+ *      on a future mount after the environment is healthy.
+ *
+ * Ordering guarantee: Option A from 21-RESEARCH.md §"CRITICAL ordering"
+ * — this helper runs from `QualityLayout` useEffect BEFORE child components
+ * (including `QualityOverviewPage`'s `useLocalStorage({key: RESOURCE_TYPES_STORAGE_KEY})`)
+ * read from storage. React commits parent effects before children on first
+ * mount, so the migration completes before `useLocalStorage` ever hydrates.
+ *
+ * Threats mitigated:
+ *   - T-21-11 (double-run race): `if (existing === null)` guard + unconditional
+ *     legacy removeItem means the second tab's migration is a no-op, not a
+ *     clobber.
+ *   - T-21-12 (storage quota): try/catch swallows exceptions.
+ *   - T-21-03 (PHI in logs): no console output; no branch logs patient IDs.
+ */
+export function migrateLegacyResourceTypeKey(): void {
+  try {
+    const legacy = window.localStorage.getItem(LEGACY_COHORT_KEY);
+    if (legacy === null) return;
+    const existing = window.localStorage.getItem(RESOURCE_TYPES_STORAGE_KEY);
+    if (existing === null) {
+      window.localStorage.setItem(RESOURCE_TYPES_STORAGE_KEY, legacy);
+    }
+    window.localStorage.removeItem(LEGACY_COHORT_KEY);
+  } catch {
+    /* localStorage unavailable — fail closed; user keeps legacy key. */
+  }
+}
+
+/**
  * Parses a raw Textarea string of patient references into a normalized,
  * deduped bare-ID array capped at 10,000 entries (Decision D-06).
  *
