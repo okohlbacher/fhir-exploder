@@ -15,14 +15,24 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { MedplumClient } from '@medplum/core';
-import type { Bundle, Resource } from '@medplum/fhirtypes';
+import type { Bundle, Observation, Resource } from '@medplum/fhirtypes';
 import { sampleResources, SHORT_QUERY_THRESHOLD } from './sampling';
+
+function emptyBundle(): Bundle<Resource> {
+  return { resourceType: 'Bundle', type: 'searchset', entry: [] };
+}
+
+function bundleWith(resources: Resource[]): Bundle<Resource> {
+  return {
+    resourceType: 'Bundle',
+    type: 'searchset',
+    entry: resources.map((r) => ({ resource: r })),
+  };
+}
 
 function makeMockClient() {
   const searchResources = vi.fn().mockResolvedValue([]);
-  const post = vi
-    .fn()
-    .mockResolvedValue({ entry: [] } satisfies Bundle<Resource>);
+  const post = vi.fn().mockResolvedValue(emptyBundle());
   const fhirUrl = vi.fn(
     (type: string, op: string) => new URL(`http://fake/fhir/${type}/${op}`),
   );
@@ -149,13 +159,21 @@ describe('sampleResources with patient scoping', () => {
 
   it('long POST returns bundle.entry resources (matches GET shape)', async () => {
     const { client, post } = makeMockClient();
-    const fakeResources: Resource[] = [
-      { resourceType: 'Observation', id: 'o1' },
-      { resourceType: 'Observation', id: 'o2' },
+    const fakeResources: Observation[] = [
+      {
+        resourceType: 'Observation',
+        id: 'o1',
+        status: 'final',
+        code: { text: 'test' },
+      },
+      {
+        resourceType: 'Observation',
+        id: 'o2',
+        status: 'final',
+        code: { text: 'test' },
+      },
     ];
-    post.mockResolvedValueOnce({
-      entry: fakeResources.map((r) => ({ resource: r })),
-    } satisfies Bundle<Resource>);
+    post.mockResolvedValueOnce(bundleWith(fakeResources));
 
     const ids = Array.from(
       { length: SHORT_QUERY_THRESHOLD + 1 },
