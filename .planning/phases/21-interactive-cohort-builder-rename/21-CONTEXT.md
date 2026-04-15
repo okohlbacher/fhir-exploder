@@ -27,6 +27,11 @@ Ship the interactive cohort builder: users define a patient cohort via a UI supp
 - **D-03:** Switching the active cohort is done **via the dropdown directly** — pick from saved cohort names, or select "No cohort — all patients" to deactivate. No trip to the builder page required. The builder page is the source of truth for *defining* cohorts; the dashboard dropdown is the source of truth for *activating* them.
 - **D-04:** Default state is **cohort-is-opt-in**. No cohort active = analyze all patients (current behavior, zero regression). The dropdown shows "No cohort" when nothing is selected. No first-run empty-state prompt, no hard gate. Matches how thresholds and sampleSize work today — sensible defaults, opt-in overrides.
 
+### Criterion Semantics (resolved 2026-04-15 after researcher surfaced A3/A7)
+
+- **D-05:** The **date range criterion applies to `Encounter.period` only** (resolves A3). Cohort query: `Encounter?date=geYYYY-MM-DD&date=leYYYY-MM-DD&_elements=subject`, then dedupe subjects to patient IDs. Rationale: clinical-activity window is the most defensible semantic for "patients active in this range", matches the MII Kerndatensatz Fall (Encounter) module, and keeps the resolver path single-query simple. Observation/Condition date ranges are NOT in scope for Phase 21; they can be added later as a separate criterion type if needed.
+- **D-06:** **Cohort resolution hard cap at 10,000 patient IDs** (resolves A7). When any individual criterion's resolution would exceed 10K distinct patients, truncate and surface a visible warning on the builder page: "Cohort truncated to 10,000 patients — add more criteria to narrow it, or use FHIRPath (Phase 22) for larger cohorts." Consistent with `parsePatientRefs` reference-list cap and with the URL-length threshold (~40 IDs triggers POST `_search` fallback; 10K is the hard ceiling). Matches the intersection semantics (D-C below): the AND-intersected patient set can never exceed the smallest pre-intersection set, so capping each input keeps the final set bounded.
+
 ### Claude's Discretion
 
 User opted to let the researcher + planner decide the following, provided they stay consistent with codebase patterns. Directional guidance below:
