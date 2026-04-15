@@ -183,21 +183,57 @@ describe('useCohorts', () => {
     expect(result.current.activeCohort).toBeNull();
   });
 
-  // --- Plan 21-04 legacy-migration stubs — stay skipped; owned by Plan 21-04 ---
+  // --- Plan 21-04 legacy-migration tests ---
+  //
+  // The migration is owned by `migrateLegacyResourceTypeKey` in
+  // src/quality/cohorts.ts and invoked from a mount-time useEffect in
+  // QualityLayout.tsx (21-RESEARCH.md §"CRITICAL ordering / Option A").
+  // Testing the helper directly (not QualityLayout) keeps these tests
+  // lightweight and independent of the connection-gated route.
 
-  it.skip('legacy migration copies quality.cohort.v1 to quality.resourceTypes.v1 (pending Plan 21-04)', () => {
-    // TODO(Plan 21-04): seed localStorage with LEGACY_COHORT_KEY set to
-    // JSON.stringify(['Patient','Observation']); renderHook(() => useCohorts());
-    // after the mount effect, assert localStorage.getItem(RESOURCE_TYPES_STORAGE_KEY)
-    // equals the seeded payload AND localStorage.getItem(LEGACY_COHORT_KEY) === null.
-    expect(LEGACY_COHORT_KEY).toBe('quality.cohort.v1');
-    expect(RESOURCE_TYPES_STORAGE_KEY).toBe('quality.resourceTypes.v1');
+  it('legacy migration copies quality.cohort.v1 to quality.resourceTypes.v1', async () => {
+    const { migrateLegacyResourceTypeKey } = await import('../quality/cohorts');
+    window.localStorage.setItem(
+      LEGACY_COHORT_KEY,
+      JSON.stringify(['Patient', 'Observation']),
+    );
+    expect(window.localStorage.getItem(RESOURCE_TYPES_STORAGE_KEY)).toBeNull();
+
+    migrateLegacyResourceTypeKey();
+
+    expect(window.localStorage.getItem(RESOURCE_TYPES_STORAGE_KEY)).toBe(
+      JSON.stringify(['Patient', 'Observation']),
+    );
+    expect(window.localStorage.getItem(LEGACY_COHORT_KEY)).toBeNull();
   });
 
-  it.skip('migration idempotent — does not clobber existing (pending Plan 21-04)', () => {
-    // TODO(Plan 21-04): seed BOTH keys with different payloads; renderHook;
-    // assert RESOURCE_TYPES_STORAGE_KEY still holds its ORIGINAL (new) value,
-    // not the legacy payload. Guards against overwriting user's post-rename state.
-    expect(true).toBe(true);
+  it('migration idempotent — does not clobber existing', async () => {
+    const { migrateLegacyResourceTypeKey } = await import('../quality/cohorts');
+    window.localStorage.setItem(
+      LEGACY_COHORT_KEY,
+      JSON.stringify(['Old']),
+    );
+    window.localStorage.setItem(
+      RESOURCE_TYPES_STORAGE_KEY,
+      JSON.stringify(['New']),
+    );
+
+    migrateLegacyResourceTypeKey();
+
+    // New key must survive unchanged.
+    expect(window.localStorage.getItem(RESOURCE_TYPES_STORAGE_KEY)).toBe(
+      JSON.stringify(['New']),
+    );
+    // Legacy key must still be cleaned up to prevent future mounts
+    // re-running the migration.
+    expect(window.localStorage.getItem(LEGACY_COHORT_KEY)).toBeNull();
+  });
+
+  it('legacy migration no-op when legacy key absent', async () => {
+    const { migrateLegacyResourceTypeKey } = await import('../quality/cohorts');
+    // Neither key present.
+    migrateLegacyResourceTypeKey();
+    expect(window.localStorage.getItem(RESOURCE_TYPES_STORAGE_KEY)).toBeNull();
+    expect(window.localStorage.getItem(LEGACY_COHORT_KEY)).toBeNull();
   });
 });
