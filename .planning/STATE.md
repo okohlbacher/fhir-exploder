@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: -- Cohort Definition & Storage
-status: planning
-stopped_at: Phase 21 UI-SPEC approved
-last_updated: "2026-04-15T08:45:00.000Z"
-last_activity: 2026-04-15
+status: executing
+stopped_at: Phase 21 UI-SPEC approved; ready for /gsd-plan-phase 21
+last_updated: "2026-04-15T13:21:51.773Z"
+last_activity: 2026-04-15 -- Phase 21 planning complete
 progress:
   total_phases: 1
   completed_phases: 0
-  total_plans: 0
+  total_plans: 6
   completed_plans: 0
   percent: 0
 ---
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 
 Phase: 21 (planning)
 Plan: Not started — UI-SPEC approved, ready for /gsd-plan-phase 21
-Status: v1.3 planning in progress; Phase 21 design contract locked
-Last activity: 2026-04-15
+Status: Ready to execute
+Last activity: 2026-04-15 -- Phase 21 planning complete
 
 Progress: [░░░░░░░░░░] 0%
 
