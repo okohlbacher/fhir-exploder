@@ -91,7 +91,8 @@ function mkSnap(
     capturedAt: new Date(Date.parse('2026-04-14T12:00:00Z') + Number(id.length) * 1000).toISOString(),
     serverUrl,
     sampleSize: 100,
-    cohort: [],
+    resourceTypes: [],
+    cohortId: null,
     scores: { ...allScores, ...scoreOverride },
     thresholds: {
       completeness: 80,

@@ -119,12 +119,13 @@ export function QualityOverviewPage() {
       metrics,
       serverUrl: client.getBaseUrl(),
       sampleSize,
-      // Plan 21-04: legacy param name `cohort` is still accepted by the
-      // 3-arg captureSnapshot (T-4.3 adds `resourceTypes` as the canonical
-      // spelling). Keeping the existing call shape here preserves compile
-      // ordering: T-4.1 completes the rename up to the state variable and
-      // render site; T-4.3 renames the interface field.
-      cohort: resourceTypes,
+      // Plan 21-04 (T-4.3): canonical field is `resourceTypes`; the legacy
+      // `cohort: string[]` alias on `CaptureSnapshotParams` is retained only
+      // for back-compat with older in-flight callers and will be removed in
+      // Phase 22. Plan 21-06 will populate `activeCohort` here once the
+      // dashboard has a cohort dropdown — until then no active cohort.
+      resourceTypes,
+      activeCohort: null,
       getActiveThreshold,
     });
     append(snap);
@@ -167,10 +168,12 @@ export function QualityOverviewPage() {
           },
         },
         sampleSize,
-        // Plan 21-04: existing `cohort: string[]` parameter is still the
-        // resource-type list until T-4.3 renames it. Plan 21-06 will thread
-        // an additional cohort-object parameter through this call.
-        cohort: resourceTypes,
+        // Plan 21-04 (T-4.3): `resourceTypes` is the canonical resource-type
+        // filter list. The optional `cohort` object carries the active cohort
+        // (id/name/patientCount); Plan 21-06 threads a real value from a
+        // dashboard cohort dropdown — until then `null`.
+        resourceTypes,
+        cohort: null,
         thresholds,
         serverUrl: client.getBaseUrl(),
         capturedAt: new Date(),

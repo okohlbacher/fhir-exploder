@@ -28,24 +28,40 @@ export const TRENDS_STORAGE_KEY = 'quality.trends.v1';
 export const TRENDS_SOFT_LIMIT = 500;
 
 /**
- * Locked payload shape per D-02 + UI-SPEC Component Inventory.
+ * Locked payload shape per D-02 + UI-SPEC Component Inventory, evolved in
+ * Plan 21-04 (CHRT-04) with the Cohort → Resource-types rename:
  *
  * - `id`: `crypto.randomUUID()` — stable row key for React lists.
  * - `capturedAt`: `new Date().toISOString()` (UTC, Z-suffixed).
  * - `serverUrl`: verbatim current server URL (exact-match filter in Plan 02).
  * - `sampleSize`: SampleSizeControl value at capture (10..1000).
- * - `cohort`: CohortSelector values at capture ([] = all resource types).
+ * - `resourceTypes`: ResourceTypeSelector values at capture ([] = all
+ *   resource types). Renamed from `cohort` in Phase 21; legacy snapshots
+ *   with the old `cohort` field are normalized via `migrateSnapshot`.
+ * - `cohortId` / `cohortName` / `cohortPatientCount`: denormalized cohort
+ *   metadata at capture. `null`/undefined when no cohort was active. Plan
+ *   21-06 will populate these when the dashboard is wired up; until then
+ *   new captures write `cohortId: null`.
  * - `scores`: 7 "% clean" values (0..100). `null` means metric was
  *   unavailable at capture (disabled tab or error) — renders as "—" in UI.
  * - `thresholds`: threshold at capture (immutable history — users tuning
  *   thresholds later must NOT retroactively rewrite breach flags).
+ *
+ * @deprecated-field `cohort: string[]` — pre-Phase-21 field name for the
+ *   resource-types list. Still recognized by `migrateSnapshot` when
+ *   reading persisted snapshots; new captures never write it.
  */
 export interface QualitySnapshot {
   id: string;
   capturedAt: string;
   serverUrl: string;
   sampleSize: number;
-  cohort: string[];
+  resourceTypes: string[];
+  cohortId: string | null;
+  cohortName?: string;
+  cohortPatientCount?: number;
+  /** @deprecated Pre-Phase-21; readers use migrateSnapshot. */
+  cohort?: string[];
   scores: Record<MetricKey, number | null>;
   thresholds: Record<MetricKey, number | null>;
 }
@@ -65,11 +81,28 @@ export interface MetricsReadSource {
   overallReferences: number | undefined;
 }
 
+/**
+ * Input to `captureSnapshot`. Plan 21-04 renames `cohort` → `resourceTypes`
+ * and adds an optional `cohort` object that Plan 21-06 will populate with
+ * the active cohort's id/name/patientCount. For backward compat during the
+ * rename, the legacy `cohort: string[]` parameter is still accepted (with
+ * the same meaning as `resourceTypes`); callers should migrate to the new
+ * name and Phase 22 may remove the legacy form.
+ */
 export interface CaptureSnapshotParams {
   metrics: MetricsReadSource;
   serverUrl: string;
   sampleSize: number;
-  cohort: string[];
+  /** Canonical field (Plan 21-04). */
+  resourceTypes?: string[];
+  /** @deprecated Legacy alias for `resourceTypes`. Removed in Phase 22. */
+  cohort?: string[];
+  /** Active cohort at capture; null or undefined when no cohort is active. */
+  activeCohort?: {
+    id: string;
+    name: string;
+    patientCount: number;
+  } | null;
   getActiveThreshold: (key: MetricKey) => number | null;
 }
 
@@ -90,7 +123,18 @@ const METRIC_KEYS: readonly MetricKey[] = [
 ] as const;
 
 export function captureSnapshot(params: CaptureSnapshotParams): QualitySnapshot {
-  const { metrics, serverUrl, sampleSize, cohort, getActiveThreshold } = params;
+  const {
+    metrics,
+    serverUrl,
+    sampleSize,
+    resourceTypes,
+    cohort, // legacy alias (Plan 21-04 back-compat)
+    activeCohort,
+    getActiveThreshold,
+  } = params;
+  // Resolve the resource-type list with precedence: canonical wins over
+  // the deprecated alias; both missing → empty array ("all types").
+  const effectiveResourceTypes = resourceTypes ?? cohort ?? [];
   const rawScores: Record<MetricKey, number | undefined> = {
     completeness: metrics.overallCompleteness,
     coverage: metrics.overallCoverage,
@@ -111,10 +155,57 @@ export function captureSnapshot(params: CaptureSnapshotParams): QualitySnapshot 
     capturedAt: new Date().toISOString(),
     serverUrl,
     sampleSize,
-    cohort: [...cohort], // defensive copy — caller's array must not alias storage
+    // Defensive copy — caller's array must not alias storage.
+    resourceTypes: [...effectiveResourceTypes],
+    cohortId: activeCohort?.id ?? null,
+    cohortName: activeCohort?.name,
+    cohortPatientCount: activeCohort?.patientCount,
     scores,
     thresholds,
   };
+}
+
+/**
+ * Normalize a persisted snapshot shape across the Phase 21 rename.
+ *
+ * Contract:
+ *   - Returns `null` for non-object inputs (`null`, `undefined`, strings,
+ *     numbers, booleans) — protects readers against corrupt localStorage
+ *     payloads (T-21-13).
+ *   - Returns `null` when the resolved `resourceTypes` is not an array
+ *     after considering both the canonical field and the legacy `cohort`
+ *     alias. This catches tampered objects where either field is the
+ *     wrong type.
+ *   - Otherwise returns a QualitySnapshot with `resourceTypes` always an
+ *     array (preferring the canonical field over the legacy alias), and
+ *     `cohortId` defaulted to `null` when absent so the field is never
+ *     undefined for downstream TypeScript consumers.
+ *   - Never mutates the input. No logging (T-21-03: no PHI / patient IDs
+ *     surface via console even when the shape is corrupt).
+ */
+export function migrateSnapshot(raw: unknown): QualitySnapshot | null {
+  if (raw === null || raw === undefined) return null;
+  if (typeof raw !== 'object') return null;
+  const s = raw as Partial<QualitySnapshot> & { cohort?: unknown };
+
+  // Prefer canonical field. Both may be present on mixed-era payloads.
+  const candidate = s.resourceTypes ?? s.cohort;
+
+  // Empty case: neither field present → treat as "all types" ([]).
+  const resourceTypes = candidate === undefined ? [] : candidate;
+
+  if (!Array.isArray(resourceTypes)) return null;
+
+  // Normalize to a fresh object — never mutate the caller's reference,
+  // never pass through the deprecated `cohort` field.
+  const rest = s as Partial<QualitySnapshot>;
+  return {
+    ...rest,
+    resourceTypes: [...resourceTypes],
+    cohortId: s.cohortId ?? null,
+    cohortName: s.cohortName,
+    cohortPatientCount: s.cohortPatientCount,
+  } as QualitySnapshot;
 }
 
 export function filterSnapshotsByServer(

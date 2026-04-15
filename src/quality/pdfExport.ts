@@ -38,11 +38,22 @@ import {
 import { pdfFilename, type QualitySnapshot } from './trendsHistory';
 import type { MetricKey } from './thresholds';
 
+/**
+ * Plan 21-04 signature evolution:
+ *   - `cohort: string[]` renamed to `resourceTypes: string[]` (the existing
+ *     parameter has always been the dashboard's resource-type filter list,
+ *     despite its misnamed "cohort" field — see CHRT-04).
+ *   - New optional `cohort?: { id, name, patientCount } | null` for the
+ *     real cohort object. Plan 21-06 threads this from
+ *     `QualityOverviewPage.handleExport` once the dashboard has a cohort
+ *     dropdown. Until then, callers pass `null`.
+ */
 export interface ExportQualityPdfParams {
   snapshots: QualitySnapshot[];
   summary: CountSummary;
   sampleSize: number;
-  cohort: string[];
+  resourceTypes: string[];
+  cohort?: { id: string; name: string; patientCount: number } | null;
   thresholds: Record<MetricKey, number | null>;
   serverUrl: string;
   capturedAt: Date;

@@ -82,11 +82,19 @@ export interface CountSummary {
   totals: Record<MetricKey, number | undefined>;
 }
 
+/**
+ * Plan 21-04: `cohort: string[]` renamed to `resourceTypes: string[]` (the
+ * existing field has always held the dashboard's resource-type filter
+ * list, CHRT-04). New optional `cohort` object carries the real cohort at
+ * capture — rendered as a second informational line on the cover page
+ * when non-null (wired in Plan 21-06).
+ */
 export interface PdfReportLayoutProps {
   snapshots: QualitySnapshot[];
   summary: CountSummary;
   sampleSize: number;
-  cohort: string[];
+  resourceTypes: string[];
+  cohort?: { id: string; name: string; patientCount: number } | null;
   thresholds: Record<MetricKey, number | null>;
   serverUrl: string;
   capturedAt: Date;
@@ -157,11 +165,12 @@ const PdfPage = forwardRef<HTMLDivElement, PdfPageProps>(function PdfPage(
 
 export { PdfPage };
 
-function formatCohort(cohort: string[], totalTypes: number): string {
-  if (cohort.length === 0) return `All ${totalTypes} resource types`;
-  if (cohort.length === 1) return `1 resource type: ${cohort[0]}`;
-  if (cohort.length < 4) return `${cohort.length} of ${totalTypes}: ${cohort.join(', ')}`;
-  return `${cohort.length} of ${totalTypes}: ${cohort[0]}, ${cohort[1]}, ${cohort[2]}, and ${cohort.length - 3} more`;
+function formatResourceTypes(resourceTypes: string[], totalTypes: number): string {
+  if (resourceTypes.length === 0) return `All ${totalTypes} resource types`;
+  if (resourceTypes.length === 1) return `1 resource type: ${resourceTypes[0]}`;
+  if (resourceTypes.length < 4)
+    return `${resourceTypes.length} of ${totalTypes}: ${resourceTypes.join(', ')}`;
+  return `${resourceTypes.length} of ${totalTypes}: ${resourceTypes[0]}, ${resourceTypes[1]}, ${resourceTypes[2]}, and ${resourceTypes.length - 3} more`;
 }
 
 export function PdfReportLayout(props: PdfReportLayoutProps) {
@@ -169,6 +178,7 @@ export function PdfReportLayout(props: PdfReportLayoutProps) {
     snapshots,
     summary,
     sampleSize,
+    resourceTypes,
     cohort,
     thresholds,
     serverUrl,
@@ -180,7 +190,10 @@ export function PdfReportLayout(props: PdfReportLayoutProps) {
   } = props;
   const hasTrends = snapshots.length >= 2;
   const totalPages = hasTrends ? 3 : 2;
-  const cohortLine = formatCohort(cohort, summary.distinctTypes);
+  const resourceTypesLine = formatResourceTypes(
+    resourceTypes,
+    summary.distinctTypes,
+  );
 
   return (
     <>
@@ -207,7 +220,13 @@ export function PdfReportLayout(props: PdfReportLayoutProps) {
             </Text>
             <Text size="sm">Server: {serverUrl}</Text>
             <Text size="sm">Sample size: {sampleSize} resources per type</Text>
-            <Text size="sm">Cohort: {cohortLine}</Text>
+            <Text size="sm">Resource types: {resourceTypesLine}</Text>
+            {cohort != null && (
+              <Text size="sm">
+                Cohort: &quot;{cohort.name}&quot; (
+                {cohort.patientCount.toLocaleString()} patients)
+              </Text>
+            )}
             <Group gap="xs">
               <Text size="sm">Quality backend:</Text>
               <Badge color="gray" variant="light" size="sm">

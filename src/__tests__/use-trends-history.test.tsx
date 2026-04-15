@@ -72,7 +72,8 @@ function mkSnap(id: string, serverUrl = 'http://a/fhir'): QualitySnapshot {
     capturedAt: new Date().toISOString(),
     serverUrl,
     sampleSize: 100,
-    cohort: [],
+    resourceTypes: [],
+    cohortId: null,
     scores: {
       completeness: 80,
       coverage: 70,

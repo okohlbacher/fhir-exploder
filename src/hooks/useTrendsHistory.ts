@@ -31,6 +31,7 @@ import { notifications } from '@mantine/notifications';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   TRENDS_STORAGE_KEY,
+  migrateSnapshot,
   type QualitySnapshot,
 } from '../quality/trendsHistory';
 
@@ -56,12 +57,20 @@ export function useTrendsHistory(): UseTrendsHistoryReturn {
   // Warn exactly once per hook instance on corrupt payload.
   const warnedRef = useRef(false);
   const snapshots = useMemo<QualitySnapshot[]>(() => {
-    if (Array.isArray(stored)) return stored;
-    if (!warnedRef.current) {
-      console.warn('quality.trends.v1 corrupted, resetting to []');
-      warnedRef.current = true;
+    if (!Array.isArray(stored)) {
+      if (!warnedRef.current) {
+        console.warn('quality.trends.v1 corrupted, resetting to []');
+        warnedRef.current = true;
+      }
+      return [];
     }
-    return [];
+    // Plan 21-04 (T-4.3): rows persisted before the `cohort` → `resourceTypes`
+    // rename lack the new canonical field. `migrateSnapshot` normalizes the
+    // shape + drops corrupt-per-row entries (returns `null`) so stale tampered
+    // rows never flow into the UI. T-21-03: it emits no logs, so no PHI leaks.
+    return stored
+      .map((row) => migrateSnapshot(row))
+      .filter((row): row is QualitySnapshot => row !== null);
   }, [stored]);
 
   const append = useCallback(

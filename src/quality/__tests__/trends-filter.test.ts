@@ -7,7 +7,8 @@ function makeSnap(serverUrl: string, id: string): QualitySnapshot {
     capturedAt: '2026-04-14T18:30:42.123Z',
     serverUrl,
     sampleSize: 100,
-    cohort: [],
+    resourceTypes: [],
+    cohortId: null,
     scores: {
       completeness: 90,
       coverage: 80,

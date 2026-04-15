@@ -13,7 +13,8 @@ describe('QualitySnapshot serialization round-trip', () => {
     capturedAt: '2026-04-14T18:30:42.123Z',
     serverUrl: 'http://localhost:8080/fhir',
     sampleSize: 100,
-    cohort: [],
+    resourceTypes: [],
+    cohortId: null,
     scores: {
       completeness: 92.5,
       coverage: 78,
@@ -53,7 +54,7 @@ describe('QualitySnapshot serialization round-trip', () => {
       makeSnap({ id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', sampleSize: 50 }),
       makeSnap({
         id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-        cohort: ['Patient', 'Condition'],
+        resourceTypes: ['Patient', 'Condition'],
         serverUrl: 'https://blaze.example.org/fhir',
       }),
       makeSnap({
@@ -64,11 +65,13 @@ describe('QualitySnapshot serialization round-trip', () => {
     expect(roundTrip(snaps)).toEqual(snaps);
   });
 
-  it('preserves empty cohort array as [] (not null/undefined)', () => {
-    const snaps: QualitySnapshot[] = [makeSnap({ cohort: [] })];
+  it('preserves empty resourceTypes array as [] (not null/undefined)', () => {
+    // Plan 21-04 rename: field is now `resourceTypes`, old `cohort` is
+    // accepted only on read via `migrateSnapshot`.
+    const snaps: QualitySnapshot[] = [makeSnap({ resourceTypes: [] })];
     const restored = roundTrip(snaps);
-    expect(restored[0].cohort).toEqual([]);
-    expect(Array.isArray(restored[0].cohort)).toBe(true);
+    expect(restored[0].resourceTypes).toEqual([]);
+    expect(Array.isArray(restored[0].resourceTypes)).toBe(true);
   });
 
   it('preserves scores.duplicates: null as null (not dropped)', () => {

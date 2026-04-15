@@ -105,7 +105,7 @@ describe('captureSnapshot', () => {
     expect(snap.capturedAt.endsWith('Z')).toBe(true);
   });
 
-  it('passes through serverUrl, sampleSize, cohort verbatim', () => {
+  it('passes through serverUrl, sampleSize, resourceTypes verbatim', () => {
     const cohort = ['Patient', 'Condition', 'Observation'];
     const snap = captureSnapshot(
       baseParams({
@@ -116,14 +116,16 @@ describe('captureSnapshot', () => {
     );
     expect(snap.serverUrl).toBe('https://blaze.mii.example.org/fhir');
     expect(snap.sampleSize).toBe(500);
-    expect(snap.cohort).toEqual(['Patient', 'Condition', 'Observation']);
+    // Plan 21-04: `cohort` legacy alias is still accepted but the stored
+    // field is renamed to `resourceTypes`.
+    expect(snap.resourceTypes).toEqual(['Patient', 'Condition', 'Observation']);
   });
 
-  it('does not alias the caller cohort array (defensive copy)', () => {
+  it('does not alias the caller resourceTypes array (defensive copy)', () => {
     const cohort = ['Patient'];
     const snap = captureSnapshot(baseParams({ cohort }));
     cohort.push('Condition');
     // Mutation of the caller array must not leak into the snapshot.
-    expect(snap.cohort).toEqual(['Patient']);
+    expect(snap.resourceTypes).toEqual(['Patient']);
   });
 });

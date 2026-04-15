@@ -71,7 +71,8 @@ function mkSnapshot(id: string): QualitySnapshot {
     capturedAt: new Date('2026-04-14T18:30:42Z').toISOString(),
     serverUrl: 'http://localhost:8080/fhir',
     sampleSize: 100,
-    cohort: [],
+    resourceTypes: [],
+    cohortId: null,
     scores: {
       completeness: 80,
       coverage: 70,
@@ -89,7 +90,8 @@ function renderLayout(
   snapshots: QualitySnapshot[],
   overrides: Partial<{
     summary: PdfCountSummary;
-    cohort: string[];
+    resourceTypes: string[];
+    cohort: { id: string; name: string; patientCount: number } | null;
     sampleSize: number;
     serverUrl: string;
   }> = {},
@@ -103,7 +105,8 @@ function renderLayout(
         snapshots={snapshots}
         summary={overrides.summary ?? BASE_SUMMARY}
         sampleSize={overrides.sampleSize ?? 100}
-        cohort={overrides.cohort ?? []}
+        resourceTypes={overrides.resourceTypes ?? []}
+        cohort={overrides.cohort ?? null}
         thresholds={BASE_THRESHOLDS}
         serverUrl={overrides.serverUrl ?? 'http://localhost:8080/fhir'}
         capturedAt={new Date('2026-04-14T18:30:42Z')}
@@ -167,31 +170,57 @@ describe('PdfReportLayout', () => {
     ).toBeNull();
   });
 
-  it('cohort summary formats: 0 → "All N resource types"', () => {
-    renderLayout([], { cohort: [] });
-    expect(screen.getByText(/Cohort:\s*All 15 resource types/)).toBeTruthy();
-  });
-
-  it('cohort summary formats: 1 → "1 resource type: <name>"', () => {
-    renderLayout([], { cohort: ['Patient'] });
-    expect(screen.getByText(/Cohort:\s*1 resource type:\s*Patient/)).toBeTruthy();
-  });
-
-  it('cohort summary formats: 3 → "N of total: a, b, c"', () => {
-    renderLayout([], { cohort: ['Patient', 'Observation', 'Condition'] });
+  it('resource-types summary formats: 0 → "All N resource types"', () => {
+    renderLayout([], { resourceTypes: [] });
     expect(
-      screen.getByText(/Cohort:\s*3 of 15:\s*Patient,\s*Observation,\s*Condition/),
+      screen.getByText(/Resource types:\s*All 15 resource types/),
     ).toBeTruthy();
   });
 
-  it('cohort summary formats: 5 → "N of total: a, b, c, and K more"', () => {
+  it('resource-types summary formats: 1 → "1 resource type: <name>"', () => {
+    renderLayout([], { resourceTypes: ['Patient'] });
+    expect(
+      screen.getByText(/Resource types:\s*1 resource type:\s*Patient/),
+    ).toBeTruthy();
+  });
+
+  it('resource-types summary formats: 3 → "N of total: a, b, c"', () => {
+    renderLayout([], { resourceTypes: ['Patient', 'Observation', 'Condition'] });
+    expect(
+      screen.getByText(
+        /Resource types:\s*3 of 15:\s*Patient,\s*Observation,\s*Condition/,
+      ),
+    ).toBeTruthy();
+  });
+
+  it('resource-types summary formats: 5 → "N of total: a, b, c, and K more"', () => {
     renderLayout([], {
-      cohort: ['Patient', 'Observation', 'Condition', 'Encounter', 'MedicationRequest'],
+      resourceTypes: [
+        'Patient',
+        'Observation',
+        'Condition',
+        'Encounter',
+        'MedicationRequest',
+      ],
     });
     expect(
       screen.getByText(
-        /Cohort:\s*5 of 15:\s*Patient,\s*Observation,\s*Condition,\s*and 2 more/,
+        /Resource types:\s*5 of 15:\s*Patient,\s*Observation,\s*Condition,\s*and 2 more/,
       ),
+    ).toBeTruthy();
+  });
+
+  it('omits the Cohort line when no active cohort is provided', () => {
+    renderLayout([], { cohort: null });
+    expect(screen.queryByText(/^Cohort:/)).toBeNull();
+  });
+
+  it('renders the Cohort line with name + patient count when cohort is provided', () => {
+    renderLayout([], {
+      cohort: { id: 'c-123', name: 'Diabetic 2024', patientCount: 1234 },
+    });
+    expect(
+      screen.getByText(/Cohort:.*Diabetic 2024.*1,234 patients/),
     ).toBeTruthy();
   });
 });
