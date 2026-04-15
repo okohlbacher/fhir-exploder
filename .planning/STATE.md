@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: -- Cohort Definition & Storage
 status: planning
-stopped_at: Phase 21 context gathered
-last_updated: "2026-04-15T06:03:53.679Z"
+stopped_at: Phase 21 UI-SPEC approved
+last_updated: "2026-04-15T08:45:00.000Z"
 last_activity: 2026-04-15
 progress:
   total_phases: 1
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 
 ## Current Position
 
-Phase: -- (next: 21)
-Plan: Not started
-Status: v1.2 shipped; v1.3 awaiting planning
+Phase: 21 (planning)
+Plan: Not started — UI-SPEC approved, ready for /gsd-plan-phase 21
+Status: v1.3 planning in progress; Phase 21 design contract locked
 Last activity: 2026-04-15
 
 Progress: [░░░░░░░░░░] 0%
@@ -65,6 +65,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-15T06:03:53.677Z
-Stopped at: Phase 21 context gathered
-Resume file: .planning/phases/21-interactive-cohort-builder-rename/21-CONTEXT.md
+Last session: 2026-04-15T08:45:00.000Z
+Stopped at: Phase 21 UI-SPEC approved; ready for /gsd-plan-phase 21
+Resume file: .planning/phases/21-interactive-cohort-builder-rename/21-UI-SPEC.md
