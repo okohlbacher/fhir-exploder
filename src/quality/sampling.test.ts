@@ -87,8 +87,11 @@ describe('sampleResources with patient scoping', () => {
     const [url, body, contentType] = post.mock.calls[0];
     expect(url).toBe('http://fake/fhir/Observation/_search');
     expect(typeof body).toBe('string');
-    // URL-encoded form body — Patient%2F is 'Patient/' encoded
-    expect(body).toContain('patient=Patient%2Fp1');
+    // URL-encoded form body — Patient%2F is 'Patient/' encoded, %2C is ','
+    // First ID (p0) appears right after `patient=`; subsequent IDs after %2C.
+    expect(body).toContain('patient=Patient%2Fp0');
+    expect(body).toContain('%2CPatient%2Fp1');
+    expect(body).toContain('%2CPatient%2Fp40');
     expect(body).toContain('_count=1000');
     expect(contentType).toBe('application/x-www-form-urlencoded');
   });
