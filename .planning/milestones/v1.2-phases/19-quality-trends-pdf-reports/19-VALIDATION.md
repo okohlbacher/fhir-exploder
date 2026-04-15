@@ -2,8 +2,8 @@
 phase: 19
 slug: quality-trends-pdf-reports
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-14
 ---
 
@@ -39,7 +39,13 @@ created: 2026-04-14
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| {filled by planner} | | | | | | | | | ⬜ pending |
+| 19-01 / T1 | 01 | 1 | QUAL-05, QUAL-06 | T-19-01, T-19-02 | Peer-valid deps + jsPDF/Mantine charts importable | integration (npm) | `npm ls @mantine/charts @mantine/core jspdf 2>&1 \| grep -vE "^(npm warn\|$)" \| grep -v invalid && npm run build` | Wave 0 — package.json exists | ⬜ planned |
+| 19-01 / T2 | 01 | 1 | QUAL-05, QUAL-06 | T-19-02, T-19-05 | Snapshot type + pure helpers (filename sanitization, breach flag, server filter) round-trip correctly | unit (vitest) | `npm run test -- src/quality/__tests__/trendsHistory.test.ts src/quality/__tests__/capture-snapshot.test.ts src/quality/__tests__/pdf-filename.test.ts src/quality/__tests__/trends-breach.test.ts src/quality/__tests__/trends-filter.test.ts` | Wave 0 — 5 test files | ⬜ planned |
+| 19-02 / T1 | 02 | 2 | QUAL-05 | T-19-07, T-19-09 | `useTrendsHistory` hydrates, corrupt payload → `[]` + warn, `QuotaExceededError` surfaces red toast | hook (vitest + @testing-library) | `npm run test -- src/__tests__/use-trends-history.test.tsx` | Wave 0 — test stub | ⬜ planned |
+| 19-02 / T2 | 02 | 2 | QUAL-05 | T-19-07, T-19-08, T-19-10, T-19-11, T-19-12 | Trends tab renders 0/1/N states, Overlay mode, Include-other-servers filter with per-server shape disambiguation (UI-SPEC I-07), Clear history modal, soft-warning at >500 | component (vitest + @testing-library) | `npm run test -- src/__tests__/trends-panel.test.tsx src/__tests__/use-trends-history.test.tsx` | Wave 0 — test stub | ⬜ planned |
+| 19-03 / T1 | 03 | 3 | QUAL-05, QUAL-06 | T-19-13, T-19-14, T-19-15, T-19-16, T-19-17 | `PdfReportLayout` renders 2 or 3 pages conditionally; `exportQualityPdf` orchestrates portal→fonts→rAF×2→toPng×N→jsPDF.save→cleanup with try/finally | unit + layout (vitest + mocks) | `npm run test -- src/__tests__/pdf-report-layout.test.tsx src/quality/__tests__/pdfExport.test.ts` | Wave 0 — test stubs | ⬜ planned |
+| 19-03 / T2 | 03 | 3 | QUAL-05, QUAL-06 | T-19-18, T-19-19 | `/quality` toolbar Capture + Export buttons wired; TrendsPanel receives `onCapture`; error path surfaces red toast | full suite (vitest + tsc) | `npm run test && npm run build` | — (edits existing files) | ⬜ planned |
+| 19-03 / T3 | 03 | 3 | QUAL-05, QUAL-06 | T-19-13, T-19-20 | Human UAT: end-to-end PDF export, breach coloring (D-11), cross-server filter, Clear history flow | manual (checkpoint:human-verify) | `19-HUMAN-UAT.md` script (manual — jsdom cannot render canvas) | `19-HUMAN-UAT.md` created by T2 | ⬜ planned |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -79,4 +85,4 @@ created: 2026-04-14
 - [ ] Feedback latency < 10s for per-task sampling
 - [ ] `nyquist_compliant: true` set in frontmatter after planner fills Per-Task map
 
-**Approval:** pending
+**Approval:** planner-signed 2026-04-14 — Per-Task map populated (7 rows: P01-T1, P01-T2, P02-T1, P02-T2, P03-T1, P03-T2, P03-T3), nyquist_compliant + wave_0_complete flipped to true. Pending human sign-off on UAT (see `19-HUMAN-UAT.md` created during Plan 03 Task 2).

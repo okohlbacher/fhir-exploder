@@ -1,34 +1,34 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: -- Tech Debt & Quality Monitoring
-status: executing
-stopped_at: Phase 18 UI-SPEC approved
-last_updated: "2026-04-14T21:49:31.327Z"
-last_activity: 2026-04-14
+milestone: v1.3
+milestone_name: -- Cohort Definition & Storage
+status: planning
+stopped_at: v1.2 shipped 2026-04-15
+last_updated: "2026-04-15T06:00:00.000Z"
+last_activity: 2026-04-15
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 19
-  completed_plans: 19
-  percent: 100
+  total_phases: 2
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-13)
+See: .planning/PROJECT.md (updated 2026-04-15)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 20 — v12-gap-closure
+**Current focus:** Planning v1.3 — Cohort Definition & Storage (Phases 21-22)
 
 ## Current Position
 
-Phase: 20
+Phase: -- (next: 21)
 Plan: Not started
-Status: Executing Phase 20
-Last activity: 2026-04-14
+Status: v1.2 shipped; v1.3 awaiting planning
+Last activity: 2026-04-15
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -36,36 +36,28 @@ Progress: [░░░░░░░░░░] 0%
 
 **Velocity:**
 
-- Total plans completed: 15
-- Average duration: --
-- Total execution time: --
+- Total plans completed (v1.2): 22
+- Total phases shipped (v1.2): 7 (14-20)
 
 ## Accumulated Context
 
 ### Decisions
 
-- v1.2 scope expanded: 16 requirements across 6 phases (tech debt + Kahn et al. DQ framework)
-- Phase 15 (drill-down) is foundational -- Phases 16+17 depend on it for issue navigation
-- Phases 16 and 17 are independent of each other (both depend on 15)
-- Phase 18 (alerting) depends on both 16 and 17 being complete
-- Phase 14 before all DQ work: clean codebase before adding new features
-- [Phase 17]: 17-03 gap closure: two one-word edits to DuplicatesPanel summary memos (members -> patients/resources) plus 3-test regression suite that fails on broken code; closes SC-1 / SC-2 / DQ-07 / DQ-08
+- v1.3 scope: cohort definition + storage (7 requirements, CHRT-01..07 across Phases 21 + 22)
+- Phase 21 before Phase 22: interactive builder establishes the storage/scoping contract that FHIRPath + FDPG reuse
+- Rename "Cohort" control → "Resource types" in Phase 21 to fix the long-standing UX mismatch
 
 ### Pending Todos
 
-2 todos:
-
-- Add cohort selection for scoped data quality analysis (ui) — interactive UI filtering
-- Define cohorts via FHIRPath query or MII FDPG format (ui) — programmatic definition, import/export, deletion
+None tracked in STATE; v1.3 planning kick-off via `/gsd-new-milestone` or `/gsd-plan-phase 21`.
 
 ### Completed Todos
 
-4 todos resolved in Phase 14:
+Cohort-related todos consumed by v1.3 REQUIREMENTS:
 
-- ~~Fix readResource type-widening TS2345 errors~~ (ui)
-- ~~Fix unused variable warnings in tests~~ (testing)
-- ~~Fix global not found in resource-type-landing-counts test~~ (testing)
-- ~~Fix SearchRequest coercion warning TS2352~~ (ui)
+- ~~Add cohort selection for scoped data quality analysis~~ — absorbed by CHRT-01/02/03 (Phase 21)
+- ~~Define cohorts via FHIRPath query or MII FDPG format~~ — absorbed by CHRT-05/06/07 (Phase 22)
+- ~~Cohort selector UI mismatch (rename or replace)~~ — rename handled by CHRT-04 (Phase 21)
 
 ### Blockers/Concerns
 
@@ -73,6 +65,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-14T09:47:36.244Z
-Stopped at: Phase 18 UI-SPEC approved
-Resume file: .planning/phases/18-quality-alerting-thresholds/18-UI-SPEC.md
+Last session: 2026-04-15T06:00:00.000Z
+Stopped at: v1.2 shipped 2026-04-15
+Resume file: (start v1.3 with `/gsd-new-milestone` or `/gsd-plan-phase 21`)

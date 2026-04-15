@@ -647,22 +647,25 @@ doc.save(pdfFilename(serverUrl, new Date()));
 
 **All other claims in this research are VERIFIED or CITED.**
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the "Export PDF" button live on the main `/quality` toolbar or only on the Trends tab toolbar?**
    - What we know: CONTEXT D-17 says main toolbar ("right of Capture snapshot"). But D-08 Trends-tab toolbar also includes Capture snapshot.
    - What's unclear: Is Capture duplicated on both toolbars, or only on Trends?
    - Recommendation: Per D-17 verbatim — Capture + Export PDF live on the main `/quality` toolbar (always-visible). Trends tab toolbar has Clear history + Overlay toggle + Include-other-servers toggle. Let planner resolve at UI-SPEC.
+   - **RESOLVED by UI-SPEC I-01** (see 19-UI-SPEC.md §I-01 and the Trends-tab toolbar note at line 314 — "Capture snapshot does NOT live on the Trends tab toolbar; it lives on the main /quality toolbar only"). Locked left-to-right order: Last-computed → Configure thresholds → Capture snapshot → Export PDF → Recompute metrics. Trends-tab toolbar is Clear history + Overlay all metrics + Include other servers, no duplication.
 
 2. **Tooltip type on overlay chart: single-line multi-series vs stacked?**
    - What we know: Claude's Discretion per CONTEXT.
    - What's unclear: Does 7-series tooltip need compacting?
    - Recommendation: Use Mantine's default `ChartTooltip` behavior in overlay mode (it handles multi-series natively), override only for mini-charts.
+   - **RESOLVED by UI-SPEC I-04** (see 19-UI-SPEC.md §I-04 "Overlay-mode tooltip" rule at line 419 — "uses the default Mantine ChartTooltip (multi-series list). No custom content override"). Custom tooltip is mini-chart-only; overlay chart uses Mantine's built-in stacked list, intentionally dropping threshold / breach info to keep 7 series readable.
 
 3. **Per-snapshot threshold reference-line rendering: single reference line at most-recent threshold, OR stepped second data series, OR multiple `referenceLines` (one per distinct threshold value)?**
    - What we know: D-11 specifies "threshold value active at each snapshot time" — not the current threshold.
    - What's unclear: Visual treatment — a stepped line (Pattern 4) is truthful but can clutter the 280×160 mini-chart.
    - Recommendation: Start with stepped second-series (most truthful, matches D-11 literally). Planner may downgrade to "single ref line at most-recent threshold + tooltip-disclosed per-snapshot threshold" if UAT finds it too busy.
+   - **RESOLVED by UI-SPEC I-03** (see 19-UI-SPEC.md §I-03 LineChart configuration at line 393 — `threshold` series uses `curveType: 'step'` with `strokeDasharray: '4 4'` as a second data series). Stepped second-series is locked; Plan 02 Task 2 enforces `curveType: 'step'` + `strokeDasharray: '4 4'` via grep acceptance criteria.
 
 ## Environment Availability
 
