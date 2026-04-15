@@ -72,5 +72,5 @@ Full details: [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 14-20 (v1.2) | v1.2 | 22/22 | ✅ Shipped | 2026-04-15 |
-| 21. Interactive Cohort Builder + Rename | v1.3 | 0/0 | Not started | - |
+| 21. Interactive Cohort Builder + Rename | v1.3 | 4/6 | In Progress|  |
 | 22. Programmatic Cohort Definition (FHIRPath + FDPG) | v1.3 | 0/0 | Not started | - |

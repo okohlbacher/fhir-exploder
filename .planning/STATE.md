@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: -- Cohort Definition & Storage
 status: executing
-stopped_at: Phase 21 UI-SPEC approved; ready for /gsd-plan-phase 21
-last_updated: "2026-04-15T13:21:51.773Z"
-last_activity: 2026-04-15 -- Phase 21 planning complete
+stopped_at: Completed Plan 21-04 (CHRT-04 rename + legacy migration)
+last_updated: "2026-04-15T18:55:00.000Z"
+last_activity: 2026-04-15 -- Phase 21 Plan 04 executed (6 commits, zero regression)
 progress:
-  total_phases: 1
-  completed_phases: 0
-  total_plans: 6
-  completed_plans: 0
-  percent: 0
+  total_phases: 10
+  completed_phases: 6
+  total_plans: 31
+  completed_plans: 29
+  percent: 94
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 
 ## Current Position
 
-Phase: 21 (planning)
-Plan: Not started — UI-SPEC approved, ready for /gsd-plan-phase 21
-Status: Ready to execute
-Last activity: 2026-04-15 -- Phase 21 planning complete
+Phase: 21 (Wave 1 executing)
+Plan: 21-04 complete — next up is 21-05 (if any remain) then 21-06 (dashboard wiring)
+Status: Executing
+Last activity: 2026-04-15 -- Plan 21-04 executed: CohortSelector → ResourceTypeSelector + localStorage migration + snapshot legacy reader
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -46,6 +46,7 @@ Progress: [░░░░░░░░░░] 0%
 - v1.3 scope: cohort definition + storage (7 requirements, CHRT-01..07 across Phases 21 + 22)
 - Phase 21 before Phase 22: interactive builder establishes the storage/scoping contract that FHIRPath + FDPG reuse
 - Rename "Cohort" control → "Resource types" in Phase 21 to fix the long-standing UX mismatch
+- Plan 21-04 D-11: one-shot localStorage migration runs at QualityLayout mount (parent effect before child useLocalStorage reads); never-clobber + unconditional legacy removeItem; migrateSnapshot normalizes persisted trend rows on read and returns null for corrupt payloads (T-21-13)
 
 ### Pending Todos
 
@@ -65,6 +66,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-15T08:45:00.000Z
-Stopped at: Phase 21 UI-SPEC approved; ready for /gsd-plan-phase 21
-Resume file: .planning/phases/21-interactive-cohort-builder-rename/21-UI-SPEC.md
+Last session: 2026-04-15T18:55:00.000Z
+Stopped at: Completed Plan 21-04 (CHRT-04 rename + legacy migration); Plans 21-02/21-03/21-04 all Wave 1 complete
+Resume file: .planning/phases/21-interactive-cohort-builder-rename/21-06-PLAN.md
