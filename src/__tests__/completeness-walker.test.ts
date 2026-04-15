@@ -15,7 +15,7 @@
  *   and simply treats the parent as present.
  */
 import { describe, it, expect } from 'vitest';
-import type { StructureDefinition } from '@medplum/fhirtypes';
+import type { Resource, StructureDefinition } from '@medplum/fhirtypes';
 import {
   requiredElementPaths,
   isPathPopulated,

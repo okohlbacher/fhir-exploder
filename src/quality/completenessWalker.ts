@@ -104,7 +104,7 @@ export function computeCompleteness(
     }
     if (missing.length > 0) {
       perResource.push({
-        resourceId: `${r.resourceType}/${(r as Record<string, unknown>).id ?? 'unknown'}`,
+        resourceId: `${r.resourceType}/${(r as unknown as Record<string, unknown>).id ?? 'unknown'}`,
         resourceType: r.resourceType ?? '',
         missingPaths: missing,
       });
