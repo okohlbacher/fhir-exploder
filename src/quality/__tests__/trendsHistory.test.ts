@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { QualitySnapshot } from '../trendsHistory';
+import { migrateSnapshot, type QualitySnapshot } from '../trendsHistory';
 
 /**
  * Round-trip serialization through JSON.parse(JSON.stringify(...)) must
@@ -123,19 +123,94 @@ describe('QualitySnapshot serialization round-trip', () => {
  * The `-t "legacy snapshot"` filter in 21-VALIDATION.md resolves here.
  */
 describe('legacy snapshot', () => {
-  it.skip('treats legacy `cohort` field as `resourceTypes` (pending Plan 21-04)', () => {
-    // TODO(Plan 21-04): Import migrateSnapshot (not yet implemented) from
-    // ../trendsHistory and assert it promotes `cohort` → `resourceTypes`.
-    //
-    // Expected behaviour:
-    //   Input:  { cohort: ['Patient','Observation'], resourceTypes: undefined }
-    //   Output: { resourceTypes: ['Patient','Observation'] }  // legacy field dropped
-    expect(true).toBe(true);
+  // Shared shape the reader needs besides the migrated field. Kept minimal
+  // and PHI-free (T-21-03).
+  const baseFields = {
+    id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    capturedAt: '2026-04-14T18:30:42.123Z',
+    serverUrl: 'http://localhost:8080/fhir',
+    sampleSize: 100,
+    scores: {
+      completeness: 92.5,
+      coverage: 78,
+      validation: 99.1,
+      plausibility: 99.9,
+      labRanges: 97,
+      duplicates: 100,
+      references: 98.4,
+    },
+    thresholds: {
+      completeness: 80,
+      coverage: 70,
+      validation: 95,
+      plausibility: 99,
+      labRanges: 95,
+      duplicates: 99,
+      references: 98,
+    },
+  } as const;
+
+  it('treats legacy `cohort` field as `resourceTypes`', () => {
+    const legacy = { ...baseFields, cohort: ['Patient', 'Observation'] };
+    const migrated = migrateSnapshot(legacy);
+    expect(migrated).not.toBeNull();
+    expect(migrated!.resourceTypes).toEqual(['Patient', 'Observation']);
+    // Plan 21-04 adds these fields as `null` / undefined for legacy rows.
+    expect(migrated!.cohortId).toBeNull();
+    expect(migrated!.cohortName).toBeUndefined();
+    expect(migrated!.cohortPatientCount).toBeUndefined();
   });
 
-  it.skip('leaves modern snapshots (with resourceTypes) untouched (pending Plan 21-04)', () => {
-    // TODO(Plan 21-04): assert migrateSnapshot is idempotent — a snapshot
-    // that already has `resourceTypes` is returned unchanged.
-    expect(true).toBe(true);
+  it('prefers `resourceTypes` when both present', () => {
+    const mixed = {
+      ...baseFields,
+      cohort: ['LEGACY'],
+      resourceTypes: ['Patient', 'Condition'],
+    };
+    const migrated = migrateSnapshot(mixed);
+    expect(migrated!.resourceTypes).toEqual(['Patient', 'Condition']);
+  });
+
+  it('leaves modern snapshots (with resourceTypes) untouched', () => {
+    const modern = {
+      ...baseFields,
+      resourceTypes: ['Patient', 'Observation'],
+      cohortId: 'c-123',
+      cohortName: 'Diabetic 2024',
+      cohortPatientCount: 42,
+    };
+    const migrated = migrateSnapshot(modern);
+    expect(migrated!.resourceTypes).toEqual(['Patient', 'Observation']);
+    expect(migrated!.cohortId).toBe('c-123');
+    expect(migrated!.cohortName).toBe('Diabetic 2024');
+    expect(migrated!.cohortPatientCount).toBe(42);
+  });
+
+  it('returns null for null input (corrupt payload — T-21-13)', () => {
+    expect(migrateSnapshot(null)).toBeNull();
+    expect(migrateSnapshot(undefined)).toBeNull();
+  });
+
+  it('returns null for non-object input', () => {
+    expect(migrateSnapshot('some string')).toBeNull();
+    expect(migrateSnapshot(42)).toBeNull();
+    expect(migrateSnapshot(true)).toBeNull();
+  });
+
+  it('returns null when resourceTypes is not an array', () => {
+    // Tampered payload — T-21-13 mitigation.
+    expect(
+      migrateSnapshot({ ...baseFields, resourceTypes: 'not-an-array' }),
+    ).toBeNull();
+    expect(
+      migrateSnapshot({ ...baseFields, cohort: { notAnArray: true } }),
+    ).toBeNull();
+  });
+
+  it('defaults resourceTypes to [] when neither field is present', () => {
+    // Empty array is the "all resource types" semantic — not a corruption.
+    const migrated = migrateSnapshot(baseFields);
+    expect(migrated).not.toBeNull();
+    expect(migrated!.resourceTypes).toEqual([]);
   });
 });
