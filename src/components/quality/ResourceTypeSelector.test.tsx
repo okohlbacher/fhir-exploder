@@ -55,7 +55,10 @@ describe('ResourceTypeSelector', () => {
         />
       </Wrap>,
     );
-    expect(screen.getByLabelText('Resource types')).toBeInTheDocument();
+    // Mantine MultiSelect associates the label with both the hidden input and
+    // the visible combobox; `getAllByLabelText` returns ≥1 when the label
+    // string is wired.
+    expect(screen.getAllByLabelText('Resource types').length).toBeGreaterThan(0);
   });
 
   it('shows "Filtering to:" helper when value is non-empty', () => {
@@ -70,7 +73,7 @@ describe('ResourceTypeSelector', () => {
     );
     expect(
       screen.getByText('Filtering to: Patient, Observation'),
-    ).toBeInTheDocument();
+    ).toBeTruthy();
   });
 
   it('shows "All resource types" helper when value is empty', () => {

@@ -34,13 +34,14 @@ import { PlausibilityPanel } from './PlausibilityPanel';
 import { LabRangesPanel } from './LabRangesPanel';
 import { DuplicatesPanel } from './DuplicatesPanel';
 import { ReferencesPanel } from './ReferencesPanel';
-import { CohortSelector } from './CohortSelector';
+import { ResourceTypeSelector } from './ResourceTypeSelector';
 import { TrendsPanel } from './TrendsPanel';
 import { useThresholds } from '../../hooks/useThresholds';
 import { useTrendsHistory } from '../../hooks/useTrendsHistory';
 import { useQualityMetrics } from '../../quality/QualityMetricsContext';
 import { captureSnapshot } from '../../quality/trendsHistory';
 import { exportQualityPdf } from '../../quality/pdfExport';
+import { RESOURCE_TYPES_STORAGE_KEY } from '../../quality/cohorts';
 import type { MetricKey } from '../../quality/thresholds';
 
 const VALID_TABS = new Set([
@@ -76,11 +77,11 @@ export function QualityOverviewPage() {
     [capability],
   );
 
-  const [cohortTypes, setCohortTypes] = useLocalStorage<string[]>({
-    key: 'quality.cohort.v1',
+  const [resourceTypes, setResourceTypes] = useLocalStorage<string[]>({
+    key: RESOURCE_TYPES_STORAGE_KEY,
     defaultValue: [],
   });
-  const effectiveTypes = cohortTypes.length > 0 ? cohortTypes : types;
+  const effectiveTypes = resourceTypes.length > 0 ? resourceTypes : types;
 
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
@@ -118,7 +119,12 @@ export function QualityOverviewPage() {
       metrics,
       serverUrl: client.getBaseUrl(),
       sampleSize,
-      cohort: cohortTypes,
+      // Plan 21-04: legacy param name `cohort` is still accepted by the
+      // 3-arg captureSnapshot (T-4.3 adds `resourceTypes` as the canonical
+      // spelling). Keeping the existing call shape here preserves compile
+      // ordering: T-4.1 completes the rename up to the state variable and
+      // render site; T-4.3 renames the interface field.
+      cohort: resourceTypes,
       getActiveThreshold,
     });
     append(snap);
@@ -128,7 +134,7 @@ export function QualityOverviewPage() {
       message: 'Added to trend history.',
       autoClose: 2500,
     });
-  }, [metrics, client, sampleSize, cohortTypes, getActiveThreshold, append]);
+  }, [metrics, client, sampleSize, resourceTypes, getActiveThreshold, append]);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -161,7 +167,10 @@ export function QualityOverviewPage() {
           },
         },
         sampleSize,
-        cohort: cohortTypes,
+        // Plan 21-04: existing `cohort: string[]` parameter is still the
+        // resource-type list until T-4.3 renames it. Plan 21-06 will thread
+        // an additional cohort-object parameter through this call.
+        cohort: resourceTypes,
         thresholds,
         serverUrl: client.getBaseUrl(),
         capturedAt: new Date(),
@@ -191,7 +200,7 @@ export function QualityOverviewPage() {
     snapshots,
     metrics,
     sampleSize,
-    cohortTypes,
+    resourceTypes,
     client,
     getActiveThreshold,
     summary.total,
@@ -208,7 +217,11 @@ export function QualityOverviewPage() {
 
       <Group justify="space-between" align="flex-end">
         <Group gap="md" align="flex-end">
-          <CohortSelector types={types} value={cohortTypes} onChange={setCohortTypes} />
+          <ResourceTypeSelector
+            types={types}
+            value={resourceTypes}
+            onChange={setResourceTypes}
+          />
           <SampleSizeControl value={sampleSize} onChange={setSampleSize} />
         </Group>
         <Group gap="sm">
