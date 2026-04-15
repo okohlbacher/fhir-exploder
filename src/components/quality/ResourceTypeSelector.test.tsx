@@ -1,28 +1,90 @@
 /**
- * Wave 0 stub test file for Plan 21-04 (`src/components/quality/ResourceTypeSelector.tsx`).
+ * Plan 21-04 T-4.1 — `ResourceTypeSelector` rename contract.
  *
- * The current `CohortSelector` component is renamed to `ResourceTypeSelector`
- * in Plan 21-04 (CHRT-04). This stub locks the post-rename label contract so
- * the rename is enforced, not merely hoped for.
+ * Asserts the two text contracts locked in UI-SPEC §S8:
+ *   - `<MultiSelect label="Resource types" />`
+ *   - Helper text reads `Filtering to: {value.join(', ')}` when value is non-empty
  *
- * VALIDATION.md row:
+ * VALIDATION.md rows (CHRT-04):
  *   `npx vitest run src/components/quality/ResourceTypeSelector.test.tsx`
  *   (file-level run — the `Resource types` literal also lets callers filter
  *   with `-t "Resource types"` if desired.)
- *
- * Test is `it.skip` until Plan 21-04 un-skips and renders the renamed
- * component. The literal string "Resource types" MUST appear in this file
- * so the VALIDATION grep in acceptance_criteria returns ≥1 match.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { MantineProvider } from '@mantine/core';
+import type { ReactNode } from 'react';
+import { ResourceTypeSelector } from './ResourceTypeSelector';
+
+// ----- jsdom polyfills required by Mantine 8 -----
+
+class MockResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+(globalThis as unknown as { ResizeObserver: typeof ResizeObserver }).ResizeObserver =
+  MockResizeObserver as unknown as typeof ResizeObserver;
+
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+function Wrap({ children }: { children: ReactNode }) {
+  return <MantineProvider>{children}</MantineProvider>;
+}
 
 describe('ResourceTypeSelector', () => {
-  it.skip('renders label "Resource types" (pending Plan 21-04)', () => {
-    // TODO(Plan 21-04): import { ResourceTypeSelector } from './ResourceTypeSelector'
-    // (renamed from CohortSelector), render inside <MantineProvider>, then
-    //   expect(screen.getByLabelText('Resource types')).toBeInTheDocument();
-    // This drives the rename: the test fails at import-time until the file
-    // is renamed in Plan 21-04.
-    expect(true).toBe(true);
+  it('renders label "Resource types"', () => {
+    render(
+      <Wrap>
+        <ResourceTypeSelector
+          types={['Patient', 'Observation']}
+          value={[]}
+          onChange={() => {}}
+        />
+      </Wrap>,
+    );
+    expect(screen.getByLabelText('Resource types')).toBeInTheDocument();
+  });
+
+  it('shows "Filtering to:" helper when value is non-empty', () => {
+    render(
+      <Wrap>
+        <ResourceTypeSelector
+          types={['Patient', 'Observation', 'Condition']}
+          value={['Patient', 'Observation']}
+          onChange={() => {}}
+        />
+      </Wrap>,
+    );
+    expect(
+      screen.getByText('Filtering to: Patient, Observation'),
+    ).toBeInTheDocument();
+  });
+
+  it('shows "All resource types" helper when value is empty', () => {
+    render(
+      <Wrap>
+        <ResourceTypeSelector
+          types={['Patient', 'Observation']}
+          value={[]}
+          onChange={() => {}}
+        />
+      </Wrap>,
+    );
+    // Two matches: the placeholder and the helper text. getAllByText to avoid
+    // flaking on whichever the renderer resolves first.
+    expect(screen.getAllByText('All resource types').length).toBeGreaterThan(0);
   });
 });
