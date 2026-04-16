@@ -923,22 +923,25 @@ Translates to: `Condition?code=44054006&_elements=subject&_count=10000`
 
 **Items needing user confirmation in plan-check:** A4 (Encounter→Fall mapping default).
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the FHIRPath card surface the curated `SEARCH_PARAM_MAP` to the user as supported-fields documentation?**
    - What we know: The map is hand-curated; users will hit "Field X has no FHIR search parameter mapping" errors when they try unsupported fields.
    - What's unclear: Whether to render a `<Collapse>`-d helper section listing every supported (resourceType, field) pair, or just rely on the error message.
    - Recommendation: Helper section listing the 4 primary resource types (Patient, Condition, Observation, Encounter) and 3-5 example expressions per. Avoids re-querying the map at error time.
+   - **RESOLVED:** Helper `<Collapse>` section listing 4 primary resource types (Patient, Condition, Observation, Encounter) with 2-3 `<Code>`-rendered example expressions each — per the UI-SPEC §S1 Copywriting Contract (12 examples total). The user does not see the raw `SEARCH_PARAM_MAP`; unsupported-field errors rely on the translator's verbatim `'Field "{field}" on {resourceType} has no FHIR search parameter mapping. Supported fields: {list}.'` message (UI-SPEC §S7 translator error catalog).
 
 2. **For inbound FDPG SQ files, what behavior on mixed inclusion + exclusion criteria?**
    - What we know: D-06 says "Unsupported SQ features (exclusion criteria, OR groups, time-windows the translator doesn't recognize) cause the import to fail with a red Alert."
    - What's unclear: Whether "exclusion criteria" means non-empty `exclusionCriteria` (array length > 0) — and whether an empty `exclusionCriteria: []` should pass through silently.
    - Recommendation: Reject when `exclusionCriteria.some(group => group.length > 0)`; allow empty array (Flare emits `exclusionCriteria: []` for inclusion-only queries).
+   - **RESOLVED:** Reject import when `exclusionCriteria.some(group => group.length > 0)`; allow empty array (`exclusionCriteria: []` or omitted field entirely) to pass through silently. Rationale: Flare emits `exclusionCriteria: []` for inclusion-only queries, so treating the empty-array case as rejection would block round-tripping the most common FDPG export shape. Codec error message when non-empty: `'Exclusion criteria are not yet supported.'` (UI-SPEC §S6 codec error catalog, already locked verbatim).
 
 3. **Should `duplicateCohort` deactivate the original cohort if it was active?**
    - What we know: D-09 says Duplicate "inserts a new cohort with `name: '<original> (copy)'`, fresh UUID, fresh timestamps, same criteria."
    - What's unclear: Whether the duplicated cohort should auto-activate (probably not — user just wants a copy to edit).
-   - Recommendation: No auto-activation; original cohort stays active. User can switch via the dashboard `ActiveCohortSelect` if desired. **Out-of-band confirm with user during plan check.**
+   - Recommendation: No auto-activation; original cohort stays active. User can switch via the dashboard `ActiveCohortSelect` if desired.
+   - **RESOLVED:** Duplicating a cohort creates the new copy but does NOT auto-activate it. `activeCohortId` is left untouched. The user sees the new row in the saved-cohorts list and can activate it explicitly via the existing activate UI if desired. **Why:** Matches the implicit contract of duplicate actions across Mantine-style management UIs (new row appears but focus stays where the user is). Prevents surprising dashboard recomputes triggered by a duplicate click. Consistent with Phase 21's explicit-activation model (activation is always a deliberate user action, never a side-effect of another write). Recorded as D-11 in 22-CONTEXT.md.
 
 ## Sources
 

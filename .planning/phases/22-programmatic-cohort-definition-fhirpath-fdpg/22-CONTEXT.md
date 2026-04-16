@@ -170,6 +170,12 @@ Editing the currently-active cohort is allowed without restriction. On Save:
 
 No "draft" slot, no edit-while-active block. The Phase-21 cache mechanism already provides the right invalidation contract; layering a draft concept on top would be a Phase 22 invention with no analogue elsewhere.
 
+### D-11 — Duplicate does not auto-activate
+
+Duplicating a cohort creates the new copy but does NOT auto-activate it. `activeCohortId` is left untouched. The user sees the new row in the saved-cohorts list and can activate it explicitly via the existing activate UI if desired.
+
+**Why:** Matches the implicit contract of duplicate actions across Mantine-style management UIs (new row appears but focus stays where the user is). Prevents surprising dashboard recomputes triggered by a duplicate click. Consistent with Phase 21's explicit-activation model (activation is always a deliberate user action, never a side-effect of another write).
+
 ### Folded Todos
 
 None — all v1.3 cohort-related backlog items were absorbed into CHRT-01..07 during milestone planning.
