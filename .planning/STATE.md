@@ -1,41 +1,43 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.3
-milestone_name: -- Cohort Definition & Storage
-status: Awaiting human UAT
-stopped_at: Plan 21-06 code complete; T-6.3 human UAT PENDING (live Blaze server required)
-last_updated: "2026-04-16T14:19:44.907Z"
+milestone: v1.4
+milestone_name: -- Hardening & Tech-Debt Sweep
+status: Defining requirements
+stopped_at: Milestone v1.4 started — gathering requirements
+last_updated: "2026-04-16T18:05:00.000Z"
 last_activity: 2026-04-16
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 9
-  completed_plans: 9
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-15)
+See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Planning v1.3 — Cohort Definition & Storage (Phases 21-22)
+**Current focus:** Planning v1.4 — Hardening & Tech-Debt Sweep (phases 23-29 planned)
 
 ## Current Position
 
-Phase: 22
-Plan: Not started
-Status: Awaiting human UAT
-Last activity: 2026-04-16
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-16 — Milestone v1.4 started
 
-Progress: [██████████] 100%
+Progress: [          ] 0%
 
 ## Performance Metrics
 
 **Velocity:**
 
+- Total plans completed (v1.3): 9 (16 tasks)
+- Total phases shipped (v1.3): 2 (21-22)
 - Total plans completed (v1.2): 22
 - Total phases shipped (v1.2): 7 (14-20)
 
@@ -43,33 +45,35 @@ Progress: [██████████] 100%
 
 ### Decisions
 
-- v1.3 scope: cohort definition + storage (7 requirements, CHRT-01..07 across Phases 21 + 22)
-- Phase 21 before Phase 22: interactive builder establishes the storage/scoping contract that FHIRPath + FDPG reuse
-- Rename "Cohort" control → "Resource types" in Phase 21 to fix the long-standing UX mismatch
-- Plan 21-04 D-11: one-shot localStorage migration runs at QualityLayout mount (parent effect before child useLocalStorage reads); never-clobber + unconditional legacy removeItem; migrateSnapshot normalizes persisted trend rows on read and returns null for corrupt payloads (T-21-13)
-- Plan 21-06 D-6.1: threaded optional `patientIds?: string[]` through each of 7 panel components rather than hoisting hook calls into QualityOverviewPage — minimal surface change, backward-compatible (undefined = unscoped)
-- Plan 21-06 D-6.2: bundled T-6.3 handleCapture/handleExport cohort threading into the T-6.1 QualityOverviewPage rewrite (atomic diff) instead of a separate commit
-- Plan 21-06 D-6.3: use literal Unicode chars (—, …, ·) in JSX strings rather than \u escapes — JSX attribute values don't interpret \u sequences and would render them literally
-- [Phase 21]: Plan 21-06: threaded patientIds through panel-component props rather than hoisting hook calls — minimal surface change, backward-compatible
+- v1.4 scope: consolidate v1.3 tech debt + cross-AI code review findings + pending UX todos into 7 phases (23-29)
+- Inputs: `.planning/CODE-REVIEW-2026-04-16.md` (15 findings R1-R15), `.planning/v1.4-PLAN-DRAFT.md`, v1.3 MILESTONE-AUDIT tech_debt block, `.planning/todos/pending/`
+- Phase 23 must ship first — W1-W3 are correctness bugs; U1-U8 UAT requires live Blaze
+- Phase 24 unblocks 25 + 26 — `useAsyncRun` + `Map<serverUrl>` caches are refactor prerequisites
+- Phase 27 + 28 parallel-safe with 25/26; Phase 29 (backlog UX) independent of refactor thread
+- R14 (QualityMetricsContext split) flagged as risk — may defer to v1.5 if too invasive
 
 ### Pending Todos
 
-None tracked in STATE; v1.3 planning kick-off via `/gsd-new-milestone` or `/gsd-plan-phase 21`.
+- Seed REQUIREMENTS.md from v1.4-PLAN-DRAFT.md inventory
+- Spawn gsd-roadmapper with phase numbering context (start at 23)
 
 ### Completed Todos
 
-Cohort-related todos consumed by v1.3 REQUIREMENTS:
+v1.3 (shipped 2026-04-16):
 
-- ~~Add cohort selection for scoped data quality analysis~~ — absorbed by CHRT-01/02/03 (Phase 21)
-- ~~Define cohorts via FHIRPath query or MII FDPG format~~ — absorbed by CHRT-05/06/07 (Phase 22)
-- ~~Cohort selector UI mismatch (rename or replace)~~ — rename handled by CHRT-04 (Phase 21)
+- ~~Interactive cohort builder~~ — CHRT-01/02/03 (Phase 21)
+- ~~Rename Cohort control → Resource types~~ — CHRT-04 (Phase 21)
+- ~~FHIRPath programmatic cohorts + MII FDPG codec~~ — CHRT-05/06 (Phase 22)
+- ~~Cohort CRUD~~ — CHRT-07 (Phase 22)
 
 ### Blockers/Concerns
 
-None.
+- v1.3 `nyquist_compliant: false` on both VALIDATION.md files — must flip in Phase 23 once UAT green
+- 8 v1.3 UAT items require a live Blaze server; not all Claude-automatable
+- 3 v1.3 code review warnings (WR-01/02/03) carry-forward as correctness bugs
 
 ## Session Continuity
 
-Last session: 2026-04-16T04:10:21.364Z
-Stopped at: Plan 21-06 code complete; T-6.3 human UAT PENDING (live Blaze server required)
+Last session: 2026-04-16T18:05:00.000Z
+Stopped at: Milestone v1.4 started — gathering requirements
 Resume file: None

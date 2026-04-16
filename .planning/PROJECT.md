@@ -67,15 +67,20 @@ Quality dashboard retains its **9 tabs** with the Overview tile strip; the `/qua
 
 **localStorage keys** now in use: `quality.thresholds.v1`, `quality.trends.v1`, `quality.cohorts.v1`, `quality.activeCohortId.v1`, `quality.resourceTypes.v1` (migrated from legacy `quality.cohort.v1`).
 
-## Current Milestone: None (v1.3 shipped)
+## Current Milestone: v1.4 Hardening & Tech-Debt Sweep
 
-Run `/gsd-new-milestone` to define the next milestone — questioning → research → requirements → roadmap.
+**Goal:** Ship v1.3 cleanly (close documented warnings + human UAT), then fix the architectural drift flagged by the cross-AI code review (2026-04-16) before it compounds in future feature work.
 
-**Candidate directions** (not yet committed):
-- Close v1.3 human UAT deferrals + address the 3 code review warnings (WR-01/02/03)
-- Federated cohort queries (server-side CQL execution on Blaze)
-- Cohort versioning / audit history
-- Write-back operations (currently out of scope — would need authentication layer)
+**Target features:**
+- Close v1.3 tech debt — 3 code review warnings (WR-01/02/03), 2 cosmetic integration notes (I1/I2), 8 human UAT items, Nyquist sign-off flip (N1)
+- Data-fetching foundation — cross-mount cache for `useResourceCounts`, shared `useAsyncRun` state machine for the 4 report hooks, `Map<serverUrl>` quality cache
+- Quality module dedup — `useSampleWalker` (unifies completeness + coding), `<DrillDownShell>` (collapses 5 drill-downs), `perPathExamples` in `PerTypeCoverageReport` (halves coding drill-down calls), drop `keepMounted` eager fetch, shared `SortableTh`
+- App-shell dedup — `<ConnectionGatedOutlet>` for 3 layouts, `searchByIdentifierPrefix` helper, sidebar nested-route activation, `Anchor component={Link}` standardization, `SettingsContext` clean `useCallback`
+- Efficiency polish — `QualityMetricsContext` re-render split, `React.lazy()` drill-down routes, `useResourceCounts` effect-dep memoization, `ResourceIssueTable` pagination memo
+- Micro-consistency sweep — replace 13+ `as unknown as Record<string, unknown>` sites with existing `toRecord` helper, unify en-/em-dash usage, ref-type fixes, drop now-redundant `eslint-disable`s
+- Backlog UX — External FHIR validator integration (T1), OverviewStrip tile reduction 9→7 + status-line header (T2)
+
+**Key context:** Inputs consolidated from `.planning/CODE-REVIEW-2026-04-16.md` (15 findings R1-R15), `.planning/v1.3-PLAN-DRAFT.md`, v1.3 tech-debt carry-forward (`.planning/milestones/v1.3-MILESTONE-AUDIT.md`), and `.planning/todos/pending/`. Estimated ~9-10 engineering days across 7 phases (23-29).
 
 ### Out of Scope
 
@@ -157,4 +162,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after v1.3 milestone shipped — 7/7 requirements validated across Phases 21-22*
+*Last updated: 2026-04-16 — started milestone v1.4 Hardening & Tech-Debt Sweep (phases 23-29 planned)*
