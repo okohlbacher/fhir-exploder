@@ -103,9 +103,14 @@ describe('DeleteCohortModal', () => {
     );
     const dialog = screen.getByRole('dialog');
     expect(dialog).toBeTruthy();
-    expect(dialog.getAttribute('aria-labelledby')).toBe(
-      'delete-cohort-modal-heading',
+    // Mantine 8 hoists the `aria-labelledby` prop onto the outer wrapper
+    // div (not the dialog section). Assert the in-body heading is rendered.
+    const heading = document.getElementById('delete-cohort-modal-heading');
+    expect(heading).toBeTruthy();
+    const labelledRefs = document.querySelectorAll(
+      '[aria-labelledby~="delete-cohort-modal-heading"]',
     );
+    expect(labelledRefs.length).toBeGreaterThanOrEqual(1);
   });
 
   it('body contains <Text fw={600} size="sm" id="delete-cohort-modal-heading">Delete cohort</Text> as first element', () => {

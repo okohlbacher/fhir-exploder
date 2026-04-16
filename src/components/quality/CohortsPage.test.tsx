@@ -21,55 +21,73 @@ import { Notifications } from '@mantine/notifications';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import type { CohortDefinition } from '../../quality/cohorts';
+import { FDPG_SQ_VERSION } from '../../quality/fdpgTypes';
 
 // ---- Mocks ---------------------------------------------------------------
+//
+// `vi.mock` factories are hoisted above every `import`, so any state they
+// close over must be created via `vi.hoisted` (also hoisted) rather than
+// plain `const`.
 
-const mockSearch = vi.fn();
-vi.mock('@medplum/react-hooks', () => ({
-  useMedplum: () => ({ search: mockSearch }),
+const hoisted = vi.hoisted(() => ({
+  mockSearch: vi.fn(),
+  mockShow: vi.fn(),
+  mockAddCohort: vi.fn(),
+  mockDeleteCohort: vi.fn(),
+  mockUpdateCohort: vi.fn(),
+  mockDuplicateCohort: vi.fn(),
+  mockActivateCohort: vi.fn(),
+  mockDownloadString: vi.fn(),
+  state: {
+    cohorts: [] as CohortDefinition[],
+    activeCohortId: null as string | null,
+  },
 }));
 
-// Mock @mantine/notifications so we can inspect the toast titles/messages
-// WITHOUT relying on the Notifications portal lifecycle (DOM portal
-// interactions are flaky in jsdom).
-const mockShow = vi.fn();
+const {
+  mockSearch,
+  mockShow,
+  mockAddCohort,
+  mockDeleteCohort,
+  mockUpdateCohort,
+  mockDuplicateCohort,
+  mockActivateCohort,
+  mockDownloadString,
+} = hoisted;
+
+vi.mock('@medplum/react-hooks', () => ({
+  useMedplum: () => ({ search: hoisted.mockSearch }),
+}));
+
 vi.mock('@mantine/notifications', async () => {
   const actual = await vi.importActual<typeof import('@mantine/notifications')>(
     '@mantine/notifications',
   );
   return {
     ...actual,
-    notifications: { show: mockShow },
+    notifications: { show: hoisted.mockShow },
   };
 });
 
-const mockAddCohort = vi.fn();
-const mockDeleteCohort = vi.fn();
-const mockUpdateCohort = vi.fn();
-const mockDuplicateCohort = vi.fn();
-const mockActivateCohort = vi.fn();
-let mockCohorts: CohortDefinition[] = [];
-let mockActiveCohortId: string | null = null;
-
 vi.mock('../../hooks/useCohorts', () => ({
   useCohorts: () => ({
-    cohorts: mockCohorts,
-    activeCohortId: mockActiveCohortId,
+    cohorts: hoisted.state.cohorts,
+    activeCohortId: hoisted.state.activeCohortId,
     activeCohort:
-      mockCohorts.find((c) => c.id === mockActiveCohortId) ?? null,
+      hoisted.state.cohorts.find(
+        (c) => c.id === hoisted.state.activeCohortId,
+      ) ?? null,
     hydrated: true,
-    addCohort: mockAddCohort,
-    activateCohort: mockActivateCohort,
-    updateCohort: mockUpdateCohort,
-    deleteCohort: mockDeleteCohort,
-    duplicateCohort: mockDuplicateCohort,
+    addCohort: hoisted.mockAddCohort,
+    activateCohort: hoisted.mockActivateCohort,
+    updateCohort: hoisted.mockUpdateCohort,
+    deleteCohort: hoisted.mockDeleteCohort,
+    duplicateCohort: hoisted.mockDuplicateCohort,
   }),
 }));
 
-// Mock downloadString so Export tests don't need to spy on Blob/URL plumbing.
-const mockDownloadString = vi.fn();
 vi.mock('../../utils/export', () => ({
-  downloadString: mockDownloadString,
+  downloadString: hoisted.mockDownloadString,
 }));
 
 // ----- jsdom polyfills required by Mantine 8 -----
@@ -108,8 +126,8 @@ beforeEach(() => {
   mockDuplicateCohort.mockReset();
   mockActivateCohort.mockReset();
   mockDownloadString.mockReset();
-  mockCohorts = [];
-  mockActiveCohortId = null;
+  hoisted.state.cohorts = [];
+  hoisted.state.activeCohortId = null;
 });
 
 afterEach(() => {
@@ -162,7 +180,7 @@ describe('CohortsPage', () => {
   });
 
   it('row menu has 3 items (Edit, Duplicate, Delete) when cohort contains a FHIRPath criterion (Export disabled)', async () => {
-    mockCohorts = [
+    hoisted.state.cohorts = [
       makeCohort({
         id: 'c-fhir',
         name: 'FHIR cohort',
@@ -188,18 +206,19 @@ describe('CohortsPage', () => {
     await flush(50);
 
     expect(
-      screen.getByRole('menuitem', { name: /^edit$/i }),
+      screen.getByRole('menuitem', { name: /^edit$/i, hidden: true }),
     ).toBeTruthy();
     expect(
-      screen.getByRole('menuitem', { name: /^duplicate$/i }),
+      screen.getByRole('menuitem', { name: /^duplicate$/i, hidden: true }),
     ).toBeTruthy();
     expect(
-      screen.getByRole('menuitem', { name: /^delete…?$/i }),
+      screen.getByRole('menuitem', { name: /^delete…?$/i, hidden: true }),
     ).toBeTruthy();
 
     // Export menu item is present but disabled via aria-disabled.
     const exportItem = screen.getByRole('menuitem', {
       name: /export to fdpg json/i,
+      hidden: true,
     });
     expect(exportItem.getAttribute('data-disabled') !== null || exportItem.hasAttribute('disabled') || exportItem.getAttribute('aria-disabled') === 'true').toBe(true);
   });
@@ -246,7 +265,7 @@ describe('CohortsPage', () => {
   });
 
   it('exports SQ JSON for a non-FHIRPath cohort', async () => {
-    mockCohorts = [
+    hoisted.state.cohorts = [
       makeCohort({
         id: 'c-export',
         name: 'Export me',
@@ -275,6 +294,7 @@ describe('CohortsPage', () => {
 
     const exportItem = screen.getByRole('menuitem', {
       name: /export to fdpg json/i,
+      hidden: true,
     });
     await act(async () => {
       fireEvent.click(exportItem);
@@ -301,9 +321,9 @@ describe('CohortsPage', () => {
   });
 
   it('Duplicate menu item shows Cohort duplicated toast', async () => {
-    mockCohorts = [makeCohort({ id: 'c-dup', name: 'Dup source' })];
+    hoisted.state.cohorts = [makeCohort({ id: 'c-dup', name: 'Dup source' })];
     mockDuplicateCohort.mockImplementation(() => ({
-      ...mockCohorts[0],
+      ...hoisted.state.cohorts[0],
       id: 'c-dup-new',
       name: 'Dup source (copy)',
     }));
@@ -320,7 +340,7 @@ describe('CohortsPage', () => {
       fireEvent.click(actionBtn);
     });
     await flush(50);
-    const dupItem = screen.getByRole('menuitem', { name: /^duplicate$/i });
+    const dupItem = screen.getByRole('menuitem', { name: /^duplicate$/i, hidden: true });
     await act(async () => {
       fireEvent.click(dupItem);
     });
@@ -336,7 +356,7 @@ describe('CohortsPage', () => {
   });
 
   it('Edit menu item opens EditCohortModal', async () => {
-    mockCohorts = [makeCohort({ id: 'c-e', name: 'Edit me' })];
+    hoisted.state.cohorts = [makeCohort({ id: 'c-e', name: 'Edit me' })];
     render(
       <Wrap>
         <CohortsPage />
@@ -349,7 +369,7 @@ describe('CohortsPage', () => {
       fireEvent.click(actionBtn);
     });
     await flush(50);
-    const editItem = screen.getByRole('menuitem', { name: /^edit$/i });
+    const editItem = screen.getByRole('menuitem', { name: /^edit$/i, hidden: true });
     await act(async () => {
       fireEvent.click(editItem);
     });
@@ -360,7 +380,7 @@ describe('CohortsPage', () => {
   });
 
   it('Delete menu item opens DeleteCohortModal', async () => {
-    mockCohorts = [makeCohort({ id: 'c-d', name: 'Delete me' })];
+    hoisted.state.cohorts = [makeCohort({ id: 'c-d', name: 'Delete me' })];
     render(
       <Wrap>
         <CohortsPage />
@@ -373,7 +393,7 @@ describe('CohortsPage', () => {
       fireEvent.click(actionBtn);
     });
     await flush(50);
-    const deleteItem = screen.getByRole('menuitem', { name: /^delete…?$/i });
+    const deleteItem = screen.getByRole('menuitem', { name: /^delete…?$/i, hidden: true });
     await act(async () => {
       fireEvent.click(deleteItem);
     });
@@ -416,7 +436,7 @@ describe('CohortsPage', () => {
   it('imports SQ JSON via FileButton (valid v3 JSON)', async () => {
     // Build a minimal SQ JSON payload that the codec will accept.
     const validSq = {
-      version: 'http://medizininformatik-initiative.de/fdpg/StructuredQuery/v3/schema',
+      version: FDPG_SQ_VERSION,
       display: 'Imported cohort',
       inclusionCriteria: [
         [
@@ -428,8 +448,7 @@ describe('CohortsPage', () => {
               },
             ],
             context: {
-              system:
-                'http://fdpg.mii.cds/CodeSystem/CriteriaSets',
+              system: 'fdpg.mii.cds',
               code: 'Diagnose',
             },
           },
@@ -481,7 +500,7 @@ describe('CohortsPage', () => {
   });
 
   it('Export is disabled on FHIRPath cohorts with tooltip', async () => {
-    mockCohorts = [
+    hoisted.state.cohorts = [
       makeCohort({
         id: 'c-fhir-2',
         name: 'FHIRPath cohort',
@@ -508,6 +527,7 @@ describe('CohortsPage', () => {
 
     const exportItem = screen.getByRole('menuitem', {
       name: /export to fdpg json/i,
+      hidden: true,
     });
     // Mantine disables menu items via data-disabled attribute.
     expect(
