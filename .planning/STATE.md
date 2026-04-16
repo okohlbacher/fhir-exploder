@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: -- Cohort Definition & Storage
-status: executing
-stopped_at: Completed Plan 21-04 (CHRT-04 rename + legacy migration)
-last_updated: "2026-04-15T18:55:00.000Z"
-last_activity: 2026-04-15 -- Phase 21 Plan 04 executed (6 commits, zero regression)
+status: Awaiting human UAT
+stopped_at: Plan 21-06 code complete; T-6.3 human UAT PENDING (live Blaze server required)
+last_updated: "2026-04-16T04:10:21.366Z"
+last_activity: "2026-04-16 -- Plan 21-06 executed: ActiveCohortSelect + toolbar + thread patientIds through 8 hooks + cohort in captureSnapshot/PDF"
 progress:
   total_phases: 10
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 31
-  completed_plans: 29
-  percent: 94
+  completed_plans: 31
+  percent: 100
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 
 ## Current Position
 
-Phase: 21 (Wave 1 executing)
-Plan: 21-04 complete — next up is 21-05 (if any remain) then 21-06 (dashboard wiring)
-Status: Executing
-Last activity: 2026-04-15 -- Plan 21-04 executed: CohortSelector → ResourceTypeSelector + localStorage migration + snapshot legacy reader
+Phase: 21 (Wave 3 — final — code complete; human UAT pending on 21-06)
+Plan: 21-06 code complete (ActiveCohortSelect + patientIds threaded end-to-end + cohort metadata in snapshots/PDF). T-6.3 is a blocking `checkpoint:human-verify` gate awaiting UAT A/B/C/D against a live Blaze server.
+Status: Awaiting human UAT
+Last activity: 2026-04-16 -- Plan 21-06 executed: ActiveCohortSelect + toolbar + thread patientIds through 8 hooks + cohort in captureSnapshot/PDF
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -47,6 +47,10 @@ Progress: [░░░░░░░░░░] 0%
 - Phase 21 before Phase 22: interactive builder establishes the storage/scoping contract that FHIRPath + FDPG reuse
 - Rename "Cohort" control → "Resource types" in Phase 21 to fix the long-standing UX mismatch
 - Plan 21-04 D-11: one-shot localStorage migration runs at QualityLayout mount (parent effect before child useLocalStorage reads); never-clobber + unconditional legacy removeItem; migrateSnapshot normalizes persisted trend rows on read and returns null for corrupt payloads (T-21-13)
+- Plan 21-06 D-6.1: threaded optional `patientIds?: string[]` through each of 7 panel components rather than hoisting hook calls into QualityOverviewPage — minimal surface change, backward-compatible (undefined = unscoped)
+- Plan 21-06 D-6.2: bundled T-6.3 handleCapture/handleExport cohort threading into the T-6.1 QualityOverviewPage rewrite (atomic diff) instead of a separate commit
+- Plan 21-06 D-6.3: use literal Unicode chars (—, …, ·) in JSX strings rather than \u escapes — JSX attribute values don't interpret \u sequences and would render them literally
+- [Phase 21]: Plan 21-06: threaded patientIds through panel-component props rather than hoisting hook calls — minimal surface change, backward-compatible
 
 ### Pending Todos
 
@@ -66,6 +70,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-15T18:55:00.000Z
-Stopped at: Completed Plan 21-04 (CHRT-04 rename + legacy migration); Plans 21-02/21-03/21-04 all Wave 1 complete
-Resume file: .planning/phases/21-interactive-cohort-builder-rename/21-06-PLAN.md
+Last session: 2026-04-16T04:10:21.364Z
+Stopped at: Plan 21-06 code complete; T-6.3 human UAT PENDING (live Blaze server required)
+Resume file: None

@@ -20,7 +20,7 @@ The two "real cohort" directions (interactive UI vs programmatic definitions) ar
 
 - [ ] **CHRT-01**: User can define a patient cohort through an interactive builder supporting at minimum: date range filter (encounter/observation period), condition code filter (CodeableConcept lookup), and explicit reference-list inclusion (paste list of Patient/XYZ references)
 - [ ] **CHRT-02**: Cohort definitions persist in browser `localStorage` under a versioned key (pattern: `quality.cohorts.v1`); saved cohorts are reusable across sessions
-- [ ] **CHRT-03**: Dashboard quality analyses (all 7 panels) can be scoped to a saved cohort, composing with the existing resource-type filter (both apply intersectively)
+- [x] **CHRT-03**: Dashboard quality analyses (all 7 panels) can be scoped to a saved cohort, composing with the existing resource-type filter (both apply intersectively)
 - [x] **CHRT-04**: The existing "Cohort" label on the `CohortSelector` resource-type multi-select is renamed to "Resource types"; the two controls render as visually distinct UI elements and compose orthogonally
 
 ### Programmatic Cohort Definition (Phase 22)
@@ -49,7 +49,7 @@ None currently deferred.
 |-------------|-------|--------|
 | CHRT-01 | Phase 21 | Pending |
 | CHRT-02 | Phase 21 | Pending |
-| CHRT-03 | Phase 21 | Pending |
+| CHRT-03 | Phase 21 | Complete |
 | CHRT-04 | Phase 21 | Complete |
 | CHRT-05 | Phase 22 | Pending |
 | CHRT-06 | Phase 22 | Pending |

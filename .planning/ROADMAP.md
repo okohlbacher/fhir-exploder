@@ -38,7 +38,7 @@ Full details: [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
 
 ## Phases (v1.3)
 
-- [ ] **Phase 21: Interactive Cohort Builder + Rename** -- Ship the interactive cohort builder UI with localStorage persistence; rename the existing "Cohort" control to "Resource types" so both controls coexist clearly
+- [x] **Phase 21: Interactive Cohort Builder + Rename** -- Ship the interactive cohort builder UI with localStorage persistence; rename the existing "Cohort" control to "Resource types" so both controls coexist clearly (completed 2026-04-16)
 - [ ] **Phase 22: Programmatic Cohort Definition (FHIRPath + FDPG)** -- Extend cohort system with FHIRPath query definitions and MII FDPG JSON import/export
 
 ## Phase Details (v1.3)
@@ -72,5 +72,5 @@ Full details: [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 14-20 (v1.2) | v1.2 | 22/22 | ✅ Shipped | 2026-04-15 |
-| 21. Interactive Cohort Builder + Rename | v1.3 | 4/6 | In Progress|  |
+| 21. Interactive Cohort Builder + Rename | v1.3 | 6/6 | Complete   | 2026-04-16 |
 | 22. Programmatic Cohort Definition (FHIRPath + FDPG) | v1.3 | 0/0 | Not started | - |
