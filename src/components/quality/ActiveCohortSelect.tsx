@@ -3,7 +3,7 @@
  * patient cohort (Plan 21-06 Task 6.1, CHRT-03).
  *
  * Renders a Mantine `<Select>` labelled "Active cohort" with:
- *   - Placeholder option "No cohort -- all patients"
+ *   - Placeholder option "No cohort — all patients"
  *   - One option per saved cohort (sorted by createdAt ASC)
  *   - Helper text below the Select per UI-SPEC S6 (4 states)
  *   - Skeleton gate while useCohorts is hydrating (Pitfall 1)
@@ -36,7 +36,7 @@ export function ActiveCohortSelect({
   }
 
   const data = [
-    { value: '', label: 'No cohort \u2014 all patients' },
+    { value: '', label: 'No cohort — all patients' },
     ...cohorts
       .slice()
       .sort(
@@ -84,14 +84,14 @@ export function ActiveCohortSelect({
     helperText = 'Analyzing all patients.';
     helperColor = undefined; // default "dimmed"
   } else if (resolutionStatus === 'resolving') {
-    helperText = 'Resolving cohort\u2026';
+    helperText = 'Resolving cohort…';
     helperColor = undefined; // "dimmed"
   } else if (resolutionStatus === 'failed') {
     helperText = 'Could not resolve cohort. Panels running unscoped.';
     helperColor = 'red';
   } else if (resolvedPatientCount != null) {
     // Active + idle + count known
-    helperText = `${activeCohort.name} \u00B7 ${resolvedPatientCount.toLocaleString()} patients`;
+    helperText = `${activeCohort.name} · ${resolvedPatientCount.toLocaleString()} patients`;
     helperColor = undefined;
   } else {
     // Active + idle but count not yet available (shouldn't normally happen)
@@ -103,7 +103,7 @@ export function ActiveCohortSelect({
     <div>
       <Select
         label="Active cohort"
-        placeholder="No cohort \u2014 all patients"
+        placeholder="No cohort — all patients"
         data={data}
         value={activeCohortId ?? ''}
         onChange={handleChange}
