@@ -320,19 +320,26 @@ describe('updateCohort', () => {
     });
     await flush();
     // Swap setItem for the quota-throwing stub AFTER the initial setItem that
-    // persists the just-created cohort has already run.
-    vi.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
-      throw new DOMException('quota exceeded', 'QuotaExceededError');
-    });
-    expect(() =>
-      result.current.updateCohort(created!.id, { name: 'x' }),
-    ).toThrow();
-    expect(showSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        color: 'red',
-        title: 'Update failed',
-      }),
-    );
+    // persists the just-created cohort has already run. Follows the
+    // Storage.prototype pattern from use-trends-history.test.tsx — jsdom
+    // does not permit `vi.spyOn(window.localStorage, 'setItem')` directly.
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = vi.fn(() => {
+      throw new DOMException('quota', 'QuotaExceededError');
+    }) as unknown as typeof Storage.prototype.setItem;
+    try {
+      expect(() =>
+        result.current.updateCohort(created!.id, { name: 'x' }),
+      ).toThrow();
+      expect(showSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          color: 'red',
+          title: 'Update failed',
+        }),
+      );
+    } finally {
+      Storage.prototype.setItem = originalSetItem;
+    }
   });
 });
 
@@ -410,16 +417,21 @@ describe('deleteCohort', () => {
       created = result.current.addCohort({ name: 'A', criteria: [] });
     });
     await flush();
-    vi.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
-      throw new DOMException('quota exceeded', 'QuotaExceededError');
-    });
-    expect(() => result.current.deleteCohort(created!.id)).toThrow();
-    expect(showSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        color: 'red',
-        title: 'Delete failed',
-      }),
-    );
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = vi.fn(() => {
+      throw new DOMException('quota', 'QuotaExceededError');
+    }) as unknown as typeof Storage.prototype.setItem;
+    try {
+      expect(() => result.current.deleteCohort(created!.id)).toThrow();
+      expect(showSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          color: 'red',
+          title: 'Delete failed',
+        }),
+      );
+    } finally {
+      Storage.prototype.setItem = originalSetItem;
+    }
   });
 });
 
@@ -487,15 +499,20 @@ describe('duplicateCohort', () => {
       created = result.current.addCohort({ name: 'A', criteria: [] });
     });
     await flush();
-    vi.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
-      throw new DOMException('quota exceeded', 'QuotaExceededError');
-    });
-    expect(() => result.current.duplicateCohort(created!.id)).toThrow();
-    expect(showSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        color: 'red',
-        title: 'Duplicate failed',
-      }),
-    );
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = vi.fn(() => {
+      throw new DOMException('quota', 'QuotaExceededError');
+    }) as unknown as typeof Storage.prototype.setItem;
+    try {
+      expect(() => result.current.duplicateCohort(created!.id)).toThrow();
+      expect(showSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          color: 'red',
+          title: 'Duplicate failed',
+        }),
+      );
+    } finally {
+      Storage.prototype.setItem = originalSetItem;
+    }
   });
 });

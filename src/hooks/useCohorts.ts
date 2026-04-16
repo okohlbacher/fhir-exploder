@@ -64,6 +64,37 @@ export interface UseCohortsApi {
   addCohort(input: { name: string; criteria: CohortCriterion[] }): CohortDefinition;
   /** Sets `activeCohortId`; pass `null` to deactivate. */
   activateCohort(id: string | null): void;
+  /**
+   * Updates an existing cohort's `name` and/or `criteria`. Always bumps
+   * `updatedAt` to `new Date().toISOString()` so Phase-21's resolver cache
+   * (keyed on `cohort.id + updatedAt`) invalidates automatically (D-10).
+   *
+   * Throws `Error('Cohort not found: {id}')` on unknown id.
+   * Surfaces `'Update failed'` red toast on QuotaExceededError, then
+   * re-throws the DOMException.
+   */
+  updateCohort(
+    id: string,
+    patch: { name?: string; criteria?: CohortCriterion[] },
+  ): CohortDefinition;
+  /**
+   * Removes a cohort from storage. Clears `activeCohortId` if it matched
+   * the deleted cohort's id. Silently no-ops on unknown id (UI should
+   * prevent this, but defensive coding avoids noisy failures).
+   *
+   * Surfaces `'Delete failed'` red toast on QuotaExceededError, then
+   * re-throws.
+   */
+  deleteCohort(id: string): void;
+  /**
+   * Creates a copy of an existing cohort with a fresh UUID, fresh
+   * timestamps, and the name suffixed with `' (copy)'`. Returns the new
+   * cohort (useful for UIs that want to immediately scroll/highlight it).
+   *
+   * Throws `Error('Cohort not found: {id}')` on unknown id.
+   * Surfaces `'Duplicate failed'` red toast on QuotaExceededError.
+   */
+  duplicateCohort(id: string): CohortDefinition;
 }
 
 export function useCohorts(): UseCohortsApi {
@@ -127,6 +158,114 @@ export function useCohorts(): UseCohortsApi {
     [stored, setStored],
   );
 
+  // -----------------------------------------------------------------------
+  // Plan 22-02 — CRUD surface (updateCohort / deleteCohort / duplicateCohort).
+  //
+  // All three share the same "probe localStorage.setItem before delegating
+  // to Mantine's setStored" pattern established by `addCohort`. That probe
+  // is the T-21-06 defence: Mantine's useLocalStorage silently swallows the
+  // DOMException('QuotaExceededError') and only console.error-s, so we must
+  // intercept it here to raise the user-visible red notification.
+  // -----------------------------------------------------------------------
+
+  const persist = useCallback(
+    (next: CohortsStorage, failureTitle: string, failureMessage: string) => {
+      try {
+        window.localStorage.setItem(COHORTS_STORAGE_KEY, JSON.stringify(next));
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'QuotaExceededError') {
+          notifications.show({
+            color: 'red',
+            title: failureTitle,
+            message: failureMessage,
+            autoClose: 6000,
+          });
+        }
+        throw err;
+      }
+      setStored(next);
+    },
+    [setStored],
+  );
+
+  const updateCohort = useCallback(
+    (
+      id: string,
+      patch: { name?: string; criteria?: CohortCriterion[] },
+    ): CohortDefinition => {
+      const idx = stored.cohorts.findIndex((c) => c.id === id);
+      if (idx < 0) {
+        throw new Error(`Cohort not found: ${id}`);
+      }
+      const now = new Date().toISOString();
+      const existing = stored.cohorts[idx];
+      const updated: CohortDefinition = {
+        ...existing,
+        name: patch.name ?? existing.name,
+        criteria: patch.criteria ?? existing.criteria,
+        updatedAt: now,
+      };
+      const nextCohorts = [...stored.cohorts];
+      nextCohorts[idx] = updated;
+      const next: CohortsStorage = { ...stored, cohorts: nextCohorts };
+      persist(
+        next,
+        'Update failed',
+        'Could not save changes to browser storage. Your browser may be in private mode or out of space.',
+      );
+      return updated;
+    },
+    [stored, persist],
+  );
+
+  const deleteCohort = useCallback(
+    (id: string): void => {
+      const exists = stored.cohorts.some((c) => c.id === id);
+      if (!exists) return;
+      const nextCohorts = stored.cohorts.filter((c) => c.id !== id);
+      const nextActiveId =
+        stored.activeCohortId === id ? null : stored.activeCohortId;
+      const next: CohortsStorage = {
+        cohorts: nextCohorts,
+        activeCohortId: nextActiveId,
+      };
+      persist(
+        next,
+        'Delete failed',
+        'Could not delete cohort from browser storage. Try again or reload the page.',
+      );
+    },
+    [stored, persist],
+  );
+
+  const duplicateCohort = useCallback(
+    (id: string): CohortDefinition => {
+      const original = stored.cohorts.find((c) => c.id === id);
+      if (!original) {
+        throw new Error(`Cohort not found: ${id}`);
+      }
+      const now = new Date().toISOString();
+      const copy: CohortDefinition = {
+        id: crypto.randomUUID(),
+        name: `${original.name} (copy)`,
+        criteria: original.criteria,
+        createdAt: now,
+        updatedAt: now,
+      };
+      const next: CohortsStorage = {
+        ...stored,
+        cohorts: [...stored.cohorts, copy],
+      };
+      persist(
+        next,
+        'Duplicate failed',
+        'Could not duplicate cohort. Your browser may be in private mode or out of space.',
+      );
+      return copy;
+    },
+    [stored, persist],
+  );
+
   const activeCohort = useMemo(() => findActiveCohort(stored), [stored]);
 
   return {
@@ -136,5 +275,8 @@ export function useCohorts(): UseCohortsApi {
     hydrated,
     addCohort,
     activateCohort,
+    updateCohort,
+    deleteCohort,
+    duplicateCohort,
   };
 }
