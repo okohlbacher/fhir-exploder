@@ -99,8 +99,40 @@ The research phase (SUMMARY.md at `research/SUMMARY.md`) locked three safety inv
 
 ## Traceability
 
-Populated by `gsd-roadmapper` when ROADMAP.md is created.
+Populated by `gsd-roadmapper` (2026-04-16). All 34 v1.4 requirements mapped to exactly one phase.
 
-| REQ-ID | Phase | Notes |
-|--------|-------|-------|
-| — | — | — |
+| REQ-ID | Phase | Status | Notes |
+|--------|-------|--------|-------|
+| CLOSE-01 | Phase 23 | Pending | W1 handleExport closure-capture |
+| CLOSE-02 | Phase 23 | Pending | W2 activateCohort quota probe |
+| CLOSE-03 | Phase 23 | Pending | W3 PATIENT_REF_CAP truncation (5-case test matrix) |
+| CLOSE-04 | Phase 23 | Pending | I1 FhirpathLike alias removal |
+| CLOSE-05 | Phase 23 | Pending | I2 EditCohortModal stale toast |
+| CLOSE-06 | Phase 23 | Pending | U1-U8 human UAT against live Blaze |
+| CLOSE-07 | Phase 23 | Pending | N1 nyquist audit sign-off (Phase 21 + 22) |
+| FOUND-01 | Phase 24 | Pending | useResourceCounts Map cache + line-75 memo |
+| FOUND-02 | Phase 24 | Pending | metricsCache.ts Map<serverUrl> registry, 2-entry LRU |
+| FOUND-03 | Phase 24 | Pending | useAsyncRun (closure-scoped `let cancelled`) |
+| FOUND-04 | Phase 24 | Pending | useResourceCounts.ts:29 cancellation pre-fix |
+| QDDEP-01 | Phase 25 | Pending | perPathExamples in PerTypeCoverageReport (FIRST in phase) |
+| QDDEP-02 | Phase 25 | Pending | `<DrillDownShell>` — 5 drill-downs collapse (SECOND) |
+| QDDEP-03 | Phase 25 | Pending | useSampleWalker<T> replaces duplicated worker pool |
+| QDDEP-04 | Phase 25 | Pending | Drop keepMounted on Completeness + Coding |
+| QDDEP-05 | Phase 25 | Pending | SortableTh extracted |
+| QDDEP-06 | Phase 25 | Pending | `<RunProgress>` replaces inline pct math |
+| SHELL-01 | Phase 26 | Pending | `<ConnectionGatedOutlet>` for 3 layouts |
+| SHELL-02 | Phase 26 | Pending | searchByIdentifierPrefix helper |
+| SHELL-03 | Phase 26 | Pending | Sidebar nested-route activation (RouterNavLink isActive) |
+| SHELL-04 | Phase 26 | Pending | `Anchor component={Link}` standardization |
+| SHELL-05 | Phase 26 | Pending | setSettings useCallback (drop eslint-disable) |
+| EFF-01 | Phase 27 | Pending | ResourceIssueTable pagination memo |
+| EFF-02 | Phase 27 | Pending | React.lazy() drill-down routes + chunk-load retry |
+| EFF-03 | Phase 27 | Pending | rollup-plugin-visualizer + ANALYZE=1 treemap |
+| SWEEP-01 | Phase 28 | Pending | toRecord helper sweep (0 `as unknown as Record`) |
+| SWEEP-02 | Phase 28 | Pending | En/em-dash unification |
+| SWEEP-03 | Phase 28 | Pending | Drop 4 drill-down eslint-disables |
+| SWEEP-04 | Phase 28 | Pending | Ref-type fixes + micro-cleanup |
+| UX-01 | Phase 29 | Pending | External validator (SECOND in phase — L-task) |
+| UX-02 | Phase 29 | Pending | OverviewStrip 9→7 + status line (FIRST — warm-up) |
+
+**Coverage:** 31/31 v1.4 requirements mapped (CLOSE 7 + FOUND 4 + QDDEP 6 + SHELL 5 + EFF 3 + SWEEP 4 + UX 2). EFF-R14 is explicitly deferred to v1.5+ (Future Requirements section above) and NOT counted in v1.4 coverage. No orphans. No duplicates.
