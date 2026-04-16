@@ -64,7 +64,10 @@ Full details: [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
   2. User can import and export cohort definitions in MII FDPG JSON format for interop with other MII tooling
   3. User can edit, duplicate, and delete saved cohorts from a management view
   4. FHIRPath cohorts and interactive-builder cohorts share the same storage + scoping contract established in Phase 21
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 22-01-PLAN.md — FHIRPath translator + FhirpathCriterion union extension + resolver branch (backend, CHRT-05)
+- [ ] 22-02-PLAN.md — FDPG v3 types + codec + useCohorts update/delete/duplicate CRUD (CHRT-06, CHRT-07)
+- [ ] 22-03-PLAN.md — UI wiring: FhirpathCriterionCard, CohortBuilderForm edit mode, Edit/Delete modals, CohortsPage Import/Export/row-menu (CHRT-05, CHRT-06, CHRT-07)
 **UI hint**: yes
 
 ## Progress
@@ -73,4 +76,4 @@ Full details: [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
 |-------|-----------|----------------|--------|-----------|
 | 14-20 (v1.2) | v1.2 | 22/22 | ✅ Shipped | 2026-04-15 |
 | 21. Interactive Cohort Builder + Rename | v1.3 | 6/6 | Complete   | 2026-04-16 |
-| 22. Programmatic Cohort Definition (FHIRPath + FDPG) | v1.3 | 0/0 | Not started | - |
+| 22. Programmatic Cohort Definition (FHIRPath + FDPG) | v1.3 | 0/3 | Planned | - |
