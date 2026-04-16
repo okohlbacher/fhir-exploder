@@ -43,6 +43,11 @@
 import type { MedplumClient, QueryTypes } from '@medplum/core';
 import type { Resource } from '@medplum/fhirtypes';
 import type { CohortCriterion, CohortDefinition } from './cohorts';
+import {
+  PREFIX_FOR_OPERATOR,
+  SEARCH_PARAM_MAP,
+  translateFhirpath,
+} from './fhirpathTranslator';
 
 const MAX_IDS_PER_CRITERION = 10_000;
 const DEFAULT_PAGE_COUNT = '1000';
@@ -144,14 +149,49 @@ async function resolveCriterion(
     return new Set(c.patientIds);
   }
 
-  const params: Record<string, string | string[]> = {
-    _elements: 'subject',
-    _count: DEFAULT_PAGE_COUNT,
-  };
-  let resourceType: 'Encounter' | 'Condition';
+  if (c.type === 'fhirpath') {
+    // Re-translate on every resolve — the cached `translatedQuery` on the
+    // criterion object is a UI-only convenience (populated by Validate
+    // click; cleared on edit). The resolver stays deterministic by always
+    // running the translator, which keeps behaviour identical between the
+    // "opened the cohort editor and saved without re-validating" path and
+    // the "loaded from storage and activated without visiting the editor"
+    // path. The translator is pure and cheap (~1ms per call). TranslationError
+    // propagates to resolveCohort's caller — the UI is expected to
+    // pre-validate via the Validate button (Plan 22-03 S1/S7).
+    const tq = translateFhirpath(c.expression);
+    const sp = SEARCH_PARAM_MAP[tq.resourceType]?.[tq.fieldPath];
+    if (!sp) {
+      // T-22-05 mitigation: no patient IDs in the error message.
+      throw new Error(
+        `Unsupported field: ${tq.resourceType}.${tq.fieldPath}`,
+      );
+    }
+    const value = `${PREFIX_FOR_OPERATOR[tq.operator]}${String(tq.literal.value)}`;
+    const params: Record<string, string | string[]> = {
+      [sp.searchParam]: value,
+      _elements: sp.elements,
+      _count: DEFAULT_PAGE_COUNT,
+    };
+    // Patient-rooted searches: the resource IS the Patient. Pull `id`
+    // directly via collectIdField. Encounter/Condition/Observation return
+    // non-Patient resources; fall back to the existing Phase-21
+    // collectSubjectPatientIds (which extracts `subject.reference`).
+    if (sp.elements === 'id' && tq.resourceType === 'Patient') {
+      return await collectIdField(client, tq.resourceType, params);
+    }
+    return await collectSubjectPatientIds(
+      client,
+      tq.resourceType as 'Encounter' | 'Condition',
+      params,
+    );
+  }
 
   if (c.type === 'date-range') {
-    resourceType = 'Encounter';
+    const params: Record<string, string | string[]> = {
+      _elements: 'subject',
+      _count: DEFAULT_PAGE_COUNT,
+    };
     const dates: string[] = [];
     if (c.start) dates.push(`ge${c.start}`);
     if (c.end) dates.push(`le${c.end}`);
@@ -161,13 +201,25 @@ async function resolveCriterion(
       return new Set();
     }
     params.date = dates;
-  } else {
-    // condition-code
-    resourceType = 'Condition';
-    params.code = `${c.system}|${c.code}`;
+    return await collectSubjectPatientIds(client, 'Encounter', params);
   }
 
-  return await collectSubjectPatientIds(client, resourceType, params);
+  if (c.type === 'condition-code') {
+    const params: Record<string, string | string[]> = {
+      _elements: 'subject',
+      _count: DEFAULT_PAGE_COUNT,
+      code: `${c.system}|${c.code}`,
+    };
+    return await collectSubjectPatientIds(client, 'Condition', params);
+  }
+
+  // Exhaustiveness — if a new CohortCriterion variant is added without a
+  // matching branch above, TS flags this line at compile time with
+  // "Argument of type 'X' is not assignable to parameter of type 'never'".
+  const _exhaustive: never = c;
+  throw new Error(
+    `Unhandled criterion type: ${JSON.stringify(_exhaustive)}`,
+  );
 }
 
 /**
@@ -231,6 +283,42 @@ async function collectSubjectPatientIds(
     console.warn(
       `Cohort resolver: skipped ${malformed} malformed subject references`,
     );
+  }
+  return ids;
+}
+
+/**
+ * Paginate a `searchResourcePages` generator and collect unique resource
+ * `id` values. Sibling of `collectSubjectPatientIds` — used for
+ * Patient-rooted searches where the result IS the Patient and we want the
+ * `id` field directly rather than `subject.reference`.
+ *
+ * Shares the Phase-21 `MAX_IDS_PER_CRITERION` cap (10,000) so FHIRPath
+ * Patient queries behave identically to Encounter/Condition queries wrt
+ * T-22-03 (DoS / result-set size cap).
+ *
+ * No malformed-data accounting: a Patient resource without an `id` is
+ * silently skipped (a read-only explorer doesn't emit warnings for data
+ * quality issues outside the quality engines).
+ */
+async function collectIdField(
+  client: MedplumClient,
+  resourceType: string,
+  params: Record<string, string | string[]>,
+): Promise<Set<string>> {
+  const ids = new Set<string>();
+  for await (const page of client.searchResourcePages(
+    resourceType as never,
+    params as unknown as QueryTypes,
+  )) {
+    for (const r of page as Resource[]) {
+      const rid = (r as { id?: string }).id;
+      if (typeof rid === 'string' && rid.length > 0) {
+        ids.add(rid);
+        if (ids.size >= MAX_IDS_PER_CRITERION) break;
+      }
+    }
+    if (ids.size >= MAX_IDS_PER_CRITERION) break;
   }
   return ids;
 }

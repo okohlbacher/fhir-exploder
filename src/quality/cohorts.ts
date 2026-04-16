@@ -53,10 +53,30 @@ export interface ReferenceListCriterion {
   patientIds: string[];
 }
 
+/**
+ * FHIRPath programmatic criterion — Phase 22 CHRT-05.
+ *
+ * `expression` is the raw FHIRPath string the user typed (subject to the
+ * D-02 locked subset: `<Resource>.where(<field> <op> <literal>)`).
+ *
+ * `translatedQuery` is the FHIR search URL path + query produced by
+ * `translatedQueryToFhirSearchUrl` at validate time, cached here so the
+ * cohortResolver can issue it without re-parsing. Cleared on every edit
+ * (set to `undefined`); re-populated by each successful Validate click.
+ * Resolver cache-miss path also calls the translator fresh (see
+ * cohortResolver Task 3).
+ */
+export interface FhirpathCriterion {
+  type: 'fhirpath';
+  expression: string;
+  translatedQuery?: string;
+}
+
 export type CohortCriterion =
   | DateRangeCriterion
   | ConditionCodeCriterion
-  | ReferenceListCriterion;
+  | ReferenceListCriterion
+  | FhirpathCriterion;
 
 // -----------------------------------------------------------------------------
 // CohortDefinition — the persisted shape that Phase 22 (edit/duplicate/delete)

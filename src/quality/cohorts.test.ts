@@ -14,8 +14,10 @@ import {
   RESOURCE_TYPES_STORAGE_KEY,
   findActiveCohort,
   parsePatientRefs,
+  type CohortCriterion,
   type CohortDefinition,
   type CohortsStorage,
+  type FhirpathCriterion,
 } from './cohorts';
 
 // -----------------------------------------------------------------------------
@@ -145,5 +147,76 @@ describe('CohortsStorage shape', () => {
       LEGACY_COHORT_KEY,
     ];
     expect(new Set(keys).size).toBe(keys.length);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// FhirpathCriterion — Plan 22-01 Task 2 type test
+// -----------------------------------------------------------------------------
+
+// assertNever enforces union exhaustiveness at type-check time. If a new
+// CohortCriterion variant is added without a matching branch in
+// `discriminator` below, `assertNever(c)` will fail type-checking with a
+// "Argument of type '…' is not assignable to parameter of type 'never'"
+// error. Vitest transpiles via esbuild, so a broken type crashes the run.
+function assertNever(x: never): never {
+  throw new Error(`Unexpected criterion type: ${JSON.stringify(x)}`);
+}
+
+function discriminator(c: CohortCriterion): string {
+  switch (c.type) {
+    case 'date-range':
+      return 'd';
+    case 'condition-code':
+      return 'c';
+    case 'reference-list':
+      return 'r';
+    case 'fhirpath':
+      return 'f';
+    default:
+      return assertNever(c);
+  }
+}
+
+describe('FhirpathCriterion type', () => {
+  it('is a member of the CohortCriterion discriminated union', () => {
+    const c: CohortCriterion = {
+      type: 'fhirpath',
+      expression: 'Patient.where(birthDate < @1960-01-01)',
+    };
+    expect(discriminator(c)).toBe('f');
+  });
+
+  it('accepts an optional translatedQuery cache field', () => {
+    const c: FhirpathCriterion = {
+      type: 'fhirpath',
+      expression: "Patient.where(gender = 'female')",
+      translatedQuery: 'Patient?gender=female&_elements=id&_count=10000',
+    };
+    expect(c.translatedQuery).toContain('Patient?gender=female');
+  });
+
+  it('discriminator function covers all 4 criterion types', () => {
+    const dateRange: CohortCriterion = {
+      type: 'date-range',
+      start: null,
+      end: null,
+    };
+    const code: CohortCriterion = {
+      type: 'condition-code',
+      system: 's',
+      code: 'c',
+    };
+    const refs: CohortCriterion = { type: 'reference-list', patientIds: [] };
+    const fp: CohortCriterion = {
+      type: 'fhirpath',
+      expression: 'Patient.where(active = true)',
+    };
+    expect([dateRange, code, refs, fp].map(discriminator)).toEqual([
+      'd',
+      'c',
+      'r',
+      'f',
+    ]);
   });
 });
