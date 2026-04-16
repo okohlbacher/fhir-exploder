@@ -3,7 +3,18 @@ created: 2026-04-13T20:00:00.000Z
 title: Add cohort selection for scoped data quality analysis
 area: ui
 files: []
+status: roadmapped
+roadmapped: 2026-04-14
+milestone: v1.3
+phase: 20
+requirements: [CHRT-01, CHRT-02, CHRT-03]
 ---
+
+> **Roadmapped 2026-04-14:** Promoted into milestone v1.3 "Cohort Definition & Storage",
+> Phase 20 "Interactive Cohort Builder + Rename". Satisfied by requirements CHRT-01
+> (interactive builder), CHRT-02 (localStorage persistence), CHRT-03 (dashboard scoping).
+> See `.planning/milestones/v1.3-REQUIREMENTS.md` and `.planning/ROADMAP.md` §Phase 20.
+
 
 ## Problem
 

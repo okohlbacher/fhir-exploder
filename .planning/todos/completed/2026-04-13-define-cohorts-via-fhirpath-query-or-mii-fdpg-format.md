@@ -3,7 +3,19 @@ created: 2026-04-13T19:56:14.862Z
 title: Define cohorts via FHIRPath query or MII FDPG format
 area: ui
 files: []
+status: roadmapped
+roadmapped: 2026-04-14
+milestone: v1.3
+phase: 21
+requirements: [CHRT-05, CHRT-06, CHRT-07]
 ---
+
+> **Roadmapped 2026-04-14:** Promoted into milestone v1.3 "Cohort Definition & Storage",
+> Phase 21 "Programmatic Cohort Definition (FHIRPath + FDPG)". Satisfied by requirements
+> CHRT-05 (FHIRPath query), CHRT-06 (FDPG import/export), CHRT-07 (edit/duplicate/delete).
+> Depends on Phase 20. See `.planning/milestones/v1.3-REQUIREMENTS.md` and
+> `.planning/ROADMAP.md` §Phase 21.
+
 
 ## Problem
 
