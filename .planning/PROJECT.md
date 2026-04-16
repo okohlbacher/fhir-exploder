@@ -55,13 +55,15 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 Quality dashboard now has **9 tabs**: Overview, Completeness, Coding Coverage, Validation, Conformance, Plausibility, Duplicates, References, Trends. Each panel rolls up into a per-metric breach-aware overall score; thresholds configurable at `/quality/thresholds`; `?tab=` deep-linking from the 9-tile Overview strip.
 
+**Phase 22 complete (2026-04-16)** — Programmatic cohort definition via FHIRPath (CHRT-05, via Medplum AST → FHIR search URL translator with dry-run count), FDPG Codex Structured Query v3 import/export (CHRT-06, with 1 MB cap + prototype-pollution defence), and full cohort CRUD — Edit / Duplicate / Delete (CHRT-07). 3 plans / 2 waves, 160 phase-scoped tests green, 9 prior-phase regression suites passing. Human UAT items deferred to `22-HUMAN-UAT.md` (live Blaze round-trip + browser download/import).
+
 ## Current Milestone: v1.3 — Cohort Definition & Storage
 
 **Goal:** Enable scoped quality analysis by defining, persisting, and reusing patient/encounter cohorts — both via interactive UI (date range, condition, reference list) and via programmatic FHIRPath queries + MII FDPG import/export. Resolves the long-standing UX mismatch where the existing "Cohort" control actually filters by resource type.
 
 **Target features:**
-- **Phase 21** — Interactive Cohort Builder + rename ("Cohort" → "Resource types")
-- **Phase 22** — Programmatic cohort definitions (FHIRPath + MII FDPG JSON)
+- **Phase 21** — Interactive Cohort Builder + rename ("Cohort" → "Resource types") ✓
+- **Phase 22** — Programmatic cohort definitions (FHIRPath + MII FDPG JSON) ✓
 
 **Active requirements:** CHRT-01 .. CHRT-07 (see `REQUIREMENTS.md`)
 
@@ -137,4 +139,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-15 — v1.2 milestone shipped (7 phases, 22 plans, 16/16 requirements); v1.3 Cohort Definition & Storage now the active milestone*
+*Last updated: 2026-04-16 — Phase 22 complete; v1.3 requirements CHRT-05/06/07 satisfied (FHIRPath + FDPG + CRUD)*
