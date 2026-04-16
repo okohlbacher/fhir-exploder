@@ -39,7 +39,7 @@ Full details: [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
 ## Phases (v1.3)
 
 - [x] **Phase 21: Interactive Cohort Builder + Rename** -- Ship the interactive cohort builder UI with localStorage persistence; rename the existing "Cohort" control to "Resource types" so both controls coexist clearly (completed 2026-04-16)
-- [ ] **Phase 22: Programmatic Cohort Definition (FHIRPath + FDPG)** -- Extend cohort system with FHIRPath query definitions and MII FDPG JSON import/export
+- [x] **Phase 22: Programmatic Cohort Definition (FHIRPath + FDPG)** -- Extend cohort system with FHIRPath query definitions and MII FDPG JSON import/export (completed 2026-04-16)
 
 ## Phase Details (v1.3)
 
@@ -65,9 +65,9 @@ Full details: [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
   3. User can edit, duplicate, and delete saved cohorts from a management view
   4. FHIRPath cohorts and interactive-builder cohorts share the same storage + scoping contract established in Phase 21
 **Plans**: 3 plans
-- [ ] 22-01-PLAN.md — FHIRPath translator + FhirpathCriterion union extension + resolver branch (backend, CHRT-05)
-- [ ] 22-02-PLAN.md — FDPG v3 types + codec + useCohorts update/delete/duplicate CRUD (CHRT-06, CHRT-07)
-- [ ] 22-03-PLAN.md — UI wiring: FhirpathCriterionCard, CohortBuilderForm edit mode, Edit/Delete modals, CohortsPage Import/Export/row-menu (CHRT-05, CHRT-06, CHRT-07)
+- [x] 22-01-PLAN.md — FHIRPath translator + FhirpathCriterion union extension + resolver branch (backend, CHRT-05)
+- [x] 22-02-PLAN.md — FDPG v3 types + codec + useCohorts update/delete/duplicate CRUD (CHRT-06, CHRT-07)
+- [x] 22-03-PLAN.md — UI wiring: FhirpathCriterionCard, CohortBuilderForm edit mode, Edit/Delete modals, CohortsPage Import/Export/row-menu (CHRT-05, CHRT-06, CHRT-07)
 **UI hint**: yes
 
 ## Progress
@@ -76,4 +76,4 @@ Full details: [milestones/v1.2-ROADMAP.md](milestones/v1.2-ROADMAP.md)
 |-------|-----------|----------------|--------|-----------|
 | 14-20 (v1.2) | v1.2 | 22/22 | ✅ Shipped | 2026-04-15 |
 | 21. Interactive Cohort Builder + Rename | v1.3 | 6/6 | Complete   | 2026-04-16 |
-| 22. Programmatic Cohort Definition (FHIRPath + FDPG) | v1.3 | 0/3 | Planned | - |
+| 22. Programmatic Cohort Definition (FHIRPath + FDPG) | v1.3 | 3/3 | Complete    | 2026-04-16 |

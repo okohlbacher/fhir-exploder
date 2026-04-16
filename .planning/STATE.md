@@ -4,13 +4,13 @@ milestone: v1.3
 milestone_name: -- Cohort Definition & Storage
 status: Awaiting human UAT
 stopped_at: Plan 21-06 code complete; T-6.3 human UAT PENDING (live Blaze server required)
-last_updated: "2026-04-16T04:10:21.366Z"
-last_activity: "2026-04-16 -- Plan 21-06 executed: ActiveCohortSelect + toolbar + thread patientIds through 8 hooks + cohort in captureSnapshot/PDF"
+last_updated: "2026-04-16T13:50:33.543Z"
+last_activity: 2026-04-16
 progress:
-  total_phases: 10
-  completed_phases: 7
-  total_plans: 31
-  completed_plans: 31
+  total_phases: 2
+  completed_phases: 2
+  total_plans: 9
+  completed_plans: 9
   percent: 100
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-15)
 
 ## Current Position
 
-Phase: 21 (Wave 3 — final — code complete; human UAT pending on 21-06)
-Plan: 21-06 code complete (ActiveCohortSelect + patientIds threaded end-to-end + cohort metadata in snapshots/PDF). T-6.3 is a blocking `checkpoint:human-verify` gate awaiting UAT A/B/C/D against a live Blaze server.
+Phase: 22
+Plan: Not started
 Status: Awaiting human UAT
-Last activity: 2026-04-16 -- Plan 21-06 executed: ActiveCohortSelect + toolbar + thread patientIds through 8 hooks + cohort in captureSnapshot/PDF
+Last activity: 2026-04-16
 
 Progress: [██████████] 100%
 
