@@ -277,3 +277,204 @@ describe('resolveCohort', () => {
     expect(ids).toEqual(['p-good']);
   });
 });
+
+// -----------------------------------------------------------------------------
+// Plan 22-01 Task 3 — fhirpath criterion branch + 10K-ID cap + cache
+// invalidation regression. Matches VALIDATION.md `-t` filters:
+//   - `-t "resolves fhirpath criterion"`
+//   - `-t "cache invalidates on updatedAt"`
+//   - `-t "applies 10K-ID cap"`
+//   - `-t "propagates TranslationError"`
+// -----------------------------------------------------------------------------
+
+describe('fhirpath criterion', () => {
+  it('resolves fhirpath criterion — Patient gender equality via collectIdField', async () => {
+    // Patient search returns Patient resources directly; collectIdField
+    // pulls `id` (not subject.reference).
+    const pages: PageMap = new Map();
+    const genderKey = `Patient|${fingerprintParams({
+      _count: '1000',
+      _elements: 'id',
+      gender: 'female',
+    })}`;
+    pages.set(genderKey, [
+      { resourceType: 'Patient', id: 'p1' } as unknown as Resource,
+      { resourceType: 'Patient', id: 'p2' } as unknown as Resource,
+    ]);
+    const client = makeMockClient(pages);
+    const cohort: CohortDefinition = {
+      id: 'c-fp-patient',
+      name: 'gender-female',
+      criteria: [
+        {
+          type: 'fhirpath',
+          expression: "Patient.where(gender = 'female')",
+        },
+      ],
+      createdAt: '2026-04-16T00:00:00.000Z',
+      updatedAt: '2026-04-16T00:00:00.000Z',
+    };
+    const ids = await resolveCohort(client, cohort);
+    expect(new Set(ids)).toEqual(new Set(['p1', 'p2']));
+
+    const calls = (
+      client as unknown as {
+        searchResourcePages: { mock: { calls: unknown[][] } };
+      }
+    ).searchResourcePages.mock.calls;
+    expect(calls).toHaveLength(1);
+    expect(calls[0]![0]).toBe('Patient');
+    expect(calls[0]![1]).toEqual(
+      expect.objectContaining({
+        gender: 'female',
+        _elements: 'id',
+        _count: '1000',
+      }),
+    );
+  });
+
+  it('resolves fhirpath criterion — Condition code via collectSubjectPatientIds', async () => {
+    const pages: PageMap = new Map();
+    const codeKey = `Condition|${fingerprintParams({
+      _count: '1000',
+      _elements: 'subject',
+      code: '44054006',
+    })}`;
+    pages.set(codeKey, [
+      mkSubjectResource('Condition', 'p1'),
+      mkSubjectResource('Condition', 'p2'),
+    ]);
+    const client = makeMockClient(pages);
+    const cohort: CohortDefinition = {
+      id: 'c-fp-condition',
+      name: 'diabetes',
+      criteria: [
+        {
+          type: 'fhirpath',
+          expression: "Condition.where(code.coding.code = '44054006')",
+        },
+      ],
+      createdAt: '2026-04-16T00:00:00.000Z',
+      updatedAt: '2026-04-16T00:00:00.000Z',
+    };
+    const ids = await resolveCohort(client, cohort);
+    expect(new Set(ids)).toEqual(new Set(['p1', 'p2']));
+
+    const calls = (
+      client as unknown as {
+        searchResourcePages: { mock: { calls: unknown[][] } };
+      }
+    ).searchResourcePages.mock.calls;
+    expect(calls).toHaveLength(1);
+    expect(calls[0]![0]).toBe('Condition');
+    expect(calls[0]![1]).toEqual(
+      expect.objectContaining({
+        code: '44054006',
+        _elements: 'subject',
+        _count: '1000',
+      }),
+    );
+  });
+
+  it('applies 10K-ID cap to fhirpath results', async () => {
+    // Custom mock that yields 10_001 Patient resources in a single page.
+    // Builds directly rather than via PageMap so we don't have to worry
+    // about the fingerprint matching the exact params.
+    const searchResourcePages = vi.fn(
+      async function* (): AsyncGenerator<Resource[]> {
+        const page: Resource[] = [];
+        for (let i = 0; i < 10_001; i++) {
+          page.push({
+            resourceType: 'Patient',
+            id: `p-${i}`,
+          } as unknown as Resource);
+        }
+        yield page;
+      },
+    );
+    const client = {
+      searchResources: vi.fn(),
+      searchResourcePages,
+    } as unknown as MedplumClient;
+
+    const cohort: CohortDefinition = {
+      id: 'c-fp-cap',
+      name: 'cap-test',
+      criteria: [
+        {
+          type: 'fhirpath',
+          expression: "Patient.where(gender = 'female')",
+        },
+      ],
+      createdAt: '2026-04-16T00:00:00.000Z',
+      updatedAt: '2026-04-16T00:00:00.000Z',
+    };
+    const ids = await resolveCohort(client, cohort);
+    expect(ids).toHaveLength(10_000);
+  });
+
+  it('propagates TranslationError from an unsupported fhirpath expression', async () => {
+    const client = makeMockClient(new Map());
+    const cohort: CohortDefinition = {
+      id: 'c-fp-bad',
+      name: 'bad',
+      criteria: [
+        {
+          type: 'fhirpath',
+          expression:
+            "Patient.where(birthDate < @1960-01-01 and gender = 'female')",
+        },
+      ],
+      createdAt: '2026-04-16T00:00:00.000Z',
+      updatedAt: '2026-04-16T00:00:00.000Z',
+    };
+    await expect(resolveCohort(client, cohort)).rejects.toThrow(
+      /Composition \(and \/ or\) is not supported/,
+    );
+  });
+});
+
+describe('cache invalidates on updatedAt change', () => {
+  it('cache invalidates on updatedAt change — fhirpath criterion', async () => {
+    const pages: PageMap = new Map();
+    const genderKey = `Patient|${fingerprintParams({
+      _count: '1000',
+      _elements: 'id',
+      gender: 'female',
+    })}`;
+    pages.set(genderKey, [
+      { resourceType: 'Patient', id: 'p1' } as unknown as Resource,
+    ]);
+    const client = makeMockClient(pages);
+    const cohort: CohortDefinition = {
+      id: 'c-fp-cache',
+      name: 'cache',
+      criteria: [
+        {
+          type: 'fhirpath',
+          expression: "Patient.where(gender = 'female')",
+        },
+      ],
+      createdAt: '2026-04-16T10:00:00.000Z',
+      updatedAt: '2026-04-16T10:00:00.000Z',
+    };
+    // First resolve — populates cache.
+    await resolveCohort(client, cohort);
+    // Second resolve, same updatedAt — must hit cache (no second call).
+    await resolveCohort(client, cohort);
+    const calls = (
+      client as unknown as {
+        searchResourcePages: { mock: { calls: unknown[][] } };
+      }
+    ).searchResourcePages.mock.calls;
+    expect(calls).toHaveLength(1);
+
+    // Bump updatedAt — must re-resolve (fresh server call).
+    const bumped: CohortDefinition = {
+      ...cohort,
+      updatedAt: '2026-04-16T11:00:00.000Z',
+    };
+    await resolveCohort(client, bumped);
+    expect(calls).toHaveLength(2);
+  });
+});
