@@ -40,6 +40,7 @@ interface UsePlausibilityReportArgs {
   resourceType: string;
   sampleSize: number;
   settings: AppSettings | null;
+  patientIds?: string[];
 }
 
 const BATCH_SIZE = 25;
@@ -49,6 +50,7 @@ export function usePlausibilityReport({
   resourceType,
   sampleSize,
   settings,
+  patientIds,
 }: UsePlausibilityReportArgs): PlausibilityRunState {
   const [status, setStatus] = useState<PlausibilityRunStatus>('idle');
   const [progress, setProgress] = useState<{ current: number; total: number }>({
@@ -70,7 +72,7 @@ export function usePlausibilityReport({
 
     void (async () => {
       try {
-        const sample: Resource[] = await sampleResources(client, resourceType, sampleSize);
+        const sample: Resource[] = await sampleResources(client, resourceType, sampleSize, patientIds);
         if (cancelledRef.current) {
           setStatus('cancelled');
           return;
@@ -114,7 +116,7 @@ export function usePlausibilityReport({
         setErrorMessage(err instanceof Error ? err.message : String(err));
       }
     })();
-  }, [client, resourceType, sampleSize, settings]);
+  }, [client, resourceType, sampleSize, settings, patientIds]);
 
   const cancel = useCallback(() => {
     cancelledRef.current = true;

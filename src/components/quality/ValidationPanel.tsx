@@ -65,6 +65,7 @@ import type { NormalizedIssue } from '../../quality/types';
 export interface ValidationPanelProps {
   client: MedplumClient;
   sampleSize: number;
+  patientIds?: string[];
 }
 
 const BANNER_KEY_PREFIX = 'quality.validation.bannerDismissed.v1';
@@ -149,6 +150,7 @@ export function ValidationPanel(_props: ValidationPanelProps) {
     sampleSize,
     batchSize,
     settings: settings ?? null,
+    patientIds: _props.patientIds,
   });
 
   const { hasRemote, hasProfile } = resolveBackends(

@@ -36,6 +36,7 @@ export interface CompletenessPanelProps {
   types: string[];
   client: MedplumClient;
   sampleSize: number;
+  patientIds?: string[];
 }
 
 type SortKey = 'type' | 'completeness';
@@ -99,8 +100,8 @@ function SortableTh({
   );
 }
 
-export function CompletenessPanel({ types, client, sampleSize }: CompletenessPanelProps) {
-  const reports = useCompletenessReport(client, types, sampleSize);
+export function CompletenessPanel({ types, client, sampleSize, patientIds }: CompletenessPanelProps) {
+  const reports = useCompletenessReport(client, types, sampleSize, patientIds);
 
   const [sortKey, setSortKey] = useState<SortKey>('completeness');
   const [sortDir, setSortDir] = useState<SortDir>('asc');

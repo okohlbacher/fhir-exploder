@@ -34,6 +34,7 @@ export interface ReferencesPanelProps {
   types: string[];
   client: MedplumClient;
   sampleSize: number;
+  patientIds?: string[];
 }
 
 const CATEGORY_OPTIONS = [
@@ -42,7 +43,7 @@ const CATEGORY_OPTIONS = [
   { value: 'orphan', label: 'Orphan resources' },
 ];
 
-export function ReferencesPanel({ types, client, sampleSize }: ReferencesPanelProps) {
+export function ReferencesPanel({ types, client, sampleSize, patientIds }: ReferencesPanelProps) {
   const [resourceType, setResourceType] = useState<string>(
     () => types[0] ?? 'Patient',
   );
@@ -52,6 +53,7 @@ export function ReferencesPanel({ types, client, sampleSize }: ReferencesPanelPr
     client,
     resourceType,
     sampleSize,
+    patientIds,
   });
 
   const pct =

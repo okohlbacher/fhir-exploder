@@ -38,12 +38,14 @@ interface UseLabRangesReportArgs {
   client: MedplumClient | null;
   sampleSize: number;
   settings: AppSettings | null;
+  patientIds?: string[];
 }
 
 export function useLabRangesReport({
   client,
   sampleSize,
   settings,
+  patientIds,
 }: UseLabRangesReportArgs): LabRangesRunState {
   const [status, setStatus] = useState<LabRangesRunStatus>('idle');
   const [progress, setProgress] = useState<{ current: number; total: number }>({
@@ -69,7 +71,7 @@ export function useLabRangesReport({
       try {
         setProgress({ current: 0, total: 1 });
 
-        const observations = await sampleResources(client, 'Observation', sampleSize);
+        const observations = await sampleResources(client, 'Observation', sampleSize, patientIds);
         if (cancelledRef.current) {
           setStatus('cancelled');
           return;
@@ -98,7 +100,7 @@ export function useLabRangesReport({
         setErrorMessage(err instanceof Error ? err.message : String(err));
       }
     })();
-  }, [client, sampleSize, settings]);
+  }, [client, sampleSize, settings, patientIds]);
 
   const cancel = useCallback(() => {
     cancelledRef.current = true;

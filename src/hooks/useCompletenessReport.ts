@@ -54,12 +54,18 @@ export function useCompletenessReport(
   client: MedplumClient | null,
   types: string[],
   sampleSize: number,
+  patientIds?: string[],
 ): Record<string, PerTypeReport<PerTypeCompletenessReport>> {
   const [debouncedSize] = useDebouncedValue(sampleSize, DEBOUNCE_MS);
   const [reports, setReports] = useState<
     Record<string, PerTypeReport<PerTypeCompletenessReport>>
   >({});
   const typesKey = useMemo(() => types.join(','), [types]);
+  // Stable key for patientIds to avoid unnecessary re-runs
+  const patientIdsKey = useMemo(
+    () => (patientIds ? patientIds.slice().sort().join(',') : ''),
+    [patientIds],
+  );
 
   useEffect(() => {
     // Per-effect local cancellation flag. A shared ref would allow a
@@ -75,11 +81,12 @@ export function useCompletenessReport(
     const cache = getCache(serverUrl);
 
     // Seed: hydrate cache hits synchronously, mark the rest as 'loading'.
+    // Include patientIdsKey in cache key so cohort changes invalidate.
     const initial: Record<string, PerTypeReport<PerTypeCompletenessReport>> = {};
     for (const t of types) {
-      const hit = cache.get<PerTypeCompletenessReport>(
-        buildMetricsKey(serverUrl, t, debouncedSize, 'completeness'),
-      );
+      const cacheKey = buildMetricsKey(serverUrl, t, debouncedSize, 'completeness') +
+        (patientIdsKey ? `|pid:${patientIdsKey}` : '');
+      const hit = cache.get<PerTypeCompletenessReport>(cacheKey);
       initial[t] = hit ? hit.value : 'loading';
     }
     setReports(initial);
@@ -93,10 +100,12 @@ export function useCompletenessReport(
       while (active < CONCURRENCY && queue.length > 0) {
         const t = queue.shift()!;
         active++;
-        computeForType(client!, t, debouncedSize)
+        computeForType(client!, t, debouncedSize, patientIds)
           .then((report) => {
             if (cancelled) return;
-            cache.set(buildMetricsKey(serverUrl, t, debouncedSize, 'completeness'), {
+            const cacheKey = buildMetricsKey(serverUrl, t, debouncedSize, 'completeness') +
+              (patientIdsKey ? `|pid:${patientIdsKey}` : '');
+            cache.set(cacheKey, {
               value: report,
               computedAt: Date.now(),
               serverUrl,
@@ -121,7 +130,7 @@ export function useCompletenessReport(
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, typesKey, debouncedSize]);
+  }, [client, typesKey, debouncedSize, patientIdsKey]);
 
   // Rollup side-effect: arithmetic mean of settled per-type percentages.
   // See 05-01-SUMMARY for the locked rule. Undefined if nothing settled.
@@ -154,10 +163,11 @@ async function computeForType(
   client: MedplumClient,
   resourceType: string,
   sampleSize: number,
+  patientIds?: string[],
 ): Promise<PerTypeCompletenessReport> {
   const profile = getProfileForType(resourceType);
   const requiredPaths = profile ? requiredElementPaths(profile) : [];
-  const sample = await sampleResources(client, resourceType, sampleSize);
+  const sample = await sampleResources(client, resourceType, sampleSize, patientIds);
   const { populated, total, perPath, perResource } = computeCompleteness(sample, requiredPaths);
   return {
     populated,

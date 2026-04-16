@@ -35,6 +35,7 @@ export interface PlausibilityPanelProps {
   types: string[];
   client: MedplumClient;
   sampleSize: number;
+  patientIds?: string[];
 }
 
 const CHECK_TYPE_COLORS: Record<string, string> = {
@@ -59,7 +60,7 @@ const CHECK_TYPE_OPTIONS = [
   { value: 'clinical-duration', label: 'Clinical duration' },
 ];
 
-export function PlausibilityPanel({ types, client, sampleSize }: PlausibilityPanelProps) {
+export function PlausibilityPanel({ types, client, sampleSize, patientIds }: PlausibilityPanelProps) {
   const { settings } = useSettings();
 
   const [resourceType, setResourceType] = useState<string>(
@@ -72,6 +73,7 @@ export function PlausibilityPanel({ types, client, sampleSize }: PlausibilityPan
     resourceType,
     sampleSize,
     settings: settings ?? null,
+    patientIds,
   });
 
   const pct =

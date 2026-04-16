@@ -37,6 +37,7 @@ export interface DuplicatesPanelProps {
   types: string[];
   client: MedplumClient;
   sampleSize: number;
+  patientIds?: string[];
 }
 
 const CATEGORY_OPTIONS = [
@@ -45,7 +46,7 @@ const CATEGORY_OPTIONS = [
   { value: 'content-hash', label: 'Content hash duplicates' },
 ];
 
-export function DuplicatesPanel({ types, client, sampleSize }: DuplicatesPanelProps) {
+export function DuplicatesPanel({ types, client, sampleSize, patientIds }: DuplicatesPanelProps) {
   const [resourceType, setResourceType] = useState<string>(
     () => types[0] ?? 'Patient',
   );
@@ -55,6 +56,7 @@ export function DuplicatesPanel({ types, client, sampleSize }: DuplicatesPanelPr
     client,
     types: [resourceType],
     sampleSize,
+    patientIds,
   });
 
   const pct =

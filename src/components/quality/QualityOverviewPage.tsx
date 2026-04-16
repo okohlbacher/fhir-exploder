@@ -1,25 +1,32 @@
 /**
- * QualityOverviewPage — /quality landing.
+ * QualityOverviewPage -- /quality landing.
  *
- * Layout per 05-UI-SPEC.md:
+ * Layout per 05-UI-SPEC.md + 21-UI-SPEC.md:
  *   1. Title "Data Quality"
- *   2. Toolbar: SampleSizeControl + Last computed + Recompute button
- *   3. OverviewStrip (4 summary cards, cards 3-4 fed by QualityMetricsContext)
- *   4. Tabs (Counts / Completeness / Coding Coverage / Validation) — keepMounted
+ *   2. Toolbar: ResourceTypeSelector + ActiveCohortSelect + SampleSizeControl
+ *      | Last computed + Manage cohorts + Configure thresholds + Capture +
+ *      Export + Recompute
+ *   3. Zero-match Alert (above Tabs when active cohort resolves to 0 patients)
+ *   4. OverviewStrip (4 summary cards, cards 3-4 fed by QualityMetricsContext)
+ *   5. Tabs (Counts / Completeness / Coding Coverage / Validation /
+ *      Plausibility / Lab Ranges / Duplicates / References / Trends)
  *
- * Plans 03/04/05 overwrite the three stub panels (CompletenessPanel,
- * CodingCoveragePanel, ValidationPanel) without editing this file again.
+ * Plan 21-06: adds ActiveCohortSelect, Manage cohorts button, cohort
+ * resolver effect, patientIds threading through panels, and cohort-aware
+ * capture/export.
  */
-import { Button, Group, Stack, Tabs, Text, Title } from '@mantine/core';
+import { Alert, Anchor, Button, Group, Stack, Tabs, Text, Title } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
 import {
   IconAdjustmentsAlt,
+  IconAlertTriangle,
   IconCamera,
   IconFileDownload,
   IconRefresh,
+  IconUsersGroup,
 } from '@tabler/icons-react';
-import { useCallback, useMemo, useState } from 'react';
-import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import { notifications } from '@mantine/notifications';
 import type { QualityOutletContext } from './QualityLayout';
 import { parseResourceTypes } from '../../fhir/capability';
@@ -35,9 +42,12 @@ import { LabRangesPanel } from './LabRangesPanel';
 import { DuplicatesPanel } from './DuplicatesPanel';
 import { ReferencesPanel } from './ReferencesPanel';
 import { ResourceTypeSelector } from './ResourceTypeSelector';
+import { ActiveCohortSelect } from './ActiveCohortSelect';
 import { TrendsPanel } from './TrendsPanel';
 import { useThresholds } from '../../hooks/useThresholds';
 import { useTrendsHistory } from '../../hooks/useTrendsHistory';
+import { useCohorts } from '../../hooks/useCohorts';
+import { resolveCohort, clearCohortResolutionCache } from '../../quality/cohortResolver';
 import { useQualityMetrics } from '../../quality/QualityMetricsContext';
 import { captureSnapshot } from '../../quality/trendsHistory';
 import { exportQualityPdf } from '../../quality/pdfExport';
@@ -90,8 +100,6 @@ export function QualityOverviewPage() {
 
   const handleTabChange = (value: string | null) => {
     if (!value) return;
-    // Preserve other params (none today, but defensive). `replace: true` so
-    // the back button skips intra-tab navigation.
     const next = new URLSearchParams(searchParams);
     next.set('tab', value);
     setSearchParams(next, { replace: true });
@@ -105,27 +113,93 @@ export function QualityOverviewPage() {
   const { snapshots, append } = useTrendsHistory();
   const [exporting, setExporting] = useState(false);
 
+  // Plan 21-06: cohort resolver state
+  const { activeCohort, hydrated: cohortsHydrated } = useCohorts();
+  const [resolvedPatientIds, setResolvedPatientIds] = useState<string[] | null>(null);
+  const [resolutionStatus, setResolutionStatus] = useState<'idle' | 'resolving' | 'failed'>('idle');
+  const [recomputeToken, setRecomputeToken] = useState(0);
+
+  // Cohort resolution effect -- Threat T-21-15: uses `cancelled` flag to
+  // prevent toast spam; only one resolution toast per mount/change.
+  useEffect(() => {
+    if (!cohortsHydrated) return;
+    if (!activeCohort) {
+      setResolvedPatientIds(null);
+      setResolutionStatus('idle');
+      return;
+    }
+    let cancelled = false;
+    setResolutionStatus('resolving');
+    resolveCohort(client, activeCohort)
+      .then((ids) => {
+        if (!cancelled) {
+          setResolvedPatientIds(ids);
+          setResolutionStatus('idle');
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setResolvedPatientIds(null);
+          setResolutionStatus('failed');
+          notifications.show({
+            color: 'red',
+            title: 'Cohort resolution failed',
+            message: `Could not resolve "${activeCohort.name}" against the server. Panels running unscoped.`,
+            autoClose: 6000,
+          });
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCohort?.id, activeCohort?.updatedAt, cohortsHydrated, recomputeToken, client]);
+
+  // Threat T-21-16: clear cohort resolution cache on server-URL change.
+  useEffect(() => {
+    clearCohortResolutionCache();
+  }, [client]);
+
+  const resolvedPatientCount = resolvedPatientIds?.length ?? null;
+  const hasZeroMatch =
+    activeCohort != null &&
+    resolutionStatus === 'idle' &&
+    resolvedPatientCount === 0;
+
+  // Compute scoped patient IDs for panels (Pitfall 8: 0-patient or failed
+  // resolution means panels run unscoped).
+  const scopedPatientIds =
+    resolutionStatus === 'idle'
+      ? resolvedPatientIds ?? undefined
+      : undefined;
+
   const handleRecompute = () => {
     recompute();
+    // Bump recompute token so the resolver re-runs for the active cohort
+    setRecomputeToken((t) => t + 1);
     notifications.show({
       color: 'blue',
       title: 'Recomputing',
-      message: 'Re-fetching counts…',
+      message: 'Re-fetching counts\u2026',
     });
   };
 
   const handleCapture = useCallback(() => {
+    // Plan 21-06: pass cohort metadata to captureSnapshot
+    const cohort =
+      activeCohort && resolutionStatus === 'idle' && resolvedPatientIds
+        ? {
+            id: activeCohort.id,
+            name: activeCohort.name,
+            patientCount: resolvedPatientIds.length,
+          }
+        : null;
     const snap = captureSnapshot({
       metrics,
       serverUrl: client.getBaseUrl(),
       sampleSize,
-      // Plan 21-04 (T-4.3): canonical field is `resourceTypes`; the legacy
-      // `cohort: string[]` alias on `CaptureSnapshotParams` is retained only
-      // for back-compat with older in-flight callers and will be removed in
-      // Phase 22. Plan 21-06 will populate `activeCohort` here once the
-      // dashboard has a cohort dropdown — until then no active cohort.
       resourceTypes,
-      activeCohort: null,
+      activeCohort: cohort,
       getActiveThreshold,
     });
     append(snap);
@@ -135,7 +209,7 @@ export function QualityOverviewPage() {
       message: 'Added to trend history.',
       autoClose: 2500,
     });
-  }, [metrics, client, sampleSize, resourceTypes, getActiveThreshold, append]);
+  }, [metrics, client, sampleSize, resourceTypes, getActiveThreshold, append, activeCohort, resolutionStatus, resolvedPatientIds]);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -152,6 +226,17 @@ export function QualityOverviewPage() {
       const thresholds = Object.fromEntries(
         METRIC_KEYS.map((k) => [k, getActiveThreshold(k)]),
       ) as Record<MetricKey, number | null>;
+
+      // Plan 21-06: pass cohort metadata to PDF export
+      const cohort =
+        activeCohort && resolutionStatus === 'idle' && resolvedPatientIds
+          ? {
+              id: activeCohort.id,
+              name: activeCohort.name,
+              patientCount: resolvedPatientIds.length,
+            }
+          : null;
+
       await exportQualityPdf({
         snapshots,
         summary: {
@@ -168,12 +253,8 @@ export function QualityOverviewPage() {
           },
         },
         sampleSize,
-        // Plan 21-04 (T-4.3): `resourceTypes` is the canonical resource-type
-        // filter list. The optional `cohort` object carries the active cohort
-        // (id/name/patientCount); Plan 21-06 threads a real value from a
-        // dashboard cohort dropdown — until then `null`.
         resourceTypes,
-        cohort: null,
+        cohort,
         thresholds,
         serverUrl: client.getBaseUrl(),
         capturedAt: new Date(),
@@ -208,6 +289,9 @@ export function QualityOverviewPage() {
     getActiveThreshold,
     summary.total,
     summary.typeCount,
+    activeCohort,
+    resolutionStatus,
+    resolvedPatientIds,
   ]);
 
   const typesLoaded =
@@ -218,19 +302,31 @@ export function QualityOverviewPage() {
     <Stack gap="lg" p="xl">
       <Title order={2}>Data Quality</Title>
 
-      <Group justify="space-between" align="flex-end">
-        <Group gap="md" align="flex-end">
+      <Group justify="space-between" align="flex-end" wrap="wrap">
+        <Group gap="md" align="flex-end" wrap="wrap">
           <ResourceTypeSelector
             types={types}
             value={resourceTypes}
             onChange={setResourceTypes}
           />
+          <ActiveCohortSelect
+            resolvedPatientCount={resolvedPatientCount}
+            resolutionStatus={resolutionStatus}
+          />
           <SampleSizeControl value={sampleSize} onChange={setSampleSize} />
         </Group>
-        <Group gap="sm">
+        <Group gap="sm" wrap="wrap">
           <Text size="sm" c="dimmed">
             Last computed {formatRelative(lastComputed)}
           </Text>
+          <Button
+            variant="light"
+            leftSection={<IconUsersGroup size={16} />}
+            onClick={() => navigate('/quality/cohorts')}
+            aria-label="Manage cohorts. Define, view, and activate patient cohorts."
+          >
+            Manage cohorts
+          </Button>
           <Button
             variant="light"
             leftSection={<IconAdjustmentsAlt size={16} />}
@@ -267,6 +363,20 @@ export function QualityOverviewPage() {
         </Group>
       </Group>
 
+      {hasZeroMatch && (
+        <Alert
+          color="yellow"
+          icon={<IconAlertTriangle size={16} />}
+          title="Active cohort matches 0 patients"
+        >
+          Panels are currently running unscoped (all patients). Review the
+          cohort&apos;s criteria on the Cohorts page.{' '}
+          <Anchor component={Link} to="/quality/cohorts" ml="xs">
+            Open Cohorts page
+          </Anchor>
+        </Alert>
+      )}
+
       <OverviewStrip summary={summary} isLoading={!typesLoaded} />
 
       <Tabs value={activeTab} onChange={handleTabChange} keepMounted>
@@ -286,25 +396,25 @@ export function QualityOverviewPage() {
           <ResourceCountsPanel counts={counts} />
         </Tabs.Panel>
         <Tabs.Panel value="completeness" pt="md" keepMounted>
-          <CompletenessPanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
+          <CompletenessPanel types={effectiveTypes} client={client} sampleSize={sampleSize} patientIds={scopedPatientIds} />
         </Tabs.Panel>
         <Tabs.Panel value="coverage" pt="md" keepMounted>
-          <CodingCoveragePanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
+          <CodingCoveragePanel types={effectiveTypes} client={client} sampleSize={sampleSize} patientIds={scopedPatientIds} />
         </Tabs.Panel>
         <Tabs.Panel value="validation" pt="md" keepMounted>
-          <ValidationPanel client={client} sampleSize={sampleSize} />
+          <ValidationPanel client={client} sampleSize={sampleSize} patientIds={scopedPatientIds} />
         </Tabs.Panel>
         <Tabs.Panel value="plausibility" pt="md" keepMounted>
-          <PlausibilityPanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
+          <PlausibilityPanel types={effectiveTypes} client={client} sampleSize={sampleSize} patientIds={scopedPatientIds} />
         </Tabs.Panel>
         <Tabs.Panel value="lab-ranges" pt="md" keepMounted>
-          <LabRangesPanel client={client} sampleSize={sampleSize} />
+          <LabRangesPanel client={client} sampleSize={sampleSize} patientIds={scopedPatientIds} />
         </Tabs.Panel>
         <Tabs.Panel value="duplicates" pt="md" keepMounted>
-          <DuplicatesPanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
+          <DuplicatesPanel types={effectiveTypes} client={client} sampleSize={sampleSize} patientIds={scopedPatientIds} />
         </Tabs.Panel>
         <Tabs.Panel value="references" pt="md" keepMounted>
-          <ReferencesPanel types={effectiveTypes} client={client} sampleSize={sampleSize} />
+          <ReferencesPanel types={effectiveTypes} client={client} sampleSize={sampleSize} patientIds={scopedPatientIds} />
         </Tabs.Panel>
         <Tabs.Panel value="trends" pt="md" keepMounted>
           <TrendsPanel

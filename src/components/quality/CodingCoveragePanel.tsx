@@ -35,6 +35,7 @@ export interface CodingCoveragePanelProps {
   types: string[];
   client: MedplumClient;
   sampleSize: number;
+  patientIds?: string[];
 }
 
 type SortKey = 'type' | 'systemCode' | 'textOnly' | 'empty';
@@ -114,8 +115,8 @@ function SortableTh({
   );
 }
 
-export function CodingCoveragePanel({ types, client, sampleSize }: CodingCoveragePanelProps) {
-  const reports = useCodingCoverage(client, types, sampleSize);
+export function CodingCoveragePanel({ types, client, sampleSize, patientIds }: CodingCoveragePanelProps) {
+  const reports = useCodingCoverage(client, types, sampleSize, patientIds);
 
   const [sortKey, setSortKey] = useState<SortKey>('systemCode');
   const [sortDir, setSortDir] = useState<SortDir>('asc');

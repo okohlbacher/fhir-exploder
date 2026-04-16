@@ -46,12 +46,14 @@ interface UseReferenceReportArgs {
   client: MedplumClient | null;
   resourceType: string;
   sampleSize: number;
+  patientIds?: string[];
 }
 
 export function useReferenceReport({
   client,
   resourceType,
   sampleSize,
+  patientIds,
 }: UseReferenceReportArgs): ReferenceRunState {
   const [status, setStatus] = useState<ReferenceRunStatus>('idle');
   const [progress, setProgress] = useState<{ current: number; total: number }>({
@@ -81,6 +83,7 @@ export function useReferenceReport({
           client,
           resourceType,
           sampleSize,
+          patientIds,
         );
         if (cancelledRef.current) {
           setStatus('cancelled');
@@ -141,7 +144,7 @@ export function useReferenceReport({
         setErrorMessage(err instanceof Error ? err.message : String(err));
       }
     })();
-  }, [client, resourceType, sampleSize]);
+  }, [client, resourceType, sampleSize, patientIds]);
 
   const cancel = useCallback(() => {
     cancelledRef.current = true;

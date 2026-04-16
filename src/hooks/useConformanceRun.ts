@@ -57,6 +57,7 @@ interface UseConformanceRunArgs {
   sampleSize: number;
   batchSize: number;
   settings: AppSettings | null;
+  patientIds?: string[];
 }
 
 /**
@@ -84,6 +85,7 @@ export function useConformanceRun({
   sampleSize,
   batchSize,
   settings,
+  patientIds,
 }: UseConformanceRunArgs): ConformanceRunState {
   const [status, setStatus] = useState<ConformanceRunStatus>('idle');
   const [progress, setProgress] = useState<{ current: number; total: number }>({
@@ -114,7 +116,7 @@ export function useConformanceRun({
     void (async () => {
       try {
         // Step 1: Sample resources
-        const sample: Resource[] = await sampleResources(client, resourceType, sampleSize);
+        const sample: Resource[] = await sampleResources(client, resourceType, sampleSize, patientIds);
         if (cancelledRef.current) {
           setStatus('cancelled');
           return;
@@ -218,7 +220,7 @@ export function useConformanceRun({
         setErrorMessage(err instanceof Error ? err.message : String(err));
       }
     })();
-  }, [client, terminologyClient, resourceType, sampleSize, batchSize, settings]);
+  }, [client, terminologyClient, resourceType, sampleSize, batchSize, settings, patientIds]);
 
   const cancel = useCallback(() => {
     cancelledRef.current = true;

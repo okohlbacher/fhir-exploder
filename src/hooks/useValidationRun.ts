@@ -57,6 +57,7 @@ interface UseValidationRunArgs {
   sampleSize: number;
   batchSize: number;
   settings: AppSettings | null;
+  patientIds?: string[];
 }
 
 export function useValidationRun({
@@ -65,6 +66,7 @@ export function useValidationRun({
   sampleSize,
   batchSize,
   settings,
+  patientIds,
 }: UseValidationRunArgs): ValidationRunState {
   const [status, setStatus] = useState<ValidationRunStatus>('idle');
   const [progress, setProgress] = useState<{ current: number; total: number }>({
@@ -95,6 +97,7 @@ export function useValidationRun({
           client,
           resourceType,
           sampleSize,
+          patientIds,
         );
         if (cancelledRef.current) {
           setStatus('cancelled');
@@ -166,7 +169,7 @@ export function useValidationRun({
         setErrorMessage(err instanceof Error ? err.message : String(err));
       }
     })();
-  }, [client, resourceType, sampleSize, batchSize, settings]);
+  }, [client, resourceType, sampleSize, batchSize, settings, patientIds]);
 
   const cancel = useCallback(() => {
     cancelledRef.current = true;

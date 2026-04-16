@@ -33,15 +33,17 @@ import { ResourceIssueTable } from './ResourceIssueTable';
 export interface LabRangesPanelProps {
   client: MedplumClient;
   sampleSize: number;
+  patientIds?: string[];
 }
 
-export function LabRangesPanel({ client, sampleSize }: LabRangesPanelProps) {
+export function LabRangesPanel({ client, sampleSize, patientIds }: LabRangesPanelProps) {
   const { settings } = useSettings();
 
   const run = useLabRangesReport({
     client,
     sampleSize,
     settings: settings ?? null,
+    patientIds,
   });
 
   const pct =

@@ -51,12 +51,14 @@ interface UseDuplicateReportArgs {
   client: MedplumClient | null;
   types: string[];
   sampleSize: number;
+  patientIds?: string[];
 }
 
 export function useDuplicateReport({
   client,
   types,
   sampleSize,
+  patientIds,
 }: UseDuplicateReportArgs): DuplicateRunState {
   const [status, setStatus] = useState<DuplicateRunStatus>('idle');
   const [progress, setProgress] = useState<{ current: number; total: number }>({
@@ -89,7 +91,7 @@ export function useDuplicateReport({
         // headline DQ-07 check and has its own fixed key (family|given|DOB).
         let patientSample: Resource[] = [];
         try {
-          patientSample = await sampleResources(client, 'Patient', sampleSize);
+          patientSample = await sampleResources(client, 'Patient', sampleSize, patientIds);
         } catch {
           // Server may not have Patient resources -- proceed with empty sample.
           patientSample = [];
@@ -109,7 +111,7 @@ export function useDuplicateReport({
             return;
           }
           try {
-            perTypeSamples[t] = await sampleResources(client, t, sampleSize);
+            perTypeSamples[t] = await sampleResources(client, t, sampleSize, patientIds);
           } catch {
             perTypeSamples[t] = [];
           }
@@ -175,7 +177,7 @@ export function useDuplicateReport({
         setErrorMessage(err instanceof Error ? err.message : String(err));
       }
     })();
-  }, [client, types, sampleSize]);
+  }, [client, types, sampleSize, patientIds]);
 
   const cancel = useCallback(() => {
     cancelledRef.current = true;

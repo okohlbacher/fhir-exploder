@@ -46,12 +46,17 @@ export function useCodingCoverage(
   client: MedplumClient | null,
   types: string[],
   sampleSize: number,
+  patientIds?: string[],
 ): Record<string, PerTypeReport<PerTypeCoverageReport>> {
   const [debouncedSize] = useDebouncedValue(sampleSize, DEBOUNCE_MS);
   const [reports, setReports] = useState<
     Record<string, PerTypeReport<PerTypeCoverageReport>>
   >({});
   const typesKey = useMemo(() => types.join(','), [types]);
+  const patientIdsKey = useMemo(
+    () => (patientIds ? patientIds.slice().sort().join(',') : ''),
+    [patientIds],
+  );
 
   useEffect(() => {
     // Per-effect local cancellation flag. A shared ref would allow a
@@ -67,11 +72,12 @@ export function useCodingCoverage(
     const cache = getCache(serverUrl);
 
     // Seed: hydrate cache hits synchronously, mark the rest as 'loading'.
+    // Include patientIdsKey in cache key so cohort changes invalidate.
     const initial: Record<string, PerTypeReport<PerTypeCoverageReport>> = {};
     for (const t of types) {
-      const hit = cache.get<PerTypeCoverageReport>(
-        buildMetricsKey(serverUrl, t, debouncedSize, 'coverage'),
-      );
+      const cacheKey = buildMetricsKey(serverUrl, t, debouncedSize, 'coverage') +
+        (patientIdsKey ? `|pid:${patientIdsKey}` : '');
+      const hit = cache.get<PerTypeCoverageReport>(cacheKey);
       initial[t] = hit ? hit.value : 'loading';
     }
     setReports(initial);
@@ -84,12 +90,14 @@ export function useCodingCoverage(
       while (active < CONCURRENCY && queue.length > 0) {
         const t = queue.shift()!;
         active++;
-        sampleResources(client!, t, debouncedSize)
+        sampleResources(client!, t, debouncedSize, patientIds)
           .then((sample) => {
             if (cancelled) return;
             const report = aggregateCoverage(sample);
+            const cacheKey = buildMetricsKey(serverUrl, t, debouncedSize, 'coverage') +
+              (patientIdsKey ? `|pid:${patientIdsKey}` : '');
             cache.set(
-              buildMetricsKey(serverUrl, t, debouncedSize, 'coverage'),
+              cacheKey,
               {
                 value: report,
                 computedAt: Date.now(),
@@ -116,7 +124,7 @@ export function useCodingCoverage(
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, typesKey, debouncedSize]);
+  }, [client, typesKey, debouncedSize, patientIdsKey]);
 
   // Rollup side-effect: arithmetic mean of per-type coverage percentages
   // (systemCode/totalCodedFields*100), excluding loading, errored, and
