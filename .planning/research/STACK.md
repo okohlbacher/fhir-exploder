@@ -1,245 +1,260 @@
-# Technology Stack
+# Stack Research — v1.4 Hardening & Tech-Debt Sweep
 
-**Project:** FHIR Exploder
-**Researched:** 2026-04-11
-**Overall confidence:** HIGH (versions verified via npm registry)
+**Domain:** Subsequent-milestone delta on existing FHIR Exploder app
+**Researched:** 2026-04-16
+**Overall confidence:** HIGH
 
-## Recommended Stack
+## Bottom Line
 
-### Core Framework
+**One new dev-dependency, zero new runtime dependencies.** The existing stack
+(React 18 + Vite 8 + Medplum 5 + Mantine 8) already covers ~95% of v1.4 work.
 
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| React | ^18.3.1 | UI framework | Medplum 5.x supports React 18 or 19; use 18 for maximum stability with Mantine 8 and broader ecosystem compat. React 19 is fine but unnecessary risk for a local tool. | HIGH |
-| TypeScript | ^5.7.0 | Type safety | Required for @medplum/fhirtypes to provide value; pin to 5.x since TS 6.0.2 just shipped and may have edge cases with Medplum's generated types | MEDIUM |
-| Vite | ^8.0.8 | Build tool / dev server | Fast HMR, native ESM, first-class React+TS support. Vite 8 is current stable. | HIGH |
+| Change | Action | Effort |
+|--------|--------|--------|
+| `rollup-plugin-visualizer@^7.0.1` (devDep) | **ADD** to verify R15 (lazy routes) produces separate chunks | XS |
+| External FHIR validator client (T1) | **KEEP CURRENT** `src/quality/remoteValidator.ts` — `MedplumClient.post()` is correct; just add settings UI + connectivity probe | S-M |
+| `Map<serverUrl, ...>` cache (R1, R2) | **NO NEW DEP** — module-scoped `Map` in plain TS | XS |
+| `useSyncExternalStore` for `QualityMetricsContext` split (R14) | **NO NEW DEP** — built into React 18.0+ | M |
+| `useSampleWalker`, `useAsyncRun`, `<DrillDownShell>` (R1, R3, R6) | **NO NEW DEP** — pure React hook/component extraction | M |
+| `React.lazy()` route splitting (R15) | **NO NEW DEP** — built into React + Vite supports dynamic `import()` natively | S |
 
-### FHIR Libraries (Medplum Ecosystem)
+---
 
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| @medplum/core | 5.1.7 | FHIR client, search utilities, type helpers | MedplumClient provides `search()`, `searchResources()`, `searchResourcePages()`, `readResource()`, `readPatientEverything()`, `valueSetExpand()`. Handles FHIR search param parsing, pagination. Critical: supports `fhirUrlPath` and `baseUrl` for connecting to non-Medplum servers. | HIGH |
-| @medplum/fhirtypes | 5.1.7 | FHIR R4 TypeScript types | Comprehensive R4 type definitions (Patient, Bundle, Condition, Observation, etc.). All Medplum components are typed against these. | HIGH |
-| @medplum/react | 5.1.7 | FHIR-aware React components | Key components: `ResourceTable`, `SearchControl`, `ResourcePropertyDisplay`, `CodeableConceptDisplay`, `PatientHeader`, `PatientSummary`, `ResourceForm`, `ResourceHistoryTable`, `DiagnosticReportDisplay`, `ObservationTable`. Also: `ResourceName`, `ResourceBadge`, `ReferenceDisplay`. | HIGH |
-| @medplum/react-hooks | 5.1.7 | React hooks for FHIR data | `useMedplum()`, `useSearch()`, `useSearchResources()`, `useResource()`, `useMedplumContext()`. Required peer of @medplum/react. | HIGH |
+## Recommended Additions
 
-**Version lock note:** All four @medplum packages MUST be the same version (5.1.7). They are released in lockstep. Mixing versions causes type mismatches and runtime errors.
+### Bundle Analyzer (devDependency)
 
-### UI Framework (Mantine -- Required by Medplum)
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| `rollup-plugin-visualizer` | `^7.0.1` | Generates an HTML/treemap report of the production bundle, broken down by chunk and module | Verifies that R15's `React.lazy()` work actually produces separate chunks for the 3 drill-down routes + Thresholds page. Without an analyzer the team has no objective way to confirm the code-split worked — the success criterion in `v1.4-PLAN-DRAFT.md` Phase 27 is literally "bundle analyzer shows Quality drill-downs as separate chunks." |
 
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| @mantine/core | ^8.3.18 | Component library | **Required peer dependency** of @medplum/react 5.x. Not optional. Provides Table, Tabs, Modal, Button, TextInput, Select, Pagination, ActionIcon, Badge, Card, Group, Stack, Grid, Paper, etc. | HIGH |
-| @mantine/hooks | ^8.3.18 | Utility hooks | Required peer of @medplum/react. Provides useDisclosure, useLocalStorage, useDebouncedValue, useMediaQuery. | HIGH |
-| @mantine/notifications | ^8.3.18 | Toast notifications | Required peer of @medplum/react. Use for error/success feedback on FHIR operations. | HIGH |
-| @mantine/spotlight | ^8.3.18 | Command palette / search | Required peer of @medplum/react. Could be useful for quick resource-type switching. | HIGH |
+**Compatibility (verified 2026-04-16 via npm registry):**
+- `rollup-plugin-visualizer@7.0.1` peers on `rollup: 2.x \|\| 3.x \|\| 4.x` — Vite 8 ships Rollup 4.60.1, ✓ compatible
+- Released 2026-03-04 (current)
+- Requires Node ≥ 22 — repo is on Node 22.22, ✓ compatible
 
-**Critical:** Do NOT install Mantine 9.x (requires React 19 only). Stick to 8.x which supports React 18 or 19.
+**Integration (one-line `vite.config.ts` change + one new npm script):**
 
-### Configuration
+```ts
+// vite.config.ts
+import { defineConfig, type PluginOption } from 'vite';
+import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| js-yaml | 4.1.1 | YAML parsing for settings.yaml | De facto standard for YAML in JS. Small, no dependencies, well-maintained. settings.yaml will store server URL, auth config, terminology server URL. | HIGH |
-| @types/js-yaml | 4.0.9 | TypeScript types for js-yaml | Required for TS compilation. | HIGH |
-
-### Routing
-
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| react-router-dom | ^7.14.0 | Client-side routing | Three entry points (patient browser, resource explorer, data quality dashboard) need distinct routes. react-router v7 is current stable, well-integrated with React 18. | HIGH |
-
-### Dev Dependencies
-
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| @vitejs/plugin-react | latest | Vite React plugin | Required for JSX transform with Vite. | HIGH |
-| @types/react | ^18.3.28 | React type definitions | Required for TypeScript + React 18. | HIGH |
-| @types/react-dom | ^18.3.x | ReactDOM type definitions | Required for TypeScript + React 18. | HIGH |
-
-## Key Architecture Decisions
-
-### Connecting MedplumClient to Blaze (Non-Medplum FHIR Server)
-
-MedplumClient supports connecting to any FHIR R4 server via constructor options:
-
-```typescript
-import { MedplumClient } from '@medplum/core';
-
-// Blaze exposes FHIR at /fhir
-const client = new MedplumClient({
-  baseUrl: 'http://localhost:8080',
-  fhirUrlPath: 'fhir/',  // Blaze's FHIR endpoint path
+export default defineConfig({
+  plugins: [
+    react(),
+    process.env.ANALYZE && visualizer({
+      filename: 'dist/stats.html',
+      template: 'treemap',
+      gzipSize: true,
+      brotliSize: true,
+    }) as PluginOption,
+  ].filter(Boolean),
 });
-
-// For basic auth:
-client.setBasicAuth('username', 'password');
-
-// For bearer token:
-// Use accessToken in constructor or client.setAccessToken('token');
 ```
 
-**Key insight:** `fhirUrlPath` defaults to `fhir/R4/` (Medplum's path). Blaze uses `fhir/` as its FHIR base. This MUST be configured correctly or all requests will 404.
-
-**What works with non-Medplum servers:**
-- `client.search('Patient', ...)` -- standard FHIR search
-- `client.searchResources('Patient', ...)` -- returns Resource[]
-- `client.searchResourcePages('Patient', ...)` -- async generator for pagination
-- `client.readResource('Patient', 'id')` -- read by ID
-- `client.readPatientEverything('id')` -- $everything operation (if Blaze supports it)
-- `client.get(url)` / `client.post(url, body)` -- raw HTTP for custom operations
-
-**What will NOT work with non-Medplum servers:**
-- OAuth login flows (`startLogin`, `signInWithRedirect`) -- these are Medplum-specific
-- Bot execution, project management, SMART launch -- Medplum platform features
-- `useMedplumProfile()` -- returns the logged-in Medplum user (irrelevant here)
-
-### Terminology Server Integration
-
-The MII Terminology Server (https://terminology.medizininformatik-initiative.de/fhir) is a standard FHIR terminology server. Use MedplumClient's raw HTTP methods or create a second client:
-
-```typescript
-// Option A: Dedicated client for terminology
-const terminologyClient = new MedplumClient({
-  baseUrl: 'https://terminology.medizininformatik-initiative.de',
-  fhirUrlPath: 'fhir/',
-});
-
-// $expand for ValueSet expansion
-const expanded = await terminologyClient.get(
-  terminologyClient.fhirUrl('ValueSet', '$expand') + '?url=' + encodeURIComponent(valueSetUrl)
-);
-
-// $lookup for code display values
-const lookup = await terminologyClient.get(
-  terminologyClient.fhirUrl('CodeSystem', '$lookup') + '?system=' + system + '&code=' + code
-);
-
-// $translate for ConceptMap translations
-const translated = await terminologyClient.post(
-  terminologyClient.fhirUrl('ConceptMap', '$translate'),
-  { resourceType: 'Parameters', parameter: [...] }
-);
+```json
+// package.json — add script
+"analyze": "ANALYZE=1 vite build"
 ```
 
-**Note:** `client.valueSetExpand()` exists on MedplumClient and wraps the $expand operation -- verify it works against the MII server (it should, as it's standard FHIR).
+Gating on `ANALYZE` keeps normal `npm run build` unaffected; the analyzer
+only runs when explicitly requested. Matches the standard pattern published
+in the plugin's README.
 
-### Medplum React Components for This Project
+**Alternatives considered:**
 
-**Highest value components (use these first):**
+| Alternative | Why not |
+|-------------|---------|
+| `vite-bundle-visualizer@1.2.1` | Thin CLI wrapper around `rollup-plugin-visualizer`. Adds an extra package without exposing more options. Use the underlying plugin directly. |
+| `source-map-explorer@2.5.3` | Works on already-built artifacts via source maps. Slower workflow (build → run on dist), no Vite plugin integration. Useful for one-off audits but not for Vite-native CI integration. |
+| Vite built-in `--profile` flag | Profiles dev-server startup, NOT bundle composition. Wrong tool. |
 
-| Component | Use Case | Notes |
-|-----------|----------|-------|
-| `MedplumProvider` | App-level context | Wraps app, provides MedplumClient to all children via context |
-| `SearchControl` | Resource explorer browse/search | Full search UI: filters, sort, pagination, column display. Accepts `SearchRequest` object. This is the workhorse component. |
-| `ResourceTable` | Display a bundle/search result as table | Simpler than SearchControl. Good for sub-views. |
-| `ResourcePropertyDisplay` | Show a single FHIR property | Renders any FHIR datatype correctly (HumanName, Address, CodeableConcept, etc.) |
-| `ResourceForm` | Detailed resource view | Read-only mode available. Shows all resource fields. |
-| `CodeableConceptDisplay` | Show coded values | Renders CodeableConcept with display text. Key for terminology display. |
-| `PatientHeader` | Patient banner | Shows name, DOB, identifiers, photo. Standard clinical header. |
-| `PatientSummary` | Patient overview | Sections: Allergies, Problems, Medications, Labs, Insurance. |
-| `ObservationTable` | Lab results | Renders Observation resources in a clinical table format. |
-| `DiagnosticReportDisplay` | Diagnostic reports | Renders DiagnosticReport with contained observations. |
-| `ReferenceDisplay` | Clickable FHIR references | Resolves and displays Reference fields. |
-| `ResourceName` | Display resource name/title | Smart display of resource identifying info. |
-| `ResourceHistoryTable` | Resource version history | Shows resource changes over time. |
+---
 
-**Hooks for data fetching:**
+## Existing Stack Sufficiency (NO new deps needed)
 
-| Hook | Use Case |
-|------|----------|
-| `useSearch(resourceType, params)` | Returns Bundle for a search query |
-| `useSearchResources(resourceType, params)` | Returns Resource[] (unwrapped from bundle) |
-| `useResource(resourceType, id)` | Fetch single resource by ID |
-| `useMedplum()` | Access MedplumClient instance |
+### T1 — External FHIR Validator Integration
 
-### CSS Strategy
+**The current `src/quality/remoteValidator.ts` is correct and should be kept.**
+v1.4's T1 work is settings UI + connectivity probe + status line — not a new
+HTTP client.
 
-**Do NOT add a separate CSS framework.** Mantine 8 IS the CSS framework (required by Medplum). It provides:
-- CSS-in-JS with className-based styling (no runtime overhead)
-- Complete design system with theming
-- All layout primitives (Grid, Stack, Group, Flex, Container)
-- Dark mode support built-in
-- Responsive utilities
+**Why `MedplumClient.post()` over `MedplumClient.validateResource()`:**
 
-Adding Tailwind, Chakra, or any other CSS library would conflict with Mantine's styling and create maintenance burden.
+`@medplum/core@5.1.7` exposes `MedplumClient.validateResource(resource, options)`
+(line 4413 of `dist/esm/index.d.ts`) which wraps `$validate`. **However it does
+NOT accept a `profile` query parameter** — the FHIR spec's
+`POST {server}/{Type}/$validate?profile={canonical}` form is the only way to
+constrain validation against an MII profile. The existing code uses
+`client.post('Condition/$validate?profile=...', resource)` to thread the
+canonical URL through, which `validateResource()` cannot do.
 
-**Additional CSS considerations:**
-- Use `@mantine/core/styles.css` as the base stylesheet
-- Custom CSS modules (`.module.css`) for app-specific styling
-- Mantine's `createTheme()` for consistent branding
+| Validator endpoint | URL pattern | Wire format | Existing code handles it? |
+|--------------------|-------------|-------------|---------------------------|
+| HAPI FHIR JPA server `$validate` | `{base}/Condition/$validate?profile=...` | POST resource JSON, response = `OperationOutcome` | ✓ Yes |
+| FHIR Validator Wrapper (standalone server, hosted at `validator.fhir.org`) | `{base}/validate` (NB different path) | POST resource, response = `OperationOutcome` | Partial — would need URL-pattern flexibility |
+| IG Publisher CLI in server mode | `{base}/Condition/$validate?profile=...` | Same as HAPI | ✓ Yes |
+| Aidbox `/$validate` | `{base}/$validate?profile=...` (resource type inferred from body) | Same body, same response shape | ✓ Yes |
 
-## Alternatives Considered
+**Recommendation:** Keep `remoteValidator.ts` unchanged for v1.4. The optional
+extension — supporting the FHIR Validator Wrapper's `/validate` endpoint
+shape — can be deferred to v1.5 if a user actually requests it. For v1.4, the
+spec form (`{Type}/$validate?profile=...`) is what HAPI, IG-publisher, and
+Aidbox all implement, and it's what the existing code emits.
 
-| Category | Recommended | Alternative | Why Not |
-|----------|-------------|-------------|---------|
-| FHIR client | @medplum/core | HAPI FHIR JS / fhir.js | Medplum is TypeScript-first, actively maintained, and tightly integrated with @medplum/react components. fhir.js is unmaintained. |
-| FHIR types | @medplum/fhirtypes | @types/fhir | @medplum/fhirtypes is more comprehensive and version-locked with the client. @types/fhir exists but is community-maintained with fewer guarantees. |
-| FHIR UI | @medplum/react | Build custom components | Medplum provides ResourceTable, SearchControl, CodeableConceptDisplay etc. out of the box. Building from scratch would take weeks for what Medplum provides in hours. |
-| UI framework | Mantine 8 | Material UI / Ant Design | Mantine is a required peer dep of @medplum/react. No choice here -- but Mantine is excellent anyway (clean API, good TS support, fast). |
-| Build tool | Vite 8 | Next.js / Webpack | Local-only SPA with no SSR needs. Vite is simpler, faster, and the right tool for a client-side-only app. |
-| YAML parser | js-yaml | yaml (npm) | js-yaml is smaller, more widely used (50M+ weekly downloads), battle-tested. The `yaml` package is more spec-complete but overkill for a simple config file. |
-| State management | React context + hooks | Redux / Zustand | MedplumClient handles caching, React hooks handle data fetching. Minimal app state (settings, active route). No need for a state management library. |
-| Routing | react-router-dom v7 | TanStack Router | react-router is the ecosystem standard, Medplum's own examples use it, simpler setup for a 3-route app. |
-| React version | React 18 | React 19 | React 19 works with Mantine 8 and Medplum 5, but React 18 is more battle-tested. React 19's new features (actions, use()) aren't needed for this read-only explorer. Lower risk. |
-| Virtualization | @tanstack/react-virtual | react-window | TanStack Virtual is the actively maintained successor. Use for large resource lists (50K+ resources). Only add if pagination alone isn't sufficient. |
+**v1.4 T1 work is settings + UX, not stack:**
+1. Extend `AppSettings.validation` schema in `src/config/types.ts` with
+   `externalValidator: { url, auth?, profilePack? }`
+2. Settings page UI: text input + "Test connectivity" button (use existing
+   Mantine `TextInput` + `Button` + `Notifications`)
+3. ValidationPanel status line: "Using external validator @ X" /
+   "Using server $validate" / "Using local MII profile bundle" (existing
+   `Alert` component from Mantine)
+4. Connectivity probe = `client.get('metadata')` — already supported by
+   `MedplumClient`. No new dependency.
 
-## Do NOT Use
+### Other Refactors — All Doable With Current Stack
 
-| Technology | Reason |
-|------------|--------|
-| Mantine 9.x | Requires React 19 exclusively; incompatible with @medplum/react 5.x which peers on Mantine ^8.0.0 |
-| @tanstack/react-query | MedplumClient + useSearch/useSearchResources already handle caching and data fetching. Adding react-query would create two competing cache layers. |
-| Tailwind CSS | Conflicts with Mantine's styling system. Mantine IS the design system. |
-| SMART on FHIR libraries | Out of scope per PROJECT.md. Blaze access is direct, not via SMART launch. |
-| GraphQL FHIR | Blaze supports FHIR REST, not FHIR GraphQL. Stick to REST search. |
-| Next.js / Remix | This is a local SPA, not a web application needing SSR/SSG. Vite is correct. |
+| Refactor | What's needed | Already in stack? |
+|----------|---------------|-------------------|
+| `Map<serverUrl, QualityMetricsCache>` (R1) | Plain TS `Map`, replace module-scoped `let cacheInstance` | ✓ TS 5.7 |
+| `Map<serverUrl+type, count>` cache (R2) | Plain TS `Map` keyed by composite string | ✓ TS 5.7 |
+| `useSampleWalker<T>` extraction (R1) | Custom React hook wrapping the worker-pool pattern | ✓ React 18 |
+| `useAsyncRun<TState>` extraction (R6) | Custom hook owning status / progress / cancellation | ✓ React 18 |
+| `<DrillDownShell>` extraction (R3) | Pure-presentation React component | ✓ React 18 + Mantine 8 |
+| `<ConnectionGatedOutlet>` extraction (R7) | React component using `Outlet` from react-router-dom 7 | ✓ react-router-dom 7 |
+| `searchByIdentifierPrefix` helper (R8) | Pure async function calling `MedplumClient.search()` | ✓ Medplum core 5 |
+| `QualityMetricsContext` re-render split (R14) | Either (a) split into N narrow contexts, or (b) `useSyncExternalStore` with an external store (built-in to React 18 ≥ 18.0.0) | ✓ React 18 — `useSyncExternalStore` is part of the React core API since 18.0 |
+| `React.lazy()` drill-down routes (R15) | `React.lazy(() => import('./CodingDrillDown'))` + `<Suspense>` | ✓ React 18 + Vite 8 (native dynamic `import()` support, code-splits automatically) |
+| `SortableTh` lift (R12) | Pure component move | ✓ Mantine 8 `Table.Th` |
+| `<RunProgress>` extraction | Pure component using Mantine `Progress` | ✓ Mantine 8 |
+| `useCallback` for `setSettings` (R13) | Built-in React hook | ✓ React 18 |
+| `toRecord` helper sweep (R11) | Existing helper at `src/utils/fhir-helpers.ts:9` | ✓ already exists |
+
+**Notable: `useSyncExternalStore` for R14.** This is the canonical React 18
+solution for the exact problem Gemini flagged ("provider re-renders all
+consumers on any metric update"). It allows fine-grained subscription where
+each consumer only re-renders when *its* slice of the store changes, without
+any new library. React's docs explicitly position it as an alternative to
+context for "external store" patterns. Reference:
+https://react.dev/reference/react/useSyncExternalStore
+
+If the team prefers a higher-level abstraction over hand-rolling the store, a
+single-file ~40-line implementation is sufficient — adding Zustand or Jotai
+for one context split would violate the existing "no state library" decision
+in `STACK.md`. Recommend hand-rolled for v1.4, defer state-library discussion
+to v1.5+ if multiple contexts need the same treatment.
+
+---
+
+## Version Compatibility Matrix
+
+| Package | Installed | Latest (2026-04-16) | Action |
+|---------|-----------|---------------------|--------|
+| `react` | ^18.3.1 | 18.3.x (React 19.x exists, not adopting) | None — keep |
+| `vite` | ^8.0.4 | 8.0.8 | Range covers it; optional bump on next chore sweep |
+| `@medplum/core` | ^5.1.7 | 5.1.8 | Patch within range; no action |
+| `rollup-plugin-visualizer` (NEW) | — | 7.0.1 | Add as `devDependencies` |
+
+**No version bumps needed for v1.4.** Existing caret ranges absorb all current
+patches. Resist the urge to bump majors mid-tech-debt sweep.
+
+---
+
+## What NOT to Add
+
+| Library | Why someone might suggest it | Why NOT |
+|---------|------------------------------|---------|
+| `zustand` / `jotai` / `valtio` | Cleaner API for R14 context split | Existing `STACK.md` decision: "MedplumClient handles caching, React hooks handle data fetching… no need for a state management library." `useSyncExternalStore` (built-in) solves R14 without a new dep. |
+| `@tanstack/react-query` | Cleaner API for R2 cross-mount cache | Existing `STACK.md` "Do NOT use" list — would create a competing cache layer with `MedplumClient`. A 30-line `Map<serverUrl+type, count>` is simpler. |
+| `swr` | Same as react-query | Same reason. |
+| `fhir.js` / `fhirclient` | Alternative validator HTTP client | `@medplum/core`'s `MedplumClient.post()` already handles `$validate`. Adding a second FHIR client would duplicate auth handling and Bundle parsing. |
+| `axios` | "Better fetch" for validator requests | Native `fetch` + `MedplumClient` cover all needs. Adding axios for one POST is overkill. |
+| `vite-plugin-bundle-analyzer` | Older naming | Use `rollup-plugin-visualizer` directly — it's the maintained option Vite itself recommends. |
+| `webpack-bundle-analyzer` | Familiar from webpack ecosystem | Wrong bundler — Vite uses Rollup, not webpack. |
+| `react-error-boundary` | Could help with `<DrillDownShell>` error states | The existing pattern (status union: `idle \| loading \| error \| success`) is sufficient and already established across the 4 report hooks. Don't introduce a second error model mid-refactor. |
+| `immer` | Could help with `useAsyncRun` state updates | The state shape is small (status + progress + issues + error). Spread-based updates are fine. |
+
+---
 
 ## Installation
 
 ```bash
-# Core dependencies
-npm install react@^18.3.1 react-dom@^18.3.1
-npm install @medplum/core@5.1.7 @medplum/fhirtypes@5.1.7 @medplum/react@5.1.7 @medplum/react-hooks@5.1.7
-npm install @mantine/core@^8.3.18 @mantine/hooks@^8.3.18 @mantine/notifications@^8.3.18 @mantine/spotlight@^8.3.18
-npm install react-router-dom@^7.14.0
-npm install js-yaml@^4.1.1
+# v1.4 — single dev dependency
+npm install -D rollup-plugin-visualizer@^7.0.1
 
-# Peer dependency of @medplum/react (not used directly but required)
-npm install rfc6902@^5.0.1 signature_pad@^5.0.10
-
-# Dev dependencies
-npm install -D typescript@^5.7.0 vite@^8.0.8 @vitejs/plugin-react
-npm install -D @types/react@^18.3.28 @types/react-dom@^18.3.0 @types/js-yaml@^4.0.9
-
-# Optional: add later if pagination isn't enough for 50K+ resources
-# npm install @tanstack/react-virtual@^3.13.0
+# That's it. No runtime additions.
 ```
 
-## Dependency Graph
+---
 
-```
-App
- +-- React 18.3.1
- +-- @medplum/core 5.1.7
- |    +-- @medplum/fhirtypes 5.1.7
- +-- @medplum/react-hooks 5.1.7
- |    +-- @medplum/core (peer)
- +-- @medplum/react 5.1.7
- |    +-- @medplum/react-hooks (peer)
- |    +-- @mantine/core ^8.0.0 (peer)
- |    +-- @mantine/hooks ^8.0.0 (peer)
- |    +-- @mantine/notifications ^8.0.0 (peer)
- |    +-- @mantine/spotlight ^8.0.0 (peer)
- +-- react-router-dom 7.x
- +-- js-yaml 4.x
- +-- Vite 8.x (dev)
-```
+## Integration Notes for Downstream (Roadmap Authors)
+
+**Phase 24 (Data fetching foundation):**
+- No new deps. Use plain `Map<string, X>` for caches.
+- For `useAsyncRun<TState>`, type signature should match the discriminated
+  union already used in the 4 report hooks (`{status: 'idle'|'loading'|'success'|'error', ...}`).
+
+**Phase 25 (Quality dedup):**
+- No new deps. `useSampleWalker` and `<DrillDownShell>` are pure extractions.
+- `perPathExamples` change is a type widening on `PerTypeCoverageReport` in
+  `src/quality/codingCoverageWalker.ts` — no library involved.
+
+**Phase 26 (App-shell dedup):**
+- No new deps. `<ConnectionGatedOutlet>` uses existing `Outlet` from
+  react-router-dom 7. `Anchor component={Link}` standardization is purely
+  Mantine 8 + react-router idiom — no new package.
+
+**Phase 27 (Efficiency polish):**
+- **R14** (`QualityMetricsContext` split): Use `useSyncExternalStore` (React 18
+  built-in). Keep store in a plain class with a `subscribe(listener)` /
+  `getSnapshot(metricKey)` interface — ~40 LOC. Or split into N narrow
+  contexts; both are dep-free.
+- **R15** (lazy routes): `React.lazy(() => import(...))` + `<Suspense
+  fallback={<Loader />}>` from React + Mantine. After implementation, run
+  `npm run analyze` (new script) to confirm chunk separation in the
+  `dist/stats.html` treemap.
+
+**Phase 29 (Backlog UX):**
+- **T1** (external validator): No new deps. Extend settings schema, add
+  Mantine `TextInput` + `Button` for connectivity probe, keep
+  `remoteValidator.ts` as-is.
+- **T2** (OverviewStrip 9→7): Pure UI change in existing Mantine components.
+
+---
 
 ## Sources
 
-- npm registry: `npm view` commands for all version numbers (verified 2026-04-11)
-- @medplum/react peer dependencies: verified from npm metadata
-- @medplum/core MedplumClientOptions: verified from installed package TypeScript declarations
-- @medplum/react component list: verified from installed package TypeScript declarations
-- Mantine 8 vs 9 React requirements: verified from npm peer dependency metadata
+- `node_modules/@medplum/core/dist/esm/index.d.ts` (lines 4396-4413) — verified
+  `MedplumClient.validateResource()` exists but lacks `profile` param support
+  → confirms `client.post()` approach in `remoteValidator.ts` is correct.
+  Confidence: HIGH.
+- `npm view rollup-plugin-visualizer` — version 7.0.1, peer rollup `2.x ||
+  3.x || 4.x`, released 2026-03-04. Confidence: HIGH.
+- `npm view vite peerDependencies` + `npm view rollup version` — Vite 8.0.8
+  ships with Rollup 4.60.1. Confidence: HIGH.
+- `node --version` — Node 22.22.0 satisfies plugin's Node ≥22 requirement.
+  Confidence: HIGH.
+- `src/quality/remoteValidator.ts` (lines 51-78) — current implementation
+  uses `MedplumClient.post()` with `?profile=` query string; correctly handles
+  `OperationOutcome` response and degrades gracefully on network failure.
+  Confidence: HIGH.
+- `src/quality/validationBackends.ts` (lines 32-48) — existing
+  `resolveBackends(settings, resourceType)` already composes structural +
+  remote backends; v1.4 T1 work plugs into this composition layer rather than
+  adding new clients. Confidence: HIGH.
+- React docs — `useSyncExternalStore` is part of React 18 core API:
+  https://react.dev/reference/react/useSyncExternalStore. Confidence: HIGH.
+- HAPI FHIR `$validate` reference:
+  https://hapifhir.io/hapi-fhir/docs/validation/instance_validator.html — wire
+  format matches existing `remoteValidator.ts` POST shape. Confidence: HIGH.
+- FHIR Validator standalone server:
+  https://github.com/hapifhir/org.hl7.fhir.validator-wrapper — uses `/validate`
+  path (not `/{Type}/$validate`); flag for v1.5 if user needs it.
+  Confidence: MEDIUM (path noted, not exercised in code).
+
+---
+*Stack research for: v1.4 Hardening & Tech-Debt Sweep delta*
+*Researched: 2026-04-16*
