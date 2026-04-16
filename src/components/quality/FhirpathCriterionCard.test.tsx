@@ -97,7 +97,19 @@ describe('FhirpathCriterionCard', () => {
     expect(textarea.getAttribute('placeholder')).toBe(
       'Patient.where(birthDate < @1960-01-01)',
     );
-    expect(textarea.style.fontFamily).toContain('monospace');
+    // Mantine applies the `style` prop to a wrapping element; walk up to find the one
+    // with monospace font. The plan's acceptance criterion requires the literal string
+    // `style={{ fontFamily: 'monospace' }}` on the Textarea JSX (grep-verified separately).
+    let el: HTMLElement | null = textarea;
+    let found = false;
+    for (let i = 0; i < 6 && el; i++) {
+      if ((el.style?.fontFamily ?? '').includes('monospace')) {
+        found = true;
+        break;
+      }
+      el = el.parentElement;
+    }
+    expect(found).toBe(true);
   });
 
   it('Validate button is disabled when Textarea is empty', () => {
