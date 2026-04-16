@@ -1,19 +1,26 @@
 /**
  * CohortBuilderForm — Plan 21-05 (Phase 21 CHRT-01 / CHRT-02).
+ *   Extended in Plan 22-03 (Phase 22 CHRT-05 / CHRT-07) with:
+ *     - 4th criterion card (FhirpathCriterionCard)
+ *     - `mode: 'create' | 'edit'` + `initialCohort?` + `onDiscard?` +
+ *       `onSave?(payload)` props for Edit-mode wiring inside EditCohortModal
  *
- * Three-criterion cohort authoring form with Save modal:
+ * Four-criterion cohort authoring form with Save modal (Create mode only):
  *   - Encounter date range (DatePickerInput, range mode)
  *   - Condition code (TextInput pair: Code system + Code)
  *   - Patient references (Textarea with live parsed-count helper + 10k cap Alert)
+ *   - FHIRPath programmatic criterion (Paper card with Textarea + Validate)
  *
- * Consumes the Plan 21-02 hook `useCohorts()` for persistence. The caller
- * (CohortsPage) must wrap this component in `<DatesProvider>` per UI-SPEC §S3.
+ * Consumes the Plan 21-02 hook `useCohorts()` for Create-mode persistence.
+ * The caller (CohortsPage or EditCohortModal) must wrap this component in
+ * `<DatesProvider>` per UI-SPEC §S3 / §S5.
  *
- * Copy + layout locked verbatim in 21-UI-SPEC.md §S3 + §S4 + §S5. Every
- * user-visible string in this file corresponds to a row in §Copywriting
- * Contract (no inferred language).
+ * Copy + layout locked verbatim in 21-UI-SPEC.md §S3 + §S4 + §S5 and
+ * 22-UI-SPEC.md §S1 + §S2. Every user-visible string in this file
+ * corresponds to a row in the respective §Copywriting Contract (no
+ * inferred language).
  *
- * Threat mitigations (21-PLAN.md §threat_model):
+ * Threat mitigations (21-PLAN.md §threat_model + 22-PLAN.md §threat_model):
  *   - T-21-01 (XSS): every displayed value renders via React text nodes; no
  *     inner-HTML injection primitives, no `eval`, no `new Function`.
  *   - T-21-02 (DoS paste overflow): Textarea `maxLength={1_048_576}` caps
@@ -24,6 +31,9 @@
  *     shows a fallback "Save failed" toast.
  *   - T-21-14 (duplicate name): `existingNames.includes(name.trim())` check
  *     runs before `addCohort` delegation.
+ *   - T-22-01 (FHIRPath injection): FhirpathCriterionCard translator rejects
+ *     anything outside the D-02 subset. Save button in Edit mode gates on
+ *     `fhirpathTranslatedQuery` being set (validate must have succeeded).
  */
 import {
   Alert,
@@ -44,14 +54,40 @@ import type { JSX } from 'react';
 import {
   parsePatientRefs,
   type CohortCriterion,
+  type CohortDefinition,
+  type ConditionCodeCriterion,
+  type DateRangeCriterion,
+  type FhirpathCriterion,
+  type ReferenceListCriterion,
 } from '../../quality/cohorts';
 import { useCohorts } from '../../hooks/useCohorts';
+import { FhirpathCriterionCard } from './FhirpathCriterionCard';
 
 export interface CohortBuilderFormProps {
   /** Other saved cohort names; used for T-21-14 uniqueness check. */
   existingNames: string[];
-  /** Fired after a successful save (parent may refocus / reset). */
+  /** Fired after a successful Create-mode save (parent may refocus / reset). */
   onSaved: () => void;
+  /**
+   * Form mode. `'create'` (default) opens a Save-name modal on Save click
+   * (Phase 21); `'edit'` calls `onSave` directly with the current
+   * `{ name, criteria }` payload (the enclosing EditCohortModal supplies
+   * the name context so no modal is opened).
+   */
+  mode?: 'create' | 'edit';
+  /**
+   * When `mode === 'edit'`, pre-populates all four criterion sections
+   * from this cohort's `criteria` + reuses its `name` on save. Ignored
+   * in Create mode.
+   */
+  initialCohort?: CohortDefinition;
+  /** When `mode === 'edit'`, called when the user clicks Discard. */
+  onDiscard?: () => void;
+  /**
+   * When `mode === 'edit'`, called on Save-changes click with the edited
+   * payload (name reused from `initialCohort.name`; criteria freshly built).
+   */
+  onSave?: (input: { name: string; criteria: CohortCriterion[] }) => void;
 }
 
 /**
@@ -75,6 +111,8 @@ function buildCriteriaList(args: {
   codeSystem: string;
   code: string;
   parsedRefs: string[];
+  fhirpathExpression: string;
+  fhirpathTranslatedQuery: string | undefined;
 }): CohortCriterion[] {
   const criteria: CohortCriterion[] = [];
   const [start, end] = args.dateRange;
@@ -93,19 +131,51 @@ function buildCriteriaList(args: {
   if (args.parsedRefs.length > 0) {
     criteria.push({ type: 'reference-list', patientIds: args.parsedRefs });
   }
+  if (args.fhirpathExpression.trim().length > 0) {
+    const fc: FhirpathCriterion = {
+      type: 'fhirpath',
+      expression: args.fhirpathExpression.trim(),
+    };
+    if (args.fhirpathTranslatedQuery !== undefined) {
+      fc.translatedQuery = args.fhirpathTranslatedQuery;
+    }
+    criteria.push(fc);
+  }
   return criteria;
 }
 
 export function CohortBuilderForm(
   props: CohortBuilderFormProps,
 ): JSX.Element {
+  const mode = props.mode ?? 'create';
+  const isEdit = mode === 'edit';
+  const initialCohort = props.initialCohort;
+
+  // Derive initial per-criterion values from initialCohort (Edit mode).
+  const initialDateRange = initialCohort?.criteria.find(
+    (c): c is DateRangeCriterion => c.type === 'date-range',
+  );
+  const initialConditionCode = initialCohort?.criteria.find(
+    (c): c is ConditionCodeCriterion => c.type === 'condition-code',
+  );
+  const initialReferenceList = initialCohort?.criteria.find(
+    (c): c is ReferenceListCriterion => c.type === 'reference-list',
+  );
+  const initialFhirpath = initialCohort?.criteria.find(
+    (c): c is FhirpathCriterion => c.type === 'fhirpath',
+  );
+
   // ----- form state -----
   const [dateRange, setDateRange] = useState<
     [Date | string | null, Date | string | null]
-  >([null, null]);
-  const [codeSystem, setCodeSystem] = useState('');
-  const [code, setCode] = useState('');
-  const [refText, setRefText] = useState('');
+  >([initialDateRange?.start ?? null, initialDateRange?.end ?? null]);
+  const [codeSystem, setCodeSystem] = useState(
+    initialConditionCode?.system ?? '',
+  );
+  const [code, setCode] = useState(initialConditionCode?.code ?? '');
+  const [refText, setRefText] = useState(
+    initialReferenceList ? initialReferenceList.patientIds.join('\n') : '',
+  );
   const [debouncedRef] = useDebouncedValue(refText, 150);
   const parsedRefs = useMemo(
     () => parsePatientRefs(debouncedRef),
@@ -113,7 +183,19 @@ export function CohortBuilderForm(
   );
   const truncated = parsedRefs.length === PATIENT_REF_CAP;
 
-  // ----- modal state -----
+  // ----- FHIRPath state -----
+  // NOTE: translatedQuery is NOT pre-populated from
+  // initialFhirpath.translatedQuery — UI-SPEC §S2 Edit-mode form
+  // initialisation mandates the user MUST click Validate to re-confirm
+  // before Save commits. We pre-populate `expression` but NOT the cache.
+  const [fhirpathExpression, setFhirpathExpression] = useState(
+    initialFhirpath?.expression ?? '',
+  );
+  const [fhirpathTranslatedQuery, setFhirpathTranslatedQuery] = useState<
+    string | undefined
+  >(undefined);
+
+  // ----- modal state (Create mode only) -----
   const [saveModalOpen, saveModalCtrl] = useDisclosure(false);
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
@@ -125,7 +207,19 @@ export function CohortBuilderForm(
   const hasDateRange = Boolean(dateRange[0]) || Boolean(dateRange[1]);
   const hasCode = codeSystem.trim() !== '' && code.trim() !== '';
   const hasRefs = parsedRefs.length >= 1;
-  const hasAtLeastOneCriterion = hasDateRange || hasCode || hasRefs;
+  const hasFhirpath = fhirpathExpression.trim().length > 0;
+  const hasAtLeastOneCriterion = hasDateRange || hasCode || hasRefs || hasFhirpath;
+
+  // Save gate: if FHIRPath expression is present but unvalidated, block save.
+  const fhirpathNeedsValidate =
+    hasFhirpath && fhirpathTranslatedQuery === undefined;
+
+  const saveDisabled = !hasAtLeastOneCriterion || fhirpathNeedsValidate;
+  const saveDisabledTooltip = !hasAtLeastOneCriterion
+    ? 'Add at least one criterion to save.'
+    : fhirpathNeedsValidate
+      ? 'Click Validate on the FHIRPath card before saving.'
+      : undefined;
 
   // ----- handlers -----
   const resetForm = (): void => {
@@ -135,6 +229,8 @@ export function CohortBuilderForm(
     setRefText('');
     setName('');
     setNameError(null);
+    setFhirpathExpression('');
+    setFhirpathTranslatedQuery(undefined);
   };
 
   const handleOpenSave = (): void => {
@@ -169,6 +265,8 @@ export function CohortBuilderForm(
         codeSystem,
         code,
         parsedRefs,
+        fhirpathExpression,
+        fhirpathTranslatedQuery,
       });
       const saved = addCohort({ name: trimmed, criteria });
       notifications.show({
@@ -193,6 +291,19 @@ export function CohortBuilderForm(
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleEditSave = (): void => {
+    if (!isEdit || !initialCohort || !props.onSave) return;
+    const criteria = buildCriteriaList({
+      dateRange,
+      codeSystem,
+      code,
+      parsedRefs,
+      fhirpathExpression,
+      fhirpathTranslatedQuery,
+    });
+    props.onSave({ name: initialCohort.name, criteria });
   };
 
   // ----- parsed-count helper text -----
@@ -280,73 +391,99 @@ export function CohortBuilderForm(
         </Alert>
       )}
 
-      {/* --- Save button --- */}
-      <Group justify="flex-end">
-        <Button
-          variant="filled"
-          color="blue"
-          leftSection={<IconDeviceFloppy size={16} />}
-          disabled={!hasAtLeastOneCriterion}
-          title={
-            !hasAtLeastOneCriterion
-              ? 'Add at least one criterion to save.'
-              : undefined
-          }
-          onClick={handleOpenSave}
-        >
-          {/* Ellipsis indicates modal per Apple HIG and UI-SPEC §S3 */}
-          Save cohort…
-        </Button>
-      </Group>
+      {/* --- FHIRPath criterion card (Plan 22-03 S1) --- */}
+      <FhirpathCriterionCard
+        initialExpression={fhirpathExpression}
+        onExpressionChange={setFhirpathExpression}
+        onValidated={setFhirpathTranslatedQuery}
+      />
 
-      {/* --- Save modal (S4) — NO native `title` prop; heading is in-body --- */}
-      <Modal
-        opened={saveModalOpen}
-        onClose={handleCloseSave}
-        centered
-        size="md"
-        radius="sm"
-        closeOnClickOutside={!submitting}
-        closeOnEscape={!submitting}
-        aria-labelledby="save-cohort-modal-heading"
-      >
-        <Stack gap="md">
-          <Text fw={600} size="sm" id="save-cohort-modal-heading">
-            Save cohort
-          </Text>
-          <Text size="sm">
-            Name this cohort so you can activate it later from the dashboard.
-          </Text>
-          <TextInput
-            label="Cohort name"
-            placeholder="e.g. Diabetic adults 2024"
-            description="Must be unique across your saved cohorts."
-            error={nameError}
-            value={name}
-            onChange={(e) => {
-              setName(e.currentTarget.value);
-              if (nameError) setNameError(null);
-            }}
-          />
-          <Group justify="flex-end" gap="sm">
-            <Button
-              variant="default"
-              onClick={handleCloseSave}
-              disabled={submitting}
-            >
-              Discard
-            </Button>
-            <Button
-              variant="filled"
-              color="blue"
-              loading={submitting}
-              onClick={handleConfirmSave}
-            >
+      {/* --- Save / Discard button row --- */}
+      {isEdit ? (
+        <Group justify="flex-end" gap="sm">
+          <Button
+            variant="default"
+            onClick={props.onDiscard}
+          >
+            Discard
+          </Button>
+          <Button
+            variant="filled"
+            color="blue"
+            leftSection={<IconDeviceFloppy size={16} />}
+            disabled={saveDisabled}
+            title={saveDisabledTooltip}
+            onClick={handleEditSave}
+          >
+            Save changes
+          </Button>
+        </Group>
+      ) : (
+        <Group justify="flex-end">
+          <Button
+            variant="filled"
+            color="blue"
+            leftSection={<IconDeviceFloppy size={16} />}
+            disabled={saveDisabled}
+            title={saveDisabledTooltip}
+            onClick={handleOpenSave}
+          >
+            {/* Ellipsis indicates modal per Apple HIG and UI-SPEC §S3 */}
+            Save cohort…
+          </Button>
+        </Group>
+      )}
+
+      {/* --- Save modal (S4) — Create mode only; in-body heading --- */}
+      {!isEdit && (
+        <Modal
+          opened={saveModalOpen}
+          onClose={handleCloseSave}
+          centered
+          size="md"
+          radius="sm"
+          closeOnClickOutside={!submitting}
+          closeOnEscape={!submitting}
+          aria-labelledby="save-cohort-modal-heading"
+        >
+          <Stack gap="md">
+            <Text fw={600} size="sm" id="save-cohort-modal-heading">
               Save cohort
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+            </Text>
+            <Text size="sm">
+              Name this cohort so you can activate it later from the dashboard.
+            </Text>
+            <TextInput
+              label="Cohort name"
+              placeholder="e.g. Diabetic adults 2024"
+              description="Must be unique across your saved cohorts."
+              error={nameError}
+              value={name}
+              onChange={(e) => {
+                setName(e.currentTarget.value);
+                if (nameError) setNameError(null);
+              }}
+            />
+            <Group justify="flex-end" gap="sm">
+              <Button
+                variant="default"
+                onClick={handleCloseSave}
+                disabled={submitting}
+              >
+                Discard
+              </Button>
+              <Button
+                variant="filled"
+                color="blue"
+                loading={submitting}
+                onClick={handleConfirmSave}
+              >
+                Save cohort
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
+      )}
     </Stack>
   );
 }
