@@ -1,12 +1,15 @@
 /**
  * useLabRangesReport -- batch lab range validation runner for Phase 16.
  *
- * State machine: idle -> running -> complete | cancelled | error
- *
- * Samples Observation resources, runs checkLabRanges, and normalizes issues
- * (T-16-10 mitigation: bounded by sampleSize + cancellation support).
+ * Phase 24 (FOUND-03): wraps the shared `useAsyncRun<NormalizedIssue>`
+ * primitive. Cancellation, status, progress, and issue accumulation all
+ * delegate to the central reducer in `internal/asyncRunReducer.ts`. The
+ * pre-refactor cancellation-flag-in-ref anti-pattern has been removed
+ * (PITFALLS §Pitfall 2). The `summary` accessory state stays in a local `useState`
+ * per D-09 (CONTEXT.md) — fixed reducer shape would otherwise force `as`
+ * casts in consumer panels (PITFALLS §Pitfall 1).
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { MedplumClient } from '@medplum/core';
 import type { AppSettings } from '../config/types';
 import type { NormalizedIssue } from '../quality/types';
@@ -16,22 +19,12 @@ import {
   normalizeLabRangeIssues,
   type LabRangeSummary,
 } from '../quality/labRangeChecker';
+import { useAsyncRun, type UseAsyncRunResult } from './useAsyncRun';
+import type { AsyncRunStatus } from './internal/asyncRunReducer';
 
-export type LabRangesRunStatus =
-  | 'idle'
-  | 'running'
-  | 'complete'
-  | 'cancelled'
-  | 'error';
-
-export interface LabRangesRunState {
-  status: LabRangesRunStatus;
-  progress: { current: number; total: number };
-  issues: NormalizedIssue[];
+export type LabRangesRunStatus = AsyncRunStatus;
+export interface LabRangesRunState extends UseAsyncRunResult<NormalizedIssue> {
   summary: LabRangeSummary | null;
-  errorMessage?: string;
-  start: () => void;
-  cancel: () => void;
 }
 
 interface UseLabRangesReportArgs {
@@ -47,78 +40,27 @@ export function useLabRangesReport({
   settings,
   patientIds,
 }: UseLabRangesReportArgs): LabRangesRunState {
-  const [status, setStatus] = useState<LabRangesRunStatus>('idle');
-  const [progress, setProgress] = useState<{ current: number; total: number }>({
-    current: 0,
-    total: 0,
-  });
-  const [issues, setIssues] = useState<NormalizedIssue[]>([]);
   const [summary, setSummary] = useState<LabRangeSummary | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
-  const cancelledRef = useRef(false);
 
-  const start = useCallback(() => {
-    if (!client) return;
+  const run = useAsyncRun<NormalizedIssue>({
+    runner: async ({ isCancelled, setProgress, appendIssues }) => {
+      // D-09 / Open Question 2: reset accessory state at the top of each run.
+      setSummary(null);
+      if (!client) return;
+      setProgress(0, 1);
+      const observations = await sampleResources(client, 'Observation', sampleSize, patientIds);
+      if (isCancelled()) return;
+      setProgress(0, observations.length);
+      const configRanges = settings?.referenceRanges ?? {};
+      const result = checkLabRanges(observations, configRanges);
+      if (isCancelled()) return;
+      const normalized = normalizeLabRangeIssues(result.issues);
+      appendIssues(normalized);
+      setSummary(result.summary);
+      setProgress(observations.length, observations.length);
+    },
+    deps: [client, sampleSize, settings, patientIds],
+  });
 
-    cancelledRef.current = false;
-    setStatus('running');
-    setIssues([]);
-    setSummary(null);
-    setProgress({ current: 0, total: 0 });
-    setErrorMessage(undefined);
-
-    void (async () => {
-      try {
-        setProgress({ current: 0, total: 1 });
-
-        const observations = await sampleResources(client, 'Observation', sampleSize, patientIds);
-        if (cancelledRef.current) {
-          setStatus('cancelled');
-          return;
-        }
-
-        setProgress({ current: 0, total: observations.length });
-
-        const configRanges = settings?.referenceRanges ?? {};
-        const result = checkLabRanges(observations, configRanges);
-
-        if (cancelledRef.current) {
-          setStatus('cancelled');
-          return;
-        }
-
-        const normalized = normalizeLabRangeIssues(result.issues);
-        setIssues(normalized);
-        setSummary(result.summary);
-        setProgress({ current: observations.length, total: observations.length });
-
-        if (!cancelledRef.current) {
-          setStatus('complete');
-        }
-      } catch (err) {
-        setStatus('error');
-        setErrorMessage(err instanceof Error ? err.message : String(err));
-      }
-    })();
-  }, [client, sampleSize, settings, patientIds]);
-
-  const cancel = useCallback(() => {
-    cancelledRef.current = true;
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      cancelledRef.current = true;
-    };
-  }, []);
-
-  return {
-    status,
-    progress,
-    issues,
-    summary,
-    errorMessage,
-    start,
-    cancel,
-  };
+  return { ...run, summary };
 }
