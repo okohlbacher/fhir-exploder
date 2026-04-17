@@ -537,3 +537,93 @@ describe('CohortsPage', () => {
     ).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// W1 / CLOSE-01 regression guard — handleExport closure-capture
+//
+// Phase 22 extracted SavedCohortRow as a separate component with an explicit
+// `cohort: CohortDefinition` prop, and wired Export as
+// `onClick={() => onExport(cohort)}`. This test guards that the correct
+// cohort is exported when Export is clicked on a NON-first row (the
+// pre-Phase-22 bug was that the loop variable would have captured the last
+// cohort in the list for all rows).
+//
+// Per D-01: this test is expected to PASS immediately (regression guard
+// only). If it ever fails, it indicates the SavedCohortRow extraction was
+// reverted or broken.
+// ---------------------------------------------------------------------------
+describe('handleExport closure capture (W1/CLOSE-01)', () => {
+  it('serializes the correct cohort when Export is clicked on a non-current row', async () => {
+    hoisted.state.cohorts = [
+      {
+        id: 'c1',
+        name: 'Cohort One',
+        criteria: [{ type: 'date-range', start: '2020-01-01', end: '2020-12-31' }],
+        createdAt: '2026-04-01T00:00:00Z',
+        updatedAt: '2026-04-01T00:00:00Z',
+      },
+      {
+        id: 'c2',
+        name: 'Cohort Two',
+        criteria: [
+          {
+            type: 'condition-code',
+            system: 'http://snomed.info/sct',
+            code: '44054006',
+          },
+        ],
+        createdAt: '2026-04-01T00:00:00Z',
+        updatedAt: '2026-04-01T00:00:00Z',
+      },
+    ];
+
+    render(
+      <Wrap>
+        <CohortsPage />
+      </Wrap>,
+    );
+
+    // Open the Actions menu for the SECOND cohort row ("Cohort Two").
+    const actionBtn = screen.getByRole('button', {
+      name: /actions for cohort "Cohort Two"/i,
+    });
+    await act(async () => {
+      fireEvent.click(actionBtn);
+    });
+    await flush(50);
+
+    // Click "Export to FDPG JSON" in the menu.
+    const exportItem = screen.getByRole('menuitem', {
+      name: /export to fdpg json/i,
+      hidden: true,
+    });
+    await act(async () => {
+      fireEvent.click(exportItem);
+    });
+    await flush(50);
+
+    // downloadString must have been called exactly once.
+    expect(mockDownloadString).toHaveBeenCalledTimes(1);
+
+    const [content, filename, mime] = mockDownloadString.mock.calls[0] as [
+      string,
+      string,
+      string,
+    ];
+
+    // Filename must reference Cohort Two, NOT Cohort One.
+    expect(filename).toBe('cohort-two-fdpg.json');
+    expect(mime).toBe('application/json');
+
+    // Content must encode the condition-code criterion from c2, NOT the
+    // date-range criterion from c1.
+    const sq = JSON.parse(content) as {
+      version: string;
+      inclusionCriteria: unknown[][];
+    };
+    expect(Array.isArray(sq.inclusionCriteria)).toBe(true);
+    // The condition-code criterion maps to an inclusionCriteria group;
+    // the date-range criterion maps to none in the FDPG codec.
+    expect(sq.inclusionCriteria.length).toBeGreaterThan(0);
+  });
+});
