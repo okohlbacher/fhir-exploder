@@ -61,7 +61,7 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 ## Current State
 
-**Phase 23 complete 2026-04-17** — v1.3 close-out done. 4 plans, all CLOSE-01 through CLOSE-08 closed: W1/W2/W3 code warnings fixed, I1/I2 cosmetic notes cleaned, 8 UAT items executed (6 pass, 1 code-bug fixed inline as CLOSE-08, 2 environmental deferred to MII Synthea seed), Nyquist compliance flipped on Phase 21+22 VALIDATION.md. `v1.3-MILESTONE-AUDIT.md` ready to flip from `tech_debt` to `shipped-clean` via `/gsd-audit-milestone v1.3`. Test suite: 22 pre-existing failures | 717 passed. Current src size: ~35,000 LOC (TypeScript/TSX).
+**Phase 24 complete 2026-04-17** — data-fetching foundation done. 4 plans: FOUND-01 (module-scope `countCache` Map in `useResourceCounts`), FOUND-02 (LRU-2 `QualityMetricsCache` registry replacing two singleton patterns), FOUND-03 (`useAsyncRun<TIssue>` primitive + 4 report hooks migrated, -46% LOC), FOUND-04 (`cancelledRef` eliminated, closure-scoped `let cancelled` throughout). Test suite: 22 pre-existing failures | 750 passed (+33 new tests). 3 code-review warnings deferred to Phase 24.1 gap closure (array-dep stabilization in 4 hooks, stale-state window in `useReferenceReport`).
 
 Quality dashboard retains its **9 tabs** with the Overview tile strip; the `/quality` toolbar now carries two peer controls — `Resource types` (renamed from the legacy "Cohort" MultiSelect) and an **Active cohort** Select that scopes all 7 analysis panels. Cohort management lives at `/quality/cohorts` with interactive builder, saved-cohorts list with three-dot Menu (Edit / Duplicate / Export / Delete), FHIRPath criterion card (Validate against live server), and toolbar Import button for MII FDPG SQ v3 JSON.
 
@@ -162,4 +162,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 — started milestone v1.4 Hardening & Tech-Debt Sweep (phases 23-29 planned)*
+*Last updated: 2026-04-17 — Phase 24 complete, data-fetching foundation delivered*
