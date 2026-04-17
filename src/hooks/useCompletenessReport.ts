@@ -17,6 +17,9 @@
  *     and push it into QualityMetricsContext via setCompleteness — this
  *     is how OverviewStrip Card 3 flips from em-dash to a real value.
  *     Rule locked in 05-01-SUMMARY.
+ *
+ * Cross-server cache preserved via `getQualityMetricsCache(serverUrl)`
+ * registry in `metricsCache.ts` (2-entry LRU — Plan 24-03).
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -25,30 +28,13 @@ import type { MedplumClient } from '@medplum/core';
 import { sampleResources } from '../quality/sampling';
 import { computeCompleteness, requiredElementPaths } from '../quality/completenessWalker';
 import { getProfileForType } from '../quality/profiles';
-import { QualityMetricsCache } from '../quality/metricsCache';
+import { getQualityMetricsCache } from '../quality/metricsCache';
 import { buildMetricsKey } from '../quality/keys';
 import { useQualityMetrics as useQualityMetricsContext } from '../quality/QualityMetricsContext';
 import type { PerTypeCompletenessReport, PerTypeReport } from '../quality/types';
 
 const CONCURRENCY = 4;
 const DEBOUNCE_MS = 500;
-
-// Module-scoped cache, one per server URL. Plan 04's coverage hook should
-// follow the same pattern (separate cache instance) — keyed by metric in
-// buildMetricsKey so 'completeness' and 'coverage' entries never collide.
-//
-// Known limitation: switching server URLs discards the previous server's cache.
-// A Map<string, QualityMetricsCache> would preserve both, but adds memory pressure
-// for a use case (multi-server switching) that is rare in local-first usage.
-let cacheInstance: QualityMetricsCache | null = null;
-let cacheServerUrl: string | null = null;
-function getCache(serverUrl: string): QualityMetricsCache {
-  if (!cacheInstance || cacheServerUrl !== serverUrl) {
-    cacheInstance = new QualityMetricsCache({ serverUrl });
-    cacheServerUrl = serverUrl;
-  }
-  return cacheInstance;
-}
 
 export function useCompletenessReport(
   client: MedplumClient | null,
@@ -78,7 +64,7 @@ export function useCompletenessReport(
       return;
     }
     const serverUrl = client.getBaseUrl();
-    const cache = getCache(serverUrl);
+    const cache = getQualityMetricsCache(serverUrl);
 
     // Seed: hydrate cache hits synchronously, mark the rest as 'loading'.
     // Include patientIdsKey in cache key so cohort changes invalidate.

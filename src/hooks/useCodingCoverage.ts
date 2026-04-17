@@ -3,16 +3,15 @@
  * per-type coding coverage sampler for Plan 05-04.
  *
  * Mirrors `useCompletenessReport` (Plan 05-03) exactly — same worker-pool
- * shape, same debounce semantics, same cache singleton pattern, same
- * rollup wire-up via QualityMetricsContext. The only differences are the
- * walker (aggregateCoverage from codingCoverageWalker) and the metric
- * key (`'coverage'` instead of `'completeness'`).
+ * shape, same debounce semantics, same rollup wire-up via
+ * QualityMetricsContext. The only differences are the walker
+ * (aggregateCoverage from codingCoverageWalker) and the metric key
+ * (`'coverage'` instead of `'completeness'`).
  *
- * Why a separate singleton from the completeness hook: each cache's LRU
- * eviction budget is bounded (MEMORY_LIMIT=500). `buildMetricsKey`
- * namespaces by metric so 'completeness' and 'coverage' entries never
- * collide — two instances give each hook its own budget, important when
- * a server has many resource types.
+ * Uses the shared metrics-cache registry via getQualityMetricsCache(serverUrl)
+ * — see Plan 24-03. buildMetricsKey's metric namespace ('completeness' vs
+ * 'coverage') guarantees no key collision within a single QualityMetricsCache
+ * instance.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
@@ -20,27 +19,13 @@ import type { MedplumClient } from '@medplum/core';
 
 import { sampleResources } from '../quality/sampling';
 import { aggregateCoverage } from '../quality/codingCoverageWalker';
-import { QualityMetricsCache } from '../quality/metricsCache';
+import { getQualityMetricsCache } from '../quality/metricsCache';
 import { buildMetricsKey } from '../quality/keys';
 import { useQualityMetrics as useQualityMetricsContext } from '../quality/QualityMetricsContext';
 import type { PerTypeCoverageReport, PerTypeReport } from '../quality/types';
 
 const CONCURRENCY = 4;
 const DEBOUNCE_MS = 500;
-
-// Module-scoped cache, one per server URL. See 05-03-SUMMARY for the
-// blessed pattern — separate instance from useCompletenessReport because
-// the cache keys are already metric-namespaced, and separate instances
-// give each hook its own LRU eviction budget.
-let cacheInstance: QualityMetricsCache | null = null;
-let cacheServerUrl: string | null = null;
-function getCache(serverUrl: string): QualityMetricsCache {
-  if (!cacheInstance || cacheServerUrl !== serverUrl) {
-    cacheInstance = new QualityMetricsCache({ serverUrl });
-    cacheServerUrl = serverUrl;
-  }
-  return cacheInstance;
-}
 
 export function useCodingCoverage(
   client: MedplumClient | null,
@@ -69,7 +54,7 @@ export function useCodingCoverage(
       return;
     }
     const serverUrl = client.getBaseUrl();
-    const cache = getCache(serverUrl);
+    const cache = getQualityMetricsCache(serverUrl);
 
     // Seed: hydrate cache hits synchronously, mark the rest as 'loading'.
     // Include patientIdsKey in cache key so cohort changes invalidate.
