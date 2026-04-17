@@ -61,7 +61,7 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 
 ## Current State
 
-**v1.3 shipped 2026-04-16** — 2 phases (21-22), 9 plans, 16 tasks, src/ delta +6,737 / −231 across 56 files. Builds cleanly (`tsc -b` + `npm run build` both exit 0). All 7 v1.3 requirements satisfied at code level with traceability in `milestones/v1.3-REQUIREMENTS.md`. `v1.3-MILESTONE-AUDIT.md` status `tech_debt` — 28/28 integration connections, 7/7 E2E flows, no blockers. 8 human UAT items and 3 code review warnings deferred to next milestone. Current src size: ~35,000 LOC (TypeScript/TSX).
+**Phase 23 complete 2026-04-17** — v1.3 close-out done. 4 plans, all CLOSE-01 through CLOSE-08 closed: W1/W2/W3 code warnings fixed, I1/I2 cosmetic notes cleaned, 8 UAT items executed (6 pass, 1 code-bug fixed inline as CLOSE-08, 2 environmental deferred to MII Synthea seed), Nyquist compliance flipped on Phase 21+22 VALIDATION.md. `v1.3-MILESTONE-AUDIT.md` ready to flip from `tech_debt` to `shipped-clean` via `/gsd-audit-milestone v1.3`. Test suite: 22 pre-existing failures | 717 passed. Current src size: ~35,000 LOC (TypeScript/TSX).
 
 Quality dashboard retains its **9 tabs** with the Overview tile strip; the `/quality` toolbar now carries two peer controls — `Resource types` (renamed from the legacy "Cohort" MultiSelect) and an **Active cohort** Select that scopes all 7 analysis panels. Cohort management lives at `/quality/cohorts` with interactive builder, saved-cohorts list with three-dot Menu (Edit / Duplicate / Export / Delete), FHIRPath criterion card (Validate against live server), and toolbar Import button for MII FDPG SQ v3 JSON.
 
@@ -72,7 +72,7 @@ Quality dashboard retains its **9 tabs** with the Overview tile strip; the `/qua
 **Goal:** Ship v1.3 cleanly (close documented warnings + human UAT), then fix the architectural drift flagged by the cross-AI code review (2026-04-16) before it compounds in future feature work.
 
 **Target features:**
-- Close v1.3 tech debt — 3 code review warnings (WR-01/02/03), 2 cosmetic integration notes (I1/I2), 8 human UAT items, Nyquist sign-off flip (N1)
+- ✓ Close v1.3 tech debt — CLOSE-01 through CLOSE-08 all resolved (Phase 23 complete)
 - Data-fetching foundation — cross-mount cache for `useResourceCounts`, shared `useAsyncRun` state machine for the 4 report hooks, `Map<serverUrl>` quality cache
 - Quality module dedup — `useSampleWalker` (unifies completeness + coding), `<DrillDownShell>` (collapses 5 drill-downs), `perPathExamples` in `PerTypeCoverageReport` (halves coding drill-down calls), drop `keepMounted` eager fetch, shared `SortableTh`
 - App-shell dedup — `<ConnectionGatedOutlet>` for 3 layouts, `searchByIdentifierPrefix` helper, sidebar nested-route activation, `Anchor component={Link}` standardization, `SettingsContext` clean `useCallback`
