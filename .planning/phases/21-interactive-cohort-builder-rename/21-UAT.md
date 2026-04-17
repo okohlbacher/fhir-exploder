@@ -6,7 +6,7 @@ source:
   - 21-05-SUMMARY.md
   - 21-06-SUMMARY.md
 started: 2026-04-16T06:30:00.000Z
-updated: 2026-04-16T06:45:00.000Z
+updated: 2026-04-17T08:07:13.458Z
 ---
 
 ## Current Test
@@ -136,4 +136,5 @@ blocked: 0
 
 ## Gaps
 
-[none yet]
+T-5.3 re-run on live Blaze http://localhost:8080/fhir at 2026-04-17T08:07:13Z — PASS.
+Cosmetic (v1.5+ backlog): date picker clunky for multi-year ranges; typed input and year-jump wanted. Todo filed.
