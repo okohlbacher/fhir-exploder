@@ -44,7 +44,7 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 ### 🚧 v1.4 Hardening & Tech-Debt Sweep (Phases 23-29)
 
 - [x] **Phase 23: v1.3 Close-Out** — Close v1.3 warnings, UAT, and audit sign-off (must ship first) (completed 2026-04-17)
-- [ ] **Phase 24: Data-Fetching Foundation** — Cross-mount count cache, LRU quality-metrics registry, shared `useAsyncRun` state machine
+- [x] **Phase 24: Data-Fetching Foundation** — Cross-mount count cache, LRU quality-metrics registry, shared `useAsyncRun` state machine (completed 2026-04-17)
 - [ ] **Phase 25: Quality Module Dedup** — `useSampleWalker`, `<DrillDownShell>`, `perPathExamples`, drop `keepMounted`, shared `SortableTh` / `<RunProgress>`
 - [ ] **Phase 26: App-Shell Dedup** — `<ConnectionGatedOutlet>`, `searchByIdentifierPrefix`, sidebar nested-route activation, `Anchor component={Link}` standardization
 - [ ] **Phase 27: Efficiency Polish** — `ResourceIssueTable` pagination memo, `React.lazy()` drill-down routes, bundle analyzer
@@ -76,10 +76,10 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
   3. `useAsyncRun` hook owns `{status, progress, errorMessage, cancel, run}` orchestration using the closure-scoped `let cancelled` pattern (NOT `cancelledRef`); the 4 report hooks (`usePlausibilityReport`, `useLabRangesReport`, `useDuplicateReport`, `useReferenceReport`) each shrink to ≤ 40 lines without introducing new `as` casts in consumer panels.
   4. `useResourceCounts.ts:29` latent cancellation bug is fixed in the same PR.
 **Plans**: 4 plans
-- [ ] 24-01-PLAN.md — Introduce `useAsyncRun` primitive (reducer + hook + tests)
-- [ ] 24-02-PLAN.md — Refactor `useResourceCounts` with session cache, closure-scoped cancellation, typesKey memo
-- [ ] 24-03-PLAN.md — Add `Map<serverUrl, QualityMetricsCache>` registry, migrate completeness/coding, wire `setSettings` + SettingsPage to clear both caches
-- [ ] 24-04-PLAN.md — Migrate plausibility / labRanges / duplicate / reference report hooks to `useAsyncRun`
+- [x] 24-01-PLAN.md — Introduce `useAsyncRun` primitive (reducer + hook + tests)
+- [x] 24-02-PLAN.md — Refactor `useResourceCounts` with session cache, closure-scoped cancellation, typesKey memo
+- [x] 24-03-PLAN.md — Add `Map<serverUrl, QualityMetricsCache>` registry, migrate completeness/coding, wire `setSettings` + SettingsPage to clear both caches
+- [x] 24-04-PLAN.md — Migrate plausibility / labRanges / duplicate / reference report hooks to `useAsyncRun`
 **Effort**: ~1.5 days
 
 ### Phase 25: Quality Module Dedup
@@ -179,7 +179,7 @@ Phase 23 (close v1.3) ─┬─▶ Phase 24 (fetch foundation, incl. line-75 use
 | 14-20 (v1.2) | v1.2 | 22/22 | ✅ Shipped | 2026-04-15 |
 | 21-22 (v1.3) | v1.3 | 9/9 | ✅ Shipped | 2026-04-16 |
 | 23. v1.3 Close-Out | v1.4 | 4/4 | Complete    | 2026-04-17 |
-| 24. Data-Fetching Foundation | v1.4 | 0/4 | 📋 Not started | — |
+| 24. Data-Fetching Foundation | v1.4 | 4/4 | Complete    | 2026-04-17 |
 | 25. Quality Module Dedup | v1.4 | 0/? | 📋 Not started | — |
 | 26. App-Shell Dedup | v1.4 | 0/? | 📋 Not started | — |
 | 27. Efficiency Polish | v1.4 | 0/? | 📋 Not started | — |
