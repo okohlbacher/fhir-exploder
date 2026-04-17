@@ -270,3 +270,51 @@ describe('EditCohortModal', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 });
+
+describe('Cohort updated toast (CLOSE-05)', () => {
+  it('Cohort updated toast reflects the renamed cohort name (CLOSE-05)', async () => {
+    const oldCohort: CohortDefinition = {
+      id: 'c1',
+      name: 'Old Name',
+      criteria: [
+        { type: 'condition-code', system: 'http://snomed.info/sct', code: '44054006' },
+      ],
+      createdAt: '2026-04-01T00:00:00Z',
+      updatedAt: '2026-04-01T00:00:00Z',
+    };
+    const updatedCohort: CohortDefinition = {
+      id: 'c1',
+      name: 'New Name',
+      criteria: oldCohort.criteria,
+      createdAt: '2026-04-01T00:00:00Z',
+      updatedAt: new Date().toISOString(),
+    };
+
+    // mockUpdateCohort returns the NEW name (simulating a server/storage round-trip
+    // where the name was updated externally or differs from the closure value).
+    mockUpdateCohort.mockReturnValue(updatedCohort);
+
+    const onClose = vi.fn();
+    render(
+      <Wrap>
+        <EditCohortModal cohort={oldCohort} onClose={onClose} />
+      </Wrap>,
+    );
+    await flush(50);
+
+    const saveBtn = screen.getByRole('button', { name: /^save changes$/i });
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+    await flush(200);
+
+    expect(mockUpdateCohort).toHaveBeenCalledTimes(1);
+    // The toast must use the UPDATED (returned) name, not the pre-save cohort.name closure.
+    const toastTitles = screen.getAllByText('Cohort updated');
+    expect(toastTitles.length).toBeGreaterThanOrEqual(1);
+    // "New Name" should appear in the toast message, not "Old Name".
+    const toastMessages = screen.getAllByText(/"New Name" updated\. Dashboard scope refreshed\./);
+    expect(toastMessages.length).toBeGreaterThanOrEqual(1);
+    expect(onClose).toHaveBeenCalled();
+  });
+});

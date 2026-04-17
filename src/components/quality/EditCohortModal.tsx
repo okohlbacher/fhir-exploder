@@ -54,11 +54,11 @@ export function EditCohortModal({
   }): void => {
     if (!cohort) return;
     try {
-      updateCohort(cohort.id, input);
+      const updated = updateCohort(cohort.id, input);
       notifications.show({
         color: 'blue',
         title: 'Cohort updated',
-        message: `"${cohort.name}" updated. Dashboard scope refreshed.`,
+        message: `"${updated.name}" updated. Dashboard scope refreshed.`,
         autoClose: 2500,
       });
       onClose();
