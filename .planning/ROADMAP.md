@@ -43,7 +43,7 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 
 ### 🚧 v1.4 Hardening & Tech-Debt Sweep (Phases 23-29)
 
-- [ ] **Phase 23: v1.3 Close-Out** — Close v1.3 warnings, UAT, and audit sign-off (must ship first)
+- [x] **Phase 23: v1.3 Close-Out** — Close v1.3 warnings, UAT, and audit sign-off (must ship first) (completed 2026-04-17)
 - [ ] **Phase 24: Data-Fetching Foundation** — Cross-mount count cache, LRU quality-metrics registry, shared `useAsyncRun` state machine
 - [ ] **Phase 25: Quality Module Dedup** — `useSampleWalker`, `<DrillDownShell>`, `perPathExamples`, drop `keepMounted`, shared `SortableTh` / `<RunProgress>`
 - [ ] **Phase 26: App-Shell Dedup** — `<ConnectionGatedOutlet>`, `searchByIdentifierPrefix`, sidebar nested-route activation, `Anchor component={Link}` standardization
@@ -174,7 +174,7 @@ Phase 23 (close v1.3) ─┬─▶ Phase 24 (fetch foundation, incl. line-75 use
 |-------|-----------|----------------|--------|-----------|
 | 14-20 (v1.2) | v1.2 | 22/22 | ✅ Shipped | 2026-04-15 |
 | 21-22 (v1.3) | v1.3 | 9/9 | ✅ Shipped | 2026-04-16 |
-| 23. v1.3 Close-Out | v1.4 | 0/? | 📋 Not started | — |
+| 23. v1.3 Close-Out | v1.4 | 4/4 | Complete    | 2026-04-17 |
 | 24. Data-Fetching Foundation | v1.4 | 0/? | 📋 Not started | — |
 | 25. Quality Module Dedup | v1.4 | 0/? | 📋 Not started | — |
 | 26. App-Shell Dedup | v1.4 | 0/? | 📋 Not started | — |
