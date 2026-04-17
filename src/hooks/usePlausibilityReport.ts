@@ -1,15 +1,18 @@
 /**
  * usePlausibilityReport -- batch temporal plausibility runner for Phase 16.
  *
- * State machine: idle -> running -> complete | cancelled | error
+ * Phase 24 (FOUND-03): wraps the shared `useAsyncRun<NormalizedIssue>`
+ * primitive. Cancellation, status, progress, and issue accumulation all
+ * delegate to the central reducer in `internal/asyncRunReducer.ts`. The
+ * pre-refactor cancellation-flag-in-ref anti-pattern has been removed
+ * (PITFALLS §Pitfall 2).
  *
- * Samples resources, gets profile for temporal field discovery, then runs
- * checkTemporalPlausibility on each resource with batch iteration and
- * cancellation support (T-16-09 mitigation).
+ * Backward compatibility: the named exports (`PlausibilityRunStatus`,
+ * `PlausibilityRunState`, `usePlausibilityReport`) and return-object shape
+ * are byte-identical to the pre-refactor version, so consumer panels
+ * (`PlausibilityPanel`) and existing tests require no edits.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MedplumClient } from '@medplum/core';
-import type { Resource } from '@medplum/fhirtypes';
 import type { AppSettings } from '../config/types';
 import type { NormalizedIssue } from '../quality/types';
 import { sampleResources } from '../quality/sampling';
@@ -18,22 +21,11 @@ import {
   checkTemporalPlausibility,
   normalizeTemporalIssues,
 } from '../quality/temporalPlausibilityWalker';
+import { useAsyncRun, type UseAsyncRunResult } from './useAsyncRun';
+import type { AsyncRunStatus } from './internal/asyncRunReducer';
 
-export type PlausibilityRunStatus =
-  | 'idle'
-  | 'running'
-  | 'complete'
-  | 'cancelled'
-  | 'error';
-
-export interface PlausibilityRunState {
-  status: PlausibilityRunStatus;
-  progress: { current: number; total: number };
-  issues: NormalizedIssue[];
-  errorMessage?: string;
-  start: () => void;
-  cancel: () => void;
-}
+export type PlausibilityRunStatus = AsyncRunStatus;
+export type PlausibilityRunState = UseAsyncRunResult<NormalizedIssue>;
 
 interface UsePlausibilityReportArgs {
   client: MedplumClient | null;
@@ -52,88 +44,26 @@ export function usePlausibilityReport({
   settings,
   patientIds,
 }: UsePlausibilityReportArgs): PlausibilityRunState {
-  const [status, setStatus] = useState<PlausibilityRunStatus>('idle');
-  const [progress, setProgress] = useState<{ current: number; total: number }>({
-    current: 0,
-    total: 0,
-  });
-  const [issues, setIssues] = useState<NormalizedIssue[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
-  const cancelledRef = useRef(false);
-
-  const start = useCallback(() => {
-    if (!client || !resourceType) return;
-
-    cancelledRef.current = false;
-    setStatus('running');
-    setIssues([]);
-    setProgress({ current: 0, total: 0 });
-    setErrorMessage(undefined);
-
-    void (async () => {
-      try {
-        const sample: Resource[] = await sampleResources(client, resourceType, sampleSize, patientIds);
-        if (cancelledRef.current) {
-          setStatus('cancelled');
-          return;
+  return useAsyncRun<NormalizedIssue>({
+    runner: async ({ isCancelled, setProgress, appendIssues }) => {
+      if (!client || !resourceType) return;
+      const sample = await sampleResources(client, resourceType, sampleSize, patientIds);
+      if (isCancelled()) return;
+      setProgress(0, sample.length);
+      const profile = getProfileForType(resourceType);
+      const thresholds = settings?.plausibility;
+      for (let i = 0; i < sample.length; i += BATCH_SIZE) {
+        if (isCancelled()) return;
+        const batch = sample.slice(i, i + BATCH_SIZE);
+        const issues: NormalizedIssue[] = [];
+        for (const r of batch) {
+          const temporal = checkTemporalPlausibility(r, profile, thresholds);
+          issues.push(...normalizeTemporalIssues(temporal, r));
         }
-        setProgress({ current: 0, total: sample.length });
-
-        const profile = getProfileForType(resourceType);
-        const thresholds = settings?.plausibility;
-
-        for (let i = 0; i < sample.length; i += BATCH_SIZE) {
-          if (cancelledRef.current) {
-            setStatus('cancelled');
-            return;
-          }
-          const batch = sample.slice(i, i + BATCH_SIZE);
-          const batchIssues: NormalizedIssue[] = [];
-
-          for (const r of batch) {
-            const temporalIssues = checkTemporalPlausibility(r, profile, thresholds);
-            const normalized = normalizeTemporalIssues(temporalIssues, r);
-            batchIssues.push(...normalized);
-          }
-
-          setIssues((prev) => [...prev, ...batchIssues]);
-          setProgress({
-            current: Math.min(i + batch.length, sample.length),
-            total: sample.length,
-          });
-
-          if (cancelledRef.current) {
-            setStatus('cancelled');
-            return;
-          }
-        }
-
-        if (!cancelledRef.current) {
-          setStatus('complete');
-        }
-      } catch (err) {
-        setStatus('error');
-        setErrorMessage(err instanceof Error ? err.message : String(err));
+        appendIssues(issues);
+        setProgress(Math.min(i + batch.length, sample.length), sample.length);
       }
-    })();
-  }, [client, resourceType, sampleSize, settings, patientIds]);
-
-  const cancel = useCallback(() => {
-    cancelledRef.current = true;
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      cancelledRef.current = true;
-    };
-  }, []);
-
-  return {
-    status,
-    progress,
-    issues,
-    errorMessage,
-    start,
-    cancel,
-  };
+    },
+    deps: [client, resourceType, sampleSize, settings, patientIds],
+  });
 }
