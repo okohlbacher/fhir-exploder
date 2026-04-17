@@ -40,16 +40,8 @@ export class FdpgCodecError extends Error {
 
 export const MAX_FDPG_FILE_BYTES = 1_000_000;
 
-/**
- * Forward-compatibility helper: Plan 22-01 (parallel Wave 1) extends the
- * canonical `CohortCriterion` union in `src/quality/cohorts.ts` with
- * `FhirpathCriterion = { type: 'fhirpath'; expression: string }`. This
- * codec must reject that variant on export, so we widen the iterator
- * element to include the fhirpath shape locally. When both branches merge,
- * the local type becomes a structural subtype of the canonical union.
- */
-type FhirpathLike = { type: 'fhirpath'; expression: string; translatedQuery?: string };
-type CodecCriterion = CohortCriterion | FhirpathLike;
+// `CohortCriterion` already includes the `fhirpath` variant (see ./cohorts);
+// this codec rejects it on export (T-22-08 version confusion) — see handling below.
 
 /**
  * Serialize a CohortDefinition into a StructuredQuery-shaped object,
@@ -64,7 +56,7 @@ export function cohortToFdpgSq(
   const warnings: string[] = [];
   const groups: FdpgCriterion[][] = [];
 
-  for (const raw of cohort.criteria as CodecCriterion[]) {
+  for (const raw of cohort.criteria) {
     const c = raw;
     if (c.type === 'fhirpath') {
       throw new FdpgCodecError(
