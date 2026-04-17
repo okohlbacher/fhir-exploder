@@ -1,18 +1,13 @@
 /**
- * useDuplicateReport -- DQ-07 + DQ-08 orchestrating hook for Phase 17.
+ * useDuplicateReport -- DQ-07 + DQ-08 orchestrating hook (Phase 17 / 24).
  *
- * Runs two duplicate-detection checks against a cohort of resource types:
- *   1. Patient duplicate detection (exact name+DOB match, fast, sync)
- *   2. Content hash dedup per resource type (async, batched SHA-256)
- *
- * State machine (mirrors usePlausibilityReport):
- *   idle -> running -> complete | cancelled | error
- *
- * Per-batch progress is summed across Patient detection (counted as one
- * unit) plus the per-type sample sizes. Cancellation is cooperative via
- * cancelledRef, checked between every batch to keep the UI responsive.
+ * Wraps `useAsyncRun<NormalizedIssue>` (FOUND-03). Three accessory states
+ * (duplicateClusters, contentHashClusters, skippedPatients) stay in local
+ * `useState` per D-09 (fixed reducer shape; PITFALLS §Pitfall 1).
+ * Progress math (totalUnits / completedUnits) preserved verbatim from
+ * pre-refactor (Pitfall 6).
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { MedplumClient } from '@medplum/core';
 import type { Resource } from '@medplum/fhirtypes';
 import type { NormalizedIssue } from '../quality/types';
@@ -27,24 +22,14 @@ import {
   normalizeContentHashIssues,
   type ContentHashCluster,
 } from '../quality/contentHasher';
+import { useAsyncRun, type UseAsyncRunResult } from './useAsyncRun';
+import type { AsyncRunStatus } from './internal/asyncRunReducer';
 
-export type DuplicateRunStatus =
-  | 'idle'
-  | 'running'
-  | 'complete'
-  | 'cancelled'
-  | 'error';
-
-export interface DuplicateRunState {
-  status: DuplicateRunStatus;
-  progress: { current: number; total: number };
-  issues: NormalizedIssue[];
+export type DuplicateRunStatus = AsyncRunStatus;
+export interface DuplicateRunState extends UseAsyncRunResult<NormalizedIssue> {
   duplicateClusters: PatientDuplicateCluster[];
   contentHashClusters: ContentHashCluster[];
   skippedPatients: number;
-  errorMessage?: string;
-  start: () => void;
-  cancel: () => void;
 }
 
 interface UseDuplicateReportArgs {
@@ -60,144 +45,66 @@ export function useDuplicateReport({
   sampleSize,
   patientIds,
 }: UseDuplicateReportArgs): DuplicateRunState {
-  const [status, setStatus] = useState<DuplicateRunStatus>('idle');
-  const [progress, setProgress] = useState<{ current: number; total: number }>({
-    current: 0,
-    total: 0,
-  });
-  const [issues, setIssues] = useState<NormalizedIssue[]>([]);
   const [duplicateClusters, setDuplicateClusters] = useState<PatientDuplicateCluster[]>([]);
   const [contentHashClusters, setContentHashClusters] = useState<ContentHashCluster[]>([]);
   const [skippedPatients, setSkippedPatients] = useState(0);
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
-  const cancelledRef = useRef(false);
 
-  const start = useCallback(() => {
-    if (!client) return;
-
-    cancelledRef.current = false;
-    setStatus('running');
-    setIssues([]);
-    setDuplicateClusters([]);
-    setContentHashClusters([]);
-    setSkippedPatients(0);
-    setProgress({ current: 0, total: 0 });
-    setErrorMessage(undefined);
-
-    void (async () => {
+  const run = useAsyncRun<NormalizedIssue>({
+    runner: async ({ isCancelled, setProgress, appendIssues }) => {
+      // Reset accessory state at the start of each run (D-09).
+      setDuplicateClusters([]);
+      setContentHashClusters([]);
+      setSkippedPatients(0);
+      if (!client) return;
+      // Phase 1: Patient sample (best-effort; server may not have Patient).
+      let patientSample: Resource[] = [];
       try {
-        // Step 1: Patient duplicate detection. We sample Patient regardless
-        // of whether it was in `types` because patient matching is the
-        // headline DQ-07 check and has its own fixed key (family|given|DOB).
-        let patientSample: Resource[] = [];
-        try {
-          patientSample = await sampleResources(client, 'Patient', sampleSize, patientIds);
-        } catch {
-          // Server may not have Patient resources -- proceed with empty sample.
-          patientSample = [];
-        }
-        if (cancelledRef.current) {
-          setStatus('cancelled');
-          return;
-        }
-
-        // Pre-plan totals. Patient pass counts as patientSample.length units;
-        // per-type content hash runs each count sampleSize units (estimated;
-        // actual sample length may be smaller if the server has fewer rows).
-        const perTypeSamples: Record<string, Resource[]> = {};
-        for (const t of types) {
-          if (cancelledRef.current) {
-            setStatus('cancelled');
-            return;
-          }
-          try {
-            perTypeSamples[t] = await sampleResources(client, t, sampleSize, patientIds);
-          } catch {
-            perTypeSamples[t] = [];
-          }
-        }
-        if (cancelledRef.current) {
-          setStatus('cancelled');
-          return;
-        }
-
-        const totalUnits =
-          patientSample.length +
-          Object.values(perTypeSamples).reduce((sum, arr) => sum + arr.length, 0);
-        setProgress({ current: 0, total: totalUnits });
-
-        // Step 2: Patient duplicate detection (synchronous).
-        const patResult = findPatientDuplicates(patientSample);
-        const patIssues = normalizePatientDuplicateIssues(patResult.clusters);
-        setDuplicateClusters(patResult.clusters);
-        setSkippedPatients(patResult.skippedCount);
-        setIssues((prev) => [...prev, ...patIssues]);
-
-        let completedUnits = patientSample.length;
-        setProgress({ current: completedUnits, total: totalUnits });
-
-        if (cancelledRef.current) {
-          setStatus('cancelled');
-          return;
-        }
-
-        // Step 3: Content hash dedup per resource type.
-        const allContentClusters: ContentHashCluster[] = [];
-        for (const t of types) {
-          if (cancelledRef.current) {
-            setStatus('cancelled');
-            return;
-          }
-          const sample = perTypeSamples[t] ?? [];
-          const base = completedUnits;
-          const clusters = await findContentHashDuplicates(sample, t, (current) => {
-            setProgress({ current: base + current, total: totalUnits });
-          });
-          if (cancelledRef.current) {
-            setStatus('cancelled');
-            return;
-          }
-          allContentClusters.push(...clusters);
-          setContentHashClusters((prev) => [...prev, ...clusters]);
-          const batchIssues = normalizeContentHashIssues(clusters);
-          if (batchIssues.length > 0) {
-            setIssues((prev) => [...prev, ...batchIssues]);
-          }
-          completedUnits += sample.length;
-          setProgress({ current: completedUnits, total: totalUnits });
-        }
-
-        if (cancelledRef.current) {
-          setStatus('cancelled');
-          return;
-        }
-        setStatus('complete');
-      } catch (err) {
-        setStatus('error');
-        setErrorMessage(err instanceof Error ? err.message : String(err));
+        patientSample = await sampleResources(client, 'Patient', sampleSize, patientIds);
+      } catch {
+        patientSample = [];
       }
-    })();
-  }, [client, types, sampleSize, patientIds]);
+      if (isCancelled()) return;
+      // Per-type samples; pre-plan totalUnits (Pitfall 6: preserved verbatim).
+      const perTypeSamples: Record<string, Resource[]> = {};
+      for (const t of types) {
+        if (isCancelled()) return;
+        try {
+          perTypeSamples[t] = await sampleResources(client, t, sampleSize, patientIds);
+        } catch {
+          perTypeSamples[t] = [];
+        }
+      }
+      if (isCancelled()) return;
+      const totalUnits =
+        patientSample.length +
+        Object.values(perTypeSamples).reduce((sum, arr) => sum + arr.length, 0);
+      setProgress(0, totalUnits);
+      // Phase 2: synchronous patient duplicate detection.
+      const patResult = findPatientDuplicates(patientSample);
+      setDuplicateClusters(patResult.clusters);
+      setSkippedPatients(patResult.skippedCount);
+      appendIssues(normalizePatientDuplicateIssues(patResult.clusters));
+      let completedUnits = patientSample.length;
+      setProgress(completedUnits, totalUnits);
+      if (isCancelled()) return;
+      // Phase 3: per-type content hash dedup.
+      for (const t of types) {
+        if (isCancelled()) return;
+        const sample = perTypeSamples[t] ?? [];
+        const base = completedUnits;
+        const clusters = await findContentHashDuplicates(sample, t, (current) => {
+          setProgress(base + current, totalUnits);
+        });
+        if (isCancelled()) return;
+        setContentHashClusters((prev) => [...prev, ...clusters]);
+        const batchIssues = normalizeContentHashIssues(clusters);
+        if (batchIssues.length > 0) appendIssues(batchIssues);
+        completedUnits += sample.length;
+        setProgress(completedUnits, totalUnits);
+      }
+    },
+    deps: [client, types, sampleSize, patientIds],
+  });
 
-  const cancel = useCallback(() => {
-    cancelledRef.current = true;
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      cancelledRef.current = true;
-    };
-  }, []);
-
-  return {
-    status,
-    progress,
-    issues,
-    duplicateClusters,
-    contentHashClusters,
-    skippedPatients,
-    errorMessage,
-    start,
-    cancel,
-  };
+  return { ...run, duplicateClusters, contentHashClusters, skippedPatients };
 }
