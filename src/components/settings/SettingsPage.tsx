@@ -6,6 +6,7 @@ import { useTerminology } from '../../hooks/useTerminology';
 import { useTerminologyHealth } from '../../hooks/useTerminologyHealth';
 import { TERMINOLOGY_STATUS_CONFIG } from '../../terminology/statusConfig';
 import { clearAllQualityMetrics } from '../../quality/metricsCache';
+import { clearAllQualityCountCache } from '../../hooks/useResourceCounts';
 
 interface SettingsPageProps {
   settings: AppSettings | null;
@@ -39,6 +40,7 @@ export function SettingsPage({ settings, usingDefaults }: SettingsPageProps) {
   }
 
   function handleClearMetricsCache() {
+    clearAllQualityCountCache();
     const removed = clearAllQualityMetrics();
     const message =
       removed === 0

@@ -7,6 +7,12 @@ import { TerminologyContext } from '../contexts/TerminologyContext';
 import { TerminologyResolver } from '../terminology/TerminologyResolver';
 import { LOCAL_STORAGE_PREFIX, makeTerminologyKey } from '../terminology/terminologyKey';
 import { mockMedplumClientForTerminology } from './fixtures/terminology';
+import {
+  getQualityMetricsCache,
+  clearAllQualityMetrics,
+} from '../quality/metricsCache';
+import * as ResourceCountsModule from '../hooks/useResourceCounts';
+const { clearAllQualityCountCache } = ResourceCountsModule;
 
 // Polyfill ResizeObserver for jsdom (required by Mantine components)
 class MockResizeObserver {
@@ -76,6 +82,11 @@ function makeResolver() {
 
 beforeEach(() => {
   if (typeof localStorage !== 'undefined') localStorage.clear();
+  // Phase 24 FOUND-02 / W-24-03-03: wipe both quality caches between
+  // tests now that three cache types (terminology, metrics, count) share
+  // this file. Without these calls, registry state leaks across tests.
+  clearAllQualityMetrics();
+  clearAllQualityCountCache();
 });
 
 describe('SettingsPage — Clear terminology cache (V-09)', () => {
@@ -126,5 +137,48 @@ describe('SettingsPage — Clear terminology cache (V-09)', () => {
     await waitFor(() => {
       expect(screen.getByText(/No cached terms to clear\./)).toBeTruthy();
     });
+  });
+});
+
+describe('SettingsPage — Clear metrics cache (FOUND-02)', () => {
+  it('Clear metrics cache button clears BOTH quality metrics registry AND count cache', async () => {
+    const FHIR_URL = 'https://fhir.example/fhir';
+    // Pre-populate the registry instance so we have an entry to drop.
+    const cacheBefore = getQualityMetricsCache(FHIR_URL);
+    cacheBefore.set(`${FHIR_URL}|completeness|Patient|100`, {
+      value: 'v1',
+      computedAt: Date.now(),
+      serverUrl: FHIR_URL,
+      resourceType: 'Patient',
+      sampleSize: 100,
+    });
+    expect(cacheBefore.size()).toBe(1);
+
+    // Spy on the count-cache wipe to prove SettingsPage calls it as well.
+    const countSpy = vi.spyOn(ResourceCountsModule, 'clearAllQualityCountCache');
+
+    const resolver = makeResolver();
+    renderPage(resolver);
+
+    const button = screen.getByRole('button', { name: /Clear metrics cache/i });
+    fireEvent.click(button);
+
+    // 1. clearAllQualityCountCache invoked — count cache cleared.
+    expect(countSpy).toHaveBeenCalledTimes(1);
+
+    // 2. Cross-server clearAllQualityMetrics dropped the registry entry —
+    // getQualityMetricsCache(FHIR_URL) returns a fresh, empty instance.
+    const cacheAfter = getQualityMetricsCache(FHIR_URL);
+    expect(cacheAfter).not.toBe(cacheBefore);
+    expect(cacheAfter.size()).toBe(0);
+
+    // 3. Toast still appears with the existing copy. Mantine notifications
+    // accumulate in the portal across tests; use getAllByText so a stale
+    // toast from a sibling test does not collide with the assertion.
+    await waitFor(() => {
+      expect(screen.getAllByText(/Cache cleared/).length).toBeGreaterThan(0);
+    });
+
+    countSpy.mockRestore();
   });
 });

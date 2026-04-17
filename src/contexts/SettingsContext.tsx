@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, useMemo, type ReactNode } from 'react';
 import type { AppSettings } from '../config/types';
 import { loadSettings } from '../config/settings';
+import { clearQualityCountCache } from '../hooks/useResourceCounts';
+import { clearQualityMetricsCache } from '../quality/metricsCache';
 
 type SettingsContextValue = {
   settings: AppSettings | null;
@@ -25,6 +27,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setSettings = (next: AppSettings, options?: { usingDefaults?: boolean }) => {
+    // D-04 / D-05: direct-call cache invalidation at save time (no watcher).
+    // Any settings save (even sampleSize-only) wipes the current server's
+    // metrics + count caches to prevent stale reports from silently
+    // accumulating. If the serverUrl also changed, wipe the new URL too.
+    const prevUrl = settings?.fhir?.serverUrl;
+    const nextUrl = next.fhir?.serverUrl;
+    if (prevUrl) {
+      clearQualityCountCache(prevUrl);
+      clearQualityMetricsCache(prevUrl);
+    }
+    if (nextUrl && nextUrl !== prevUrl) {
+      clearQualityCountCache(nextUrl);
+      clearQualityMetricsCache(nextUrl);
+    }
     setSettingsState(next);
     setUsingDefaults(options?.usingDefaults ?? false);
   };
