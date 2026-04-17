@@ -25,6 +25,7 @@ The research phase (SUMMARY.md at `research/SUMMARY.md`) locked three safety inv
 - [ ] **CLOSE-05**: `EditCohortModal` "Cohort updated" toast captures the cohort name at toast time, not save time (I2 stale-text on rename).
 - [ ] **CLOSE-06**: 8 human UAT items (U1-U8 from v1.3 audit) executed against a live Blaze server, results recorded in `21-UAT.md` / `22-HUMAN-UAT.md`; ANY blockers escalated as follow-up warnings.
 - [ ] **CLOSE-07**: `nyquist_compliant: true` flipped in both Phase 21 and Phase 22 VALIDATION.md once CLOSE-06 UAT is green (N1 audit sign-off).
+- [ ] **CLOSE-08**: `CohortBuilderForm` in edit mode renders a name TextInput pre-populated with the existing cohort name, and `handleEditSave` uses the current name state — not the frozen `initialCohort.name`. Discovered during Phase 23 live-Blaze UAT (item 4 fail).
 
 ### Phase 24 — Data-Fetching Foundation
 

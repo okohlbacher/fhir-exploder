@@ -192,7 +192,8 @@ export function CohortBuilderForm(
 
   // ----- modal state (Create mode only) -----
   const [saveModalOpen, saveModalCtrl] = useDisclosure(false);
-  const [name, setName] = useState('');
+  // In edit mode, pre-populate name from initialCohort (CLOSE-08).
+  const [name, setName] = useState(isEdit ? (initialCohort?.name ?? '') : '');
   const [nameError, setNameError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -290,6 +291,15 @@ export function CohortBuilderForm(
 
   const handleEditSave = (): void => {
     if (!isEdit || !initialCohort || !props.onSave) return;
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setNameError('Name required.');
+      return;
+    }
+    if (props.existingNames.includes(trimmed)) {
+      setNameError('A cohort with this name already exists. Choose a different name.');
+      return;
+    }
     const criteria = buildCriteriaList({
       dateRange,
       codeSystem,
@@ -298,7 +308,7 @@ export function CohortBuilderForm(
       fhirpathExpression,
       fhirpathTranslatedQuery,
     });
-    props.onSave({ name: initialCohort.name, criteria });
+    props.onSave({ name: trimmed, criteria });
   };
 
   // ----- parsed-count helper text -----
@@ -316,6 +326,21 @@ export function CohortBuilderForm(
 
   return (
     <Stack gap="md">
+      {/* --- Cohort name (Edit mode only — CLOSE-08) --- */}
+      {isEdit && (
+        <TextInput
+          label="Cohort name"
+          description="Must be unique across your saved cohorts."
+          placeholder="e.g. Diabetic adults 2024"
+          error={nameError}
+          value={name}
+          onChange={(e) => {
+            setName(e.currentTarget.value);
+            if (nameError) setNameError(null);
+          }}
+        />
+      )}
+
       {/* --- Encounter date range --- */}
       <DatePickerInput
         type="range"

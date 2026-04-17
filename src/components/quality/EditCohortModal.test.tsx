@@ -271,6 +271,52 @@ describe('EditCohortModal', () => {
   });
 });
 
+describe('Cohort name editable in edit mode (CLOSE-08)', () => {
+  it('renders a pre-populated Cohort name input in edit mode', () => {
+    render(
+      <Wrap>
+        <EditCohortModal cohort={sampleCohort} onClose={() => {}} />
+      </Wrap>,
+    );
+    const nameInput = screen.getByLabelText(/cohort name/i) as HTMLInputElement;
+    expect(nameInput).toBeTruthy();
+    expect(nameInput.value).toBe('Diabetic adults');
+  });
+
+  it('renaming cohort in edit mode passes new name to updateCohort (CLOSE-08)', async () => {
+    const onClose = vi.fn();
+    mockUpdateCohort.mockImplementation((id, patch) => ({
+      ...sampleCohort,
+      ...patch,
+      id,
+      updatedAt: new Date().toISOString(),
+    }));
+    render(
+      <Wrap>
+        <EditCohortModal cohort={sampleCohort} onClose={onClose} />
+      </Wrap>,
+    );
+    await flush(50);
+
+    const nameInput = screen.getByLabelText(/cohort name/i) as HTMLInputElement;
+    await act(async () => {
+      fireEvent.change(nameInput, { target: { value: 'Renamed Cohort' } });
+    });
+
+    const saveBtn = screen.getByRole('button', { name: /^save changes$/i });
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+    await flush(200);
+
+    expect(mockUpdateCohort).toHaveBeenCalledWith(
+      sampleCohort.id,
+      expect.objectContaining({ name: 'Renamed Cohort' }),
+    );
+    expect(onClose).toHaveBeenCalled();
+  });
+});
+
 describe('Cohort updated toast (CLOSE-05)', () => {
   it('Cohort updated toast reflects the renamed cohort name (CLOSE-05)', async () => {
     const oldCohort: CohortDefinition = {
