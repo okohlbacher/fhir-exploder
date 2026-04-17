@@ -14,6 +14,20 @@
 import type { QualityMetricsCacheEntry } from './types';
 import { LOCAL_STORAGE_PREFIX } from './keys';
 
+/**
+ * FOUND-02 — Registry of QualityMetricsCache instances keyed by serverUrl.
+ *
+ * Replaces the two rotating `cacheInstance` singletons that previously
+ * lived in `useCompletenessReport` + `useCodingCoverage`. A 2-entry LRU
+ * keeps the last two distinct serverUrls cache-warm so a quick A/B toggle
+ * does not discard a previous server's metrics, while bounding memory
+ * (PITFALLS Pitfall 3 — unbounded Map).
+ *
+ * Module-private state — never exported.
+ */
+const LRU_LIMIT = 2;
+const cachesByServer = new Map<string, QualityMetricsCache>();
+
 const MEMORY_LIMIT = 500;
 const LOCAL_STORAGE_LIMIT = 200;
 
@@ -151,6 +165,51 @@ export class QualityMetricsCache {
 }
 
 /**
+ * Returns the QualityMetricsCache for `serverUrl`, creating one if absent.
+ *
+ * Registry semantics (FOUND-02 / PITFALLS Pitfall 3):
+ *   - LRU bound: at most 2 instances retained. Inserting a third unique
+ *     serverUrl evicts the oldest (least-recently-touched) entry.
+ *   - MRU touch on get: a successful get re-inserts the entry at the
+ *     tail of the Map, refreshing its position so a touched entry is
+ *     never the eviction target.
+ *
+ * The 2-entry bound is intentional — a typical user toggles between at
+ * most two servers (dev/prod, prod/staging). Larger bounds would risk
+ * memory growth that has no observed user benefit.
+ */
+export function getQualityMetricsCache(serverUrl: string): QualityMetricsCache {
+  const existing = cachesByServer.get(serverUrl);
+  if (existing) {
+    cachesByServer.delete(serverUrl);
+    cachesByServer.set(serverUrl, existing);
+    return existing;
+  }
+  const cache = new QualityMetricsCache({ serverUrl });
+  cachesByServer.set(serverUrl, cache);
+  if (cachesByServer.size > LRU_LIMIT) {
+    const oldestKey = cachesByServer.keys().next().value;
+    if (oldestKey !== undefined) cachesByServer.delete(oldestKey);
+  }
+  return cache;
+}
+
+/**
+ * Removes the registry entry for `serverUrl` AND wipes the underlying
+ * cache (memory + localStorage namespace). After this call, the next
+ * `getQualityMetricsCache(serverUrl)` returns a fresh instance.
+ *
+ * Wired by `SettingsContext.setSettings()` (Plan 24-03 Task 3) to
+ * invalidate stale reports whenever the user saves settings (D-04 / D-05).
+ */
+export function clearQualityMetricsCache(serverUrl: string): void {
+  const cache = cachesByServer.get(serverUrl);
+  if (!cache) return;
+  cache.clear();
+  cachesByServer.delete(serverUrl);
+}
+
+/**
  * Top-level helper wired to the Settings "Clear metrics cache" button.
  * Iterates localStorage, removes every key starting with
  * LOCAL_STORAGE_PREFIX, and returns the number removed.
@@ -161,6 +220,7 @@ export class QualityMetricsCache {
  * metrics have been requested yet this session).
  */
 export function clearAllQualityMetrics(): number {
+  cachesByServer.clear();
   if (typeof localStorage === 'undefined') return 0;
   const toRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {

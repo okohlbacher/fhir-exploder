@@ -63,7 +63,7 @@ describe('QualityMetricsCache registry — FOUND-02', () => {
 
   it('clearQualityMetricsCache removes the entry from the registry', () => {
     const a1 = getQualityMetricsCache(URL_A);
-    a1.set('k1', {
+    a1.set(`${URL_A}|completeness|Patient|100`, {
       value: 'v1',
       computedAt: Date.now(),
       serverUrl: URL_A,
@@ -79,7 +79,11 @@ describe('QualityMetricsCache registry — FOUND-02', () => {
 
   it('clearQualityMetricsCache wipes the localStorage namespace for that server', () => {
     const a = getQualityMetricsCache(URL_A);
-    a.set('k1', {
+    // Cache keys must start with `${serverUrl}|...` to be visible to the
+    // class's server-namespace scan (writeLocalStorage just prefixes
+    // LOCAL_STORAGE_PREFIX onto whatever key the caller supplied).
+    const cacheKey = `${URL_A}|completeness|Patient|100`;
+    a.set(cacheKey, {
       value: 'v1',
       computedAt: Date.now(),
       serverUrl: URL_A,
