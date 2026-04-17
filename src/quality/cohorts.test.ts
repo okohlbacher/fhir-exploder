@@ -18,6 +18,7 @@ import {
   type CohortDefinition,
   type CohortsStorage,
   type FhirpathCriterion,
+  type ParsedPatientRefs,
 } from './cohorts';
 
 // -----------------------------------------------------------------------------
@@ -27,24 +28,24 @@ import {
 
 describe('parsePatientRefs', () => {
   it('returns [] for empty string', () => {
-    expect(parsePatientRefs('')).toEqual([]);
+    expect(parsePatientRefs('').refs).toEqual([]);
   });
 
   it('returns [] for whitespace-only input', () => {
-    expect(parsePatientRefs('   \n\t  ')).toEqual([]);
+    expect(parsePatientRefs('   \n\t  ').refs).toEqual([]);
   });
 
   it('strips a single Patient/ prefix', () => {
-    expect(parsePatientRefs('Patient/abc')).toEqual(['abc']);
+    expect(parsePatientRefs('Patient/abc').refs).toEqual(['abc']);
   });
 
   it('preserves bare IDs without prefix', () => {
-    expect(parsePatientRefs('bare-id')).toEqual(['bare-id']);
+    expect(parsePatientRefs('bare-id').refs).toEqual(['bare-id']);
   });
 
   it('splits on mixed whitespace, commas, semicolons, newlines', () => {
     const input = 'Patient/abc,Patient/xyz\nbare-id;another-id';
-    expect(parsePatientRefs(input)).toEqual([
+    expect(parsePatientRefs(input).refs).toEqual([
       'abc',
       'xyz',
       'bare-id',
@@ -54,7 +55,7 @@ describe('parsePatientRefs', () => {
 
   it('dedupes preserving first-occurrence order', () => {
     const input = 'abc,xyz,abc,Patient/xyz,another';
-    expect(parsePatientRefs(input)).toEqual(['abc', 'xyz', 'another']);
+    expect(parsePatientRefs(input).refs).toEqual(['abc', 'xyz', 'another']);
   });
 
   it('caps very long input at 10,000 IDs', () => {
@@ -64,16 +65,86 @@ describe('parsePatientRefs', () => {
     for (let i = 0; i < 20_000; i++) tokens.push(`p-${i}`);
     const raw = tokens.join(',');
     const out = parsePatientRefs(raw);
-    expect(out).toHaveLength(10_000);
-    expect(out[0]).toBe('p-0');
-    expect(out[9_999]).toBe('p-9999');
+    expect(out.refs).toHaveLength(10_000);
+    expect(out.refs[0]).toBe('p-0');
+    expect(out.refs[9_999]).toBe('p-9999');
   });
 
   it('only strips ONE leading Patient/ (does not recursively strip)', () => {
     // Defensive: "Patient/Patient/x" should become "Patient/x", not "x".
     // Guards against an ambiguous input where a user literally has a
     // legacy double-prefixed ID.
-    expect(parsePatientRefs('Patient/Patient/x')).toEqual(['Patient/x']);
+    expect(parsePatientRefs('Patient/Patient/x').refs).toEqual(['Patient/x']);
+  });
+});
+
+// -----------------------------------------------------------------------------
+// parsePatientRefs truncation matrix (CLOSE-03 / W3)
+//
+// Five-case matrix covering the full boundary space for truncation signalling.
+// `originalCount` is the POST-dedupe count (deduped.length); see
+// 22-REVIEW.md §WR-03 for rationale (Option A).
+// -----------------------------------------------------------------------------
+
+describe('parsePatientRefs truncation matrix (CLOSE-03)', () => {
+  // Suppress unused import warning.
+  const _typeCheck: ParsedPatientRefs = { refs: [], truncated: false, originalCount: 0 };
+  void _typeCheck;
+
+  it('case 1: empty input → not truncated, 0 refs, originalCount 0 (post-dedupe)', () => {
+    const result = parsePatientRefs('');
+    expect(result.refs).toEqual([]);
+    expect(result.truncated).toBe(false);
+    expect(result.originalCount).toBe(0); // post-dedupe count: 0
+  });
+
+  it('case 2: < cap no duplicates → not truncated, originalCount equals post-dedupe count', () => {
+    // 100 unique IDs — well below the 10,000 cap.
+    const tokens: string[] = [];
+    for (let i = 0; i < 100; i++) tokens.push(`p-${i}`);
+    const result = parsePatientRefs(tokens.join(','));
+    expect(result.refs).toHaveLength(100);
+    expect(result.truncated).toBe(false);
+    expect(result.originalCount).toBe(100); // post-dedupe count: 100
+  });
+
+  it('case 3: < cap with duplicates → not truncated, originalCount is post-dedupe count', () => {
+    // 150 tokens, 50 are duplicates → 100 unique after dedupe.
+    const tokens: string[] = [];
+    for (let i = 0; i < 100; i++) tokens.push(`p-${i}`);
+    // 50 duplicates of the first 50.
+    for (let i = 0; i < 50; i++) tokens.push(`p-${i}`);
+    const result = parsePatientRefs(tokens.join(','));
+    expect(result.refs).toHaveLength(100);
+    expect(result.truncated).toBe(false);
+    expect(result.originalCount).toBe(100); // post-dedupe count: 100
+  });
+
+  it('case 4: exactly cap with duplicates → NOT truncated (boundary), originalCount is post-dedupe 10_000', () => {
+    // 15,000 tokens where 5,000 are duplicates → exactly 10,000 unique after dedupe.
+    // This is the boundary case that the old `parsedRefs.length === cap` check
+    // would mis-fire on, incorrectly showing the truncation warning.
+    const tokens: string[] = [];
+    for (let i = 0; i < 10_000; i++) tokens.push(`p-${i}`);
+    // 5,000 duplicates of the first 5,000.
+    for (let i = 0; i < 5_000; i++) tokens.push(`p-${i}`);
+    const result = parsePatientRefs(tokens.join(','));
+    expect(result.refs).toHaveLength(10_000);
+    expect(result.truncated).toBe(false); // boundary — 10,000 unique is NOT > cap
+    expect(result.originalCount).toBe(10_000); // post-dedupe count: 10,000
+  });
+
+  it('case 5: > cap with duplicates → truncated, originalCount is post-dedupe > 10000', () => {
+    // 15,000 tokens where 4,000 are duplicates → 11,000 unique after dedupe.
+    // 11,000 > 10,000 → truncated = true.
+    const tokens: string[] = [];
+    for (let i = 0; i < 11_000; i++) tokens.push(`p-${i}`);
+    // 4,000 duplicates of the first 4,000.
+    for (let i = 0; i < 4_000; i++) tokens.push(`p-${i}`);
+    const result = parsePatientRefs(tokens.join(','));
+    expect(result.refs).toHaveLength(10_000); // capped at 10,000
+    expect(result.truncated).toBe(true); // dedupedCount 11,000 > cap 10,000
+    expect(result.originalCount).toBe(11_000); // post-dedupe count: 11,000
   });
 });
 

@@ -18,8 +18,8 @@
  *                                  copy-migrate, delete. Do NOT write here.
  *
  * Threat mitigations (see 21-PLAN.md §threat_model):
- *   - T-21-01 (Tampering/XSS): parsePatientRefs produces plain string[],
- *     never HTML. No dangerouslySetInnerHTML, no eval, no Function ctor.
+ *   - T-21-01 (Tampering/XSS): parsePatientRefs produces plain string[]
+ *     inside `refs`, never HTML. No dangerouslySetInnerHTML, no eval, no Function ctor.
  *   - T-21-02 (DoS): parsePatientRefs caps output at 10_000 unique IDs
  *     (Decision D-06). UI-level char cap (1MB) lives in the Textarea props
  *     added in Plan 21-05; this module is the defence-in-depth layer.
@@ -178,8 +178,31 @@ export function migrateLegacyResourceTypeKey(): void {
 }
 
 /**
+ * Return shape for `parsePatientRefs` — introduced in Plan 23-01 (CLOSE-03)
+ * to fix the W3 false-positive where exactly-10,000 unique IDs triggered the
+ * truncation warning even though nothing was discarded.
+ */
+export interface ParsedPatientRefs {
+  /** Normalized bare IDs (no 'Patient/' prefix); already deduped + capped. */
+  refs: string[];
+  /**
+   * True iff the POST-dedupe count exceeds PATIENT_REF_CAP (10,000).
+   * This eliminates the false-positive in `parsedRefs.length === cap` that
+   * fired when exactly 10,000 unique IDs were provided.
+   */
+  truncated: boolean;
+  /**
+   * The POST-dedupe count (deduped.length) — see 22-REVIEW.md §WR-03 Option A
+   * for rationale. Named "originalCount" to convey that it reflects what the
+   * user originally provided AFTER deduplication, before the cap is applied.
+   */
+  originalCount: number;
+}
+
+/**
  * Parses a raw Textarea string of patient references into a normalized,
- * deduped bare-ID array capped at 10,000 entries (Decision D-06).
+ * deduped result capped at 10,000 entries (Decision D-06). Returns
+ * `ParsedPatientRefs` with explicit truncation signalling (CLOSE-03).
  *
  * Accepted input shapes:
  *   - Line-separated:    "Patient/abc\nPatient/xyz\nbare-id"
@@ -197,11 +220,19 @@ export function migrateLegacyResourceTypeKey(): void {
  * Never produces HTML; callers can render results as plain text with no
  * escaping concern beyond normal React string interpolation.
  */
-export function parsePatientRefs(raw: string): string[] {
+export function parsePatientRefs(raw: string): ParsedPatientRefs {
   const tokens = raw
     .split(/[\s,;]+/)
     .map((t) => t.trim())
     .filter(Boolean);
-  const ids = tokens.map((t) => t.replace(/^Patient\//, ''));
-  return Array.from(new Set(ids)).slice(0, 10_000);
+  const stripped = tokens.map((t) => t.replace(/^Patient\//, ''));
+  const deduped = Array.from(new Set(stripped));
+  // originalCount is the POST-dedupe count (deduped.length); see 22-REVIEW.md §WR-03 for rationale.
+  // truncated is true iff dedupedCount > 10_000 — this eliminates the false-positive
+  // where exactly-10_000 unique IDs would previously match parsedRefs.length === cap.
+  return {
+    refs: deduped.slice(0, 10_000),
+    truncated: deduped.length > 10_000,
+    originalCount: deduped.length,
+  };
 }

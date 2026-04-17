@@ -71,8 +71,8 @@ function renderCard(props?: {
   onExpressionChange?: (v: string) => void;
   onValidated?: (tq: string | undefined) => void;
 }) {
-  const onExpressionChange = props?.onExpressionChange ?? vi.fn();
-  const onValidated = props?.onValidated ?? vi.fn();
+  const onExpressionChange = vi.fn(props?.onExpressionChange ?? (() => {}));
+  const onValidated = vi.fn(props?.onValidated ?? (() => {}));
   render(
     <Wrap>
       <FhirpathCriterionCard

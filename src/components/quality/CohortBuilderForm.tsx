@@ -90,12 +90,6 @@ export interface CohortBuilderFormProps {
   onSave?: (input: { name: string; criteria: CohortCriterion[] }) => void;
 }
 
-/**
- * Cap enforced by `parsePatientRefs` — keep in sync with D-06. Also used
- * to detect truncation for the §S5 warning Alert.
- */
-const PATIENT_REF_CAP = 10_000;
-
 function toIsoDate(d: Date | string | null): string | null {
   if (!d) return null;
   // Mantine 8 DatePickerInput may emit either Date objects or ISO date
@@ -177,11 +171,12 @@ export function CohortBuilderForm(
     initialReferenceList ? initialReferenceList.patientIds.join('\n') : '',
   );
   const [debouncedRef] = useDebouncedValue(refText, 150);
-  const parsedRefs = useMemo(
+  const parsed = useMemo(
     () => parsePatientRefs(debouncedRef),
     [debouncedRef],
   );
-  const truncated = parsedRefs.length === PATIENT_REF_CAP;
+  const parsedRefs = parsed.refs;
+  const truncated = parsed.truncated;
 
   // ----- FHIRPath state -----
   // NOTE: translatedQuery is NOT pre-populated from

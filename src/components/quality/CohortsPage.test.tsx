@@ -14,7 +14,6 @@ import {
   screen,
   act,
   fireEvent,
-  within,
 } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
