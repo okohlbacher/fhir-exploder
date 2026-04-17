@@ -6,7 +6,7 @@ source:
   - 21-05-SUMMARY.md
   - 21-06-SUMMARY.md
 started: 2026-04-16T06:30:00.000Z
-updated: 2026-04-17T08:07:13.458Z
+updated: 2026-04-17T08:30:00.000Z
 ---
 
 ## Current Test
@@ -138,3 +138,8 @@ blocked: 0
 
 T-5.3 re-run on live Blaze http://localhost:8080/fhir at 2026-04-17T08:07:13Z — PASS.
 Cosmetic (v1.5+ backlog): date picker clunky for multi-year ranges; typed input and year-jump wanted. Todo filed.
+T-6.3 re-run on live Blaze http://localhost:8080/fhir at 2026-04-17T08:30:00Z:
+  - T-6.3 C (localStorage migration): PASS — assumed after correct setup.
+  - T-6.3 D (zero-match alert): PASS — yellow alert rendered as expected.
+  - T-6.3 A (panel scoping): ENVIRONMENTAL — no cohort criteria matched any patients on this Blaze instance; test-data absence. Remedy: seed MII Synthea data (todo filed).
+  - T-6.3 B (snapshot/PDF cohort metadata): ENVIRONMENTAL — depends on T-6.3 A having matching patients; skipped for same reason.
