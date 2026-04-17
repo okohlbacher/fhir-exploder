@@ -239,6 +239,62 @@ describe('useCohorts', () => {
 });
 
 // -----------------------------------------------------------------------------
+// W2 / CLOSE-02 regression guard — activateCohort quota probe
+//
+// activateCohort previously used only setStored (Mantine's hook), which
+// silently swallows QuotaExceededError. This test guards that activateCohort
+// now probes localStorage.setItem before delegating, matching the persist
+// helper pattern used by sibling mutators.
+// -----------------------------------------------------------------------------
+
+describe('activateCohort quota probe (W2/CLOSE-02)', () => {
+  it('activateCohort surfaces red toast on QuotaExceededError', async () => {
+    const { notifications } = await import('@mantine/notifications');
+    const showSpy = vi.spyOn(notifications, 'show').mockImplementation(() => '');
+    const { result } = renderHook(() => useCohorts(), { wrapper });
+    await flush();
+
+    // Seed state with one cohort.
+    let created: { id: string } | undefined;
+    await act(async () => {
+      created = result.current.addCohort({ name: 'A', criteria: [] });
+    });
+    await flush();
+
+    // Now make localStorage.setItem throw QuotaExceededError for any
+    // subsequent call (activation attempt). Use Storage.prototype pattern
+    // per existing quota tests in this file.
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = vi.fn(() => {
+      throw new DOMException('quota', 'QuotaExceededError');
+    }) as unknown as typeof Storage.prototype.setItem;
+
+    try {
+      let caughtError: unknown;
+      try {
+        result.current.activateCohort(created!.id);
+      } catch (err) {
+        caughtError = err;
+      }
+      // activateCohort must re-throw the DOMException.
+      expect(caughtError).toBeInstanceOf(DOMException);
+      expect((caughtError as DOMException).name).toBe('QuotaExceededError');
+
+      // A red "Activation failed" toast must have been shown before re-throw.
+      expect(showSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          color: 'red',
+          title: 'Activation failed',
+          message: 'Browser storage is full. Delete unused cohorts to make room.',
+        }),
+      );
+    } finally {
+      Storage.prototype.setItem = originalSetItem;
+    }
+  });
+});
+
+// -----------------------------------------------------------------------------
 // Plan 22-02 — CRUD surface extensions (updateCohort, deleteCohort,
 // duplicateCohort). Each block reuses the renderHook + MantineProvider +
 // Notifications wrapper above so the quota-failure path exercises the same

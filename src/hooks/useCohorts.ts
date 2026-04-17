@@ -153,7 +153,22 @@ export function useCohorts(): UseCohortsApi {
 
   const activateCohort = useCallback(
     (id: string | null) => {
-      setStored({ ...stored, activeCohortId: id });
+      const next: CohortsStorage = { ...stored, activeCohortId: id };
+      try {
+        window.localStorage.setItem(COHORTS_STORAGE_KEY, JSON.stringify(next));
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'QuotaExceededError') {
+          notifications.show({
+            color: 'red',
+            title: 'Activation failed',
+            message:
+              'Browser storage is full. Delete unused cohorts to make room.',
+            autoClose: 6000,
+          });
+        }
+        throw err;
+      }
+      setStored(next);
     },
     [stored, setStored],
   );
