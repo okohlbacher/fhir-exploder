@@ -901,26 +901,32 @@ describe('useResourceCounts cache (FOUND-01)', () => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+All four questions below were answered during planning; resolutions are locked into Plans 24-01 through 24-04. Section retained for audit trail.
 
 1. **`useAsyncRun` `autoStart` default stability.**
+   - RESOLVED: Plan 24-01 Task 2 — `autoStart` defaults to `false`; when `true`, `start()` fires on mount AND whenever `deps` change. Phase 24 consumers leave it at `false` and call `start()` imperatively. Phase 25 drill-downs (out of scope here) will opt-in with memoized/primitive deps per Pitfall 7.
    - What we know: D-08 mandates `autoStart?: boolean` with default `false`. Phase 24 consumers leave it `false`. Phase 25 drill-downs will use `true`.
-   - What's unclear: when `autoStart: true`, should the effect auto-cancel + auto-restart on every deps change, or only on mount? Phase 25 drill-downs will need auto-restart on `resourceType` URL change, so "restart on deps change" is the likely answer — but the reference implementation in Pattern 2 calls `start()` on every deps change without guarding for prior run state.
+   - What's unclear (historical): when `autoStart: true`, should the effect auto-cancel + auto-restart on every deps change, or only on mount? Phase 25 drill-downs will need auto-restart on `resourceType` URL change, so "restart on deps change" is the likely answer — but the reference implementation in Pattern 2 calls `start()` on every deps change without guarding for prior run state.
    - Recommendation: ship `autoStart` as "call `start()` on mount AND whenever `deps` change"; document clearly in hook header. Phase 25 integration can refine if drill-down UX demands it.
 
 2. **`useDuplicateReport` `skippedPatients` and cluster state placement.**
+   - RESOLVED: Plan 24-04 Task 2 — each hook owns its accessory `useState` locally and resets accessory state as the FIRST lines of the runner body (before any await), independent of the reducer's `start` action. Pattern applied consistently across all 4 migrated hooks (plausibility, labRanges, duplicate, reference).
    - What we know: D-09 allows retained typed accessory state in each hook. `useDuplicateReport` has three accessory states (`duplicateClusters`, `contentHashClusters`, `skippedPatients`) that don't fit `useAsyncRun`'s `issues: TIssue[]`.
-   - What's unclear: should these accessory states reset in sync with `useAsyncRun`'s `reset` action, or stay independent?
+   - What's unclear (historical): should these accessory states reset in sync with `useAsyncRun`'s `reset` action, or stay independent?
    - Recommendation: the caller uses its own `useState` and calls `setDuplicateClusters([])` etc. at the top of the runner (first line in the runner function, before any await). This keeps reset semantics obvious without coupling accessory state to the reducer.
 
 3. **Should `clearQualityCountCache` accept a serverUrl, or clear all?**
+   - RESOLVED: Plan 24-02 Task 1 — both variants are exported: `clearQualityCountCache(serverUrl: string)` for per-server wipe and `clearAllQualityCountCache(): void` for cross-server wipe. Plan 24-03 Task 3 wires the per-server variant into `SettingsContext.setSettings()` and the cross-server variant into `SettingsPage.handleClearMetricsCache`.
    - What we know: D-03 says `clearQualityCountCache(serverUrl)` clears the current server's entries. D-06 says `clearQualityMetricsCache(serverUrl)` likewise.
-   - What's unclear: `clearAllQualityMetrics()` (existing) is the wipe-everything button. Should `clearQualityCountCache()` (no arg) also exist for the Settings "Clear cache" button's parallel?
+   - What's unclear (historical): `clearAllQualityMetrics()` (existing) is the wipe-everything button. Should `clearQualityCountCache()` (no arg) also exist for the Settings "Clear cache" button's parallel?
    - Recommendation: export both `clearQualityCountCache(serverUrl: string)` AND `clearAllQualityCountCache(): void`. Mirrors the existing `clearAllQualityMetrics` / per-server `QualityMetricsCache#clear()` split. The SettingsPage "Clear cache" button uses the `All` variants; the `setSettings` call-site uses the per-server variants.
 
 4. **useValidationRun / useConformanceRun migration — in Phase 24 or deferred?**
+   - RESOLVED: DEFERRED. CONTEXT.md §domain explicitly scopes Phase 24 to the 4 async report hooks. Plans 24-01 through 24-04 do NOT touch `useValidationRun` or `useConformanceRun`; Plan 24-04 SUMMARY flags both as remaining `cancelledRef` sites for a later milestone. No scope creep.
    - What we know: These two hooks use `cancelledRef` with the same pattern as the 4 target hooks. CONTEXT.md §domain explicitly scopes Phase 24 to the 4 report hooks only.
-   - What's unclear: if `useAsyncRun` is authored in Phase 24, migrating 2 more hooks is a small incremental cost.
+   - What's unclear (historical): if `useAsyncRun` is authored in Phase 24, migrating 2 more hooks is a small incremental cost.
    - Recommendation: out of scope. Honor CONTEXT.md scoping. A later phase can migrate them if justified. This is a deliberate boundary — don't scope-creep.
 
 ---
