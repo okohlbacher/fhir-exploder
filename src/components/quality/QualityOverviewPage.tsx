@@ -388,7 +388,16 @@ export function QualityOverviewPage() {
 
       <OverviewStrip summary={summary} isLoading={!typesLoaded} />
 
-      <Tabs value={activeTab} onChange={handleTabChange} keepMounted>
+      {/*
+        QDDEP-04 (Plan 25-04): parent-level keep-mount flag flipped to `false`.
+        Mantine TabsPanel OR-combines the parent flag with its own: the parent
+        default of `true` forces every panel to stay rendered regardless of a
+        panel's own prop (verified against the installed Mantine source). Only
+        panels that need to unmount on tab switch (Completeness + Coverage --
+        see the two dropped panel props below) get the behavior change. All
+        other panels retain an explicit panel-level flag to opt back in.
+      */}
+      <Tabs value={activeTab} onChange={handleTabChange} keepMounted={false}>
         <Tabs.List>
           <Tabs.Tab value="counts">Counts</Tabs.Tab>
           <Tabs.Tab value="completeness">Completeness</Tabs.Tab>
@@ -404,10 +413,12 @@ export function QualityOverviewPage() {
         <Tabs.Panel value="counts" pt="md" keepMounted>
           <ResourceCountsPanel counts={counts} />
         </Tabs.Panel>
-        <Tabs.Panel value="completeness" pt="md" keepMounted>
+        {/* QDDEP-04: prop dropped so panel unmounts on tab switch and Completeness sampling does not run in the background */}
+        <Tabs.Panel value="completeness" pt="md">
           <CompletenessPanel types={effectiveTypes} client={client} sampleSize={sampleSize} patientIds={scopedPatientIds} />
         </Tabs.Panel>
-        <Tabs.Panel value="coverage" pt="md" keepMounted>
+        {/* QDDEP-04: prop dropped so panel unmounts on tab switch and Coding Coverage sampling does not run in the background */}
+        <Tabs.Panel value="coverage" pt="md">
           <CodingCoveragePanel types={effectiveTypes} client={client} sampleSize={sampleSize} patientIds={scopedPatientIds} />
         </Tabs.Panel>
         <Tabs.Panel value="validation" pt="md" keepMounted>

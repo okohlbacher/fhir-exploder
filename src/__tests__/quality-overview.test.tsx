@@ -141,6 +141,30 @@ vi.mock('../components/quality/LabRangesPanel', () => ({
   ),
 }));
 
+// ----- DuplicatesPanel / ReferencesPanel / TrendsPanel mocks -----
+// QDDEP-04 (Plan 25-04) addition: these panels retain their `keepMounted` prop
+// after the QDDEP-04 change, so they still mount on initial render regardless
+// of the active tab. Without mocks their real implementations would invoke
+// sampleResources on mount (via hook effects), which would pollute the spy in
+// the `Counts tab cold-open` regression test. Mocking them out keeps that test
+// focused on Completeness + Coding Coverage (the panels the plan actually
+// dropped `keepMounted` from).
+vi.mock('../components/quality/DuplicatesPanel', () => ({
+  DuplicatesPanel: () => (
+    <div data-testid="mock-DuplicatesPanel">Mock Duplicates Panel</div>
+  ),
+}));
+vi.mock('../components/quality/ReferencesPanel', () => ({
+  ReferencesPanel: () => (
+    <div data-testid="mock-ReferencesPanel">Mock References Panel</div>
+  ),
+}));
+vi.mock('../components/quality/TrendsPanel', () => ({
+  TrendsPanel: () => (
+    <div data-testid="mock-TrendsPanel">Mock Trends Panel</div>
+  ),
+}));
+
 // ----- Imports AFTER mocks are configured -----
 import { MemoryRouter } from 'react-router-dom';
 import { QualityOverviewPage } from '../components/quality/QualityOverviewPage';
@@ -150,6 +174,12 @@ import {
   useQualityMetrics as useQualityMetricsContext,
 } from '../quality/QualityMetricsContext';
 import { useEffect } from 'react';
+// QDDEP-04 (Plan 25-04): namespace import so `vi.spyOn` can observe calls to
+// `sampleResources` without mocking the whole module. The regression test
+// below asserts that cold-opening the Counts tab does NOT invoke sampling
+// (Completeness + Coding Tabs.Panel entries no longer carry the parent's
+// keep-mount flag, so their hooks do not run until the user navigates).
+import * as SamplingModule from '../quality/sampling';
 
 function renderPage() {
   return render(
@@ -229,13 +259,52 @@ describe('QualityOverviewPage (QUAL-01)', () => {
     expect(sortableHeaders.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('tab panels mount with keepMounted — Completeness (05-03), Coverage (05-04), and Validation (05-05) are all mocked', () => {
+  it('still-keep-mounted tab panels mount on initial render — Validation (05-05) remains keep-mounted after QDDEP-04', () => {
+    // QDDEP-04 (Plan 25-04): the Completeness and Coding Coverage Tabs.Panel
+    // entries were changed so they no longer force-render when inactive (the
+    // parent <Tabs> now passes keepMounted={false}; the panels themselves no
+    // longer override it). Because the Counts tab is the default active tab,
+    // the Completeness and Coding mock components are NO LONGER in the DOM
+    // on initial render — only panels that retain their own keep-mount prop
+    // (Validation, Plausibility, Lab Ranges, Duplicates, References, Trends)
+    // render their children eagerly. This test narrows to Validation as a
+    // representative of the 7-panel still-keep-mounted set.
     mockUseResourceCounts.mockReturnValue({ Patient: 120 });
     renderPage();
-    // Plans 05-03, 05-04, and 05-05 replaced their respective stubs; tests mock them.
-    expect(screen.getByTestId('mock-CompletenessPanel')).toBeDefined();
-    expect(screen.getByTestId('mock-CodingCoveragePanel')).toBeDefined();
     expect(screen.getByTestId('mock-ValidationPanel')).toBeDefined();
+    // And confirm the two dropped panels are NOT in the DOM when Counts is active:
+    expect(screen.queryByTestId('mock-CompletenessPanel')).toBeNull();
+    expect(screen.queryByTestId('mock-CodingCoveragePanel')).toBeNull();
+  });
+
+  it('Counts tab cold-open does not fire Completeness or Coding sampling (QDDEP-04)', async () => {
+    // Regression guard for Plan 25-04 / QDDEP-04 / CONTEXT.md D-14.
+    // Opening `/quality?tab=counts` cold MUST NOT trigger any sampleResources
+    // calls from Completeness or Coding Coverage panels -- those panels no
+    // longer mount until the user actively selects their tabs. This test uses
+    // vi.spyOn (not a full mock) so that, if a regression re-introduces the
+    // parent-level keepMounted flag, the spy will record the background call
+    // and fail the assertion.
+    const sampleResourcesSpy = vi.spyOn(SamplingModule, 'sampleResources');
+    mockUseResourceCounts.mockReturnValue({ Patient: 120, Condition: 250 });
+
+    render(
+      <MantineProvider>
+        <MemoryRouter initialEntries={['/quality?tab=counts']}>
+          <QualityMetricsProvider>
+            <QualityOverviewPage />
+          </QualityMetricsProvider>
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+
+    // Flush any initial-mount async microtasks so a regression would have had
+    // the opportunity to fire sampleResources before we assert.
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(sampleResourcesSpy).not.toHaveBeenCalled();
+    sampleResourcesSpy.mockRestore();
   });
 
   it('Show empty types toggle reveals zero-count rows', () => {
