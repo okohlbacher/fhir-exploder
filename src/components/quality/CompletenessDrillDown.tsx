@@ -1,24 +1,20 @@
 /**
  * CompletenessDrillDown — /quality/completeness/:type sub-page.
  *
- * Per-field breakdown of populated/total counts for a single resource
- * type, using the same sampling hook as the parent panel so cache hits
- * carry across the navigation.
+ * Per-field breakdown of populated/total counts for a single resource type,
+ * using the same sampling hook as the parent panel so cache hits carry
+ * across navigation. PARTIAL-wraps DrillDownShell (QDDEP-02 / Plan 25-03,
+ * Option A): the shell owns Back/Title/error-alert chrome; the Tabs +
+ * DrillDownList + "note" body is rendered as a sibling below the shell.
  *
- * Layout (05-UI-SPEC):
- *   Back button (auto-focused) → Title → Stack of rows where
- *   each row is a Group justify="space-between" with:
- *     left  = <Code>{path}</Code>
- *     right = <Progress /> + "{pct}% ({count}/{sampleSize})"
- *
- * Empty state: when the type has no bundled MII profile AND no
- * min>=1 paths, we surface the spec's fallback copy.
+ * `useCompletenessReport` is hook-driven (`state === 'loading' | 'error' | data`)
+ * rather than AsyncRunStatus-driven. The syntheticRun helper maps hook state
+ * into the shell's `run` shape so the shell's unified chrome applies.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useOutletContext, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useOutletContext, useParams } from 'react-router-dom';
 import {
   Alert,
-  Button,
   Code,
   Group,
   Progress,
@@ -26,22 +22,20 @@ import {
   Stack,
   Tabs,
   Text,
-  Title,
 } from '@mantine/core';
-import { IconArrowLeft } from '@tabler/icons-react';
 
 import { useCompletenessReport } from '../../hooks/useCompletenessReport';
 import { useSampleSize } from './SampleSizeControl';
 import type { QualityOutletContext } from './QualityLayout';
 import { getProfileForType } from '../../quality/profiles';
 import { ResourceIssueTable } from './ResourceIssueTable';
+import { DrillDownShell, type DrillDownShellProps } from './DrillDownShell';
 import type { NormalizedIssue } from '../../quality/types';
 
 export function CompletenessDrillDown() {
   const { type = '' } = useParams<{ type: string }>();
   const { client } = useOutletContext<QualityOutletContext>();
   const [sampleSize] = useSampleSize();
-  const backRef = useRef<HTMLAnchorElement | null>(null);
 
   // Scope to a single type — same hook, single-element array. Memoise the
   // array so its identity is stable across renders (parity with
@@ -66,52 +60,52 @@ export function CompletenessDrillDown() {
     );
   }, [state]);
 
+  // Map hook-driven state into shell's AsyncRunStatus run-shape. Completeness
+  // has no progress concept exposed by the hook, so progress is {0,0} and
+  // RunProgress renders null — expected for this asymmetric drill-down.
+  // Data state maps to 'cancelled' so that the shell (with issues=[]) stays
+  // silent on the complete-empty green alert; the bespoke Tabs body below
+  // is what actually renders the loaded data.
+  const syntheticRun = useMemo<DrillDownShellProps['run']>(() => ({
+    status:
+      state === undefined || state === 'loading'
+        ? 'running'
+        : state === 'error'
+          ? 'error'
+          : 'cancelled',
+    progress: { current: 0, total: 0 },
+  }), [state]);
+
   const handleFieldClick = (path: string) => {
     setFieldFilter(path);
     setActiveTab('resources');
   };
 
-  useEffect(() => {
-    // Auto-focus the back button on mount per accessibility spec.
-    backRef.current?.focus();
-  }, []);
-
   const profile = getProfileForType(type);
 
   return (
-    <Stack gap="md" p="xl">
-      <Button
-        variant="subtle"
-        leftSection={<IconArrowLeft size={16} />}
-        component={Link}
-        to="/quality"
-        ref={backRef}
-      >
-        Back to Completeness
-      </Button>
-
-      <Title order={2}>
-        {type} — Completeness breakdown
-      </Title>
-
-      {!profile && (
-        <Alert color="yellow" variant="light">
-          No MII profile bundled for {type}. Structural validation skipped for this type.
-        </Alert>
-      )}
-
-      {state === undefined || state === 'loading' ? (
-        <Stack gap="xs">
-          {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} height={24} radius="sm" />
-          ))}
-        </Stack>
-      ) : state === 'error' ? (
-        <Alert color="red" variant="light">
-          Failed to sample {type}. Return to the Completeness tab and recompute metrics.
-        </Alert>
-      ) : (
-        <>
+    <>
+      <DrillDownShell
+        title={`${type} — Completeness breakdown`}
+        backHref="/quality"
+        run={syntheticRun}
+        issues={[]}
+        errorMessage={`Failed to sample ${type}. Return to the Completeness tab and recompute metrics.`}
+        emptyMessage="(no-op — bespoke body below)"
+      />
+      <Stack gap="md" p="xl" pt={0}>
+        {!profile && (
+          <Alert color="yellow" variant="light">
+            No MII profile bundled for {type}. Structural validation skipped for this type.
+          </Alert>
+        )}
+        {state === undefined || state === 'loading' ? (
+          <Stack gap="xs">
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} height={24} radius="sm" />
+            ))}
+          </Stack>
+        ) : state === 'error' ? null : (
           <Tabs value={activeTab} onChange={setActiveTab}>
             <Tabs.List>
               <Tabs.Tab value="fields">Fields</Tabs.Tab>
@@ -134,9 +128,9 @@ export function CompletenessDrillDown() {
               <ResourceIssueTable issues={normalizedIssues} initialFieldFilter={fieldFilter} />
             </Tabs.Panel>
           </Tabs>
-        </>
-      )}
-    </Stack>
+        )}
+      </Stack>
+    </>
   );
 }
 
