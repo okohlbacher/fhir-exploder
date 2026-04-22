@@ -178,7 +178,7 @@ Phase 23 (close v1.3) ─┬─▶ Phase 24 (fetch foundation, incl. line-75 use
 |-------|-----------|----------------|--------|-----------|
 | 14-20 (v1.2) | v1.2 | 22/22 | ✅ Shipped | 2026-04-15 |
 | 21-22 (v1.3) | v1.3 | 9/9 | ✅ Shipped | 2026-04-16 |
-| 23. v1.3 Close-Out | v1.4 | 4/4 | Complete    | 2026-04-17 |
+| 23. v1.3 Close-Out | v1.4 | 7/7 | Complete    | 2026-04-22 |
 | 24. Data-Fetching Foundation | v1.4 | 4/4 | Complete    | 2026-04-17 |
 | 25. Quality Module Dedup | v1.4 | 0/? | 📋 Not started | — |
 | 26. App-Shell Dedup | v1.4 | 0/? | 📋 Not started | — |
