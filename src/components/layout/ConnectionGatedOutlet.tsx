@@ -13,10 +13,16 @@
  * API (D-01):
  *   - Default form: `<ConnectionGatedOutlet />` — renders `<Outlet />`
  *     when connected, canonical alert when not.
+ *   - Children form: `<ConnectionGatedOutlet>{customConnectedTree}</ConnectionGatedOutlet>`
+ *     — children replace the default connected branch (the `<Outlet />`);
+ *     disconnected branch still renders the canonical alert. This is the
+ *     typical layout use case — each layout's connected tree wraps an
+ *     <Outlet> with its own Medplum-provider + Outlet-context, but the
+ *     disconnected alert stays de-duplicated.
  *   - Render-prop form: `<ConnectionGatedOutlet render={(connected) => ...} />`
- *     — caller fully controls both branches. The typical layout use case
- *     is the render-prop form, because each layout wraps the connected
- *     branch with a layout-specific Medplum-provider + Outlet-context.
+ *     — full override of BOTH branches. Use when the caller needs custom
+ *     disconnected UI too.
+ *   - Precedence: `render` > `children` > defaults.
  *
  * Canonical alert copy (D-04) is lifted verbatim from the pre-migration
  * QualityLayout.tsx:85-101 — same icon, same color, same copy, same link.
@@ -31,16 +37,23 @@ import { useConnection } from '../../hooks/useConnection';
 
 export interface ConnectionGatedOutletProps {
   /**
-   * Optional render-prop override. Receives `connected` (true when
+   * Optional render-prop override — full control of BOTH branches.
+   * Receives `connected` (true when
    * `useConnection().state.status === 'connected'`) and returns the
-   * node to render. If omitted, default behavior is connected → Outlet,
-   * disconnected → canonical alert.
+   * node to render. Takes precedence over `children` if both are provided.
    */
   render?: (connected: boolean) => ReactNode;
+  /**
+   * Optional connected-branch replacement. When provided, renders in
+   * place of the default `<Outlet />` while connected; the disconnected
+   * branch still shows the canonical alert. Typical layout use.
+   */
+  children?: ReactNode;
 }
 
 export function ConnectionGatedOutlet({
   render,
+  children,
 }: ConnectionGatedOutletProps = {}): JSX.Element {
   const { state } = useConnection();
   const connected = state.status === 'connected';
@@ -50,7 +63,7 @@ export function ConnectionGatedOutlet({
   }
 
   if (connected) {
-    return <Outlet />;
+    return <>{children ?? <Outlet />}</>;
   }
 
   return (

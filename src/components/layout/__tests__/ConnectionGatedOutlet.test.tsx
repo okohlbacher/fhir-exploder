@@ -162,4 +162,59 @@ describe('ConnectionGatedOutlet', () => {
     // Default alert copy MUST be absent when override is in use.
     expect(screen.queryByText(/Not connected to a FHIR server/i)).toBeNull();
   });
+
+  it('children slot + connected renders the provided children (no default Outlet)', () => {
+    mocks.connectionState = {
+      status: 'connected',
+      client: {},
+      capability: { resourceType: 'CapabilityStatement' },
+    };
+
+    renderWithRoutes(
+      <ConnectionGatedOutlet>
+        <div data-testid="custom-connected-children">wrapped</div>
+      </ConnectionGatedOutlet>,
+    );
+
+    expect(screen.getByTestId('custom-connected-children')).toBeTruthy();
+    // Default Outlet child from the index route did NOT mount (children
+    // replaced it).
+    expect(screen.queryByTestId('outlet-child')).toBeNull();
+    // And no alert (still connected).
+    expect(screen.queryByText(/Not connected to a FHIR server/i)).toBeNull();
+  });
+
+  it('children slot + disconnected still renders the canonical alert (children ignored)', () => {
+    mocks.connectionState = { status: 'idle' };
+
+    renderWithRoutes(
+      <ConnectionGatedOutlet>
+        <div data-testid="custom-connected-children">wrapped</div>
+      </ConnectionGatedOutlet>,
+    );
+
+    // Canonical alert present.
+    expect(screen.getByText(/Not connected to a FHIR server/i)).toBeTruthy();
+    // Children NOT rendered (disconnected branch uses canonical alert).
+    expect(screen.queryByTestId('custom-connected-children')).toBeNull();
+  });
+
+  it('render-prop takes precedence over children when both are provided', () => {
+    mocks.connectionState = {
+      status: 'connected',
+      client: {},
+      capability: { resourceType: 'CapabilityStatement' },
+    };
+
+    renderWithRoutes(
+      <ConnectionGatedOutlet
+        render={() => <div data-testid="render-wins">r</div>}
+      >
+        <div data-testid="children-lose">c</div>
+      </ConnectionGatedOutlet>,
+    );
+
+    expect(screen.getByTestId('render-wins')).toBeTruthy();
+    expect(screen.queryByTestId('children-lose')).toBeNull();
+  });
 });
