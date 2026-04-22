@@ -72,17 +72,11 @@ export function CodingDrillDown() {
     );
   }, [state]);
 
-  // Map hook state to shell's AsyncRunStatus run-shape. progress.total=0 keeps
-  // RunProgress silent (coding has no per-type sampled-count running progress).
-  // Data state maps to 'cancelled' so the shell's empty-state green alert does
-  // NOT fire — the bespoke body below renders the loaded content instead.
+  // Map hook state to shell's AsyncRunStatus. Data→'cancelled' keeps the
+  // shell silent (with issues=[]) so the bespoke body below renders the
+  // loaded content. progress{0,0} → RunProgress renders null.
   const syntheticRun = useMemo<DrillDownShellProps['run']>(() => ({
-    status:
-      state === undefined || state === 'loading'
-        ? 'running'
-        : state === 'error'
-          ? 'error'
-          : 'cancelled',
+    status: state === undefined || state === 'loading' ? 'running' : state === 'error' ? 'error' : 'cancelled',
     progress: { current: 0, total: 0 },
   }), [state]);
 

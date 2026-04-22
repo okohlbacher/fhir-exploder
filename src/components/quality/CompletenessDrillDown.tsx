@@ -13,16 +13,7 @@
  */
 import { useMemo, useState } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
-import {
-  Alert,
-  Code,
-  Group,
-  Progress,
-  Skeleton,
-  Stack,
-  Tabs,
-  Text,
-} from '@mantine/core';
+import { Alert, Code, Group, Progress, Skeleton, Stack, Tabs, Text } from '@mantine/core';
 
 import { useCompletenessReport } from '../../hooks/useCompletenessReport';
 import { useSampleSize } from './SampleSizeControl';
@@ -60,19 +51,11 @@ export function CompletenessDrillDown() {
     );
   }, [state]);
 
-  // Map hook-driven state into shell's AsyncRunStatus run-shape. Completeness
-  // has no progress concept exposed by the hook, so progress is {0,0} and
-  // RunProgress renders null — expected for this asymmetric drill-down.
-  // Data state maps to 'cancelled' so that the shell (with issues=[]) stays
-  // silent on the complete-empty green alert; the bespoke Tabs body below
-  // is what actually renders the loaded data.
+  // Map hook-driven state to shell's AsyncRunStatus. Data→'cancelled' keeps
+  // the shell silent (with issues=[]) so the bespoke Tabs body below renders
+  // the loaded data. progress{0,0} → RunProgress renders null.
   const syntheticRun = useMemo<DrillDownShellProps['run']>(() => ({
-    status:
-      state === undefined || state === 'loading'
-        ? 'running'
-        : state === 'error'
-          ? 'error'
-          : 'cancelled',
+    status: state === undefined || state === 'loading' ? 'running' : state === 'error' ? 'error' : 'cancelled',
     progress: { current: 0, total: 0 },
   }), [state]);
 
