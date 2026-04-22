@@ -32,7 +32,6 @@ import {
   Button,
   Group,
   Paper,
-  Progress,
   Select,
   Stack,
   Tabs,
@@ -60,6 +59,7 @@ import { useConformanceRun } from '../../hooks/useConformanceRun';
 import { createTerminologyClient } from '../../terminology/terminologyClient';
 import { ValidationIssueList } from './ValidationIssueList';
 import { ResourceIssueTable } from './ResourceIssueTable';
+import { RunProgress } from './RunProgress';
 import type { NormalizedIssue } from '../../quality/types';
 
 export interface ValidationPanelProps {
@@ -157,11 +157,6 @@ export function ValidationPanel(_props: ValidationPanelProps) {
     settings ?? null,
     resourceType,
   );
-
-  const pct =
-    run.progress.total > 0
-      ? Math.round((run.progress.current / run.progress.total) * 100)
-      : 0;
 
   const canExport = run.status === 'complete' || run.status === 'cancelled';
 
@@ -375,13 +370,7 @@ export function ValidationPanel(_props: ValidationPanelProps) {
 
       {run.status === 'running' && (
         <Paper withBorder p="sm" radius="sm">
-          <Stack gap="xs" aria-live="polite">
-            <Text size="sm">
-              Validating {resourceType} ({run.progress.current}/
-              {run.progress.total})...
-            </Text>
-            <Progress value={pct} animated />
-          </Stack>
+          <RunProgress run={run} label={`Validating ${resourceType}`} />
         </Paper>
       )}
 

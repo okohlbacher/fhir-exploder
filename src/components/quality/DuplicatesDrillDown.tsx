@@ -7,19 +7,13 @@
  */
 import { useEffect, useRef } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
-import {
-  Alert,
-  Button,
-  Progress,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Alert, Button, Stack, Title } from '@mantine/core';
 import { IconAlertTriangle, IconArrowLeft, IconCheck } from '@tabler/icons-react';
 import type { QualityOutletContext } from './QualityLayout';
 import { useSampleSize } from './SampleSizeControl';
 import { useDuplicateReport } from '../../hooks/useDuplicateReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
+import { RunProgress } from './RunProgress';
 
 export function DuplicatesDrillDown() {
   const { client } = useOutletContext<QualityOutletContext>();
@@ -31,11 +25,6 @@ export function DuplicatesDrillDown() {
     types: ['Patient'],
     sampleSize,
   });
-
-  const pct =
-    run.progress.total > 0
-      ? Math.round((run.progress.current / run.progress.total) * 100)
-      : 0;
 
   useEffect(() => {
     backRef.current?.focus();
@@ -63,14 +52,7 @@ export function DuplicatesDrillDown() {
 
       <Title order={2}>Duplicate Detection -- Drill-down</Title>
 
-      {run.status === 'running' && (
-        <Stack gap="xs" aria-live="polite">
-          <Text size="sm">
-            Matching patients ({run.progress.current}/{run.progress.total})...
-          </Text>
-          <Progress value={pct} animated />
-        </Stack>
-      )}
+      <RunProgress run={run} label="Matching patients" />
 
       {run.status === 'error' && (
         <Alert variant="light" color="red" icon={<IconAlertTriangle size={20} />}>

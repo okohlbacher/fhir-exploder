@@ -6,20 +6,14 @@
  */
 import { useEffect, useRef } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
-import {
-  Alert,
-  Button,
-  Progress,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Alert, Button, Stack, Title } from '@mantine/core';
 import { IconAlertTriangle, IconArrowLeft, IconCheck } from '@tabler/icons-react';
 import type { QualityOutletContext } from './QualityLayout';
 import { useSampleSize } from './SampleSizeControl';
 import { useSettings } from '../../hooks/useSettings';
 import { useLabRangesReport } from '../../hooks/useLabRangesReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
+import { RunProgress } from './RunProgress';
 
 export function LabRangesDrillDown() {
   const { client } = useOutletContext<QualityOutletContext>();
@@ -32,11 +26,6 @@ export function LabRangesDrillDown() {
     sampleSize,
     settings: settings ?? null,
   });
-
-  const pct =
-    run.progress.total > 0
-      ? Math.round((run.progress.current / run.progress.total) * 100)
-      : 0;
 
   useEffect(() => {
     backRef.current?.focus();
@@ -66,14 +55,7 @@ export function LabRangesDrillDown() {
         Observation -- Lab Range drill-down
       </Title>
 
-      {run.status === 'running' && (
-        <Stack gap="xs" aria-live="polite">
-          <Text size="sm">
-            Checking Observations ({run.progress.current}/{run.progress.total})...
-          </Text>
-          <Progress value={pct} animated />
-        </Stack>
-      )}
+      <RunProgress run={run} label="Checking Observations" />
 
       {run.status === 'error' && (
         <Alert variant="light" color="red" icon={<IconAlertTriangle size={20} />}>

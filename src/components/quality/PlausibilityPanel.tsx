@@ -13,7 +13,6 @@ import {
   Button,
   Group,
   Paper,
-  Progress,
   Select,
   Stack,
   Text,
@@ -29,6 +28,7 @@ import { useQualityMetrics } from '../../quality/QualityMetricsContext';
 import { percentClean } from '../../quality/percent';
 import { usePlausibilityReport } from '../../hooks/usePlausibilityReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
+import { RunProgress } from './RunProgress';
 import type { NormalizedIssue } from '../../quality/types';
 
 export interface PlausibilityPanelProps {
@@ -75,11 +75,6 @@ export function PlausibilityPanel({ types, client, sampleSize, patientIds }: Pla
     settings: settings ?? null,
     patientIds,
   });
-
-  const pct =
-    run.progress.total > 0
-      ? Math.round((run.progress.current / run.progress.total) * 100)
-      : 0;
 
   // Filter issues by check type
   const filteredIssues = useMemo((): NormalizedIssue[] => {
@@ -166,12 +161,7 @@ export function PlausibilityPanel({ types, client, sampleSize, patientIds }: Pla
 
       {run.status === 'running' && (
         <Paper withBorder p="sm" radius="sm">
-          <Stack gap="xs" aria-live="polite">
-            <Text size="sm">
-              Checking {resourceType} ({run.progress.current}/{run.progress.total})...
-            </Text>
-            <Progress value={pct} animated />
-          </Stack>
+          <RunProgress run={run} label={`Checking ${resourceType}`} />
         </Paper>
       )}
 

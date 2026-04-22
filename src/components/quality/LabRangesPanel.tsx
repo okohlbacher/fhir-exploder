@@ -12,10 +12,8 @@ import {
   Button,
   Group,
   Paper,
-  Progress,
   Stack,
   Table,
-  Text,
 } from '@mantine/core';
 import {
   IconAlertTriangle,
@@ -29,6 +27,7 @@ import { useQualityMetrics } from '../../quality/QualityMetricsContext';
 import { percentClean } from '../../quality/percent';
 import { useLabRangesReport } from '../../hooks/useLabRangesReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
+import { RunProgress } from './RunProgress';
 
 export interface LabRangesPanelProps {
   client: MedplumClient;
@@ -45,11 +44,6 @@ export function LabRangesPanel({ client, sampleSize, patientIds }: LabRangesPane
     settings: settings ?? null,
     patientIds,
   });
-
-  const pct =
-    run.progress.total > 0
-      ? Math.round((run.progress.current / run.progress.total) * 100)
-      : 0;
 
   // Phase 18 / Plan 18-02: push overallLabRanges rollup to QualityMetricsContext
   // on terminal status. Special case: noRange === checked → push undefined
@@ -107,12 +101,7 @@ export function LabRangesPanel({ client, sampleSize, patientIds }: LabRangesPane
 
       {run.status === 'running' && (
         <Paper withBorder p="sm" radius="sm">
-          <Stack gap="xs" aria-live="polite">
-            <Text size="sm">
-              Checking Observations ({run.progress.current}/{run.progress.total})...
-            </Text>
-            <Progress value={pct} animated />
-          </Stack>
+          <RunProgress run={run} label="Checking Observations" />
         </Paper>
       )}
 

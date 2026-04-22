@@ -6,20 +6,14 @@
  */
 import { useEffect, useRef } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
-import {
-  Alert,
-  Button,
-  Progress,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Alert, Button, Stack, Title } from '@mantine/core';
 import { IconAlertTriangle, IconArrowLeft, IconCheck } from '@tabler/icons-react';
 import type { QualityOutletContext } from './QualityLayout';
 import { useSampleSize } from './SampleSizeControl';
 import { useSettings } from '../../hooks/useSettings';
 import { usePlausibilityReport } from '../../hooks/usePlausibilityReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
+import { RunProgress } from './RunProgress';
 
 export function PlausibilityDrillDown() {
   const { type = '' } = useParams<{ type: string }>();
@@ -34,11 +28,6 @@ export function PlausibilityDrillDown() {
     sampleSize,
     settings: settings ?? null,
   });
-
-  const pct =
-    run.progress.total > 0
-      ? Math.round((run.progress.current / run.progress.total) * 100)
-      : 0;
 
   useEffect(() => {
     backRef.current?.focus();
@@ -68,14 +57,7 @@ export function PlausibilityDrillDown() {
         {type} -- Plausibility drill-down
       </Title>
 
-      {run.status === 'running' && (
-        <Stack gap="xs" aria-live="polite">
-          <Text size="sm">
-            Checking {type} ({run.progress.current}/{run.progress.total})...
-          </Text>
-          <Progress value={pct} animated />
-        </Stack>
-      )}
+      <RunProgress run={run} label={`Checking ${type}`} />
 
       {run.status === 'error' && (
         <Alert variant="light" color="red" icon={<IconAlertTriangle size={20} />}>

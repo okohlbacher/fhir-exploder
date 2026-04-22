@@ -13,7 +13,6 @@ import {
   Button,
   Group,
   Paper,
-  Progress,
   Select,
   Stack,
   Text,
@@ -28,6 +27,7 @@ import { useQualityMetrics } from '../../quality/QualityMetricsContext';
 import { percentClean } from '../../quality/percent';
 import { useReferenceReport } from '../../hooks/useReferenceReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
+import { RunProgress } from './RunProgress';
 import type { NormalizedIssue } from '../../quality/types';
 
 export interface ReferencesPanelProps {
@@ -56,11 +56,6 @@ export function ReferencesPanel({ types, client, sampleSize, patientIds }: Refer
     patientIds,
   });
 
-  const pct =
-    run.progress.total > 0
-      ? Math.round((run.progress.current / run.progress.total) * 100)
-      : 0;
-
   const filteredIssues = useMemo((): NormalizedIssue[] => {
     if (categoryFilter === 'all') return run.issues;
     return run.issues.filter((issue) =>
@@ -83,14 +78,14 @@ export function ReferencesPanel({ types, client, sampleSize, patientIds }: Refer
     [types],
   );
 
-  // Progress message -- the hook's batched broken-ref check updates progress
-  // as (current, total batches). We show the verify-targets phase while batches
-  // are being processed (total > 0), and the "checking references" phase
-  // before that (when total is still 0).
-  const progressMessage =
+  // Progress label — RunProgress appends the (current/total)... suffix. The
+  // hook's batched broken-ref check updates progress as (current, total batches).
+  // We show the verify-targets phase while batches are being processed (total > 0),
+  // and the "checking references" phase before that (when total is still 0).
+  const progressLabel =
     run.progress.total === 0
-      ? `Checking references in ${resourceType} (${run.progress.current}/${run.progress.total})...`
-      : `Verifying reference targets (${run.progress.current}/${run.progress.total} batches)...`;
+      ? `Checking references in ${resourceType}`
+      : 'Verifying reference target batches';
 
   return (
     <Stack gap="md">
@@ -133,10 +128,7 @@ export function ReferencesPanel({ types, client, sampleSize, patientIds }: Refer
 
       {run.status === 'running' && (
         <Paper withBorder p="sm" radius="sm">
-          <Stack gap="xs" aria-live="polite">
-            <Text size="sm">{progressMessage}</Text>
-            <Progress value={pct} animated />
-          </Stack>
+          <RunProgress run={run} label={progressLabel} />
         </Paper>
       )}
 

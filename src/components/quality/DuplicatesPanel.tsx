@@ -16,7 +16,6 @@ import {
   Button,
   Group,
   Paper,
-  Progress,
   Select,
   Stack,
   Text,
@@ -31,6 +30,7 @@ import { useQualityMetrics } from '../../quality/QualityMetricsContext';
 import { percentClean } from '../../quality/percent';
 import { useDuplicateReport } from '../../hooks/useDuplicateReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
+import { RunProgress } from './RunProgress';
 import type { NormalizedIssue } from '../../quality/types';
 
 export interface DuplicatesPanelProps {
@@ -58,11 +58,6 @@ export function DuplicatesPanel({ types, client, sampleSize, patientIds }: Dupli
     sampleSize,
     patientIds,
   });
-
-  const pct =
-    run.progress.total > 0
-      ? Math.round((run.progress.current / run.progress.total) * 100)
-      : 0;
 
   // Filter issues by category prefix
   const filteredIssues = useMemo((): NormalizedIssue[] => {
@@ -131,20 +126,14 @@ export function DuplicatesPanel({ types, client, sampleSize, patientIds }: Dupli
     [types],
   );
 
-  // Phase-aware progress message. Patient pass runs first and sets progress
-  // against patientSample.length; after that content hash hashing runs.
-  const progressMessage = (() => {
-    // Heuristic: if we have patient clusters known, we're past the patient pass.
-    // While running, the hook sets progress without switching labels, so we use
-    // a simple rule: show "Matching patients" until the patient pass is done
-    // (run.duplicateClusters updated) or until skippedPatients is set.
-    const inPatientPhase =
-      run.duplicateClusters.length === 0 && run.skippedPatients === 0;
-    if (inPatientPhase) {
-      return `Matching patients (${run.progress.current}/${run.progress.total})...`;
-    }
-    return `Hashing ${resourceType} resources (${run.progress.current}/${run.progress.total})...`;
-  })();
+  // Phase-aware progress label — RunProgress appends the (current/total)... suffix.
+  // Heuristic: if we have patient clusters known, we're past the patient pass.
+  // Show "Matching patients" until the patient pass is done (duplicateClusters
+  // updated) or until skippedPatients is set.
+  const progressLabel =
+    run.duplicateClusters.length === 0 && run.skippedPatients === 0
+      ? 'Matching patients'
+      : `Hashing ${resourceType} resources`;
 
   return (
     <Stack gap="md">
@@ -187,10 +176,7 @@ export function DuplicatesPanel({ types, client, sampleSize, patientIds }: Dupli
 
       {run.status === 'running' && (
         <Paper withBorder p="sm" radius="sm">
-          <Stack gap="xs" aria-live="polite">
-            <Text size="sm">{progressMessage}</Text>
-            <Progress value={pct} animated />
-          </Stack>
+          <RunProgress run={run} label={progressLabel} />
         </Paper>
       )}
 
