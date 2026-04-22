@@ -26,68 +26,13 @@ import {
 } from '@mantine/core';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { CodeableConceptDisplay } from '@medplum/react';
-import type { CodeableConcept, Resource } from '@medplum/fhirtypes';
+import type { CodeableConcept } from '@medplum/fhirtypes';
 
 import { useCodingCoverage } from '../../hooks/useCodingCoverage';
 import { useSampleSize } from './SampleSizeControl';
 import type { QualityOutletContext } from './QualityLayout';
-import { sampleResources } from '../../quality/sampling';
-import { classifyCodedFields } from '../../quality/codingCoverageWalker';
 import { ResourceIssueTable } from './ResourceIssueTable';
-import type { ClassifiedCodedField, NormalizedIssue } from '../../quality/types';
-
-/**
- * Fetch a sample and collect per-path example CodeableConcepts.
- * Prefer systemCode examples; fall back to textOnly; then empty.
- */
-function useExamplesByPath(
-  client: QualityOutletContext['client'],
-  type: string,
-  sampleSize: number,
-): Record<string, CodeableConcept | undefined> {
-  const [examples, setExamples] = useState<
-    Record<string, CodeableConcept | undefined>
-  >({});
-
-  useEffect(() => {
-    let cancelled = false;
-    sampleResources(client, type, sampleSize)
-      .then((sample: Resource[]) => {
-        if (cancelled) return;
-        const byPath: Record<string, CodeableConcept | undefined> = {};
-        const fallback: Record<string, CodeableConcept | undefined> = {};
-        const typePrefix = `${type}.`;
-        for (const r of sample) {
-          const fields: ClassifiedCodedField[] = classifyCodedFields(r);
-          for (const f of fields) {
-            const stripped = f.path.startsWith(typePrefix)
-              ? f.path.slice(typePrefix.length)
-              : f.path;
-            const key = stripped.replace(/\[\d+\]/g, '[*]');
-            if (!byPath[key] && f.classification === 'systemCode' && f.value) {
-              byPath[key] = f.value;
-            } else if (!fallback[key] && f.value) {
-              fallback[key] = f.value;
-            }
-          }
-        }
-        // Backfill with textOnly/empty examples where no systemCode was found.
-        for (const k of Object.keys(fallback)) {
-          if (!byPath[k]) byPath[k] = fallback[k];
-        }
-        setExamples(byPath);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setExamples({});
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [client, type, sampleSize]);
-
-  return examples;
-}
+import type { NormalizedIssue } from '../../quality/types';
 
 function pct(numerator: number, denominator: number): number {
   if (denominator <= 0) return 0;
@@ -104,12 +49,16 @@ export function CodingDrillDown() {
   const reports = useCodingCoverage(client, singleTypeList, sampleSize);
   const state = reports[type];
 
-  // TODO: Consider shared sample cache to avoid double-fetching when switching between drill-down views (Phase 5 IN-08)
-  // Fetch examples in parallel so the drill-down can show a
-  // CodeableConceptDisplay per path. Cached via QualityMetricsCache by
-  // virtue of useCodingCoverage — this parallel fetch is intentionally
-  // simple rather than reusing the cached sample.
-  const examplesByPath = useExamplesByPath(client, type, sampleSize);
+  // Phase 25 Plan 01 (QDDEP-01): examples come from the same
+  // PerTypeCoverageReport the parent hook already produced — no second
+  // sampleResources fetch. Returns an empty map while the report is
+  // pending/errored so the table renders with '—' placeholders. Guarded
+  // on `state?.perPathExamples` to tolerate pre-QDDEP-01 cached report
+  // blobs (missing the field) without crashing.
+  const examplesByPath = useMemo<Record<string, CodeableConcept | undefined>>(() => {
+    if (!state || state === 'loading' || state === 'error') return {};
+    return state.perPathExamples ?? {};
+  }, [state]);
 
   const [activeTab, setActiveTab] = useState<string | null>('fields');
   const [fieldFilter, setFieldFilter] = useState('');

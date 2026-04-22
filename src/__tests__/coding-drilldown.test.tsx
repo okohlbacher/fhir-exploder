@@ -59,6 +59,17 @@ const mockCoverageReport = {
     'code': { systemCode: 5, textOnly: 2, empty: 1 },
     'category': { systemCode: 3, textOnly: 0, empty: 0 },
   },
+  // Phase 25 Plan 01 (QDDEP-01): required field on PerTypeCoverageReport.
+  // CodingDrillDown now reads examples from here rather than issuing a
+  // second sampleResources fetch.
+  perPathExamples: {
+    code: {
+      coding: [{ system: 'http://loinc.org', code: '1234-5', display: 'Example LOINC' }],
+    },
+    category: {
+      coding: [{ system: 'http://terminology.hl7.org/CodeSystem/observation-category', code: 'laboratory' }],
+    },
+  },
   perResource: [
     {
       resourceId: 'Condition/c1',
@@ -103,7 +114,10 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Mock sampleResources to return empty array (avoids real FHIR calls)
+// Mock sampleResources to return empty array (avoids real FHIR calls).
+// Kept so we can assert that CodingDrillDown does NOT invoke it — per
+// QDDEP-01 the drill-down now reads examples from the coverage report
+// instead of issuing a second sample fetch.
 vi.mock('../quality/sampling', () => ({
   sampleResources: vi.fn().mockResolvedValue([]),
 }));
@@ -116,6 +130,7 @@ vi.mock('../quality/codingCoverageWalker', () => ({
 
 // Now import the component after mocks are set up
 import { CodingDrillDown } from '../components/quality/CodingDrillDown';
+import { sampleResources } from '../quality/sampling';
 
 // ----- helpers -----
 
@@ -166,6 +181,24 @@ describe('CodingDrillDown', () => {
     // ResourceIssueTable content should be visible (resource IDs)
     expect(screen.getByText('Condition/c1')).toBeTruthy();
     expect(screen.getByText('Condition/c2')).toBeTruthy();
+  });
+
+  it('does not issue a second sample fetch when drill-down opens (QDDEP-01)', async () => {
+    // Baseline: before render, sampleResources has been called 0 times
+    // (the useCodingCoverage hook is mocked to return the report directly,
+    // so it never calls sampleResources either). After Phase 25 Plan 01,
+    // CodingDrillDown reads examples from report.perPathExamples — so
+    // the previously-doubled sample fetch is gone.
+    const callsBefore = (sampleResources as ReturnType<typeof vi.fn>).mock.calls.length;
+    renderDrillDown();
+    // Allow any microtask-queued effects to run.
+    await Promise.resolve();
+    await Promise.resolve();
+    const callsAfter = (sampleResources as ReturnType<typeof vi.fn>).mock.calls.length;
+    expect(callsAfter).toBeLessThanOrEqual(callsBefore);
+    // And the drill-down still renders the example coding from the
+    // report's perPathExamples (proves the data path).
+    expect(screen.getByText(/Example LOINC|1234-5/)).toBeTruthy();
   });
 
   it('cross-filter: clicking field row activates Resources tab with filter', () => {

@@ -146,6 +146,11 @@ export function aggregateCoverage(sample: Resource[]): PerTypeCoverageReport {
     string,
     { systemCode: number; textOnly: number; empty: number }
   > = {};
+  // Phase 25 Plan 01 (QDDEP-01): populate per-path example CodeableConcepts
+  // in the same single pass. Preference is deterministic: first systemCode
+  // wins; fall back to the first non-null textOnly/empty value seen.
+  const perPathExamples: Record<string, CodeableConcept> = {};
+  const perPathFallbacks: Record<string, CodeableConcept> = {};
   let systemCode = 0;
   let textOnly = 0;
   let empty = 0;
@@ -177,6 +182,19 @@ export function aggregateCoverage(sample: Resource[]): PerTypeCoverageReport {
       else if (f.classification === 'textOnly') textOnly++;
       else empty++;
 
+      // Representative example capture (QDDEP-01 — D-01, D-02). Prefer
+      // systemCode; otherwise remember the first non-null value as a
+      // fallback. `f.value` is always defined on entries emitted by
+      // classifyCodedFields (see isCodeableConcept), including empty
+      // CodeableConcepts like `{}` — those still count as representatives.
+      if (!perPathExamples[aggregationPath]) {
+        if (f.classification === 'systemCode' && f.value) {
+          perPathExamples[aggregationPath] = f.value;
+        } else if (f.value && !perPathFallbacks[aggregationPath]) {
+          perPathFallbacks[aggregationPath] = f.value;
+        }
+      }
+
       // Collect non-systemCode fields as issues for drill-down
       if (f.classification !== 'systemCode') {
         resourceIssues.push({ path: aggregationPath, classification: f.classification });
@@ -192,6 +210,13 @@ export function aggregateCoverage(sample: Resource[]): PerTypeCoverageReport {
     }
   }
 
+  // Backfill paths that never saw a systemCode with their remembered
+  // textOnly/empty representative. Runs once after the outer loop so
+  // systemCode always has the opportunity to override earlier fallbacks.
+  for (const [k, v] of Object.entries(perPathFallbacks)) {
+    if (!perPathExamples[k]) perPathExamples[k] = v;
+  }
+
   const totalCodedFields = systemCode + textOnly + empty;
   return {
     systemCode,
@@ -199,6 +224,7 @@ export function aggregateCoverage(sample: Resource[]): PerTypeCoverageReport {
     empty,
     totalCodedFields,
     perPath,
+    perPathExamples,
     sampleSize: sample.length,
     perResource,
   };
