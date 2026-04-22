@@ -27,9 +27,27 @@ export interface MiiModule {
    * per type without scattering conditionals through the UI.
    */
   patientSearchParam: string;
+  /**
+   * Optional additional query parameters appended to every search for this
+   * module. Example: `category=laboratory` to narrow the Laborbefund tab
+   * from ALL Observations to only lab results (excludes vital-signs,
+   * social-history, survey observations which would otherwise appear and
+   * mislead users — e.g. "Tobacco smoking status" under Lab values).
+   *
+   * String is appended verbatim (already URL-encoded). Leave undefined
+   * when no extra filter applies.
+   */
+  extraQuery?: string;
 }
 
 export const MII_MODULES: MiiModule[] = [
+  {
+    key: 'person',
+    germanLabel: 'Person',
+    fhirResourceType: 'Patient',
+    badgeColor: 'blue',
+    patientSearchParam: '_id',
+  },
   {
     key: 'diagnose',
     germanLabel: 'Diagnose',
@@ -50,6 +68,11 @@ export const MII_MODULES: MiiModule[] = [
     fhirResourceType: 'Observation',
     badgeColor: 'cyan',
     patientSearchParam: 'patient',
+    // Observations cover labs, vital-signs, social-history, survey, etc.
+    // Laborbefund (= "lab results" in the MII Kerndatensatz) only wants
+    // the `laboratory` category — otherwise social-history entries like
+    // "Tobacco smoking status" leak in.
+    extraQuery: 'category=laboratory',
   },
   {
     key: 'medikation',

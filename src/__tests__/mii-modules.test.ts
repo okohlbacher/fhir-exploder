@@ -2,13 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { MII_MODULES, type MiiModule } from '../utils/mii-modules';
 
 describe('MII_MODULES configuration', () => {
-  it('exports exactly 6 MII Kerndatensatz modules', () => {
-    expect(MII_MODULES).toHaveLength(6);
+  it('exports the 7 MII Kerndatensatz base modules', () => {
+    expect(MII_MODULES).toHaveLength(7);
   });
 
   it('contains all expected module keys', () => {
     const keys = MII_MODULES.map((m) => m.key);
     expect(keys).toEqual([
+      'person',
       'diagnose',
       'prozedur',
       'laborbefund',
@@ -33,14 +34,21 @@ describe('MII_MODULES configuration', () => {
     }
   });
 
-  it('first module is Diagnose -> Condition with teal badge', () => {
+  it('first module is Person -> Patient with blue badge (MII base module)', () => {
     expect(MII_MODULES[0]).toEqual({
-      key: 'diagnose',
-      germanLabel: 'Diagnose',
-      fhirResourceType: 'Condition',
-      badgeColor: 'teal',
-      patientSearchParam: 'patient',
+      key: 'person',
+      germanLabel: 'Person',
+      fhirResourceType: 'Patient',
+      badgeColor: 'blue',
+      patientSearchParam: '_id',
     });
+  });
+
+  it('Diagnose module uses Condition with teal badge', () => {
+    const diagnose = MII_MODULES.find((m) => m.key === 'diagnose');
+    expect(diagnose?.fhirResourceType).toBe('Condition');
+    expect(diagnose?.badgeColor).toBe('teal');
+    expect(diagnose?.patientSearchParam).toBe('patient');
   });
 
   it('Medikation module uses MedicationStatement with orange badge', () => {

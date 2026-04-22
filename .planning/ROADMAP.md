@@ -51,6 +51,10 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 - [ ] **Phase 28: Micro-Consistency Sweep** — `toRecord` helper replacement, en/em-dash unification, drop stale `eslint-disable`s, ref-type fixes
 - [ ] **Phase 29: Backlog UX** — External FHIR validator (T1), OverviewStrip 9→7 + status-line header (T2)
 
+### 📋 Backlog (unscheduled — 999.x)
+
+- [ ] **Phase 999.1: MII extension modules + UI redesign** — Add the 14 MII Kerndatensatz extension modules (Onkologie, Kardiologie, Intensivmedizin, Bildgebung, Pathologie, Mikrobiologie, Molekulargenetik, Seltene Erkrankungen, Symptom, Biobank, Studie, Dokument, MTB, PRO). Requires schema change (multi-resource-type per module), UI grouping (base vs extension, 21 tabs don't fit flat), empty-state handling for zero-resource modules, patient search param per module (some use `subject=` not `patient=`), and Mantine color strategy for 21 distinct modules. Promote to active phase during v1.5 planning.
+
 ## Phase Details
 
 ### Phase 23: v1.3 Close-Out
@@ -189,6 +193,27 @@ Phase 23 (close v1.3) ─┬─▶ Phase 24 (fetch foundation, incl. line-75 use
 | 27. Efficiency Polish | v1.4 | 0/? | 📋 Not started | — |
 | 28. Micro-Consistency Sweep | v1.4 | 0/? | 📋 Not started | — |
 | 29. Backlog UX | v1.4 | 0/? | 📋 Not started | — |
+
+### Phase 999.1: MII extension modules + UI redesign (BACKLOG)
+**Goal**: Extend MII Kerndatensatz module coverage from the current 7 base modules to all 21 modules (7 base + 14 extension) per the official MII Basismodule page and SIMPLIFIER.net catalog. Requires UI design for 21-module presentation (grouped tabs, collapsible extension section, or search/filter).
+**Depends on**: Promotion to active phase during v1.5 planning. Not scheduled in v1.4.
+**Scope**:
+  - **Base modules complete** (added in v1.4, Phase 26 sideband): Person, Fall, Consent, Diagnose, Prozedur, Laborbefund, Medikation
+  - **Extension modules to add** (14): Onkologie (Condition, Procedure), Kardiologie (Observation), Intensivmedizin/ICU (Observation), Bildgebung (DiagnosticReport, ImagingStudy), Pathologie (DiagnosticReport, Specimen), Mikrobiologie (DiagnosticReport, Observation), Molekulargenetik (DiagnosticReport, Observation), Seltene Erkrankungen (Condition), Symptom/Phänotyp (Observation), Biobank (Specimen), Studie (ResearchStudy), Dokument (DocumentReference), Molekulares Tumorboard/MTB (ServiceRequest), PRO/Patient-Reported Outcomes (Observation)
+**Design requirements** (v1.5 design phase):
+  1. Schema change: `fhirResourceType: string` → `fhirResourceType: string | string[]` (several modules span multiple types)
+  2. Module category field: `category: 'base' | 'extension'` for UI grouping
+  3. Patient search param per module: some extension modules (Specimen, DocumentReference, ResearchStudy) use `subject=` not `patient=`
+  4. UI: 21 tabs don't fit flat — options include (a) base-tabs-strip + dropdown for extension, (b) collapsible "Extension Modules" section, (c) search/filter across all 21
+  5. Empty-state UX: extension modules typically have 0 resources on stock Blaze — display prominently
+  6. Color strategy: Mantine 8's 14 colors can't accommodate 21 distinct modules — consider per-category color palette or shape/icon differentiation
+  7. Relevance filtering: optionally hide extension modules for a patient with no matching resources (e.g., no Onkologie tab if no Condition with oncology ICD)
+**Sources**:
+  - https://www.medizininformatik-initiative.de/de/basismodule-des-kerndatensatzes-der-mii
+  - https://simplifier.net/organization/koordinationsstellemii (all 21 packages published by MII Koordinationsstelle)
+  - https://simplifier.net/medizininformatikinitiative-kerndatensatz (Manteldokument — authoritative cross-module spec)
+**Requirements**: MII-EXT-01..14 (to be created when promoted)
+**Effort estimate**: ~3-4 engineering days + design review (UX for 21-module presentation). Split candidate: split into MII-EXT-A (schema change + base-module-only UI refactor) and MII-EXT-B (14 extension modules added incrementally).
 
 ## Effort Totals (v1.4)
 
