@@ -105,15 +105,10 @@ export function QualityOverviewPage() {
     setSearchParams(next, { replace: true });
   };
 
-  const { counts, summary, lastComputed, recompute } = useResourceCountsMetrics(client, types);
-
-  // Plan 19-03: capture snapshot + export PDF handlers.
-  const metrics = useQualityMetrics();
-  const { getActiveThreshold } = useThresholds();
-  const { snapshots, append } = useTrendsHistory();
-  const [exporting, setExporting] = useState(false);
-
   // Plan 21-06: cohort resolver state
+  // Phase 23 Plan 05 (CLOSE-06 Bug A): moved above the useResourceCountsMetrics
+  // call so scopedPatientIds can be passed into it and the OverviewStrip tiles
+  // 'Total resources' / 'Resource types' re-compute on cohort activation.
   const { activeCohort, hydrated: cohortsHydrated } = useCohorts();
   const [resolvedPatientIds, setResolvedPatientIds] = useState<string[] | null>(null);
   const [resolutionStatus, setResolutionStatus] = useState<'idle' | 'resolving' | 'failed'>('idle');
@@ -172,6 +167,20 @@ export function QualityOverviewPage() {
     resolutionStatus === 'idle'
       ? resolvedPatientIds ?? undefined
       : undefined;
+
+  // Phase 23 Plan 05: scopedPatientIds is now threaded into the metrics hook
+  // so the OverviewStrip tiles re-fetch scoped counts when a cohort activates.
+  const { counts, summary, lastComputed, recompute } = useResourceCountsMetrics(
+    client,
+    types,
+    scopedPatientIds,
+  );
+
+  // Plan 19-03: capture snapshot + export PDF handlers.
+  const metrics = useQualityMetrics();
+  const { getActiveThreshold } = useThresholds();
+  const { snapshots, append } = useTrendsHistory();
+  const [exporting, setExporting] = useState(false);
 
   const handleRecompute = () => {
     recompute();

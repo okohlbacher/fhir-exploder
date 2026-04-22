@@ -314,7 +314,7 @@ describe('useResourceCounts cache (FOUND-01 + FOUND-04)', () => {
     // A client whose .search returns different totals depending on whether
     // the query contains `patient=Patient/p1` or `_id=p1`.
     const search = vi.fn(
-      async (type: string, query: string | Record<string, string> | undefined) => {
+      async (_type: string, query: string | Record<string, string> | undefined) => {
         const q =
           typeof query === 'string'
             ? query
@@ -393,7 +393,12 @@ describe('useResourceCounts cache (FOUND-01 + FOUND-04)', () => {
   // Patient type since `patient=` is not a valid search parameter on Patient.
   // -------------------------------------------------------------------------
   it('Patient type scoped fetch uses _id= param (not patient=)', async () => {
-    const search = vi.fn(async () => ({ resourceType: 'Bundle', total: 5 }));
+    const search = vi.fn(
+      async (
+        _type: string,
+        _query: string | Record<string, string> | undefined,
+      ) => ({ resourceType: 'Bundle', total: 5 }),
+    );
     const client = {
       getBaseUrl: () => 'http://test.example/fhir',
       search,

@@ -21,6 +21,10 @@
  * without requiring any array-ordering or identity tricks on
  * `resourceTypes`. This replaces the earlier "reverse array on odd
  * versions" workaround.
+ *
+ * Phase 23 Plan 05 (CLOSE-06 Bug A): optional `patientIds` parameter is
+ * threaded through to `useResourceCounts` so OverviewStrip tiles 'Total
+ * resources' and 'Resource types' recompute when a cohort is active.
  */
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { MedplumClient } from '@medplum/core';
@@ -42,11 +46,18 @@ export interface ResourceCountsMetrics {
 export function useResourceCountsMetrics(
   client: MedplumClient | null,
   types: string[],
+  /**
+   * Phase 23 Plan 05 (CLOSE-06 Bug A): optional patient-id scope, passed
+   * through to `useResourceCounts` so the per-type counts (and therefore
+   * OverviewStrip tiles 'Total resources' / 'Resource types') reflect the
+   * active cohort.
+   */
+  patientIds?: string[],
 ): ResourceCountsMetrics {
   const [version, setVersion] = useState(0);
   const [lastComputed, setLastComputed] = useState<Date | null>(null);
 
-  const counts = useResourceCounts(client, types, version);
+  const counts = useResourceCounts(client, types, version, patientIds);
   const summary = useMemo(() => summarizeCounts(counts), [counts]);
 
   // lastComputed updates to "now" on the first render where every count
