@@ -4,14 +4,14 @@ milestone: v1.4
 milestone_name: -- Hardening & Tech-Debt Sweep (in progress, started 2026-04-16)
 status: executing
 stopped_at: Phase 25 context gathered
-last_updated: "2026-04-22T18:33:43.805Z"
-last_activity: 2026-04-22 -- Phase 25 planning complete
+last_updated: "2026-04-22T19:24:50.839Z"
+last_activity: 2026-04-22
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 24
-  completed_plans: 20
-  percent: 83
+  completed_plans: 24
+  percent: 100
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.4 Hardening & Tech-Debt Sweep — Phase 23 (v1.3 Close-Out) is the next action.
+**Current focus:** Phase 25 — quality-module-dedup
 
 ## Current Position
 
-Phase: 24
+Phase: 25
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-22 -- Phase 25 planning complete
+Status: Executing Phase 25
+Last activity: 2026-04-22
 
 Progress: [          ] 0% (0/7 phases)
 

@@ -45,7 +45,7 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 
 - [x] **Phase 23: v1.3 Close-Out** — Close v1.3 warnings, UAT, and audit sign-off (must ship first) (completed 2026-04-17)
 - [x] **Phase 24: Data-Fetching Foundation** — Cross-mount count cache, LRU quality-metrics registry, shared `useAsyncRun` state machine (completed 2026-04-17)
-- [ ] **Phase 25: Quality Module Dedup** — `useSampleWalker`, `<DrillDownShell>`, `perPathExamples`, drop `keepMounted`, shared `SortableTh` / `<RunProgress>`
+- [x] **Phase 25: Quality Module Dedup** — `useSampleWalker`, `<DrillDownShell>`, `perPathExamples`, drop `keepMounted`, shared `SortableTh` / `<RunProgress>` (completed 2026-04-22)
 - [ ] **Phase 26: App-Shell Dedup** — `<ConnectionGatedOutlet>`, `searchByIdentifierPrefix`, sidebar nested-route activation, `Anchor component={Link}` standardization
 - [ ] **Phase 27: Efficiency Polish** — `ResourceIssueTable` pagination memo, `React.lazy()` drill-down routes, bundle analyzer
 - [ ] **Phase 28: Micro-Consistency Sweep** — `toRecord` helper replacement, en/em-dash unification, drop stale `eslint-disable`s, ref-type fixes
@@ -93,10 +93,10 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
   4. Opening `/quality?tab=counts` no longer fires background Completeness / Coding sampling (`keepMounted` dropped or hooks gated on `isActive`).
   5. Repo-wide grep shows a single `SortableTh` definition at `src/components/quality/SortableTh.tsx`; the 9 inline `pct = total > 0 ? Math.round(...) : 0` sites collapse to `<RunProgress run={run} label="..."/>`.
 **Plans**: 4 plans
-- [ ] 25-01-PLAN.md — QDDEP-01: perPathExamples populated in codingCoverageWalker; delete useExamplesByPath; CodingDrillDown reads from report (TDD)
-- [ ] 25-02-PLAN.md — QDDEP-03 + QDDEP-05 + QDDEP-06 bundled: useSampleWalker<T> extraction + SortableTh extraction + RunProgress extraction (3 atomic commits)
-- [ ] 25-03-PLAN.md — QDDEP-02: DrillDownShell component + migrate 5 simple drill-downs + PARTIAL CodingDrillDown wrap
-- [ ] 25-04-PLAN.md — QDDEP-04: drop keepMounted on Completeness + Coding Tabs.Panel; add cold-open sampling-idle regression test
+- [x] 25-01-PLAN.md — QDDEP-01: perPathExamples populated in codingCoverageWalker; delete useExamplesByPath; CodingDrillDown reads from report (TDD)
+- [x] 25-02-PLAN.md — QDDEP-03 + QDDEP-05 + QDDEP-06 bundled: useSampleWalker<T> extraction + SortableTh extraction + RunProgress extraction (3 atomic commits)
+- [x] 25-03-PLAN.md — QDDEP-02: DrillDownShell component + migrate 5 simple drill-downs + PARTIAL CodingDrillDown wrap
+- [x] 25-04-PLAN.md — QDDEP-04: drop keepMounted on Completeness + Coding Tabs.Panel; add cold-open sampling-idle regression test
 **Effort**: ~2 days
 **UI hint**: yes
 
@@ -184,7 +184,7 @@ Phase 23 (close v1.3) ─┬─▶ Phase 24 (fetch foundation, incl. line-75 use
 | 21-22 (v1.3) | v1.3 | 9/9 | ✅ Shipped | 2026-04-16 |
 | 23. v1.3 Close-Out | v1.4 | 7/7 | Complete    | 2026-04-22 |
 | 24. Data-Fetching Foundation | v1.4 | 4/4 | Complete    | 2026-04-17 |
-| 25. Quality Module Dedup | v1.4 | 0/4 | 📋 Planned    | — |
+| 25. Quality Module Dedup | v1.4 | 4/4 | Complete    | 2026-04-22 |
 | 26. App-Shell Dedup | v1.4 | 0/? | 📋 Not started | — |
 | 27. Efficiency Polish | v1.4 | 0/? | 📋 Not started | — |
 | 28. Micro-Consistency Sweep | v1.4 | 0/? | 📋 Not started | — |
