@@ -143,3 +143,7 @@ T-6.3 re-run on live Blaze http://localhost:8080/fhir at 2026-04-17T08:30:00Z:
   - T-6.3 D (zero-match alert): PASS — yellow alert rendered as expected.
   - T-6.3 A (panel scoping): ENVIRONMENTAL — no cohort criteria matched any patients on this Blaze instance; test-data absence. Remedy: seed MII Synthea data (todo filed).
   - T-6.3 B (snapshot/PDF cohort metadata): ENVIRONMENTAL — depends on T-6.3 A having matching patients; skipped for same reason.
+
+Re-run 2026-04-22 against live Blaze http://localhost:8080/fhir with 139-patient cohort:
+  - T-6.3 A (panel scoping): PASS — originally environmental, then diagnosed as code-bug at commit 8656431 (Bug A + Bug B). Fixed by Plan 23-05 (commits dce0564 tests, 3d39aef Bug A, 1cafdf2 Bug B). Re-verified in-person; OverviewStrip tiles scope to cohort; 4 report hooks re-fire on activation with per-metric Network evidence.
+  - T-6.3 B (snapshot/PDF cohort metadata): PASS — re-confirmed with matching cohort active.
