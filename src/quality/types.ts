@@ -70,6 +70,16 @@ export interface PerTypeCoverageReport {
   /** Per-path breakdown for drill-down UI. */
   perPath: Record<string, { systemCode: number; textOnly: number; empty: number }>;
   sampleSize: number;
+  /**
+   * One representative CodeableConcept per aggregation path, selected
+   * deterministically in a single pass by `aggregateCoverage` (Phase 25
+   * Plan 01, QDDEP-01). Preference order per path: the FIRST `systemCode`
+   * observation wins; if none exist, the first non-null `textOnly`/`empty`
+   * value is used. Key format matches `perPath` (stripped resourceType
+   * prefix, `[\d+]` collapsed to `[*]`). Enables `CodingDrillDown` to
+   * render example codings without issuing a second sample fetch.
+   */
+  perPathExamples: Record<string, CodeableConcept>;
   /** Per-resource coding issues for drill-down (Phase 15). */
   perResource?: Array<{
     resourceId: string;
