@@ -294,6 +294,141 @@ describe('useResourceCounts cache (FOUND-01 + FOUND-04)', () => {
   });
 
   // -------------------------------------------------------------------------
+  // Phase 23 Plan 05 (CLOSE-06 Bug A) — RED regression tests.
+  //
+  // These assertions REQUIRE useResourceCounts to accept an optional
+  // 4th `patientIds?: string[]` parameter and to route scoped fetches
+  // through client.search with `patient=Patient/{id}` (non-Patient types)
+  // or `_id={id}` (Patient type) mirroring `src/quality/sampling.ts:26-66`.
+  //
+  // The cache must be keyed on a patientIds fingerprint so scoped counts
+  // never collide with unscoped cache entries.
+  //
+  // Synthetic IDs only (`p1`, etc.) — no real PHI per threat T-23-05-04.
+  // -------------------------------------------------------------------------
+
+  // -------------------------------------------------------------------------
+  // Test 1a (Bug A) — scoped fetch re-runs on patientIds change.
+  // -------------------------------------------------------------------------
+  it('patientIds change triggers a scoped re-fetch and returns cohort-scoped total', async () => {
+    // A client whose .search returns different totals depending on whether
+    // the query contains `patient=Patient/p1` or `_id=p1`.
+    const search = vi.fn(
+      async (type: string, query: string | Record<string, string> | undefined) => {
+        const q =
+          typeof query === 'string'
+            ? query
+            : Object.entries(query ?? {})
+                .map(([k, v]) => `${k}=${v}`)
+                .join('&');
+        const hasScope =
+          q.includes('patient=Patient/p1') || q.includes('_id=p1');
+        return { resourceType: 'Bundle', total: hasScope ? 12 : 100 };
+      },
+    );
+    const client = {
+      getBaseUrl: () => 'http://test.example/fhir',
+      search,
+    } as unknown as MedplumClient;
+
+    const { result, rerender } = renderHook(
+      ({ patientIds }: { patientIds: string[] | undefined }) =>
+        useResourceCounts(client, ['Observation'], 0, patientIds),
+      { initialProps: { patientIds: undefined as string[] | undefined } },
+    );
+    await waitFor(() => expect(result.current.Observation).toBe(100));
+
+    rerender({ patientIds: ['p1'] });
+    await waitFor(() => expect(result.current.Observation).toBe(12));
+  });
+
+  // -------------------------------------------------------------------------
+  // Test 1b (Bug A) — cache isolation: unscoped cache is NOT clobbered by a
+  // scoped fetch that resolved earlier. Re-rendering back to unscoped should
+  // return the unscoped value from cache without a new fetch.
+  // -------------------------------------------------------------------------
+  it('unscoped cache is isolated from scoped results (patientIds fingerprint in cache key)', async () => {
+    const search = vi.fn(
+      async (_type: string, query: string | Record<string, string> | undefined) => {
+        const q =
+          typeof query === 'string'
+            ? query
+            : Object.entries(query ?? {})
+                .map(([k, v]) => `${k}=${v}`)
+                .join('&');
+        const hasScope =
+          q.includes('patient=Patient/p1') || q.includes('_id=p1');
+        return { resourceType: 'Bundle', total: hasScope ? 12 : 100 };
+      },
+    );
+    const client = {
+      getBaseUrl: () => 'http://test.example/fhir',
+      search,
+    } as unknown as MedplumClient;
+
+    const { result, rerender } = renderHook(
+      ({ patientIds }: { patientIds: string[] | undefined }) =>
+        useResourceCounts(client, ['Observation'], 0, patientIds),
+      { initialProps: { patientIds: undefined as string[] | undefined } },
+    );
+    await waitFor(() => expect(result.current.Observation).toBe(100));
+    const callsAfterUnscoped = search.mock.calls.length;
+
+    rerender({ patientIds: ['p1'] });
+    await waitFor(() => expect(result.current.Observation).toBe(12));
+
+    // Now swap back to unscoped. The unscoped cache entry must still hold 100.
+    rerender({ patientIds: undefined });
+    await waitFor(() => expect(result.current.Observation).toBe(100));
+
+    // Extra fetches should be the scoped round-trip only (1). If the scoped
+    // fetch polluted the unscoped cache key, this would trigger another
+    // unscoped fetch as well (count would be >= callsAfterUnscoped + 2).
+    expect(search.mock.calls.length).toBeLessThanOrEqual(callsAfterUnscoped + 1);
+  });
+
+  // -------------------------------------------------------------------------
+  // Test 1c (Bug A) — Patient type uses `_id=` param, not `patient=`.
+  // Mirrors sampleResources (sampling.ts:39-43) which selects `_id` for the
+  // Patient type since `patient=` is not a valid search parameter on Patient.
+  // -------------------------------------------------------------------------
+  it('Patient type scoped fetch uses _id= param (not patient=)', async () => {
+    const search = vi.fn(async () => ({ resourceType: 'Bundle', total: 5 }));
+    const client = {
+      getBaseUrl: () => 'http://test.example/fhir',
+      search,
+    } as unknown as MedplumClient;
+
+    const { result } = renderHook(() =>
+      useResourceCounts(client, ['Patient'], 0, ['p1']),
+    );
+    await waitFor(() => expect(result.current.Patient).toBe(5));
+
+    // Inspect the scoped call's 2nd arg. Accept either a string query or
+    // an object — check that `_id` is present and `patient=` is NOT.
+    const scopedCall = search.mock.calls.find((c) => {
+      const q = c[1];
+      const s =
+        typeof q === 'string'
+          ? q
+          : Object.entries((q ?? {}) as Record<string, string>)
+              .map(([k, v]) => `${k}=${v}`)
+              .join('&');
+      return s.includes('p1');
+    });
+    expect(scopedCall).toBeDefined();
+    const qArg = scopedCall![1];
+    const serialized =
+      typeof qArg === 'string'
+        ? qArg
+        : Object.entries((qArg ?? {}) as Record<string, string>)
+            .map(([k, v]) => `${k}=${v}`)
+            .join('&');
+    expect(serialized).toMatch(/_id=p1/);
+    expect(serialized).not.toMatch(/patient=Patient\/p1/);
+  });
+
+  // -------------------------------------------------------------------------
   // Test 8 — clearAllQualityCountCache wipes across all servers.
   // -------------------------------------------------------------------------
   it('clearAllQualityCountCache wipes entries across all serverUrls', async () => {
