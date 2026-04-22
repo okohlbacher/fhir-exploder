@@ -17,20 +17,18 @@ import { Link } from 'react-router-dom';
 import {
   Alert,
   Badge,
-  Group,
   RingProgress,
   Skeleton,
   Stack,
   Table,
   Text,
-  UnstyledButton,
 } from '@mantine/core';
-import { IconChevronDown, IconChevronUp, IconSelector } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
 
 import { useCompletenessReport } from '../../hooks/useCompletenessReport';
 import { getProfileForType } from '../../quality/profiles';
 import type { PerTypeCompletenessReport, PerTypeReport } from '../../quality/types';
+import { SortableTh } from './SortableTh';
 
 export interface CompletenessPanelProps {
   types: string[];
@@ -71,33 +69,6 @@ function compareRows(a: Row, b: Row, by: SortKey, dir: SortDir): number {
   const ap = a.pct ?? -1;
   const bp = b.pct ?? -1;
   return sign * (ap - bp);
-}
-
-function SortableTh({
-  children,
-  active,
-  dir,
-  onClick,
-}: {
-  children: React.ReactNode;
-  active: boolean;
-  dir: SortDir;
-  onClick: () => void;
-}) {
-  const ariaSort = !active ? 'none' : dir === 'asc' ? 'ascending' : 'descending';
-  const Icon = !active ? IconSelector : dir === 'asc' ? IconChevronUp : IconChevronDown;
-  return (
-    <Table.Th aria-sort={ariaSort}>
-      <UnstyledButton onClick={onClick}>
-        <Group gap={4} wrap="nowrap">
-          <Text fw={600} size="sm">
-            {children}
-          </Text>
-          <Icon size={14} />
-        </Group>
-      </UnstyledButton>
-    </Table.Th>
-  );
 }
 
 export function CompletenessPanel({ types, client, sampleSize, patientIds }: CompletenessPanelProps) {

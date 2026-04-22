@@ -23,13 +23,12 @@ import {
   Stack,
   Table,
   Text,
-  UnstyledButton,
 } from '@mantine/core';
-import { IconChevronDown, IconChevronUp, IconSelector } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
 
 import { useCodingCoverage } from '../../hooks/useCodingCoverage';
 import type { PerTypeCoverageReport, PerTypeReport } from '../../quality/types';
+import { SortableTh } from './SortableTh';
 
 export interface CodingCoveragePanelProps {
   types: string[];
@@ -86,33 +85,6 @@ function compareRows(a: Row, b: Row, by: SortKey, dir: SortDir): number {
   if (valA === null) return 1;
   if (valB === null) return -1;
   return sign * (valA - valB);
-}
-
-function SortableTh({
-  children,
-  active,
-  dir,
-  onClick,
-}: {
-  children: React.ReactNode;
-  active: boolean;
-  dir: SortDir;
-  onClick: () => void;
-}) {
-  const ariaSort = !active ? 'none' : dir === 'asc' ? 'ascending' : 'descending';
-  const Icon = !active ? IconSelector : dir === 'asc' ? IconChevronUp : IconChevronDown;
-  return (
-    <Table.Th aria-sort={ariaSort}>
-      <UnstyledButton onClick={onClick}>
-        <Group gap={4} wrap="nowrap">
-          <Text fw={600} size="sm">
-            {children}
-          </Text>
-          <Icon size={14} />
-        </Group>
-      </UnstyledButton>
-    </Table.Th>
-  );
 }
 
 export function CodingCoveragePanel({ types, client, sampleSize, patientIds }: CodingCoveragePanelProps) {
