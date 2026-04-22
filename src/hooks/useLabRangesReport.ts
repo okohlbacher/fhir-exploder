@@ -8,8 +8,13 @@
  * (PITFALLS §Pitfall 2). The `summary` accessory state stays in a local `useState`
  * per D-09 (CONTEXT.md) — fixed reducer shape would otherwise force `as`
  * casts in consumer panels (PITFALLS §Pitfall 1).
+ *
+ * Phase 23 gap-closure (CLOSE-06 Bug B): autoStart: true + memoized
+ * patientIdsKey so a cohort change re-fires the runner. Previously the
+ * runner only fired on imperative start() — stale unscoped results persisted
+ * when patientIds changed. See 23-HUMAN-UAT.md root_cause.
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { MedplumClient } from '@medplum/core';
 import type { AppSettings } from '../config/types';
 import type { NormalizedIssue } from '../quality/types';
@@ -42,6 +47,14 @@ export function useLabRangesReport({
 }: UseLabRangesReportArgs): LabRangesRunState {
   const [summary, setSummary] = useState<LabRangeSummary | null>(null);
 
+  // Phase 23 gap-closure (CLOSE-06 Bug B): memoize patientIds into a stable
+  // sorted-join key (PITFALLS §Pitfall 7 / threat T-23-05-05).
+  const patientIdsKey = useMemo(
+    () =>
+      patientIds && patientIds.length > 0 ? patientIds.slice().sort().join(',') : '',
+    [patientIds],
+  );
+
   const run = useAsyncRun<NormalizedIssue>({
     runner: async ({ isCancelled, setProgress, appendIssues }) => {
       // D-09 / Open Question 2: reset accessory state at the top of each run.
@@ -59,7 +72,8 @@ export function useLabRangesReport({
       setSummary(result.summary);
       setProgress(observations.length, observations.length);
     },
-    deps: [client, sampleSize, settings, patientIds],
+    deps: [client, sampleSize, settings, patientIdsKey],
+    autoStart: true,
   });
 
   return { ...run, summary };

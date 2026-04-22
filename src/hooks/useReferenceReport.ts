@@ -4,8 +4,13 @@
  * Wraps `useAsyncRun<NormalizedIssue>` (FOUND-03). Accessory state
  * (brokenCount, orphanCount) lives in local `useState` per D-09. Progress
  * tracks the broken-ref batch counter; orphan detection runs after.
+ *
+ * Phase 23 gap-closure (CLOSE-06 Bug B): autoStart: true + memoized
+ * patientIdsKey so a cohort change re-fires the runner. Previously the
+ * runner only fired on imperative start() — stale unscoped results persisted
+ * when patientIds changed. See 23-HUMAN-UAT.md root_cause.
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { MedplumClient } from '@medplum/core';
 import type { Resource } from '@medplum/fhirtypes';
 import type { NormalizedIssue } from '../quality/types';
@@ -40,6 +45,15 @@ export function useReferenceReport({
 }: UseReferenceReportArgs): ReferenceRunState {
   const [brokenCount, setBrokenCount] = useState(0);
   const [orphanCount, setOrphanCount] = useState(0);
+
+  // Phase 23 gap-closure (CLOSE-06 Bug B): memoize patientIds into a stable
+  // sorted-join key (PITFALLS §Pitfall 7 / threat T-23-05-05).
+  const patientIdsKey = useMemo(
+    () =>
+      patientIds && patientIds.length > 0 ? patientIds.slice().sort().join(',') : '',
+    [patientIds],
+  );
+
   const run = useAsyncRun<NormalizedIssue>({
     runner: async ({ isCancelled, setProgress, appendIssues }) => {
       // Reset accessory state at the start of each run (D-09).
@@ -89,7 +103,8 @@ export function useReferenceReport({
       setOrphanCount(orphanIssues.length);
       appendIssues([...brokenIssues, ...orphanIssues]);
     },
-    deps: [client, resourceType, sampleSize, patientIds],
+    deps: [client, resourceType, sampleSize, patientIdsKey],
+    autoStart: true,
   });
   return { ...run, brokenCount, orphanCount };
 }

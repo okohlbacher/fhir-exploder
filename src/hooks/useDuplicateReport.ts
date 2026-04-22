@@ -6,8 +6,13 @@
  * `useState` per D-09 (fixed reducer shape; PITFALLS §Pitfall 1).
  * Progress math (totalUnits / completedUnits) preserved verbatim from
  * pre-refactor (Pitfall 6).
+ *
+ * Phase 23 gap-closure (CLOSE-06 Bug B): autoStart: true + memoized
+ * patientIdsKey + typesKey so a cohort change re-fires the runner without
+ * thrashing on render-identity-different-but-equal array references
+ * (PITFALLS §Pitfall 7 / threat T-23-05-05). See 23-HUMAN-UAT.md root_cause.
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { MedplumClient } from '@medplum/core';
 import type { Resource } from '@medplum/fhirtypes';
 import type { NormalizedIssue } from '../quality/types';
@@ -48,6 +53,17 @@ export function useDuplicateReport({
   const [duplicateClusters, setDuplicateClusters] = useState<PatientDuplicateCluster[]>([]);
   const [contentHashClusters, setContentHashClusters] = useState<ContentHashCluster[]>([]);
   const [skippedPatients, setSkippedPatients] = useState(0);
+
+  // Phase 23 gap-closure (CLOSE-06 Bug B): memoize `types` AND `patientIds`
+  // into stable keys. `types` is an array passed from the parent; without
+  // `typesKey` memoization, autoStart:true would thrash whenever the parent
+  // re-renders with a new array identity (PITFALLS §Pitfall 7).
+  const typesKey = useMemo(() => types.join(','), [types]);
+  const patientIdsKey = useMemo(
+    () =>
+      patientIds && patientIds.length > 0 ? patientIds.slice().sort().join(',') : '',
+    [patientIds],
+  );
 
   const run = useAsyncRun<NormalizedIssue>({
     runner: async ({ isCancelled, setProgress, appendIssues }) => {
@@ -103,7 +119,8 @@ export function useDuplicateReport({
         setProgress(completedUnits, totalUnits);
       }
     },
-    deps: [client, types, sampleSize, patientIds],
+    deps: [client, typesKey, sampleSize, patientIdsKey],
+    autoStart: true,
   });
 
   return { ...run, duplicateClusters, contentHashClusters, skippedPatients };
