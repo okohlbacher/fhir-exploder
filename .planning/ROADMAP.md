@@ -46,7 +46,7 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 - [x] **Phase 23: v1.3 Close-Out** — Close v1.3 warnings, UAT, and audit sign-off (must ship first) (completed 2026-04-17)
 - [x] **Phase 24: Data-Fetching Foundation** — Cross-mount count cache, LRU quality-metrics registry, shared `useAsyncRun` state machine (completed 2026-04-17)
 - [x] **Phase 25: Quality Module Dedup** — `useSampleWalker`, `<DrillDownShell>`, `perPathExamples`, drop `keepMounted`, shared `SortableTh` / `<RunProgress>` (completed 2026-04-22)
-- [ ] **Phase 26: App-Shell Dedup** — `<ConnectionGatedOutlet>`, `searchByIdentifierPrefix`, sidebar nested-route activation, `Anchor component={Link}` standardization
+- [x] **Phase 26: App-Shell Dedup** — `<ConnectionGatedOutlet>`, `searchByIdentifierPrefix`, sidebar nested-route activation, `Anchor component={Link}` standardization (completed 2026-04-22)
 - [ ] **Phase 27: Efficiency Polish** — `ResourceIssueTable` pagination memo, `React.lazy()` drill-down routes, bundle analyzer
 - [ ] **Phase 28: Micro-Consistency Sweep** — `toRecord` helper replacement, en/em-dash unification, drop stale `eslint-disable`s, ref-type fixes
 - [ ] **Phase 29: Backlog UX** — External FHIR validator (T1), OverviewStrip 9→7 + status-line header (T2)
@@ -115,9 +115,9 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
   4. Internal links across `CompletenessPanel`, `SearchResultsPage`, `PatientListPage`, `ResourceCountsPanel`, `CodingCoveragePanel` use `Anchor component={Link}` with Mantine theme colors; no inline `style={{ color: 'var(--mantine-color-blue-6)' }}`.
   5. `SettingsContext.tsx:32` has no `eslint-disable-next-line react-hooks/exhaustive-deps`; `setSettings` is `useCallback`-wrapped.
 **Plans**: 3 plans
-- [ ] 26-01-PLAN.md — SHELL-01: ConnectionGatedOutlet render-prop primitive + migrate 3 layouts + Wave 0 legacy-migration test
-- [ ] 26-02-PLAN.md — SHELL-02 + SHELL-04 + SHELL-05 bundle: searchByIdentifierPrefix helper + CompletenessPanel Anchor+Link migration + SettingsContext useCallback
-- [ ] 26-03-PLAN.md — SHELL-03: Sidebar useMatch for nested-route activation
+- [x] 26-01-PLAN.md — SHELL-01: ConnectionGatedOutlet render-prop primitive + migrate 3 layouts + Wave 0 legacy-migration test
+- [x] 26-02-PLAN.md — SHELL-02 + SHELL-04 + SHELL-05 bundle: searchByIdentifierPrefix helper + CompletenessPanel Anchor+Link migration + SettingsContext useCallback
+- [x] 26-03-PLAN.md — SHELL-03: Sidebar useMatch for nested-route activation
 **Effort**: ~1 day
 **UI hint**: yes
 
@@ -192,7 +192,7 @@ Phase 23 (close v1.3) ─┬─▶ Phase 24 (fetch foundation, incl. line-75 use
 | 23. v1.3 Close-Out | v1.4 | 7/7 | Complete    | 2026-04-22 |
 | 24. Data-Fetching Foundation | v1.4 | 4/4 | Complete    | 2026-04-17 |
 | 25. Quality Module Dedup | v1.4 | 4/4 | Complete    | 2026-04-22 |
-| 26. App-Shell Dedup | v1.4 | 0/3 | 📋 Planned | — |
+| 26. App-Shell Dedup | v1.4 | 3/3 | Complete    | 2026-04-22 |
 | 27. Efficiency Polish | v1.4 | 0/? | 📋 Not started | — |
 | 28. Micro-Consistency Sweep | v1.4 | 0/? | 📋 Not started | — |
 | 29. Backlog UX | v1.4 | 0/? | 📋 Not started | — |
