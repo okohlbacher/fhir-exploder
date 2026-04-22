@@ -16,6 +16,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Alert,
+  Anchor,
   Badge,
   RingProgress,
   Skeleton,
@@ -141,12 +142,13 @@ function CompletenessRow({ row }: { row: Row }) {
     return (
       <Table.Tr>
         <Table.Td>
-          <Link
+          <Anchor
+            component={Link}
             to={`/quality/completeness/${type}`}
-            style={{ color: 'var(--mantine-color-blue-6)' }}
+            c="blue.6"
           >
             {type}
-          </Link>
+          </Anchor>
         </Table.Td>
         <Table.Td>
           <Skeleton height={48} width={48} circle />
@@ -168,12 +170,13 @@ function CompletenessRow({ row }: { row: Row }) {
     return (
       <Table.Tr>
         <Table.Td>
-          <Link
+          <Anchor
+            component={Link}
             to={`/quality/completeness/${type}`}
-            style={{ color: 'var(--mantine-color-blue-6)' }}
+            c="blue.6"
           >
             {type}
-          </Link>
+          </Anchor>
         </Table.Td>
         <Table.Td colSpan={4}>
           <Badge color="red" variant="light">
@@ -188,12 +191,13 @@ function CompletenessRow({ row }: { row: Row }) {
   return (
     <Table.Tr>
       <Table.Td>
-        <Link
+        <Anchor
+          component={Link}
           to={`/quality/completeness/${type}`}
-          style={{ color: 'var(--mantine-color-blue-6)' }}
+          c="blue.6"
         >
           {type}
-        </Link>
+        </Anchor>
       </Table.Td>
       <Table.Td>
         <RingProgress
