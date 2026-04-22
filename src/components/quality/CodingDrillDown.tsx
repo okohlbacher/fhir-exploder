@@ -7,24 +7,20 @@
  * @medplum/react CodeableConceptDisplay so terminology-resolved display
  * values come "for free" from the Phase 4 TerminologyProvider.
  *
+ * PARTIAL-wraps DrillDownShell (QDDEP-02 / Plan 25-03, Option A):
+ *   The shell owns Back/Title/error-alert chrome; the bespoke per-path
+ *   coverage body (Tabs + DrillDownTable + CodeableConceptDisplay tree)
+ *   is rendered as a sibling below the shell. `issues={[]}` keeps the
+ *   shell from rendering ResourceIssueTable; the bespoke body below is
+ *   the one that renders the Resources tab with the normalized issues.
+ *
  * Layout (05-UI-SPEC lines 289-306):
  *   Back button (auto-focused) → Title → Table rows of
  *     Field path | system+code % | text-only % | empty % | Example coded value
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useOutletContext, useParams } from 'react-router-dom';
-import {
-  Alert,
-  Button,
-  Code,
-  Skeleton,
-  Stack,
-  Table,
-  Tabs,
-  Text,
-  Title,
-} from '@mantine/core';
-import { IconArrowLeft } from '@tabler/icons-react';
+import { useMemo, useState } from 'react';
+import { useOutletContext, useParams } from 'react-router-dom';
+import { Alert, Code, Skeleton, Stack, Table, Tabs, Text } from '@mantine/core';
 import { CodeableConceptDisplay } from '@medplum/react';
 import type { CodeableConcept } from '@medplum/fhirtypes';
 
@@ -32,6 +28,7 @@ import { useCodingCoverage } from '../../hooks/useCodingCoverage';
 import { useSampleSize } from './SampleSizeControl';
 import type { QualityOutletContext } from './QualityLayout';
 import { ResourceIssueTable } from './ResourceIssueTable';
+import { DrillDownShell, type DrillDownShellProps } from './DrillDownShell';
 import type { NormalizedIssue } from '../../quality/types';
 
 function pct(numerator: number, denominator: number): number {
@@ -43,7 +40,6 @@ export function CodingDrillDown() {
   const { type = '' } = useParams<{ type: string }>();
   const { client } = useOutletContext<QualityOutletContext>();
   const [sampleSize] = useSampleSize();
-  const backRef = useRef<HTMLAnchorElement | null>(null);
 
   const singleTypeList = useMemo(() => [type], [type]);
   const reports = useCodingCoverage(client, singleTypeList, sampleSize);
@@ -51,10 +47,8 @@ export function CodingDrillDown() {
 
   // Phase 25 Plan 01 (QDDEP-01): examples come from the same
   // PerTypeCoverageReport the parent hook already produced — no second
-  // sampleResources fetch. Returns an empty map while the report is
-  // pending/errored so the table renders with '—' placeholders. Guarded
-  // on `state?.perPathExamples` to tolerate pre-QDDEP-01 cached report
-  // blobs (missing the field) without crashing.
+  // sampleResources fetch. Guarded on `state?.perPathExamples` to tolerate
+  // pre-QDDEP-01 cached report blobs (missing the field) without crashing.
   const examplesByPath = useMemo<Record<string, CodeableConcept | undefined>>(() => {
     if (!state || state === 'loading' || state === 'error') return {};
     return state.perPathExamples ?? {};
@@ -78,65 +72,67 @@ export function CodingDrillDown() {
     );
   }, [state]);
 
+  // Map hook state to shell's AsyncRunStatus run-shape. progress.total=0 keeps
+  // RunProgress silent (coding has no per-type sampled-count running progress).
+  // Data state maps to 'cancelled' so the shell's empty-state green alert does
+  // NOT fire — the bespoke body below renders the loaded content instead.
+  const syntheticRun = useMemo<DrillDownShellProps['run']>(() => ({
+    status:
+      state === undefined || state === 'loading'
+        ? 'running'
+        : state === 'error'
+          ? 'error'
+          : 'cancelled',
+    progress: { current: 0, total: 0 },
+  }), [state]);
+
   const handleFieldClick = (path: string) => {
     setFieldFilter(path);
     setActiveTab('resources');
   };
 
-  useEffect(() => {
-    backRef.current?.focus();
-  }, []);
-
   return (
-    <Stack gap="md" p="xl">
-      <Button
-        variant="subtle"
-        leftSection={<IconArrowLeft size={16} />}
-        component={Link}
-        to="/quality"
-        ref={backRef}
-      >
-        Back to Coding Coverage
-      </Button>
-
-      <Title order={2}>
-        {type} — Coding coverage breakdown
-      </Title>
-
-      {state === undefined || state === 'loading' ? (
-        <Stack gap="xs">
-          {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} height={24} radius="sm" />
-          ))}
-        </Stack>
-      ) : state === 'error' ? (
-        <Alert color="red" variant="light">
-          Failed to sample {type}. Return to the Coding Coverage tab and recompute metrics.
-        </Alert>
-      ) : state.totalCodedFields === 0 ? (
-        <Alert color="gray" variant="light">
-          No CodeableConcept fields found in the first {state.sampleSize} sampled{' '}
-          {type} resources.
-        </Alert>
-      ) : (
-        <Tabs value={activeTab} onChange={setActiveTab}>
-          <Tabs.List>
-            <Tabs.Tab value="fields">Fields</Tabs.Tab>
-            <Tabs.Tab value="resources">Resources</Tabs.Tab>
-          </Tabs.List>
-          <Tabs.Panel value="fields" pt="md">
-            <DrillDownTable
-              perPath={state.perPath}
-              examplesByPath={examplesByPath}
-              onFieldClick={handleFieldClick}
-            />
-          </Tabs.Panel>
-          <Tabs.Panel value="resources" pt="md">
-            <ResourceIssueTable issues={normalizedIssues} initialFieldFilter={fieldFilter} />
-          </Tabs.Panel>
-        </Tabs>
-      )}
-    </Stack>
+    <>
+      <DrillDownShell
+        title={`${type} — Coding coverage breakdown`}
+        backHref="/quality"
+        run={syntheticRun}
+        issues={[]}
+        errorMessage={`Failed to sample ${type}. Return to the Coding Coverage tab and recompute metrics.`}
+        emptyMessage="(no-op — bespoke body below)"
+      />
+      <Stack gap="md" p="xl" pt={0}>
+        {state === undefined || state === 'loading' ? (
+          <Stack gap="xs">
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} height={24} radius="sm" />
+            ))}
+          </Stack>
+        ) : state === 'error' ? null : state.totalCodedFields === 0 ? (
+          <Alert color="gray" variant="light">
+            No CodeableConcept fields found in the first {state.sampleSize} sampled{' '}
+            {type} resources.
+          </Alert>
+        ) : (
+          <Tabs value={activeTab} onChange={setActiveTab}>
+            <Tabs.List>
+              <Tabs.Tab value="fields">Fields</Tabs.Tab>
+              <Tabs.Tab value="resources">Resources</Tabs.Tab>
+            </Tabs.List>
+            <Tabs.Panel value="fields" pt="md">
+              <DrillDownTable
+                perPath={state.perPath}
+                examplesByPath={examplesByPath}
+                onFieldClick={handleFieldClick}
+              />
+            </Tabs.Panel>
+            <Tabs.Panel value="resources" pt="md">
+              <ResourceIssueTable issues={normalizedIssues} initialFieldFilter={fieldFilter} />
+            </Tabs.Panel>
+          </Tabs>
+        )}
+      </Stack>
+    </>
   );
 }
 
