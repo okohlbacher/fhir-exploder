@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom';
 import {
   Anchor,
+  ActionIcon,
   Alert,
   Badge,
   Button,
+  Code,
   Group,
+  Modal,
   NumberInput,
   Select,
   Skeleton,
@@ -14,11 +17,177 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from '@mantine/core';
-import type { Bundle, Patient } from '@medplum/fhirtypes';
+import { useDisclosure } from '@mantine/hooks';
+import type { Bundle, Patient, Resource } from '@medplum/fhirtypes';
+import type { MedplumClient } from '@medplum/core';
 import type { PatientsOutletContext } from './PatientsLayout';
 import { PaginationControls } from '../explorer/PaginationControls';
+import { searchByIdentifierPrefix } from '../../utils/searchByIdentifierPrefix';
 
+// ---------------------------------------------------------------------------
+// extractDate — pull the most relevant clinical date from any FHIR resource
+// ---------------------------------------------------------------------------
+function extractDate(r: Resource): string | null {
+  const o = r as unknown as Record<string, unknown>;
+  // Direct date/dateTime fields
+  for (const f of [
+    'effectiveDateTime', 'performedDateTime', 'recordedDate', 'onsetDateTime',
+    'authoredOn', 'date', 'issued', 'recorded', 'birthDate',
+  ]) {
+    const v = o[f];
+    if (typeof v === 'string' && v.length >= 4) return v;
+  }
+  // Period start
+  for (const f of ['effectivePeriod', 'period', 'performedPeriod', 'onsetPeriod']) {
+    const p = o[f] as Record<string, unknown> | undefined;
+    if (p && typeof p.start === 'string') return p.start;
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// usePatientResourceSummary — fetches $everything sample once per patient,
+// returns total count + clinical date range (first → last)
+// ---------------------------------------------------------------------------
+const SAMPLE_SIZE = 200;
+
+interface ResourceSummary {
+  count: number | null;
+  firstDate: string | null;
+  lastDate: string | null;
+  error: boolean;
+}
+
+function usePatientResourceSummary(patientId: string, client: MedplumClient): ResourceSummary {
+  const [state, setState] = useState<ResourceSummary>({
+    count: null, firstDate: null, lastDate: null, error: false,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    client
+      .get(client.fhirUrl(`Patient/${patientId}/$everything?_count=${SAMPLE_SIZE}`).toString())
+      .then((raw) => {
+        if (cancelled) return;
+        const bundle: Bundle = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        const resources = (bundle.entry ?? [])
+          .map((e) => e.resource)
+          .filter(Boolean) as Resource[];
+        let first: string | null = null;
+        let last: string | null = null;
+        for (const r of resources) {
+          const d = extractDate(r);
+          if (!d) continue;
+          if (!first || d < first) first = d;
+          if (!last || d > last) last = d;
+        }
+        setState({
+          count: bundle.total ?? resources.length,
+          firstDate: first,
+          lastDate: last,
+          error: false,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setState({ count: null, firstDate: null, lastDate: null, error: true });
+      });
+    return () => { cancelled = true; };
+  }, [patientId, client]);
+
+  return state;
+}
+
+function formatTimeRange(s: ResourceSummary): React.ReactNode {
+  if (s.error) return <Text size="sm" c="dimmed">—</Text>;
+  if (s.count === null) return <Skeleton height={14} width={140} />;
+  const { firstDate, lastDate } = s;
+  if (!firstDate && !lastDate) return <Text size="sm" c="dimmed">—</Text>;
+  const fmt = (d: string | null) => (d ? d.slice(0, 10) : '?');
+  if (firstDate && lastDate && firstDate.slice(0, 10) === lastDate.slice(0, 10)) {
+    return <Text size="sm" c="dimmed" ff="monospace">{fmt(firstDate)}</Text>;
+  }
+  return (
+    <Text size="sm" c="dimmed" ff="monospace">
+      {fmt(firstDate)} → {fmt(lastDate)}
+    </Text>
+  );
+}
+
+function formatCount(s: ResourceSummary): React.ReactNode {
+  if (s.error) return <Text size="sm" c="dimmed">—</Text>;
+  if (s.count === null) return <Skeleton height={14} width={36} />;
+  return <Text size="sm">{s.count.toLocaleString()}</Text>;
+}
+
+// ---------------------------------------------------------------------------
+// RawPatientButton — compact [RAW] badge that opens a modal with ids + JSON
+// ---------------------------------------------------------------------------
+function RawPatientButton({ patient }: { patient: Patient }) {
+  const [opened, { open, close }] = useDisclosure(false);
+
+  const identifiers = patient.identifier ?? [];
+  const json = JSON.stringify(patient, null, 2);
+
+  return (
+    <>
+      <Tooltip label="View raw IDs and JSON" withArrow>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); open(); }}
+          aria-label="View raw patient data"
+        >
+          <Text size="xs" fw={600} ff="monospace">RAW</Text>
+        </ActionIcon>
+      </Tooltip>
+
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={`Raw data — ${patient.id}`}
+        size="lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Stack gap="sm">
+          {identifiers.length > 0 && (
+            <>
+              <Text size="sm" fw={600}>Identifiers</Text>
+              <Table withTableBorder withColumnBorders fz="xs">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>System</Table.Th>
+                    <Table.Th>Value</Table.Th>
+                    <Table.Th>Use</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {identifiers.map((id, i) => (
+                    <Table.Tr key={i}>
+                      <Table.Td ff="monospace">{id.system ?? '—'}</Table.Td>
+                      <Table.Td ff="monospace">{id.value ?? '—'}</Table.Td>
+                      <Table.Td>{id.use ?? '—'}</Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </>
+          )}
+          <Text size="sm" fw={600}>FHIR ID</Text>
+          <Code block fz="xs">{patient.id}</Code>
+          <Text size="sm" fw={600}>Full JSON</Text>
+          <Code block fz="xs" style={{ maxHeight: 400, overflowY: 'auto' }}>{json}</Code>
+        </Stack>
+      </Modal>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 interface PatientSearchParams {
   name: string;
   identifier: string;
@@ -50,9 +219,55 @@ function getPatientName(patient: Patient): string {
   return parts.join(', ') || (patient.id ?? '');
 }
 
-function getPatientIdentifier(patient: Patient): string {
-  if (!patient.identifier || patient.identifier.length === 0) return '';
-  return patient.identifier[0].value ?? '';
+// ---------------------------------------------------------------------------
+// PatientRow — single row; calls usePatientResourceSummary once and renders
+// the count + time-range cells from the shared result.
+// ---------------------------------------------------------------------------
+function PatientRow({
+  patient,
+  client,
+  onNavigate,
+}: {
+  patient: Patient;
+  client: MedplumClient;
+  onNavigate: (id: string) => void;
+}) {
+  const summary = usePatientResourceSummary(patient.id ?? '', client);
+  return (
+    <Table.Tr
+      style={{ cursor: 'pointer' }}
+      onClick={() => patient.id && onNavigate(patient.id)}
+    >
+      <Table.Td>
+        <Anchor
+          size="sm"
+          fw={500}
+          href={`/patients/${patient.id}`}
+          onClick={(e) => {
+            e.preventDefault();
+            if (patient.id) onNavigate(patient.id);
+          }}
+        >
+          {getPatientName(patient)}
+        </Anchor>
+      </Table.Td>
+      <Table.Td>
+        <Text size="sm">{patient.birthDate ?? ''}</Text>
+      </Table.Td>
+      <Table.Td>
+        {patient.gender && (
+          <Badge size="sm" variant="light" color={patient.gender === 'female' ? 'pink' : 'blue'}>
+            {patient.gender}
+          </Badge>
+        )}
+      </Table.Td>
+      <Table.Td>{formatTimeRange(summary)}</Table.Td>
+      <Table.Td style={{ textAlign: 'right' }}>{formatCount(summary)}</Table.Td>
+      <Table.Td onClick={(e) => e.stopPropagation()}>
+        <RawPatientButton patient={patient} />
+      </Table.Td>
+    </Table.Tr>
+  );
 }
 
 /**
@@ -105,35 +320,16 @@ export function PatientListPage() {
       const isWildcard = idValue.includes('*');
 
       if (isWildcard) {
-        // Wildcard: client-side prefix search on _id
+        // Wildcard: client-side prefix search on _id (delegated to SHELL-02 helper).
         const prefix = idValue.replace(/\*/g, '');
-        const idUrl = `Patient?_elements=id&_count=5000`;
-        client
-          .get(client.fhirUrl(idUrl).toString())
-          .then((raw) => {
+        searchByIdentifierPrefix(client, 'Patient', prefix, {
+          limit: 5000,
+          pageSize: count,
+        })
+          .then((result) => {
             if (cancelled) return;
-            const idBundle: Bundle = typeof raw === 'string' ? JSON.parse(raw) : raw;
-            const allIds = (idBundle.entry ?? [])
-              .map((e) => e.resource?.id)
-              .filter((id): id is string => !!id);
-            const matching = allIds.filter((id) => id.startsWith(prefix));
-
-            if (matching.length === 0) {
-              setBundle({ resourceType: 'Bundle', type: 'searchset', total: 0, entry: [] });
-              setLoading(false);
-              return;
-            }
-
-            const pageIds = matching.slice(0, count);
-            return client
-              .get(client.fhirUrl(`Patient?_id=${pageIds.join(',')}&_count=${count}`).toString())
-              .then((raw2) => {
-                if (cancelled) return;
-                const result: Bundle = typeof raw2 === 'string' ? JSON.parse(raw2) : raw2;
-                result.total = matching.length;
-                setBundle(result);
-                setLoading(false);
-              });
+            setBundle(result);
+            setLoading(false);
           })
           .catch((err) => {
             if (cancelled) return;
@@ -328,61 +524,19 @@ export function PatientListPage() {
               <Table.Th>Name</Table.Th>
               <Table.Th>Birth Date</Table.Th>
               <Table.Th>Gender</Table.Th>
-              <Table.Th>Identifier</Table.Th>
-              <Table.Th>ID</Table.Th>
+              <Table.Th>Time Range</Table.Th>
+              <Table.Th style={{ textAlign: 'right' }}>Resources</Table.Th>
+              <Table.Th></Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {patients.map((p) => (
-              <Table.Tr
+              <PatientRow
                 key={p.id}
-                style={{ cursor: 'pointer' }}
-                onClick={() => navigate(`/patients/${p.id}`)}
-              >
-                <Table.Td>
-                  <Anchor
-                    size="sm"
-                    fw={500}
-                    href={`/patients/${p.id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate(`/patients/${p.id}`);
-                    }}
-                  >
-                    {getPatientName(p)}
-                  </Anchor>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm">{p.birthDate ?? ''}</Text>
-                </Table.Td>
-                <Table.Td>
-                  {p.gender && (
-                    <Badge size="sm" variant="light" color={p.gender === 'female' ? 'pink' : 'blue'}>
-                      {p.gender}
-                    </Badge>
-                  )}
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm" ff="monospace" truncate style={{ maxWidth: 200 }}>
-                    {getPatientIdentifier(p)}
-                  </Text>
-                </Table.Td>
-                <Table.Td>
-                  <Anchor
-                    size="sm"
-                    ff="monospace"
-                    truncate="end"
-                    style={{ maxWidth: 150, display: 'block' }}
-                    href={`/patients/${p.id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate(`/patients/${p.id}`);
-                    }}
-                  >
-                    {p.id}
-                  </Anchor>
-                </Table.Td>
-              </Table.Tr>
+                patient={p}
+                client={client}
+                onNavigate={(id) => navigate(`/patients/${id}`)}
+              />
             ))}
           </Table.Tbody>
         </Table>

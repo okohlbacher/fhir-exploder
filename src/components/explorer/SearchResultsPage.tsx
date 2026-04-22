@@ -3,7 +3,7 @@ import { useOutletContext, useNavigate } from 'react-router-dom';
 import { Alert, Anchor, Breadcrumbs, Button, Group, Menu, Skeleton, Stack, Table, Text, Badge } from '@mantine/core';
 import { IconDownload, IconFileTypeCsv, IconFileCode } from '@tabler/icons-react';
 import { useMedplum } from '@medplum/react-hooks';
-import type { Bundle, Resource } from '@medplum/fhirtypes';
+import type { Bundle, Resource, ResourceType } from '@medplum/fhirtypes';
 import type { ExplorerOutletContext } from './ExplorerLayout';
 import { parseResourceTypes } from '../../fhir/capability';
 import { useSearchState } from '../../hooks/useSearchState';
@@ -12,6 +12,7 @@ import { SearchFilterPanel } from './SearchFilterPanel';
 import { PaginationControls } from './PaginationControls';
 import { resourcesToCSV, resourcesToNDJSON, downloadString } from '../../utils/export';
 import { toRecord } from '../../utils/fhir-helpers';
+import { searchByIdentifierPrefix } from '../../utils/searchByIdentifierPrefix';
 
 /**
  * Extracts a human-readable summary of a resource for table display.
@@ -163,39 +164,17 @@ export function SearchResultsPage() {
     }
 
     // Client-side prefix search for identifier/ID wildcards.
-    // Fetches all IDs (lightweight), filters by prefix, then fetches matching resources.
+    // Delegated to shared helper (SHELL-02). Helper fetches IDs, prefix-filters,
+    // and returns a Bundle with `total` overridden to the full match count.
     if (idPrefixSearch !== null) {
-      const prefix = idPrefixSearch;
-      const MAX_ID_FETCH = 5000;
-      const idUrl = `${resourceType}?_elements=id&_count=${MAX_ID_FETCH}`;
-      client
-        .get(client.fhirUrl(idUrl).toString())
-        .then((raw) => {
+      searchByIdentifierPrefix(client, resourceType as ResourceType, idPrefixSearch, {
+        limit: 5000,
+        pageSize: searchRequest.count ?? 20,
+      })
+        .then((result) => {
           if (cancelled) return;
-          const idBundle: Bundle = typeof raw === 'string' ? JSON.parse(raw) : raw;
-          const allIds = (idBundle.entry ?? [])
-            .map((e) => e.resource?.id)
-            .filter((id): id is string => !!id);
-          const matchingIds = allIds.filter((id) => id.startsWith(prefix));
-
-          if (matchingIds.length === 0) {
-            setBundle({ resourceType: 'Bundle', type: 'searchset', total: 0, entry: [] });
-            setLoading(false);
-            return;
-          }
-
-          // Fetch full resources for matching IDs (batch in groups of 50)
-          const pageSize = searchRequest.count ?? 20;
-          const pageIds = matchingIds.slice(0, pageSize);
-          const fetchUrl = `${resourceType}?_id=${pageIds.join(',')}&_count=${pageSize}`;
-          return client.get(client.fhirUrl(fetchUrl).toString()).then((raw2) => {
-            if (cancelled) return;
-            const result: Bundle = typeof raw2 === 'string' ? JSON.parse(raw2) : raw2;
-            // Override total to reflect all matches, not just this page
-            result.total = matchingIds.length;
-            setBundle(result);
-            setLoading(false);
-          });
+          setBundle(result);
+          setLoading(false);
         })
         .catch((err) => {
           if (cancelled) return;
