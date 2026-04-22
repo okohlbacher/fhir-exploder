@@ -1,151 +1,20 @@
 /**
- * useCompletenessReport — progressive, concurrency-limited, cache-backed
- * per-type completeness sampler for Plan 05-03.
- *
- * Mirrors the `useResourceCounts` worker-pool shape:
- *   - CONCURRENCY = 4 simultaneous sampling operations
- *   - cancelledRef pattern for unmount / dep-change abort
- *   - Promise-chained with .finally → next() recursion for throughput
- *
- * Additions layered on top:
- *   - Sample-size debounce at the HOOK level (500ms) so rapid slider
- *     changes do not trigger N samples per keystroke (T-05-03-02).
- *   - QualityMetricsCache hit path per (serverUrl, type, sampleSize)
- *     so tab-switching or drill-down navigation does not re-sample.
- *   - Rollup wire-up: whenever `reports` settles, compute the arithmetic
- *     mean of per-type percentages (excluding loading/errored/total===0)
- *     and push it into QualityMetricsContext via setCompleteness — this
- *     is how OverviewStrip Card 3 flips from em-dash to a real value.
- *     Rule locked in 05-01-SUMMARY.
- *
- * Cross-server cache preserved via `getQualityMetricsCache(serverUrl)`
- * registry in `metricsCache.ts` (2-entry LRU — Plan 24-03).
+ * useCompletenessReport — wraps useSampleWalker<PerTypeCompletenessReport>,
+ * supplies the completeness compute callback, pushes arithmetic-mean rollup
+ * to QualityMetricsContext (Plan 05-01 locked rule). Worker-pool lives in
+ * useSampleWalker<T> (QDDEP-03 / Plan 25-02).
  */
-import { useEffect, useMemo, useState } from 'react';
-import { useDebouncedValue } from '@mantine/hooks';
+import { useEffect } from 'react';
 import type { MedplumClient } from '@medplum/core';
 
 import { sampleResources } from '../quality/sampling';
 import { computeCompleteness, requiredElementPaths } from '../quality/completenessWalker';
 import { getProfileForType } from '../quality/profiles';
-import { getQualityMetricsCache } from '../quality/metricsCache';
-import { buildMetricsKey } from '../quality/keys';
 import { useQualityMetrics as useQualityMetricsContext } from '../quality/QualityMetricsContext';
 import type { PerTypeCompletenessReport, PerTypeReport } from '../quality/types';
+import { useSampleWalker } from './useSampleWalker';
 
-const CONCURRENCY = 4;
-const DEBOUNCE_MS = 500;
-
-export function useCompletenessReport(
-  client: MedplumClient | null,
-  types: string[],
-  sampleSize: number,
-  patientIds?: string[],
-): Record<string, PerTypeReport<PerTypeCompletenessReport>> {
-  const [debouncedSize] = useDebouncedValue(sampleSize, DEBOUNCE_MS);
-  const [reports, setReports] = useState<
-    Record<string, PerTypeReport<PerTypeCompletenessReport>>
-  >({});
-  const typesKey = useMemo(() => types.join(','), [types]);
-  // Stable key for patientIds to avoid unnecessary re-runs
-  const patientIdsKey = useMemo(
-    () => (patientIds ? patientIds.slice().sort().join(',') : ''),
-    [patientIds],
-  );
-
-  useEffect(() => {
-    // Per-effect local cancellation flag. A shared ref would allow a
-    // stale in-flight promise from a prior effect run to commit after
-    // this effect re-sets the ref to false. Closure-scoped `cancelled`
-    // isolates cancellation to the in-flight work of THIS effect.
-    let cancelled = false;
-    if (!client || types.length === 0) {
-      setReports({});
-      return;
-    }
-    const serverUrl = client.getBaseUrl();
-    const cache = getQualityMetricsCache(serverUrl);
-
-    // Seed: hydrate cache hits synchronously, mark the rest as 'loading'.
-    // Include patientIdsKey in cache key so cohort changes invalidate.
-    const initial: Record<string, PerTypeReport<PerTypeCompletenessReport>> = {};
-    for (const t of types) {
-      const cacheKey = buildMetricsKey(serverUrl, t, debouncedSize, 'completeness') +
-        (patientIdsKey ? `|pid:${patientIdsKey}` : '');
-      const hit = cache.get<PerTypeCompletenessReport>(cacheKey);
-      initial[t] = hit ? hit.value : 'loading';
-    }
-    setReports(initial);
-
-    const queue = types.filter((t) => initial[t] === 'loading');
-    let active = 0;
-
-    function next() {
-      // Early return: effect cleanup set cancelled=true, abort remaining pages
-      if (cancelled) return;
-      while (active < CONCURRENCY && queue.length > 0) {
-        const t = queue.shift()!;
-        active++;
-        computeForType(client!, t, debouncedSize, patientIds)
-          .then((report) => {
-            if (cancelled) return;
-            const cacheKey = buildMetricsKey(serverUrl, t, debouncedSize, 'completeness') +
-              (patientIdsKey ? `|pid:${patientIdsKey}` : '');
-            cache.set(cacheKey, {
-              value: report,
-              computedAt: Date.now(),
-              serverUrl,
-              resourceType: t,
-              sampleSize: debouncedSize,
-            });
-            setReports((p) => ({ ...p, [t]: report }));
-          })
-          .catch(() => {
-            if (cancelled) return;
-            setReports((p) => ({ ...p, [t]: 'error' }));
-          })
-          .finally(() => {
-            active--;
-            next();
-          });
-      }
-    }
-    next();
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, typesKey, debouncedSize, patientIdsKey]);
-
-  // Rollup side-effect: arithmetic mean of settled per-type percentages.
-  // See 05-01-SUMMARY for the locked rule. Undefined if nothing settled.
-  const { setCompleteness } = useQualityMetricsContext();
-  useEffect(() => {
-    const values = Object.values(reports);
-    // Suppress rollup updates while we are still waiting for the first
-    // settlement of at least one type — otherwise the OverviewStrip card
-    // flickers em-dash → value → em-dash on rapid dep changes.
-    const stillWaiting =
-      values.length > 0 && values.some((r) => r === 'loading');
-    const pcts: number[] = [];
-    for (const r of values) {
-      if (r === 'loading' || r === 'error') continue;
-      if (!r || typeof r !== 'object') continue;
-      if (r.total > 0) pcts.push((r.populated / r.total) * 100);
-    }
-    if (pcts.length === 0) {
-      if (!stillWaiting) setCompleteness(undefined);
-      return;
-    }
-    const avg = pcts.reduce((a, b) => a + b, 0) / pcts.length;
-    setCompleteness(Math.round(avg));
-  }, [reports, setCompleteness]);
-
-  return reports;
-}
-
-async function computeForType(
+async function computeForCompleteness(
   client: MedplumClient,
   resourceType: string,
   sampleSize: number,
@@ -155,13 +24,32 @@ async function computeForType(
   const requiredPaths = profile ? requiredElementPaths(profile) : [];
   const sample = await sampleResources(client, resourceType, sampleSize, patientIds);
   const { populated, total, perPath, perResource } = computeCompleteness(sample, requiredPaths);
-  return {
-    populated,
-    total,
-    perPath,
-    perResource,
-    sampleSize: sample.length,
-    totalForType: null, // joined by useResourceCounts elsewhere; left unjoined here
-    profileUrl: profile?.url ?? null,
-  };
+  return { populated, total, perPath, perResource, sampleSize: sample.length, totalForType: null, profileUrl: profile?.url ?? null };
+}
+
+export function useCompletenessReport(
+  client: MedplumClient | null,
+  types: string[],
+  sampleSize: number,
+  patientIds?: string[],
+): Record<string, PerTypeReport<PerTypeCompletenessReport>> {
+  const { reports } = useSampleWalker<PerTypeCompletenessReport>({
+    client, types, sampleSize, patientIds,
+    compute: computeForCompleteness,
+    metricNamespace: 'completeness',
+  });
+  // Rollup (05-01-SUMMARY): mean of per-type populated/total, suppressed while loading.
+  const { setCompleteness } = useQualityMetricsContext();
+  useEffect(() => {
+    const values = Object.values(reports);
+    const stillWaiting = values.length > 0 && values.some((r) => r === 'loading');
+    const pcts: number[] = [];
+    for (const r of values) {
+      if (r === 'loading' || r === 'error' || !r || typeof r !== 'object') continue;
+      if (r.total > 0) pcts.push((r.populated / r.total) * 100);
+    }
+    if (pcts.length === 0) { if (!stillWaiting) setCompleteness(undefined); return; }
+    setCompleteness(Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length));
+  }, [reports, setCompleteness]);
+  return reports;
 }

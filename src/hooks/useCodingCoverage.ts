@@ -1,31 +1,28 @@
 /**
- * useCodingCoverage — progressive, concurrency-limited, cache-backed
- * per-type coding coverage sampler for Plan 05-04.
- *
- * Mirrors `useCompletenessReport` (Plan 05-03) exactly — same worker-pool
- * shape, same debounce semantics, same rollup wire-up via
- * QualityMetricsContext. The only differences are the walker
- * (aggregateCoverage from codingCoverageWalker) and the metric key
- * (`'coverage'` instead of `'completeness'`).
- *
- * Uses the shared metrics-cache registry via getQualityMetricsCache(serverUrl)
- * — see Plan 24-03. buildMetricsKey's metric namespace ('completeness' vs
- * 'coverage') guarantees no key collision within a single QualityMetricsCache
- * instance.
+ * useCodingCoverage — wrapper around `useSampleWalker<PerTypeCoverageReport>`
+ * that supplies the coverage-specific `compute` callback and pushes the
+ * arithmetic-mean rollup into QualityMetricsContext (Plan 05-01 locked rule).
+ * Worker-pool orchestration lives in `useSampleWalker<T>` (QDDEP-03 / Plan 25-02).
  */
-import { useEffect, useMemo, useState } from 'react';
-import { useDebouncedValue } from '@mantine/hooks';
+import { useEffect } from 'react';
 import type { MedplumClient } from '@medplum/core';
 
 import { sampleResources } from '../quality/sampling';
 import { aggregateCoverage } from '../quality/codingCoverageWalker';
-import { getQualityMetricsCache } from '../quality/metricsCache';
-import { buildMetricsKey } from '../quality/keys';
 import { useQualityMetrics as useQualityMetricsContext } from '../quality/QualityMetricsContext';
 import type { PerTypeCoverageReport, PerTypeReport } from '../quality/types';
 
-const CONCURRENCY = 4;
-const DEBOUNCE_MS = 500;
+import { useSampleWalker } from './useSampleWalker';
+
+async function computeForCoverage(
+  client: MedplumClient,
+  resourceType: string,
+  sampleSize: number,
+  patientIds?: string[],
+): Promise<PerTypeCoverageReport> {
+  const sample = await sampleResources(client, resourceType, sampleSize, patientIds);
+  return aggregateCoverage(sample);
+}
 
 export function useCodingCoverage(
   client: MedplumClient | null,
@@ -33,110 +30,28 @@ export function useCodingCoverage(
   sampleSize: number,
   patientIds?: string[],
 ): Record<string, PerTypeReport<PerTypeCoverageReport>> {
-  const [debouncedSize] = useDebouncedValue(sampleSize, DEBOUNCE_MS);
-  const [reports, setReports] = useState<
-    Record<string, PerTypeReport<PerTypeCoverageReport>>
-  >({});
-  const typesKey = useMemo(() => types.join(','), [types]);
-  const patientIdsKey = useMemo(
-    () => (patientIds ? patientIds.slice().sort().join(',') : ''),
-    [patientIds],
-  );
+  const { reports } = useSampleWalker<PerTypeCoverageReport>({
+    client, types, sampleSize, patientIds,
+    compute: computeForCoverage,
+    metricNamespace: 'coverage',
+  });
 
-  useEffect(() => {
-    // Per-effect local cancellation flag. A shared ref would allow a
-    // stale in-flight promise from a prior effect run to commit after
-    // this effect re-sets the ref to false. Closure-scoped `cancelled`
-    // isolates cancellation to the in-flight work of THIS effect.
-    let cancelled = false;
-    if (!client || types.length === 0) {
-      setReports({});
-      return;
-    }
-    const serverUrl = client.getBaseUrl();
-    const cache = getQualityMetricsCache(serverUrl);
-
-    // Seed: hydrate cache hits synchronously, mark the rest as 'loading'.
-    // Include patientIdsKey in cache key so cohort changes invalidate.
-    const initial: Record<string, PerTypeReport<PerTypeCoverageReport>> = {};
-    for (const t of types) {
-      const cacheKey = buildMetricsKey(serverUrl, t, debouncedSize, 'coverage') +
-        (patientIdsKey ? `|pid:${patientIdsKey}` : '');
-      const hit = cache.get<PerTypeCoverageReport>(cacheKey);
-      initial[t] = hit ? hit.value : 'loading';
-    }
-    setReports(initial);
-
-    const queue = types.filter((t) => initial[t] === 'loading');
-    let active = 0;
-
-    function next() {
-      if (cancelled) return;
-      while (active < CONCURRENCY && queue.length > 0) {
-        const t = queue.shift()!;
-        active++;
-        sampleResources(client!, t, debouncedSize, patientIds)
-          .then((sample) => {
-            if (cancelled) return;
-            const report = aggregateCoverage(sample);
-            const cacheKey = buildMetricsKey(serverUrl, t, debouncedSize, 'coverage') +
-              (patientIdsKey ? `|pid:${patientIdsKey}` : '');
-            cache.set(
-              cacheKey,
-              {
-                value: report,
-                computedAt: Date.now(),
-                serverUrl,
-                resourceType: t,
-                sampleSize: debouncedSize,
-              },
-            );
-            setReports((p) => ({ ...p, [t]: report }));
-          })
-          .catch(() => {
-            if (cancelled) return;
-            setReports((p) => ({ ...p, [t]: 'error' }));
-          })
-          .finally(() => {
-            active--;
-            next();
-          });
-      }
-    }
-    next();
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, typesKey, debouncedSize, patientIdsKey]);
-
-  // Rollup side-effect: arithmetic mean of per-type coverage percentages
-  // (systemCode/totalCodedFields*100), excluding loading, errored, and
-  // totalCodedFields===0 types. Rule locked in 05-01-SUMMARY; mirrors
-  // setCompleteness shape from Plan 05-03.
+  // Rollup (05-01-SUMMARY): arithmetic mean of per-type systemCode/totalCodedFields
+  // percentages, suppressed while any type is still loading.
   const { setCoverage } = useQualityMetricsContext();
   useEffect(() => {
     const values = Object.values(reports);
-    // Suppress rollup updates while we are still waiting for the first
-    // settlement of at least one type — otherwise the OverviewStrip card
-    // flickers em-dash → value → em-dash on rapid dep changes.
-    const stillWaiting =
-      values.length > 0 && values.some((r) => r === 'loading');
+    const stillWaiting = values.length > 0 && values.some((r) => r === 'loading');
     const pcts: number[] = [];
     for (const r of values) {
-      if (r === 'loading' || r === 'error') continue;
-      if (!r || typeof r !== 'object') continue;
-      if (r.totalCodedFields > 0) {
-        pcts.push((r.systemCode / r.totalCodedFields) * 100);
-      }
+      if (r === 'loading' || r === 'error' || !r || typeof r !== 'object') continue;
+      if (r.totalCodedFields > 0) pcts.push((r.systemCode / r.totalCodedFields) * 100);
     }
     if (pcts.length === 0) {
       if (!stillWaiting) setCoverage(undefined);
       return;
     }
-    const avg = pcts.reduce((a, b) => a + b, 0) / pcts.length;
-    setCoverage(Math.round(avg));
+    setCoverage(Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length));
   }, [reports, setCoverage]);
 
   return reports;
