@@ -1,24 +1,26 @@
 ---
 phase: 23-v1.3-close-out
 verified: 2026-04-17T12:00:00Z
-status: human_needed
-score: 6/7 must-haves verified (CLOSE-06 partial — 2 UAT items environmental-deferred)
+re_verified: 2026-04-22T17:30:00Z
+status: passed
+score: 7/7 must-haves verified (CLOSE-06 fully resolved via Plan 23-05 + 23-06 live-Blaze re-run)
 overrides_applied: 0
-human_verification:
-  - test: "Confirm T-6.3 A panel scoping against a Blaze instance with matching patients"
-    expected: "With a cohort active, panel numbers (Completeness, Coding Coverage, Plausibility) are strictly lower than the unscoped baseline. Network tab shows FHIR requests with patient= or _id= params."
-    why_human: "Requires a Blaze instance with test data that matches cohort criteria (MII Synthea seed). The two UAT sessions used http://localhost:8080/fhir which had no matching patients. D-10 classified as environmental; user accepted accept-and-defer — but no live-Blaze pass was ever recorded for this item."
-  - test: "Confirm T-6.3 B snapshot/PDF cohort metadata"
-    expected: "After clicking Capture snapshot with an active cohort, Local Storage quality.trends.v1 contains cohortId/cohortName/cohortPatientCount. PDF cover page shows both Resource types: and Cohort: lines."
-    why_human: "Depends on T-6.3 A having matching patients. Same environmental blocker — no live-Blaze pass recorded."
+human_verification_resolved:
+  - test: "T-6.3 A panel scoping against a Blaze instance with matching patients"
+    resolved_by: "Plan 23-05 (commits dce0564, 3d39aef, 1cafdf2) + Plan 23-06 live-Blaze re-run on 2026-04-22"
+    evidence: "23-HUMAN-UAT.md Test 1 flipped result: issue → pass; per-metric Network-tab evidence captured for all 4 previously-stale report hooks."
+  - test: "T-6.3 B snapshot/PDF cohort metadata"
+    resolved_by: "Plan 23-06 live-Blaze re-run on 2026-04-22"
+    evidence: "23-HUMAN-UAT.md Test 2 pass; snapshot writes cohortId/cohortName/cohortPatientCount; PDF cover page shows both Resource types: and Cohort: lines when active."
 ---
 
 # Phase 23: v1.3 Close-Out Verification Report
 
 **Phase Goal:** Close all outstanding v1.3 audit items (CLOSE-01 through CLOSE-07) so the v1.3 milestone can flip from tech_debt to shipped-clean.
 **Verified:** 2026-04-17T12:00:00Z
-**Status:** human_needed
-**Re-verification:** No — initial verification
+**Re-verified:** 2026-04-22T17:30:00Z
+**Status:** passed
+**Re-verification:** Yes — T-6.3 A root-cause fixed by Plan 23-05, re-run passed by Plan 23-06 on 2026-04-22
 
 ## Goal Achievement
 
@@ -32,19 +34,19 @@ human_verification:
 | 4 | CLOSE-03: CohortBuilderForm reads parsed.truncated not parsedRefs.length === PATIENT_REF_CAP | VERIFIED | `CohortBuilderForm.tsx:174-179` — `const parsed = useMemo(() => parsePatientRefs(debouncedRef), ...); const parsedRefs = parsed.refs; const truncated = parsed.truncated;`. No `PATIENT_REF_CAP` constant remains in file. |
 | 5 | CLOSE-04: FhirpathLike alias removed from fdpgCodec.ts; no FhirpathLike or CodecCriterion remains | VERIFIED | Repo-wide grep for `FhirpathLike` and `CodecCriterion` returns 0 results. `fdpgCodec.ts:59` — `for (const raw of cohort.criteria)` (uncasted). Forward-compat JSDoc replaced with 2-line comment. Commit 8dbd76c. |
 | 6 | CLOSE-05: EditCohortModal toast reads updated.name at toast-dispatch time, not cohort.name closure | VERIFIED | `EditCohortModal.tsx:57-62` — `const updated = updateCohort(cohort.id, input); notifications.show({ message: '"${updated.name}" updated. ...' })`. Old `cohort.name` pattern gone. Test `'Cohort updated toast reflects the renamed cohort name (CLOSE-05)'` at `EditCohortModal.test.tsx:321`. Commit b3a8860. |
-| 7 | CLOSE-06: 8 UAT items executed against live Blaze, results recorded, D-10 policy applied | PARTIAL | T-5.3, T-6.3 C, T-6.3 D, all 7 Phase 22 items: pass (6 pass + 1 code-bug-fixed). T-6.3 A and T-6.3 B: environmental-deferred (no matching test data on the Blaze instance used). D-10 applied correctly; user accepted-and-deferred. Code bug CLOSE-08 was discovered and fixed inline (commit 39d9000). PHI grep matches on both UAT files are false-positives (planning slugs and schema URLs, not PHI). |
-| 8 | CLOSE-07: nyquist_compliant: true and wave_0_complete: true flipped on both Phase 21 + 22 VALIDATION.md | VERIFIED | `21-VALIDATION.md:5` — `nyquist_compliant: true`, `wave_0_complete: true`. `22-VALIDATION.md:5` — same. Commit e1b9a93 touches exactly 2 files, 4 insertions + 4 deletions. |
+| 7 | CLOSE-06: 8 UAT items executed against live Blaze, results recorded, D-10 policy applied | VERIFIED | Initial run: T-5.3, T-6.3 C, T-6.3 D, all 7 Phase 22 items pass (6 pass + 1 code-bug-fixed). T-6.3 A and T-6.3 B initially environmental-deferred. Plan 23-05 diagnosed and fixed the two root-cause defects (Bug A OverviewStrip tiles unscoped; Bug B 4 report hooks stale on patientIds change) in commits dce0564 (RED tests) + 3d39aef (Bug A fix) + 1cafdf2 (Bug B fix). Plan 23-06 re-ran UAT on 2026-04-22 against live Blaze (localhost:8080/fhir, 139-patient cohort) — both T-6.3 A and T-6.3 B pass with per-metric Network-tab evidence (commit 913e3d9). Code bug CLOSE-08 was discovered and fixed inline (commit 39d9000). PHI grep matches on both UAT files are false-positives (planning slugs and schema URLs, not PHI). |
+| 8 | CLOSE-07: nyquist_compliant: true and wave_0_complete: true flipped on both Phase 21 + 22 VALIDATION.md | VERIFIED | `21-VALIDATION.md:5` — `nyquist_compliant: true`, `wave_0_complete: true`. `22-VALIDATION.md:5` — same. Commit e1b9a93 touches exactly 2 files, 4 insertions + 4 deletions. Re-confirmed 2026-04-22 by Plan 23-07 Task 1 verify-first grep (4/4 true flags). |
 
-**Score:** 6/7 truths verified (CLOSE-06 partial — 2 of 8 UAT items environmental-deferred, never live-Blaze confirmed)
+**Score:** 7/7 truths verified (CLOSE-06 fully resolved via Plan 23-05 root-cause fix + Plan 23-06 live-Blaze re-run on 2026-04-22)
 
-### Deferred Items
+### Deferred Items — RESOLVED 2026-04-22
 
-Items not yet met but explicitly addressed in later milestone phases.
+Items originally deferred at initial 2026-04-17 verification; all resolved by Plan 23-05 (root-cause fix) + Plan 23-06 (live-Blaze re-run).
 
-| # | Item | Addressed In | Evidence |
-|---|------|-------------|---------|
-| 1 | T-6.3 A panel scoping (environmental — no matching test data) | Not a later phase; user decision: accept-and-defer | Documented in 23-03-SUMMARY.md and 21-UAT.md ## Gaps as environmental; MII Synthea seed todo filed |
-| 2 | T-6.3 B snapshot/PDF cohort metadata (environmental — depends on T-6.3 A) | Not a later phase; user decision: accept-and-defer | Documented in 23-03-SUMMARY.md as environmental; resolves when T-6.3 A resolved |
+| # | Item | Resolution | Evidence |
+|---|------|-----------|---------|
+| 1 | T-6.3 A panel scoping (originally environmental — turned out to be two code bugs) | RESOLVED — Plan 23-05 commits dce0564 + 3d39aef + 1cafdf2 fixed Bug A (OverviewStrip tiles unscoped) and Bug B (4 report hooks stale on patientIds change); Plan 23-06 re-run PASS on 2026-04-22 | 23-HUMAN-UAT.md Test 1 `result: pass`; per-metric Network-tab evidence for Plausibility, Lab Ranges, Duplicates, References |
+| 2 | T-6.3 B snapshot/PDF cohort metadata (depended on T-6.3 A) | RESOLVED — Plan 23-06 live-Blaze re-run confirmed snapshot + PDF metadata with active cohort | 23-HUMAN-UAT.md Test 2 `result: pass`; snapshot writes cohortId/cohortName/cohortPatientCount; PDF cover shows both Resource types and Cohort lines |
 
 ### Required Artifacts
 
@@ -114,7 +116,9 @@ Step 7b: SKIPPED for test files (unit tests are runnable via vitest but require 
 
 No stubs, no TODO/FIXME blockers, no placeholder returns, no hardcoded empty data found in any Phase 23 modified files.
 
-### Human Verification Required
+### Human Verification Required — RESOLVED 2026-04-22
+
+**RESOLVED 2026-04-22:** Both items below were verified-pass on live Blaze (localhost:8080/fhir, 139-patient cohort) after Plan 23-05 fixed the root-cause defects. Historical content preserved below for audit trail.
 
 #### 1. T-6.3 A — Panel scoping against live Blaze with matching patients
 
@@ -134,9 +138,9 @@ No stubs, no TODO/FIXME blockers, no placeholder returns, no hardcoded empty dat
 
 ### Gaps Summary
 
-No blocking code-level gaps were found. All 7 CLOSE-0X requirements have implementation evidence in the codebase. The two human verification items (T-6.3 A and T-6.3 B) are environmental gaps that were explicitly accepted-and-deferred by the user during Plan 23-03. They represent live-Blaze confirmation that is still outstanding — not regressions or missing code.
+No blocking code-level gaps were found. All 7 CLOSE-0X requirements have implementation evidence in the codebase. The two human verification items (T-6.3 A and T-6.3 B) were originally accepted-and-deferred by the user during Plan 23-03 as environmental.
 
-The status is `human_needed` because T-6.3 A and T-6.3 B require a Blaze instance with MII Synthea test data to confirm, and no such confirmation has been recorded. Once those two items are verified on a properly seeded Blaze instance, Phase 23 can be considered fully complete.
+**Resolution:** The "environmental" classification turned out to be incorrect — the 2026-04-17 UAT failure ("Nothing happens if I select a cohort that matches 139 patients, the counts on the quality dashboard do not change at all") was caused by two distinct code defects diagnosed in commit 8656431: (Bug A) OverviewStrip tiles 'Total resources' and 'Resource types' were unconditionally unscoped because `useResourceCountsMetrics` / `useResourceCounts` accepted no `patientIds` argument; (Bug B) Plausibility, LabRanges, Duplicates, and Reference reports called `useAsyncRun` without `autoStart: true` and without a manual cancel+reset effect keyed on `patientIds`, so on cohort activation their `patientIds` dep changed but the runner never re-fired and previously-computed unscoped results persisted stale. Plan 23-05 delivered the fix across commits dce0564 (RED regression tests), 3d39aef (Bug A fix — OverviewStrip scoping), and 1cafdf2 (Bug B fix — stale-result invalidation on `patientIds` change). Plan 23-06 delivered the live-Blaze pass on 2026-04-22 against the same 139-patient cohort that originally failed. Phase 23 is now shipped-clean; v1.3 milestone is eligible for `/gsd-audit-milestone v1.3` re-run to flip the verdict from `tech_debt` to `shipped-clean`.
 
 **PHI sanitization note:** The canonical PHI grep pattern returns non-zero counts on both UAT files, but all matches are false-positives:
 - `21-UAT.md`: matches `21-interactive-cohort-builder-rename` (a planning slug, 30+ chars)
@@ -147,4 +151,6 @@ None of these contain patient IDs, tokens, or auth headers. The actual server UR
 ---
 
 _Verified: 2026-04-17T12:00:00Z_
+_Re-verified: 2026-04-22T17:30:00Z_
 _Verifier: Claude (gsd-verifier)_
+_Re-verifier: Claude (gsd-executor, Plan 23-07)_
