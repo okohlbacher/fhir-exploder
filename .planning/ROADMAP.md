@@ -114,7 +114,10 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
   3. Navigating to `/patients/123`, `/explorer/Patient/1`, or `/quality/plausibility/Observation` highlights the corresponding sidebar section root via `RouterNavLink`'s native `isActive`.
   4. Internal links across `CompletenessPanel`, `SearchResultsPage`, `PatientListPage`, `ResourceCountsPanel`, `CodingCoveragePanel` use `Anchor component={Link}` with Mantine theme colors; no inline `style={{ color: 'var(--mantine-color-blue-6)' }}`.
   5. `SettingsContext.tsx:32` has no `eslint-disable-next-line react-hooks/exhaustive-deps`; `setSettings` is `useCallback`-wrapped.
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 26-01-PLAN.md — SHELL-01: ConnectionGatedOutlet render-prop primitive + migrate 3 layouts + Wave 0 legacy-migration test
+- [ ] 26-02-PLAN.md — SHELL-02 + SHELL-04 + SHELL-05 bundle: searchByIdentifierPrefix helper + CompletenessPanel Anchor+Link migration + SettingsContext useCallback
+- [ ] 26-03-PLAN.md — SHELL-03: Sidebar useMatch for nested-route activation
 **Effort**: ~1 day
 **UI hint**: yes
 
@@ -189,7 +192,7 @@ Phase 23 (close v1.3) ─┬─▶ Phase 24 (fetch foundation, incl. line-75 use
 | 23. v1.3 Close-Out | v1.4 | 7/7 | Complete    | 2026-04-22 |
 | 24. Data-Fetching Foundation | v1.4 | 4/4 | Complete    | 2026-04-17 |
 | 25. Quality Module Dedup | v1.4 | 4/4 | Complete    | 2026-04-22 |
-| 26. App-Shell Dedup | v1.4 | 0/? | 📋 Not started | — |
+| 26. App-Shell Dedup | v1.4 | 0/3 | 📋 Planned | — |
 | 27. Efficiency Polish | v1.4 | 0/? | 📋 Not started | — |
 | 28. Micro-Consistency Sweep | v1.4 | 0/? | 📋 Not started | — |
 | 29. Backlog UX | v1.4 | 0/? | 📋 Not started | — |
