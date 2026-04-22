@@ -162,4 +162,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-22 — Phase 23 gap closure complete (T-6.3 A/B live-Blaze PASS after Bug A+B fix); v1.3 close-out now shipped-clean*
+*Last updated: 2026-04-22 — Phase 25 Quality Module Dedup shipped: useSampleWalker sibling primitive (hooks 310→113 LOC), DrillDownShell collapses 5 drill-downs, SortableTh+RunProgress extracted, keepMounted dropped on Completeness+Coding. All 6 QDDEP requirements delivered; VERIFICATION 10/10.*
