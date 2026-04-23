@@ -1,0 +1,11 @@
+{
+  "resourceType": "OperationOutcome",
+  "issue": [
+    {
+      "severity": "error",
+      "code": "code-invalid",
+      "expression": ["Patient.maritalStatus.coding.code"],
+      "diagnostics": "Code is required from http://hl7.org/fhir/ValueSet/marital-status"
+    }
+  ]
+}

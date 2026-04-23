@@ -1,0 +1,11 @@
+{
+  "resourceType": "OperationOutcome",
+  "issue": [
+    {
+      "severity": "error",
+      "code": "invariant",
+      "location": ["Observation.component[0]"],
+      "diagnostics": "Slice <blood-pressure> does not match"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "resourceType": "OperationOutcome",
+  "issue": [
+    {
+      "severity": "warning",
+      "code": "code-invalid",
+      "expression": ["Observation.code"],
+      "diagnostics": "Code preferred from ValueSet — not a member"
+    }
+  ]
+}

@@ -58,6 +58,7 @@ import { resolveBackends } from '../../quality/validationBackends';
 import { useConformanceRun } from '../../hooks/useConformanceRun';
 import { createTerminologyClient } from '../../terminology/terminologyClient';
 import { phiAckKey } from '../../quality/phiGate';
+import { normalizeOperationOutcomeIssue } from '../../quality/normalizers';
 import { ValidationIssueList } from './ValidationIssueList';
 import { ResourceIssueTable } from './ResourceIssueTable';
 import { RunProgress } from './RunProgress';
@@ -165,17 +166,9 @@ export function ValidationPanel(_props: ValidationPanelProps) {
 
   // Normalized issues from legacy backends for the Resources tab
   const legacyNormalizedIssues = useMemo((): NormalizedIssue[] => {
-    return run.legacyIssues.map((issue) => ({
-      resourceId: issue._resourceId ?? 'unknown/unknown',
-      resourceType: (issue._resourceId ?? 'unknown').split('/')[0],
-      field: issue.expression?.[0] ?? issue.location?.[0] ?? '',
-      description: `${issue.code ?? ''} -- ${issue.diagnostics ?? issue.details?.text ?? ''}`,
-      severity: (issue.severity === 'fatal' || issue.severity === 'error'
-        ? 'error'
-        : issue.severity === 'warning'
-          ? 'warning'
-          : 'info') as NormalizedIssue['severity'],
-    }));
+    return run.legacyIssues.map((issue) =>
+      normalizeOperationOutcomeIssue(issue, issue._resourceId ?? 'unknown/unknown'),
+    );
   }, [run.legacyIssues]);
 
   // Merge conformance + legacy normalized issues for the Resources tab
