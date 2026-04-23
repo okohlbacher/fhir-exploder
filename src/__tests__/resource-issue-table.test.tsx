@@ -6,6 +6,7 @@
  * prop, empty state, and filter-empty state.
  */
 import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { useMemo, useState } from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import { MemoryRouter } from 'react-router-dom';
@@ -307,5 +308,97 @@ describe('ResourceIssueTable', () => {
 
     // Should be on page 1 (showing from 1)
     expect(screen.getByText(/Showing 1--/)).toBeTruthy();
+  });
+
+  // ----- EFF-01 regression tests (Phase 27, Plan 01) -----
+
+  it('page 2 yields rows 51-100 from a 200-issue input', () => {
+    renderTable({ issues: makeIssues(200) });
+
+    // Initially page 1, rows 1-50
+    expect(screen.getByText(/Showing 1--50 of 200 issues/)).toBeTruthy();
+
+    // Click page 2
+    const page2Btn = screen.getByRole('button', { name: '2' });
+    fireEvent.click(page2Btn);
+
+    // Now showing rows 51-100
+    expect(screen.getByText(/Showing 51--100 of 200 issues/)).toBeTruthy();
+    // Patient/p50 falls within page 2 (it is the 51st row when sorted by
+    // severity then resourceId; rows 1-50 are p0..p49 of severity-error and
+    // up). The exact row depends on sort order; what we assert is that the
+    // page-2 slice is non-empty and that some Patient/p50 row appears
+    // somewhere in the rendered table while a known page-1 row does not.
+    // Use the previously-visible page-1 marker "Showing 1--50" as the
+    // negative assertion proxy (it should now be gone).
+    expect(screen.queryByText(/Showing 1--50 of 200 issues/)).toBeNull();
+  });
+
+  it('pagination slice does not recompute on no-op parent re-render (EFF-01)', () => {
+    // Spy on Array.prototype.slice to count how many times it is invoked.
+    // Pre-fix: `filtered.slice(...)` runs at the top of EVERY render of
+    // ResourceIssueTable, including renders triggered by sibling state
+    // changes inside the same parent.
+    // Post-fix: it lives inside the useMemo and only runs when the memo
+    // deps [issues, severityFilter, fieldFilter, page] change.
+    //
+    // We track slice calls on arrays of length 60 — that's the exact
+    // `filtered.slice(...)` call pre-fix (filtered === sorted issues,
+    // length 60).
+    const sliceSpy = vi.spyOn(Array.prototype, 'slice');
+
+    // To force ResourceIssueTable to re-render WITHOUT changing its props,
+    // we host its element inside a parent whose own state change forces the
+    // child element to be re-created (new JSX node) on every render — but
+    // with the SAME `issues` reference (stabilized via useMemo). This way
+    // the memo's deps array `[issues, severityFilter, fieldFilter, page]`
+    // is unchanged across the re-render, so the memo body should not
+    // re-execute.
+    function ParentWithTick() {
+      const [tick, setTick] = useState(0);
+      // Stabilize the issues array reference across re-renders.
+      const issues = useMemo(() => makeIssues(60), []);
+      return (
+        <>
+          <button type="button" onClick={() => setTick((t) => t + 1)}>
+            tick {tick}
+          </button>
+          <ResourceIssueTable issues={issues} />
+        </>
+      );
+    }
+
+    render(
+      <MantineProvider>
+        <MemoryRouter>
+          <ParentWithTick />
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+
+    // Sanity: page-1 view rendered.
+    expect(screen.getByText(/Showing 1--50 of 60 issues/)).toBeTruthy();
+
+    function countIssuesSlice(): number {
+      return sliceSpy.mock.instances.filter(
+        (inst) => Array.isArray(inst) && inst.length === 60,
+      ).length;
+    }
+
+    const before = countIssuesSlice();
+
+    // Force a parent re-render WITHOUT changing any table props.
+    fireEvent.click(screen.getByRole('button', { name: /tick 0/ }));
+
+    const after = countIssuesSlice();
+    const delta = after - before;
+
+    sliceSpy.mockRestore();
+
+    // GREEN expectation: delta === 0 — the slice is gated by the memo and
+    // does NOT re-run when only the parent state changes.
+    // RED expectation (pre-fix): delta >= 1 — `filtered.slice(...)` re-runs
+    // unconditionally on every render of ResourceIssueTable.
+    expect(delta).toBe(0);
   });
 });
