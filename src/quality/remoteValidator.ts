@@ -55,13 +55,25 @@ export function createRemoteBackend(
   const client = createValidatorClient(validatorUrl);
   return {
     kind: 'remote',
-    async validate(resource: Resource): Promise<OperationOutcomeIssue[]> {
+    async validate(
+      resource: Resource,
+      options?: { signal?: AbortSignal },
+    ): Promise<OperationOutcomeIssue[]> {
       const query = profileCanonical
         ? `?profile=${encodeURIComponent(profileCanonical)}`
         : '';
       const path = `${resource.resourceType}/$validate${query}`;
       try {
-        const outcome = await client.post<OperationOutcome>(path, resource);
+        // MedplumClient.post(path, body, contentType?, options?) accepts a
+        // RequestInit-shaped 4th arg (MedplumRequestOptions extends RequestInit).
+        // Thread options?.signal so unmount-mid-fetch aborts the server-tier
+        // request (D-20, VAL-05, PITFALLS #1).
+        const outcome = await client.post<OperationOutcome>(
+          path,
+          resource,
+          undefined,
+          options?.signal ? { signal: options.signal } : undefined,
+        );
         return outcome?.issue ?? [];
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

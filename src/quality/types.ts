@@ -110,7 +110,7 @@ export type ValidationBackendKind = 'structural' | 'remote';
  */
 export interface ValidationBackend {
   kind: ValidationBackendKind;
-  validate(resource: Resource): Promise<OperationOutcomeIssue[]>;
+  validate(resource: Resource, options?: { signal?: AbortSignal }): Promise<OperationOutcomeIssue[]>;
 }
 
 /**

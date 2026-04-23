@@ -45,7 +45,12 @@ export function createStructuralBackend(
 ): ValidationBackend {
   return {
     kind: 'structural',
-    async validate(resource: Resource): Promise<OperationOutcomeIssue[]> {
+    async validate(
+      resource: Resource,
+      _options?: { signal?: AbortSignal },
+    ): Promise<OperationOutcomeIssue[]> {
+      // Structural validator is synchronous + offline; signal accepted for
+      // interface symmetry only (D-20).
       return validateStructural(resource, getProfile(resource.resourceType));
     },
   };
