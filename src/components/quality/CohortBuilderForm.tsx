@@ -100,6 +100,76 @@ function toIsoDate(d: Date | string | null): string | null {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * Parse a free-text date range shortcut for the Encounter date range field.
+ * Accepts (whitespace-tolerant, `-` / `–` / `to` separators):
+ *   - "YYYY"                 → [YYYY-01-01, YYYY-12-31]
+ *   - "YYYY-YYYY"            → [YYYY₁-01-01, YYYY₂-12-31]
+ *   - "YYYY-MM - YYYY-MM"    → [YYYY₁-MM₁-01, YYYY₂-MM₂-(last day)]
+ *   - "YYYY-MM-DD - YYYY-MM-DD" → literal
+ * Returns `null` if the input cannot be parsed.
+ */
+function parseDateRangeShortcut(
+  raw: string,
+): [string, string] | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
+  // Bare year shortcut: "2001" → whole year.
+  const bareYear = /^(\d{4})$/.exec(trimmed);
+  if (bareYear) {
+    const y = bareYear[1];
+    return [`${y}-01-01`, `${y}-12-31`];
+  }
+
+  // Split on the last occurrence of a range separator so dashes inside an
+  // ISO date (2024-03-15) don't split the parts. Accept `-`, `–`, ` to `.
+  const sepMatch = trimmed.match(/^(.*?)\s*(?:-|–|to)\s*(.+)$/i);
+  if (!sepMatch) return null;
+  // Retry: for a 2-digit ISO (like "2001-2025") the greedy `.+` grabs
+  // everything — allow the simple `YYYY-YYYY` path explicitly.
+  const yearRange = /^(\d{4})\s*[-–]\s*(\d{4})$/.exec(trimmed);
+  if (yearRange) {
+    const [, y1, y2] = yearRange;
+    return [`${y1}-01-01`, `${y2}-12-31`];
+  }
+
+  const left = sepMatch[1].trim();
+  const right = sepMatch[2].trim();
+  const start = parseSideToStart(left);
+  const end = parseSideToEnd(right);
+  if (!start || !end) return null;
+  return [start, end];
+}
+
+function parseSideToStart(s: string): string | null {
+  // YYYY → YYYY-01-01
+  if (/^\d{4}$/.test(s)) return `${s}-01-01`;
+  // YYYY-MM → YYYY-MM-01
+  const ym = /^(\d{4})-(\d{2})$/.exec(s);
+  if (ym) return `${ym[1]}-${ym[2]}-01`;
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  return null;
+}
+
+function parseSideToEnd(s: string): string | null {
+  // YYYY → YYYY-12-31
+  if (/^\d{4}$/.test(s)) return `${s}-12-31`;
+  // YYYY-MM → last day of that month
+  const ym = /^(\d{4})-(\d{2})$/.exec(s);
+  if (ym) {
+    const year = Number(ym[1]);
+    const month = Number(ym[2]);
+    // JS trick: Date(year, month, 0) = last day of previous month → month is 1-indexed here
+    const lastDay = new Date(year, month, 0).getDate();
+    return `${ym[1]}-${ym[2]}-${String(lastDay).padStart(2, '0')}`;
+  }
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  return null;
+}
+
 function buildCriteriaList(args: {
   dateRange: [Date | string | null, Date | string | null];
   codeSystem: string;
@@ -163,6 +233,10 @@ export function CohortBuilderForm(
   const [dateRange, setDateRange] = useState<
     [Date | string | null, Date | string | null]
   >([initialDateRange?.start ?? null, initialDateRange?.end ?? null]);
+  // Typed-range shortcut state (parallel to the calendar — neither is
+  // authoritative; both write to `dateRange`).
+  const [dateRangeText, setDateRangeText] = useState('');
+  const [dateRangeTextError, setDateRangeTextError] = useState<string | null>(null);
   const [codeSystem, setCodeSystem] = useState(
     initialConditionCode?.system ?? '',
   );
@@ -220,6 +294,8 @@ export function CohortBuilderForm(
   // ----- handlers -----
   const resetForm = (): void => {
     setDateRange([null, null]);
+    setDateRangeText('');
+    setDateRangeTextError(null);
     setCodeSystem('');
     setCode('');
     setRefText('');
@@ -342,21 +418,53 @@ export function CohortBuilderForm(
       )}
 
       {/* --- Encounter date range --- */}
-      <DatePickerInput
-        type="range"
-        label="Encounter date range"
-        description="Patients with at least one Encounter whose period falls in this range."
-        placeholder="Select start and end date"
-        valueFormat="DD MMM YYYY"
-        numberOfColumns={2}
-        clearable
-        value={dateRange}
-        onChange={(v) =>
-          setDateRange(
-            v as [Date | string | null, Date | string | null],
-          )
-        }
-      />
+      <Stack gap={4}>
+        <TextInput
+          label="Encounter date range (quick entry)"
+          description='Type e.g. "2001-2025", "2024-03 - 2026-04", or "2024-03-15 to 2026-04-20". Press Enter to apply.'
+          placeholder="e.g. 2001-2025"
+          value={dateRangeText}
+          error={dateRangeTextError}
+          onChange={(e) => {
+            setDateRangeText(e.currentTarget.value);
+            if (dateRangeTextError) setDateRangeTextError(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            if (dateRangeText.trim() === '') {
+              setDateRange([null, null]);
+              setDateRangeTextError(null);
+              return;
+            }
+            const parsed = parseDateRangeShortcut(dateRangeText);
+            if (!parsed) {
+              setDateRangeTextError(
+                'Unrecognised format. Try "2001-2025" or "2024-03-15 to 2026-04-20".',
+              );
+              return;
+            }
+            setDateRange([parsed[0], parsed[1]]);
+            setDateRangeTextError(null);
+          }}
+        />
+        <DatePickerInput
+          type="range"
+          label="Or pick from the calendar"
+          description="Patients with at least one Encounter whose period falls in this range. Click the month/year header to jump to year or decade views."
+          placeholder="Select start and end date"
+          valueFormat="DD MMM YYYY"
+          numberOfColumns={2}
+          maxLevel="decade"
+          clearable
+          value={dateRange}
+          onChange={(v) =>
+            setDateRange(
+              v as [Date | string | null, Date | string | null],
+            )
+          }
+        />
+      </Stack>
 
       {/* --- Condition code pair --- */}
       <Stack gap="xs">
