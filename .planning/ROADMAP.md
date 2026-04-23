@@ -90,7 +90,10 @@ Full details: [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
   4. `src/quality/phiGate.ts`, `src/quality/normalizers.ts`, and `src/quality/cascadingValidator.ts` exist with dedicated unit tests; `normalizers.test.ts` includes severity-mapping fixtures for HAPI, Firely, and IG-Publisher shapes.
   5. Unmounting `ValidationPanel` mid-run aborts both external-tier and server-tier fetches via threaded `AbortSignal` (no orphan requests in DevTools Network).
   6. `public/settings.yaml` ships a commented `externalValidator:` example block; schema in `src/config/types.ts` accepts `{ url, enabled, timeoutMs }`; `deepMerge` handles missing block gracefully.
-**Plans**: TBD (per `29-02-PLAN.md` Tasks 1-5: PHI gate extraction, normalizers extraction, cascade orchestrator, settings schema, useConformanceRun wiring)
+**Plans:** 1 plan
+
+Plans:
+- [ ] 31-01-PLAN.md — Three-tier cascade (external → server → local) + PHI gate extraction + normalizers extraction + settings schema + useConformanceRun wiring + Active-strategy status line; woven with D-17..D-20 deltas
 **Effort**: ~2-2.5 days (plan pre-litigated; 3 new src files + 3 new test files + touches to 6 existing files; regression-test contract drives most of the work)
 **UI hint**: yes (active-strategy status line + timeout toast + PHI gate Alert copy)
 
@@ -208,7 +211,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 14-20 (v1.2) | v1.2 | 22/22 | ✅ Shipped | 2026-04-15 |
 | 21-22 (v1.3) | v1.3 | 9/9 | ✅ Shipped | 2026-04-16 |
 | 23-30 (v1.4) | v1.4 | 35/35 | ✅ Shipped | 2026-04-23 |
-| 31. UX-01 External Validator Cascade | v1.5 | 0/? | 📋 Not started | — |
+| 31. UX-01 External Validator Cascade | v1.5 | 0/1 | 📋 Not started | — |
 | 32. EFF-R14 QualityMetricsContext Split | v1.5 | 0/? | 📋 Not started | — |
 | 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 0/? | 📋 Not started | — |
 | 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 0/? | 📋 Not started | — |
