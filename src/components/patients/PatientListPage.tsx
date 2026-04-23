@@ -282,16 +282,22 @@ export function PatientListPage() {
   const navigate = useNavigate();
   const [urlParams, setUrlParams] = useSearchParams();
 
-  // Initialize from URL params (bookmark restore)
-  const initialFromUrl = useMemo<PatientSearchParams>(() => ({
+  // Mount-time snapshot from URL params (bookmark restore) — the function
+  // is defined in render scope so it closes over the current `urlParams`,
+  // but `useState` only invokes it on the first render. Re-renders that
+  // re-create the function with a different `urlParams` are harmless;
+  // useState ignores subsequent initializers. This is the canonical fix
+  // for the previous useMemo with empty deps that needed a lint suppression
+  // (Phase 28 SWEEP-04).
+  const computeInitialFromUrl = (): PatientSearchParams => ({
     name: urlParams.get('name') ?? '',
     identifier: urlParams.get('identifier') ?? '',
     ageMin: urlParams.get('ageMin') ?? '',
     ageMax: urlParams.get('ageMax') ?? '',
     gender: urlParams.get('gender') ?? '',
-  }), []); // eslint-disable-line react-hooks/exhaustive-deps
+  });
 
-  const [searchParams, setSearchParams] = useState<PatientSearchParams>(initialFromUrl);
+  const [searchParams, setSearchParams] = useState<PatientSearchParams>(computeInitialFromUrl);
   const [bundle, setBundle] = useState<Bundle | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -300,7 +306,7 @@ export function PatientListPage() {
   );
 
   // Active search = what's actually been submitted (not live typing)
-  const [activeSearch, setActiveSearch] = useState<PatientSearchParams>(initialFromUrl);
+  const [activeSearch, setActiveSearch] = useState<PatientSearchParams>(computeInitialFromUrl);
   const [searchVersion, setSearchVersion] = useState(0);
 
   // Execute search whenever activeSearch or count changes
