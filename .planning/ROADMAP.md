@@ -143,7 +143,9 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
   2. En-dash (`–`) and em-dash (`—`) usage unified across `PlausibilityDrillDown.tsx:68`, `ResourceIssueTable.tsx:158`, and siblings: `—` for separators, `–` for numeric ranges.
   3. The 4 drill-down `eslint-disable-next-line react-hooks/exhaustive-deps` lines on auto-start effects (`PlausibilityDrillDown.tsx:52`, `LabRangesDrillDown.tsx:50`, `DuplicatesDrillDown.tsx:49`, `ReferencesDrillDown.tsx:49`) are removed; no new disables introduced.
   4. `useRef` types on Back-button refs in `CompletenessDrillDown.tsx:44` and `CodingDrillDown.tsx:101` use `HTMLButtonElement` (or `HTMLElement`); `QualityLayout` legacy-migration essay moved into `migrateLegacyResourceTypeKey` body; `useState(() => …)` replaces the inline `eslint-disable-line` for `initialFromUrl` snapshot in `PatientListPage.tsx:70`.
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 28-01-PLAN.md — SWEEP-01 (22 cast sites → toRecord helper) + SWEEP-02 (3 ASCII '--' sites in JSX text → unicode em/en-dash)
+- [ ] 28-02-PLAN.md — SWEEP-03 (remove 4 drill-down eslint-disables) + SWEEP-04 (DrillDownShell ref type, QualityLayout essay consolidation, PatientListPage lazy initializer)
 **Effort**: ~0.5 day
 
 ### Phase 29: Backlog UX
@@ -196,7 +198,7 @@ Phase 23 (close v1.3) ─┬─▶ Phase 24 (fetch foundation, incl. line-75 use
 | 25. Quality Module Dedup | v1.4 | 4/4 | Complete    | 2026-04-22 |
 | 26. App-Shell Dedup | v1.4 | 3/3 | Complete    | 2026-04-22 |
 | 27. Efficiency Polish | v1.4 | 2/2 | Complete    | 2026-04-23 |
-| 28. Micro-Consistency Sweep | v1.4 | 0/? | 📋 Not started | — |
+| 28. Micro-Consistency Sweep | v1.4 | 0/2 | 📋 Planned     | — |
 | 29. Backlog UX | v1.4 | 0/? | 📋 Not started | — |
 
 ### Phase 999.1: MII extension modules + UI redesign (BACKLOG)
