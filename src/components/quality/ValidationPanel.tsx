@@ -57,6 +57,7 @@ import { parseResourceTypes } from '../../fhir/capability';
 import { resolveBackends } from '../../quality/validationBackends';
 import { useConformanceRun } from '../../hooks/useConformanceRun';
 import { createTerminologyClient } from '../../terminology/terminologyClient';
+import { phiAckKey } from '../../quality/phiGate';
 import { ValidationIssueList } from './ValidationIssueList';
 import { ResourceIssueTable } from './ResourceIssueTable';
 import { RunProgress } from './RunProgress';
@@ -69,7 +70,6 @@ export interface ValidationPanelProps {
 }
 
 const BANNER_KEY_PREFIX = 'quality.validation.bannerDismissed.v1';
-const PHI_ACK_KEY_PREFIX = 'quality.validation.phiAcknowledged.v1';
 const TERM_BANNER_KEY_PREFIX = 'quality.validation.termBannerDismissed.v1';
 const BANNER_COPY =
   'This server does not implement $validate on resources. Phase 5 runs structural validation locally against bundled MII profiles. To run full FHIR validation, set validation.validatorUrl in settings.yaml to a validator that supports $validate (e.g. validator.fhir.org/validator).';
@@ -97,12 +97,12 @@ export function ValidationPanel(_props: ValidationPanelProps) {
   // PHI acknowledgement is independent from the info-banner dismissal and
   // is scoped per (serverUrl, validatorUrl) so a user who switches
   // validator URLs must re-acknowledge before the next remote run.
-  const phiAckKey = useMemo(
-    () => `${PHI_ACK_KEY_PREFIX}:${serverUrl}|${validatorUrl ?? 'none'}`,
+  const phiAckKeyStr = useMemo(
+    () => phiAckKey(serverUrl, validatorUrl ?? null),
     [serverUrl, validatorUrl],
   );
   const [phiAcknowledged, setPhiAcknowledged] = useLocalStorage<boolean>({
-    key: phiAckKey,
+    key: phiAckKeyStr,
     defaultValue: false,
   });
 
