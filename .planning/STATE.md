@@ -75,6 +75,12 @@ Progress: [          ] 0% (0/7 phases)
 - Phase 27 lazy-route work may break existing `render(<App />)` tests — test audit sub-task must convert `getBy*` → `findBy*` (Pitfall 6 from research/PITFALLS.md)
 - Phase 29 external validator T1 must NOT bypass Phase 7 PHI gate — regression test required (Pitfall 8)
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260423-ezd | Auto-connect to FHIR server on startup if URL is already configured in settings | 2026-04-23 | 3e2784a | [260423-ezd-auto-connect-to-fhir-server-on-startup-i](./quick/260423-ezd-auto-connect-to-fhir-server-on-startup-i/) |
+
 ## Session Continuity
 
 Last session: 2026-04-23T07:04:22.567Z
