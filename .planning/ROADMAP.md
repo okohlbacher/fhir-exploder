@@ -48,7 +48,7 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 - [x] **Phase 25: Quality Module Dedup** — `useSampleWalker`, `<DrillDownShell>`, `perPathExamples`, drop `keepMounted`, shared `SortableTh` / `<RunProgress>` (completed 2026-04-22)
 - [x] **Phase 26: App-Shell Dedup** — `<ConnectionGatedOutlet>`, `searchByIdentifierPrefix`, sidebar nested-route activation, `Anchor component={Link}` standardization (completed 2026-04-22)
 - [x] **Phase 27: Efficiency Polish** — `ResourceIssueTable` pagination memo, `React.lazy()` drill-down routes, bundle analyzer (completed 2026-04-23)
-- [ ] **Phase 28: Micro-Consistency Sweep** — `toRecord` helper replacement, en/em-dash unification, drop stale `eslint-disable`s, ref-type fixes
+- [x] **Phase 28: Micro-Consistency Sweep** — `toRecord` helper replacement, en/em-dash unification, drop stale `eslint-disable`s, ref-type fixes (completed 2026-04-23)
 - [ ] **Phase 29: Backlog UX** — External FHIR validator (T1), OverviewStrip 9→7 + status-line header (T2)
 
 ### 📋 Backlog (unscheduled — 999.x)
@@ -144,8 +144,8 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
   3. The 4 drill-down `eslint-disable-next-line react-hooks/exhaustive-deps` lines on auto-start effects (`PlausibilityDrillDown.tsx:52`, `LabRangesDrillDown.tsx:50`, `DuplicatesDrillDown.tsx:49`, `ReferencesDrillDown.tsx:49`) are removed; no new disables introduced.
   4. `useRef` types on Back-button refs in `CompletenessDrillDown.tsx:44` and `CodingDrillDown.tsx:101` use `HTMLButtonElement` (or `HTMLElement`); `QualityLayout` legacy-migration essay moved into `migrateLegacyResourceTypeKey` body; `useState(() => …)` replaces the inline `eslint-disable-line` for `initialFromUrl` snapshot in `PatientListPage.tsx:70`.
 **Plans**: 2 plans
-- [ ] 28-01-PLAN.md — SWEEP-01 (22 cast sites → toRecord helper) + SWEEP-02 (3 ASCII '--' sites in JSX text → unicode em/en-dash)
-- [ ] 28-02-PLAN.md — SWEEP-03 (remove 4 drill-down eslint-disables) + SWEEP-04 (DrillDownShell ref type, QualityLayout essay consolidation, PatientListPage lazy initializer)
+- [x] 28-01-PLAN.md — SWEEP-01 (22 cast sites → toRecord helper) + SWEEP-02 (3 ASCII '--' sites in JSX text → unicode em/en-dash)
+- [x] 28-02-PLAN.md — SWEEP-03 (remove 4 drill-down eslint-disables) + SWEEP-04 (DrillDownShell ref type, QualityLayout essay consolidation, PatientListPage lazy initializer)
 **Effort**: ~0.5 day
 
 ### Phase 29: Backlog UX
@@ -198,7 +198,7 @@ Phase 23 (close v1.3) ─┬─▶ Phase 24 (fetch foundation, incl. line-75 use
 | 25. Quality Module Dedup | v1.4 | 4/4 | Complete    | 2026-04-22 |
 | 26. App-Shell Dedup | v1.4 | 3/3 | Complete    | 2026-04-22 |
 | 27. Efficiency Polish | v1.4 | 2/2 | Complete    | 2026-04-23 |
-| 28. Micro-Consistency Sweep | v1.4 | 0/2 | 📋 Planned     | — |
+| 28. Micro-Consistency Sweep | v1.4 | 2/2 | Complete    | 2026-04-23 |
 | 29. Backlog UX | v1.4 | 0/? | 📋 Not started | — |
 
 ### Phase 999.1: MII extension modules + UI redesign (BACKLOG)
