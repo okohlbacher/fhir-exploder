@@ -4,7 +4,6 @@ import {
   Badge,
   Box,
   Card,
-  Code,
   Group,
   NavLink,
   Stack,
@@ -21,7 +20,6 @@ import {
 import { NavLink as RouterNavLink, useMatch } from 'react-router-dom';
 import { useTerminologyHealth } from '../../hooks/useTerminologyHealth';
 import { TERMINOLOGY_STATUS_CONFIG } from '../../terminology/statusConfig';
-import { useSettings } from '../../hooks/useSettings';
 import { FhirSettingsModal } from '../settings/FhirSettingsModal';
 import { TerminologySettingsModal } from '../settings/TerminologySettingsModal';
 
@@ -207,8 +205,6 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
   const status = STATUS_CONFIG[connectionStatus];
   const termHealth = useTerminologyHealth();
   const termStatus = TERMINOLOGY_STATUS_CONFIG[termHealth];
-  const { settings } = useSettings();
-  const serverUrl = settings?.fhir?.serverUrl ?? '';
 
   const settingsMatch = useMatch({ path: '/settings', end: true });
 
@@ -260,22 +256,6 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
                 </Text>
               </Group>
             </UnstyledButton>
-
-            {serverUrl && (
-              <UnstyledButton onClick={() => setFhirModalOpen(true)}>
-                <Code
-                  style={{
-                    display: 'block',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {serverUrl}
-                </Code>
-              </UnstyledButton>
-            )}
 
             <UnstyledButton onClick={() => setTermModalOpen(true)}>
               <Group gap="xs" wrap="nowrap">
