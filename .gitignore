@@ -27,3 +27,6 @@ dist-ssr
 # Bundle analyzer output (npm run analyze) — never commit.
 bundle-stats.html
 dist/bundle-stats.html
+
+# Claude Code local user settings + worktree scratch (user-local, not project state)
+.claude/
