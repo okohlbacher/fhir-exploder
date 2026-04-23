@@ -40,6 +40,11 @@ export interface MiiModule {
   extraQuery?: string;
 }
 
+// Order reflects the Phase 30 UAT feedback (test 8): surface administrative
+// and case-level modules first (Person, Fall), then clinical detail
+// (Diagnose, Prozedur), then governance / downstream (Consent), then the
+// high-volume ancillary modules (Laborbefund, Medikation). Consumers that
+// need alphabetical or domain-specific ordering should sort a local copy.
 export const MII_MODULES: MiiModule[] = [
   {
     key: 'person',
@@ -47,6 +52,13 @@ export const MII_MODULES: MiiModule[] = [
     fhirResourceType: 'Patient',
     badgeColor: 'blue',
     patientSearchParam: '_id',
+  },
+  {
+    key: 'fall',
+    germanLabel: 'Fall',
+    fhirResourceType: 'Encounter',
+    badgeColor: 'indigo',
+    patientSearchParam: 'patient',
   },
   {
     key: 'diagnose',
@@ -60,6 +72,13 @@ export const MII_MODULES: MiiModule[] = [
     germanLabel: 'Prozedur',
     fhirResourceType: 'Procedure',
     badgeColor: 'violet',
+    patientSearchParam: 'patient',
+  },
+  {
+    key: 'consent',
+    germanLabel: 'Consent',
+    fhirResourceType: 'Consent',
+    badgeColor: 'pink',
     patientSearchParam: 'patient',
   },
   {
@@ -79,20 +98,6 @@ export const MII_MODULES: MiiModule[] = [
     germanLabel: 'Medikation',
     fhirResourceType: 'MedicationStatement',
     badgeColor: 'orange',
-    patientSearchParam: 'patient',
-  },
-  {
-    key: 'fall',
-    germanLabel: 'Fall',
-    fhirResourceType: 'Encounter',
-    badgeColor: 'indigo',
-    patientSearchParam: 'patient',
-  },
-  {
-    key: 'consent',
-    germanLabel: 'Consent',
-    fhirResourceType: 'Consent',
-    badgeColor: 'pink',
     patientSearchParam: 'patient',
   },
 ];
