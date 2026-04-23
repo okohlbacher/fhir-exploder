@@ -162,4 +162,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-22 — Phase 26 App-Shell Dedup shipped: ConnectionGatedOutlet primitive (3 layouts ExplorerLayout 57→28, PatientsLayout 61→30, QualityLayout 119→58 soft-miss), searchByIdentifierPrefix helper, Sidebar useMatch with Option B Cohorts activation, CompletenessPanel Anchor+Link, SettingsContext useCallback. All 5 SHELL requirements delivered; VERIFICATION 10/10.*
+*Last updated: 2026-04-23 — Phase 27 Efficiency Polish shipped: ResourceIssueTable pagination memo (slice + totalPages folded into useMemo), 7 quality drill-down routes lazy-loaded with `lazyRetry` (3 attempts, 100/300/900ms backoff) + AppLayout Suspense fallback (`route-loading` testid), `npm run analyze` produces bundle-stats.html via rollup-plugin-visualizer behind ANALYZE=1 gate. All 3 EFF requirements delivered; VERIFICATION 7/7.*
