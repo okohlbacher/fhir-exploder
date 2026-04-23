@@ -101,104 +101,123 @@ function renderSidebarAt(path: string) {
 
 /**
  * Look up a NavLink row by its `href` attribute (React Router's NavLink
- * renders as `<a href="...">`). Walks up to the anchor element that
- * Mantine marks with `data-active` when `active` is true.
+ * renders as `<a href="...">`). Returns null if the row is not rendered —
+ * Phase 30 redesign conditionally renders Quality children only when under
+ * /quality/*, so callers must tolerate absence on other routes.
  */
-function rowFor(container: HTMLElement, href: string): HTMLElement {
-  const anchor = container.querySelector<HTMLElement>(`a[href="${href}"]`);
-  if (!anchor) {
-    throw new Error(`No NavLink row with href="${href}" found in Sidebar`);
-  }
-  return anchor;
+function rowFor(container: HTMLElement, href: string): HTMLElement | null {
+  return container.querySelector<HTMLElement>(`a[href="${href}"]`);
 }
 
-function isActive(row: HTMLElement): boolean {
+function requireRow(container: HTMLElement, href: string): HTMLElement {
+  const row = rowFor(container, href);
+  if (!row) {
+    throw new Error(`No NavLink row with href="${href}" found in Sidebar`);
+  }
+  return row;
+}
+
+function isActive(row: HTMLElement | null): boolean {
   // Mantine 8 NavLink emits data-active="true" on the root <a> element
   // when the `active` prop is truthy, and omits the attribute otherwise.
-  return row.getAttribute('data-active') === 'true';
+  // A missing row (null) is trivially "not active".
+  return row?.getAttribute('data-active') === 'true';
 }
+
+/**
+ * When the Quality parent renders both itself and a nested Overview child
+ * with identical `to="/quality"`, `querySelector` returns the first anchor.
+ * The redesign renders the parent first, so `rowFor(c, '/quality')` continues
+ * to resolve to the parent row — preserving the pre-Phase-30 test contract.
+ */
 
 describe('Sidebar nested-route activation (SHELL-03 / Option B)', () => {
   it("highlights ONLY Dashboard at '/'", () => {
     const { container } = renderSidebarAt('/');
 
-    expect(isActive(rowFor(container, '/'))).toBe(true);
-    expect(isActive(rowFor(container, '/explorer'))).toBe(false);
-    expect(isActive(rowFor(container, '/patients'))).toBe(false);
-    expect(isActive(rowFor(container, '/quality'))).toBe(false);
+    expect(isActive(requireRow(container, '/'))).toBe(true);
+    expect(isActive(requireRow(container, '/explorer'))).toBe(false);
+    expect(isActive(requireRow(container, '/patients'))).toBe(false);
+    expect(isActive(requireRow(container, '/quality'))).toBe(false);
+    // Cohorts sub-row is NOT rendered outside /quality/* — isActive(null) is
+    // false, which preserves the pre-Phase-30 contract (Cohorts inactive here).
     expect(isActive(rowFor(container, '/quality/cohorts'))).toBe(false);
   });
 
   it("highlights the Patients section root for '/patients/123'", () => {
     const { container } = renderSidebarAt('/patients/123');
 
-    expect(isActive(rowFor(container, '/patients'))).toBe(true);
-    expect(isActive(rowFor(container, '/'))).toBe(false);
-    expect(isActive(rowFor(container, '/explorer'))).toBe(false);
-    expect(isActive(rowFor(container, '/quality'))).toBe(false);
+    expect(isActive(requireRow(container, '/patients'))).toBe(true);
+    expect(isActive(requireRow(container, '/'))).toBe(false);
+    expect(isActive(requireRow(container, '/explorer'))).toBe(false);
+    expect(isActive(requireRow(container, '/quality'))).toBe(false);
     expect(isActive(rowFor(container, '/quality/cohorts'))).toBe(false);
   });
 
   it("highlights the Explorer section root for '/explorer/Patient/1'", () => {
     const { container } = renderSidebarAt('/explorer/Patient/1');
 
-    expect(isActive(rowFor(container, '/explorer'))).toBe(true);
-    expect(isActive(rowFor(container, '/'))).toBe(false);
-    expect(isActive(rowFor(container, '/patients'))).toBe(false);
-    expect(isActive(rowFor(container, '/quality'))).toBe(false);
+    expect(isActive(requireRow(container, '/explorer'))).toBe(true);
+    expect(isActive(requireRow(container, '/'))).toBe(false);
+    expect(isActive(requireRow(container, '/patients'))).toBe(false);
+    expect(isActive(requireRow(container, '/quality'))).toBe(false);
     expect(isActive(rowFor(container, '/quality/cohorts'))).toBe(false);
   });
 
   it("highlights the Quality section root for '/quality/plausibility/Observation'", () => {
     const { container } = renderSidebarAt('/quality/plausibility/Observation');
 
-    expect(isActive(rowFor(container, '/quality'))).toBe(true);
-    // Cohorts is exact:true and must NOT activate on non-cohorts descendants.
-    expect(isActive(rowFor(container, '/quality/cohorts'))).toBe(false);
-    expect(isActive(rowFor(container, '/'))).toBe(false);
-    expect(isActive(rowFor(container, '/explorer'))).toBe(false);
-    expect(isActive(rowFor(container, '/patients'))).toBe(false);
+    // Quality parent row is the first <a href="/quality"> in the DOM, so
+    // rowFor resolves to it (not the Overview child which also has the same
+    // href). The parent is active on any /quality/* descendant that's not a
+    // suppressed child path (cohorts/thresholds).
+    expect(isActive(requireRow(container, '/quality'))).toBe(true);
+    expect(isActive(requireRow(container, '/quality/cohorts'))).toBe(false);
+    expect(isActive(requireRow(container, '/'))).toBe(false);
+    expect(isActive(requireRow(container, '/explorer'))).toBe(false);
+    expect(isActive(requireRow(container, '/patients'))).toBe(false);
   });
 
   it("Option B: '/quality/cohorts' highlights ONLY Cohorts (Quality suppressed)", () => {
     // Option B committed: '/quality/cohorts' highlights ONLY Cohorts.
     // ROADMAP success criterion #3 says 'section root' (singular). Quality
     // suppresses when a Cohorts descendant is active via the
-    // most-specific-wins rule in Sidebar.tsx (active = !!qualityMatch &&
-    // !cohortsMatch for the Quality row).
+    // most-specific-wins rule in Sidebar.tsx (suppressParent=true on the
+    // Cohorts child).
     const { container } = renderSidebarAt('/quality/cohorts');
 
-    expect(isActive(rowFor(container, '/quality/cohorts'))).toBe(true);
-    expect(isActive(rowFor(container, '/quality'))).toBe(false);
-    expect(isActive(rowFor(container, '/'))).toBe(false);
-    expect(isActive(rowFor(container, '/explorer'))).toBe(false);
-    expect(isActive(rowFor(container, '/patients'))).toBe(false);
+    expect(isActive(requireRow(container, '/quality/cohorts'))).toBe(true);
+    expect(isActive(requireRow(container, '/quality'))).toBe(false);
+    expect(isActive(requireRow(container, '/'))).toBe(false);
+    expect(isActive(requireRow(container, '/explorer'))).toBe(false);
+    expect(isActive(requireRow(container, '/patients'))).toBe(false);
+  });
+
+  it("Option B: '/quality/thresholds' highlights ONLY Thresholds (Quality suppressed)", () => {
+    // Phase 30 Step 1 extended the Option B suppression to Thresholds.
+    // Children are rendered only when under /quality/*, so the sub-rows
+    // appear here.
+    const { container } = renderSidebarAt('/quality/thresholds');
+
+    expect(isActive(requireRow(container, '/quality/thresholds'))).toBe(true);
+    expect(isActive(requireRow(container, '/quality'))).toBe(false);
+    expect(isActive(requireRow(container, '/quality/cohorts'))).toBe(false);
   });
 
   it("regression guard: '/' does NOT highlight Patients (Dashboard exact-match)", () => {
-    // Dashboard is exact:true. Without the exact flag, useMatch({path: '/',
-    // end: false}) would match every route; we must assert Patients stays
-    // inactive on '/'. This also confirms Patients' end:false match doesn't
-    // accidentally fire on '/' (it shouldn't — '/patients' is not a prefix
-    // of '/', but belt-and-braces coverage).
     const { container } = renderSidebarAt('/');
 
-    expect(isActive(rowFor(container, '/patients'))).toBe(false);
-    expect(isActive(rowFor(container, '/explorer'))).toBe(false);
-    expect(isActive(rowFor(container, '/quality'))).toBe(false);
+    expect(isActive(requireRow(container, '/patients'))).toBe(false);
+    expect(isActive(requireRow(container, '/explorer'))).toBe(false);
+    expect(isActive(requireRow(container, '/quality'))).toBe(false);
     expect(isActive(rowFor(container, '/quality/cohorts'))).toBe(false);
   });
 
   it("Settings row activates on '/settings' (regression guard on second exact-match site)", () => {
-    // Sidebar.tsx:115 currently uses `location.pathname === '/settings'`.
-    // Post-refactor this migrates to `useMatch({ path: '/settings', end:
-    // true })`. This test guards that the Settings row still activates on
-    // the exact path after the useLocation → useMatch migration.
     const { container } = renderSidebarAt('/settings');
 
-    expect(isActive(rowFor(container, '/settings'))).toBe(true);
-    // Sanity: non-settings rows are not active on '/settings'.
-    expect(isActive(rowFor(container, '/'))).toBe(false);
-    expect(isActive(rowFor(container, '/patients'))).toBe(false);
+    expect(isActive(requireRow(container, '/settings'))).toBe(true);
+    expect(isActive(requireRow(container, '/'))).toBe(false);
+    expect(isActive(requireRow(container, '/patients'))).toBe(false);
   });
 });
