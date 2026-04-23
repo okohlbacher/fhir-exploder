@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: -- Hardening & Tech-Debt Sweep (in progress, started 2026-04-16)
 status: executing
-stopped_at: Phase 29 context gathered
-last_updated: "2026-04-23T07:47:22.301Z"
-last_activity: 2026-04-23 -- Phase 29 planning complete
+stopped_at: Phase 29.5 scaffolded (test baseline repair)
+last_updated: "2026-04-23T10:20:00.000Z"
+last_activity: 2026-04-23 -- Phase 29.5 inserted for test baseline repair; Phase 30 redesign parked on feature branch
 progress:
   total_phases: 9
   completed_phases: 8
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 28 — micro-consistency-sweep
+**Current focus:** Phase 29.5 — test-baseline-repair (blocks Phase 30 redesign)
 
 ## Current Position
 
-Phase: 28
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-23 -- Phase 29 planning complete
+Phase: 29.5 (test-baseline-repair) — EXECUTING
+Plan: 29.5-01 (single plan, 3 tasks)
+Status: Repair pre-existing test failures on main
+Last activity: 2026-04-23 -- Phase 29.5 inserted; 22 failing tests diagnosed (SettingsProvider + fhirUrl mock)
 
 Progress: [          ] 0% (0/7 phases)
 

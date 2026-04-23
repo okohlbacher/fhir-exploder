@@ -50,6 +50,7 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 - [x] **Phase 27: Efficiency Polish** — `ResourceIssueTable` pagination memo, `React.lazy()` drill-down routes, bundle analyzer (completed 2026-04-23)
 - [x] **Phase 28: Micro-Consistency Sweep** — `toRecord` helper replacement, en/em-dash unification, drop stale `eslint-disable`s, ref-type fixes (completed 2026-04-23)
 - [ ] **Phase 29: Backlog UX** — External FHIR validator (T1), OverviewStrip 9→7 + status-line header (T2)
+- [ ] **Phase 29.5: Test Baseline Repair** — 22 pre-existing test failures on main block the layout-redesign test gate. Add `SettingsProvider` wrappers to 7 component tests; add `fhirUrl()` to the terminology fixture. Test-setup-only, single commit. (Must land before Phase 30 redesign can enforce `npm test` gate.)
 
 ### 📋 Backlog (unscheduled — 999.x)
 
