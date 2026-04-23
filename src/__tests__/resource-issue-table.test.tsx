@@ -161,8 +161,8 @@ describe('ResourceIssueTable', () => {
 
   it('paginates at 50 items', () => {
     renderTable({ issues: makeIssues(60) });
-    // Should show "Showing 1--50 of 60 issues"
-    expect(screen.getByText(/Showing 1--50 of 60 issues/)).toBeTruthy();
+    // Should show "Showing 1–50 of 60 issues" (en-dash per Phase 28 SWEEP-02)
+    expect(screen.getByText(/Showing 1–50 of 60 issues/)).toBeTruthy();
     // Pagination control should be present
     // Mantine Pagination renders buttons with page numbers
     expect(screen.getByRole('button', { name: '2' })).toBeTruthy();
@@ -294,7 +294,7 @@ describe('ResourceIssueTable', () => {
     // Go to page 2
     const page2Btn = screen.getByRole('button', { name: '2' });
     fireEvent.click(page2Btn);
-    expect(screen.getByText(/Showing 51--60/)).toBeTruthy();
+    expect(screen.getByText(/Showing 51–60/)).toBeTruthy();
 
     // Change severity filter -- should reset to page 1
     const select = screen.getByRole('textbox', { name: 'Filter by severity' });
@@ -307,7 +307,7 @@ describe('ResourceIssueTable', () => {
     fireEvent.click(errorOption!);
 
     // Should be on page 1 (showing from 1)
-    expect(screen.getByText(/Showing 1--/)).toBeTruthy();
+    expect(screen.getByText(/Showing 1–/)).toBeTruthy();
   });
 
   // ----- EFF-01 regression tests (Phase 27, Plan 01) -----
@@ -316,22 +316,22 @@ describe('ResourceIssueTable', () => {
     renderTable({ issues: makeIssues(200) });
 
     // Initially page 1, rows 1-50
-    expect(screen.getByText(/Showing 1--50 of 200 issues/)).toBeTruthy();
+    expect(screen.getByText(/Showing 1–50 of 200 issues/)).toBeTruthy();
 
     // Click page 2
     const page2Btn = screen.getByRole('button', { name: '2' });
     fireEvent.click(page2Btn);
 
     // Now showing rows 51-100
-    expect(screen.getByText(/Showing 51--100 of 200 issues/)).toBeTruthy();
+    expect(screen.getByText(/Showing 51–100 of 200 issues/)).toBeTruthy();
     // Patient/p50 falls within page 2 (it is the 51st row when sorted by
     // severity then resourceId; rows 1-50 are p0..p49 of severity-error and
     // up). The exact row depends on sort order; what we assert is that the
     // page-2 slice is non-empty and that some Patient/p50 row appears
     // somewhere in the rendered table while a known page-1 row does not.
-    // Use the previously-visible page-1 marker "Showing 1--50" as the
+    // Use the previously-visible page-1 marker "Showing 1–50" as the
     // negative assertion proxy (it should now be gone).
-    expect(screen.queryByText(/Showing 1--50 of 200 issues/)).toBeNull();
+    expect(screen.queryByText(/Showing 1–50 of 200 issues/)).toBeNull();
   });
 
   it('pagination slice does not recompute on no-op parent re-render (EFF-01)', () => {
@@ -377,7 +377,7 @@ describe('ResourceIssueTable', () => {
     );
 
     // Sanity: page-1 view rendered.
-    expect(screen.getByText(/Showing 1--50 of 60 issues/)).toBeTruthy();
+    expect(screen.getByText(/Showing 1–50 of 60 issues/)).toBeTruthy();
 
     function countIssuesSlice(): number {
       return sliceSpy.mock.instances.filter(
