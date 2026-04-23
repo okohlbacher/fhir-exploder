@@ -23,6 +23,41 @@ interface MiiModuleTabsProps {
  * on panels) so switching tabs does not re-trigger FHIR searches --
  * mitigating Pitfall 4 (tab content re-fetching).
  */
+/**
+ * Render a module pill label with the German name on top and the FHIR
+ * resource type below. Phase 30 UAT-18 revealed that the default
+ * `c="dimmed"` subtitle becomes unreadable against the solid indigo
+ * background of the active pill; swap the subtitle colour to inherit
+ * from the tab when active so it picks up the pill's own text colour.
+ */
+function TabPillLabel({
+  primary,
+  secondary,
+  active,
+}: {
+  primary: string;
+  secondary: string;
+  active: boolean;
+}) {
+  return (
+    <>
+      <Text fw={600} size="sm">
+        {primary}
+      </Text>
+      <Text
+        size="xs"
+        c={active ? 'inherit' : 'dimmed'}
+        // Active state uses inherit from the pill (white on indigo,
+        // still visible); add a slight opacity to nudge it back toward
+        // "secondary text" treatment without killing contrast.
+        style={active ? { opacity: 0.85 } : undefined}
+      >
+        {secondary}
+      </Text>
+    </>
+  );
+}
+
 export function MiiModuleTabs({ patientId }: MiiModuleTabsProps) {
   const [activeTab, setActiveTab] = useState<string | null>(MII_MODULES[0].key);
 
@@ -31,21 +66,19 @@ export function MiiModuleTabs({ patientId }: MiiModuleTabsProps) {
       <Tabs.List>
         {MII_MODULES.map((mod) => (
           <Tabs.Tab key={mod.key} value={mod.key}>
-            <Text fw={600} size="sm">
-              {mod.germanLabel}
-            </Text>
-            <Text size="xs" c="dimmed">
-              {mod.fhirResourceType}
-            </Text>
+            <TabPillLabel
+              primary={mod.germanLabel}
+              secondary={mod.fhirResourceType}
+              active={activeTab === mod.key}
+            />
           </Tabs.Tab>
         ))}
         <Tabs.Tab value="timeline">
-          <Text fw={600} size="sm">
-            Zeitleiste
-          </Text>
-          <Text size="xs" c="dimmed">
-            Timeline
-          </Text>
+          <TabPillLabel
+            primary="Zeitleiste"
+            secondary="Timeline"
+            active={activeTab === 'timeline'}
+          />
         </Tabs.Tab>
       </Tabs.List>
 
