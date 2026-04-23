@@ -41,7 +41,7 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 
 </details>
 
-### 🚧 v1.4 Hardening & Tech-Debt Sweep (Phases 23-29)
+### 🚧 v1.4 Hardening & Tech-Debt Sweep (Phases 23-30)
 
 - [x] **Phase 23: v1.3 Close-Out** — Close v1.3 warnings, UAT, and audit sign-off (must ship first) (completed 2026-04-17)
 - [x] **Phase 24: Data-Fetching Foundation** — Cross-mount count cache, LRU quality-metrics registry, shared `useAsyncRun` state machine (completed 2026-04-17)
@@ -49,8 +49,9 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 - [x] **Phase 26: App-Shell Dedup** — `<ConnectionGatedOutlet>`, `searchByIdentifierPrefix`, sidebar nested-route activation, `Anchor component={Link}` standardization (completed 2026-04-22)
 - [x] **Phase 27: Efficiency Polish** — `ResourceIssueTable` pagination memo, `React.lazy()` drill-down routes, bundle analyzer (completed 2026-04-23)
 - [x] **Phase 28: Micro-Consistency Sweep** — `toRecord` helper replacement, en/em-dash unification, drop stale `eslint-disable`s, ref-type fixes (completed 2026-04-23)
-- [ ] **Phase 29: Backlog UX** — External FHIR validator (T1), OverviewStrip 9→7 + status-line header (T2)
+- [~] **Phase 29: Backlog UX** — SUPERSEDED 2026-04-23 by Phase 30. 29-01 (UX-02 OverviewStrip 9→7) obsolete (redesign drops RingProgress). 29-02 (UX-01 external validator) preserved for a future phase.
 - [x] **Phase 29.5: Test Baseline Repair** — 22 → 0 failing tests across 8 files (SettingsProvider/ConnectionProvider wrappers, fhirUrl/get mock additions, useSearchParams router mock, stale-DOM assertion updates). Test-setup-only (completed 2026-04-23). Unblocks Phase 30's `npm test` gate.
+- [ ] **Phase 30: Layout Redesign** — Port the handoff redesign (tokens, Sidebar, Dashboard, Patients, Quality, Explorer, Patient detail, Cohorts) across 8 single-commit steps. Layout + styling only; no business-logic changes.
 
 ### 📋 Backlog (unscheduled — 999.x)
 
@@ -149,19 +150,29 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 - [x] 28-02-PLAN.md — SWEEP-03 (remove 4 drill-down eslint-disables) + SWEEP-04 (DrillDownShell ref type, QualityLayout essay consolidation, PatientListPage lazy initializer)
 **Effort**: ~0.5 day
 
-### Phase 29: Backlog UX
-**Goal**: Two pending-todo UX items logged from prior user feedback. Intra-phase ordering: T2 (UX-02 OverviewStrip) BEFORE T1 (UX-01 External validator) — the smaller UI task warms up before the L-effort validator cascade.
-**Depends on**: Phase 23 (independent of refactor thread — parallel-safe with 25/26/27)
-**Requirements**: UX-01, UX-02
+### Phase 29: Backlog UX — SUPERSEDED (2026-04-23)
+**Status**: Superseded by Phase 30 before execution started. See `phases/29-backlog-ux/SUPERSEDED.md`.
+- **29-01 (UX-02 OverviewStrip 9→7 rings)** — obsolete. The Phase 30 handoff explicitly drops `RingProgress` tiles in favor of uppercase label + mono number + 3-px fill bar + per-type quality matrix. The ring reduction conflicts with the new direction.
+- **29-02 (UX-01 external validator cascade)** — preserved as-is. Redesign does not touch validation behavior. Will be picked up as a standalone phase (candidate: Phase 31 or v1.5).
+
+### Phase 30: Layout Redesign
+**Goal**: Port the external design team's redesign (HTML mockup → Mantine codebase) across 7 views while preserving all existing behavior (routing, hooks, data fetching, tests).
+**Depends on**: Phase 28 (latest shipped). Supersedes Phase 29-01.
+**Requirements**: UX-REDESIGN-01..08 (new, promoted from backlog Phase 999.1 UI-redesign slice)
 **Success Criteria** (what must be TRUE):
-  1. `settings.yaml` accepts a `validation.externalValidator: { url, enabled, timeoutMs }` block; `ValidationPanel` cascades external → server `$validate` → local checker, predicated on a capability probe cached per `serverUrl`.
-  2. Every external-validator `fetch` is wrapped in `AbortController` with a configurable timeout (default 15s) AND routed through the existing Phase 7 PHI acknowledgment gate (regression-tested: no fetch fires before user consent); on timeout the cascade falls back to local checker with a visible toast.
-  3. `ValidationPanel` renders an "Active strategy: external / server / local" status line per resource type; OperationOutcome issues are normalized via a unit-tested `normalizeOperationOutcomeIssue` mapper into the existing `NormalizedIssue` type.
-  4. `OverviewStrip` shows 7 ring tiles (Total resources + Resource types dropped) and a status line above reads `N resources · M types · Last computed {relative-time}`; `18-UI-SPEC.md` updated and PDF export reflects the new tile layout. Cardinality entries remain non-clickable.
-  5. Both pending-todos move from `.planning/todos/pending/` to `.planning/todos/completed/`.
-**Plans**: TBD
-**Effort**: ~2 days
-**UI hint**: yes
+  1. `src/styles/tokens.css` exists, is imported once in `src/main.tsx`, and IBM Plex Sans/Mono loads via `<link>` in `index.html`. `src/theme.ts` uses `primaryColor: 'indigo'`, warm-neutral gray ramp, and Card/Table/Button/Tabs defaults from the handoff.
+  2. Sidebar consolidates the two status pills into a single Server card; Cohorts/Thresholds render as nested children of Quality; active row has 2-px indigo left rail.
+  3. Dashboard has 4 summary cards (adds Patients), sections open by default, `RingProgress` removed; MII tiles 4-col/2-col responsive grid.
+  4. Patient list toolbar is a single `<Card>` filter bar with active-filter chip row; table adds row-index cell, initials avatar, hover-revealed RAW button, neutral gender chip, constant-weighted sparkline.
+  5. Quality overview toolbar is split into scope (`<Card>` + 3-col `SimpleGrid`) and actions (right-aligned `Group`); `OverviewStrip` restyled without rings; tabs use `variant='pills'` with inline counts; per-type quality matrix as default Counts panel.
+  6. Explorer introduces a 240-px `<ResourceTypeRail>` on `/explorer/*` routes; `Explorer › <Category> › <Type>` breadcrumbs; 4-tab `SegmentedControl` replaces the display-mode toggle.
+  7. Patient detail: 3-col header grid, 5-tile vitals strip, pills MII tabs, restyled ClinicalTimeline rows.
+  8. Cohorts page uses 2-col layout (`1fr 380px`) with a live Builder preview on the right.
+  9. One commit per step, 8 commits total on branch `gsd/phase-30-layout-redesign`; `npm run build` and `npm test` exit 0 after each commit.
+**Plans**: `30-01-PLAN.md` (single plan, 8 tasks)
+**Handoff**: `phases/30-layout-redesign/handoff/INSTRUCTIONS.md` (authoritative step list); `handoff/tokens.css` (source); `handoff/mockup/` (visual reference only — not shipped).
+**Effort**: ~2-3 days
+**UI hint**: yes — this IS the UI work
 
 ## Dependencies & Ordering
 
@@ -176,7 +187,9 @@ Phase 23 (close v1.3) ─┬─▶ Phase 24 (fetch foundation, incl. line-75 use
                        │
                        ├─▶ Phase 27 (efficiency polish — R15 independent of 24)
                        │
-                       └─▶ Phase 29 (UX backlog — independent; T2 before T1 intra-phase)
+                       ├─▶ Phase 29 (UX backlog — SUPERSEDED 2026-04-23 by Phase 30)
+                       │
+                       └─▶ Phase 30 (layout redesign — 8 single-commit steps, single PR)
 ```
 
 **Key ordering constraints:**
@@ -233,8 +246,9 @@ Phase 23 (close v1.3) ─┬─▶ Phase 24 (fetch foundation, incl. line-75 use
 | 26 | App-Shell Dedup | ~1 day |
 | 27 | Efficiency Polish | ~1.5 days |
 | 28 | Micro-Consistency Sweep | ~0.5 day |
-| 29 | Backlog UX | ~2 days |
-| **Total** | — | **~9-10 focused engineering days** |
+| 29 | Backlog UX | ~2 days (SUPERSEDED by Phase 30; 29-02 deferred) |
+| 30 | Layout Redesign | ~2-3 days |
+| **Total** | — | **~11-13 focused engineering days** |
 
 ## Research References (v1.4)
 
