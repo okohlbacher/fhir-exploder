@@ -27,7 +27,7 @@ export function MiiModuleTabs({ patientId }: MiiModuleTabsProps) {
   const [activeTab, setActiveTab] = useState<string | null>(MII_MODULES[0].key);
 
   return (
-    <Tabs value={activeTab} onChange={setActiveTab} keepMounted>
+    <Tabs value={activeTab} onChange={setActiveTab} keepMounted variant="pills">
       <Tabs.List>
         {MII_MODULES.map((mod) => (
           <Tabs.Tab key={mod.key} value={mod.key}>

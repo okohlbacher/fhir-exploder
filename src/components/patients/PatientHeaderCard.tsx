@@ -1,5 +1,26 @@
-import { Avatar, Badge, Card, Code, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
-import { IconCalendar, IconId, IconUser } from '@tabler/icons-react';
+import { useState } from 'react';
+import {
+  ActionIcon,
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Code,
+  Group,
+  Modal,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+  Tooltip,
+} from '@mantine/core';
+import {
+  IconBraces,
+  IconCalendar,
+  IconId,
+  IconShareplay,
+  IconUser,
+} from '@tabler/icons-react';
 import type { Patient } from '@medplum/fhirtypes';
 
 interface PatientHeaderCardProps {
@@ -49,12 +70,12 @@ export function PatientHeaderCard({ patient }: PatientHeaderCardProps) {
 
   return (
     <Card withBorder padding="lg" radius="md" shadow="sm">
-      <Group wrap="nowrap" gap="lg">
-        <Avatar size={72} radius="xl" color={genderColor} variant="filled">
+      <Group wrap="nowrap" gap="lg" align="flex-start">
+        <Avatar size={64} radius="xl" color={genderColor} variant="filled">
           {getInitials(patient)}
         </Avatar>
 
-        <Stack gap={4} style={{ flex: 1 }}>
+        <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
           <Group gap="sm" align="center">
             <Title order={3}>{name}</Title>
             {patient.gender && (
@@ -108,7 +129,66 @@ export function PatientHeaderCard({ patient }: PatientHeaderCardProps) {
             </Group>
           )}
         </Stack>
+
+        <PatientHeaderActions patient={patient} />
       </Group>
     </Card>
+  );
+}
+
+/**
+ * Action column shown on the right of PatientHeaderCard (Phase 30 Step 6).
+ * - Raw JSON button opens a Modal with the pretty-printed Patient resource.
+ * - $everything button navigates the browser to
+ *   `{fhirUrlPath}/Patient/{id}/$everything` in a new tab — the FHIR
+ *   server's native bundle response is handy for debugging/export.
+ */
+function PatientHeaderActions({ patient }: { patient: Patient }) {
+  const [rawOpen, setRawOpen] = useState(false);
+  const json = JSON.stringify(patient, null, 2);
+
+  return (
+    <Group gap="xs" align="flex-start" wrap="nowrap" style={{ flexShrink: 0 }}>
+      <Tooltip label="View raw JSON" withArrow>
+        <Button
+          variant="light"
+          size="xs"
+          leftSection={<IconBraces size={14} />}
+          onClick={() => setRawOpen(true)}
+          aria-label="View raw patient JSON"
+        >
+          Raw JSON
+        </Button>
+      </Tooltip>
+      <Tooltip label="Open $everything bundle" withArrow>
+        <ActionIcon
+          variant="light"
+          size="lg"
+          aria-label="Open Patient $everything in a new tab"
+          onClick={() => {
+            if (!patient.id) return;
+            const base = window.location.origin;
+            window.open(
+              `${base}/__fhir-passthrough/Patient/${patient.id}/$everything`,
+              '_blank',
+              'noopener',
+            );
+          }}
+        >
+          <IconShareplay size={16} />
+        </ActionIcon>
+      </Tooltip>
+
+      <Modal
+        opened={rawOpen}
+        onClose={() => setRawOpen(false)}
+        title={`Raw JSON — Patient/${patient.id}`}
+        size="lg"
+      >
+        <Code block fz="xs" style={{ maxHeight: 500, overflowY: 'auto' }}>
+          {json}
+        </Code>
+      </Modal>
+    </Group>
   );
 }
