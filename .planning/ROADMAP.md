@@ -71,8 +71,8 @@ Full details: [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
 
 ### 🚧 v1.5 Validation, Performance & MII Extensions (Phases 31-35)
 
-- [ ] **Phase 31: UX-01 External Validator Cascade** — Execute the preserved `29-02-PLAN.md` verbatim: three-tier cascade (external → server `$validate` → local structural), PHI-gate extraction, `normalizeOperationOutcomeIssue`, probe cache, AbortController + 15 s timeout, active-strategy status line. Parallel-safe with Phase 32.
-- [ ] **Phase 32: EFF-R14 QualityMetricsContext Split** — Option A: 7 per-metric `React.createContext` providers + `<QualityMetricsProviders>` composer. Facade `useQualityMetrics()` preserved. Parallel-safe with Phase 31 (merge-conflict watch on `ValidationPanel.tsx`).
+- [~] **Phase 31: UX-01 External Validator Cascade** — Execute the preserved `29-02-PLAN.md` verbatim: three-tier cascade (external → server `$validate` → local structural), PHI-gate extraction, `normalizeOperationOutcomeIssue`, probe cache, AbortController + 15 s timeout, active-strategy status line. Parallel-safe with Phase 32. (31-01 completed 2026-04-23; 31-02 gap-closure in progress — closes CR-01 PHI ack key mismatch)
+- [x] **Phase 32: EFF-R14 QualityMetricsContext Split** — Option A: 7 per-metric `React.createContext` providers + `<QualityMetricsProviders>` composer. Facade `useQualityMetrics()` preserved. Parallel-safe with Phase 31 (merge-conflict watch on `ValidationPanel.tsx`). (completed 2026-04-23)
 - [ ] **Phase 33: MII Schema Foundation + Extension-Modules Collapse UI** — Helpers-first refactor (`fhirResourceTypesOf`, `findModuleForType`, `getPatientSearchParamForType`), schema widening (`fhirResourceType: string | string[]` + `category` + `patientSearchParamOverrides?`), `MiiModuleTab` fan-out, collapsible Extension modules section. Absorbs UAT-FU-04 (Dashboard MII tile scoping) and UAT-FU-06 (empty per-patient MII/FHIR panel investigation).
 - [ ] **Phase 34: 14 MII Extension Modules + Palette + Bundled Profiles** — 14 extension module entries, 7 custom `MantineColorsTuple`s (WCAG AA audit), 21 Tabler icons, `scripts/fetch-mii-profiles.mjs` via `fhir-package-loader@^2.2.4` devDep + `prepare` lifecycle, CC-BY-4.0 attribution, dimmed empty-state + "Show N empty" toggle.
 - [ ] **Phase 35: Phase-30 UAT Follow-ups + Per-Type Quality Matrix** — UAT-FU-01 Explorer Date/Status extractor (TDD), UAT-FU-02 HumanReadableView extension cleanup, UAT-FU-03 ResourceDetailPage mode removal + Developer→JSON rename, UAT-FU-05 per-type quality matrix card under Counts tab (requires Phase 32).
@@ -90,10 +90,11 @@ Full details: [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
   4. `src/quality/phiGate.ts`, `src/quality/normalizers.ts`, and `src/quality/cascadingValidator.ts` exist with dedicated unit tests; `normalizers.test.ts` includes severity-mapping fixtures for HAPI, Firely, and IG-Publisher shapes.
   5. Unmounting `ValidationPanel` mid-run aborts both external-tier and server-tier fetches via threaded `AbortSignal` (no orphan requests in DevTools Network).
   6. `public/settings.yaml` ships a commented `externalValidator:` example block; schema in `src/config/types.ts` accepts `{ url, enabled, timeoutMs }`; `deepMerge` handles missing block gracefully.
-**Plans:** 1 plan
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 31-01-PLAN.md — Three-tier cascade (external → server → local) + PHI gate extraction + normalizers extraction + settings schema + useConformanceRun wiring + Active-strategy status line; woven with D-17..D-20 deltas
+- [x] 31-01-PLAN.md — Three-tier cascade (external → server → local) + PHI gate extraction + normalizers extraction + settings schema + useConformanceRun wiring + Active-strategy status line; woven with D-17..D-20 deltas
+- [x] 31-02-PLAN.md — Gap closure: fix CR-01 PHI ack key mismatch in ValidationPanel (key external-tier URL, extend banner visibility to external-only deployments) + integration test locking UI↔cascade key agreement (VAL-01 PARTIAL → SATISFIED, VAL-04 PARTIAL → SATISFIED)
 **Effort**: ~2-2.5 days (plan pre-litigated; 3 new src files + 3 new test files + touches to 6 existing files; regression-test contract drives most of the work)
 **UI hint**: yes (active-strategy status line + timeout toast + PHI gate Alert copy)
 
@@ -211,7 +212,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 14-20 (v1.2) | v1.2 | 22/22 | ✅ Shipped | 2026-04-15 |
 | 21-22 (v1.3) | v1.3 | 9/9 | ✅ Shipped | 2026-04-16 |
 | 23-30 (v1.4) | v1.4 | 35/35 | ✅ Shipped | 2026-04-23 |
-| 31. UX-01 External Validator Cascade | v1.5 | 0/1 | 📋 Not started | — |
+| 31. UX-01 External Validator Cascade | v1.5 | 2/2 | Complete    | 2026-04-23 |
 | 32. EFF-R14 QualityMetricsContext Split | v1.5 | 0/? | 📋 Not started | — |
 | 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 0/? | 📋 Not started | — |
 | 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 0/? | 📋 Not started | — |
