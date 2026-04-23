@@ -4,14 +4,14 @@ milestone: v1.4
 milestone_name: -- Hardening & Tech-Debt Sweep (in progress, started 2026-04-16)
 status: executing
 stopped_at: Phase 29 context gathered
-last_updated: "2026-04-23T07:04:22.569Z"
-last_activity: 2026-04-23
+last_updated: "2026-04-23T07:47:22.301Z"
+last_activity: 2026-04-23 -- Phase 29 planning complete
 progress:
   total_phases: 9
   completed_phases: 8
-  total_plans: 31
+  total_plans: 33
   completed_plans: 31
-  percent: 100
+  percent: 94
 ---
 
 # Project State
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 
 Phase: 28
 Plan: Not started
-Status: Executing Phase 28
-Last activity: 2026-04-23
+Status: Ready to execute
+Last activity: 2026-04-23 -- Phase 29 planning complete
 
 Progress: [          ] 0% (0/7 phases)
 
