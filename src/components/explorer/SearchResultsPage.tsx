@@ -6,6 +6,7 @@ import { useMedplum } from '@medplum/react-hooks';
 import type { Bundle, Resource, ResourceType } from '@medplum/fhirtypes';
 import type { ExplorerOutletContext } from './ExplorerLayout';
 import { parseResourceTypes } from '../../fhir/capability';
+import { getResourceCategory } from '../../utils/fhir-categories';
 import { useSearchState } from '../../hooks/useSearchState';
 import { ResourceTypeSelector } from './ResourceTypeSelector';
 import { SearchFilterPanel } from './SearchFilterPanel';
@@ -276,6 +277,9 @@ export function SearchResultsPage() {
         <Anchor onClick={() => navigate('/explorer')} size="sm">
           Explorer
         </Anchor>
+        <Text size="sm" c="dimmed">
+          {getResourceCategory(resourceType)}
+        </Text>
         <Text size="sm" fw={600}>
           {resourceType}
         </Text>
