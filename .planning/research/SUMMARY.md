@@ -1,175 +1,178 @@
-# Project Research Summary
+# v1.5 Research Summary
 
-**Project:** FHIR Exploder
-**Domain:** FHIR Server Explorer / Browser (read-only, local-first SPA)
-**Researched:** 2026-04-11
-**Confidence:** MEDIUM
+Synthesis of [STACK.md](./STACK.md), [FEATURES.md](./FEATURES.md), [ARCHITECTURE.md](./ARCHITECTURE.md), [PITFALLS.md](./PITFALLS.md).
 
 ## Executive Summary
 
-FHIR Exploder is a read-only, local-first React SPA for exploring and auditing data on a Blaze FHIR R4 server, with specific focus on MII Kerndatensatz profiles and German clinical terminology. The recommended stack centers on Medplum's React component ecosystem (@medplum/core, @medplum/react, @medplum/fhirtypes v5.1.7), which provides battle-tested FHIR-aware UI components (ResourceTable, CodeableConceptDisplay, PatientSummary, etc.) and typed FHIR data hooks. Mantine 8 is a mandatory peer dependency of Medplum and serves as the sole design system -- no additional CSS framework should be added. Vite 8 is the build tool, React 18 is the runtime, and react-router-dom v7 handles client-side routing across three primary entry points: patient browser, resource explorer, and data quality dashboard.
+v1.5 is a **four-group delta** on a mature codebase (v1.4 shipped 2026-04-23, 836 passing tests, live-Blaze validated): UX-01 external validator cascade, EFF-R14 per-metric `QualityMetricsContext` split, six Phase-30 UAT follow-ups, and the 14 MII Kerndatensatz extension modules. All four research docs converge: **the v1.4 stack already covers ~95% of scope; the only new dependency is one devDep (`fhir-package-loader@^2.2.4`) to script-extract extension-module `StructureDefinition`s at build time**. No runtime packages, no state-management libs, no color libs, no new test tooling.
 
-The single largest architectural risk is the coupling between MedplumClient and the Medplum backend. While MedplumClient exposes `baseUrl` and `fhirUrlPath` options for pointing at non-Medplum servers like Blaze, many Medplum React components internally call `useMedplum()` to fetch data, which may invoke Medplum-specific API behaviors. The recommended mitigation is to audit every Medplum component during Phase 1 for internal fetch calls, use components purely as renderers where possible, and build a compatibility matrix before committing to the component strategy. If MedplumClient integration proves too tightly coupled, the fallback is a thin custom FHIR client with `fetch()` -- but this should be a last resort since it forfeits the hook ecosystem.
+Recommended approach: execute `29-02-PLAN.md` **verbatim** for UX-01; apply **Option A (seven separate `React.createContext` symbols + `<QualityMetricsProviders>` composer)** for EFF-R14; introduce a **schema widening pattern** (`fhirResourceType: string | string[]` + `category` + per-type override helpers) for the 21-module rollout; ship six mostly-independent UAT fixes. Phase ordering is dictated by two hard dependencies: (a) **EFF-R14 must land before the per-type quality matrix card (UAT #6)**, and (b) **MII schema widening + helper utilities must land before the 14 extension data entries** to prevent silent `.find()` breakage across ~8 call sites.
 
-Secondary risks include CORS blocking (solved by Vite dev proxy from day one), Blaze's opaque cursor-based pagination (design Next/Previous UI, not page-number jumps), terminology server rate limiting (aggressive caching + progressive enhancement pattern), and the rabbit hole of client-side MII profile validation (use server-side `$validate` instead). The project has a clear feature dependency chain: server connection -> CapabilityStatement -> resource browsing -> patient-centric views -> terminology resolution -> data quality dashboard. This chain should directly inform phase structure.
+Highest risks: PHI gate regressions in the validator cascade (D-09 invariant must not be relaxed), concurrent-fetch storms from 22 `keepMounted` tabs on `/patients/:id` (browser 6-per-origin limit + Blaze head-of-line blocking), and compounding test-baseline maintenance cost (29.5-style repairs if providers aren't wrapped in a composer). All three have locked mitigations below.
+
+---
+
+## Locked Decisions (cross-document agreement)
+
+| Decision | Lock reason | Source |
+|---|---|---|
+| **Exactly one new devDep: `fhir-package-loader@^2.2.4`** (Apache-2.0, Node-only, build-time) | npm + packages.fhir.org verified; nothing else needed | STACK §Bottom Line |
+| **Zero new runtime deps** | Native `fetch` + `AbortController` locked by 29-02 test contract; per-metric context = vanilla React; color = Mantine custom tuples | STACK §What NOT to Add; PITFALLS #19 |
+| **UX-01 = execute `29-02-PLAN.md` verbatim** (three-tier cascade, 15s timeout, probe cache, PHI gate extraction, `normalizeOperationOutcomeIssue`, active-strategy line) | Plan pre-litigated with D-07..D-16; all four docs concur | FEATURES §1.a; ARCHITECTURE Q3; PITFALLS #1-6 |
+| **EFF-R14 = Option A, seven `createContext` symbols + `<QualityMetricsProviders>` composer** (NOT `useSyncExternalStore`, NOT selector libs, NOT Zustand/Jotai) | PROJECT.md locks Option A; STACK rejects state libs on design grounds | STACK §EFF-R14; ARCHITECTURE Q2; PITFALLS #7-10 |
+| **Providers at `QualityLayout` level, never co-located with panels** | State must survive tab switches | ARCHITECTURE Q2; PITFALLS #9 |
+| **Facade `useQualityMetrics()` preserved** — consumers migrate opt-in per tile | PdfReportLayout + capture-snapshot use bulk reads | ARCHITECTURE Q2 |
+| **Keep 7 base module colors unchanged** (blue/indigo/teal/violet/pink/cyan/orange) | Muscle memory; Phase 30 tokens locked | ARCHITECTURE Q6 |
+| **Extension colors: 7 custom `MantineColorsTuple`s on `createTheme()`** (NOT runtime color libs; one-off `npx wcag-contrast` audit during design) | Design-time task, not runtime behavior | STACK §Color Strategy; PITFALLS #15 |
+| **MII schema: `fhirResourceType: string \| string[]` + `category: 'base' \| 'extension'` + `patientSearchParamOverrides?: Record<string,string>` + `extraQuery?: Record<string,string>`** | All four shapes surfaced by call-site analysis | ARCHITECTURE Q1/Q5; PITFALLS #12-14 |
+| **Helper utilities shipped BEFORE schema widening** (`getTypesForModule`, `findModuleForType`, `getPatientSearchParamForType`, `getExtraQueryForType`) | TS cannot flag `===` on `string` vs `string \| string[]`; only codemod prevents silent breakage | PITFALLS #13 |
+| **Collapsible "Extension modules" section defaults CLOSED; auto-expand if activeTab is extension key** | Discoverability + first-paint perf | ARCHITECTURE Q4; FEATURES §2.a |
+| **Extension tabs DROP `keepMounted`; base 7 keep it** | 22 concurrent FHIR searches = 3-5s TTI degradation | PITFALLS #11 |
+| **Empty-state: visible + dimmed (0.55 opacity) + specific copy + "Show N empty" toggle** (NOT auto-hide) | "Browse the ecosystem" core value; matches Phase 30 Dashboard MII pattern | FEATURES §5; PITFALLS #16 |
+| **Probe cache: per-session `useRef<Map>` inside `useConformanceRun`; reset on Validate-sample click AND on settings change; include `externalValidatorUrl` in key** | Per-run isolation; invalidation on settings mismatch | ARCHITECTURE Q3; PITFALLS #2 |
+| **Bundled extension profiles under `src/quality/profiles/extensions/` — CC-BY-4.0, attribution in `ATTRIBUTION.md`** | Mirrors v1.0 Phase 5 pattern; license verified | STACK §2 |
+| **Pre-GA MII packages bundled as-latest-available** (Kardiologie `2026.0.0-alpha.2`, Symptom `2024.0.0-ballot`) with graceful empty-state | Upgrade-safe version-string change | STACK §2 |
+
+---
+
+## Phase Ordering Constraints (Hard Dependencies)
+
+1. **EFF-R14 (Phase 32) → Per-type quality matrix (UAT #6, Phase 35).** Matrix has 50×7=350 cells; without per-metric isolation → jank. [PITFALLS #17]
+2. **MII helpers → schema widening → 14 extension entries.** Ship helpers first (mechanical refactor, no behavior change), then widen schema, then add data. [PITFALLS #13]
+3. **UAT #4 (empty per-patient panel investigation) → MII extension rollout.** UAT #4 likely exposes a `patient=` vs `subject=` bug applicable to base modules; fix pattern propagates. [PITFALLS #14]
+4. **UAT #5 (Dashboard MII tile scoping) → MII extension rollout.** Decision for 7 base tiles applies to 14 extensions. [ARCHITECTURE Q7]
+
+**Parallel-safe:** UX-01 is independent of everything else. Phase-30 UAT #1/#2/#3 have no inter-dependencies.
+
+**Merge-conflict watch:** Both UX-01 and EFF-R14 touch `ValidationPanel.tsx`. Recommend UX-01 ships first, EFF-R14 rebases — OR one engineer owns the panel surface.
+
+---
 
 ## Key Findings
 
-### Recommended Stack
+### Stack — see [STACK.md](./STACK.md)
+v1.4 stack sufficient + `fhir-package-loader@^2.2.4` devDep for MII extension profile extraction. Explicit rejections with rationale: `zustand`/`jotai`/`use-context-selector` (vanilla React suffices); `axios`/`ky` (duplicates MedplumClient auth + breaks `vi.spyOn(global,'fetch')` contract); `chroma-js`/`colorizr` runtime (design-time task only); `msw` (forks mocking); Mantine 9 (requires React 19).
 
-The stack is anchored by the Medplum FHIR ecosystem (v5.1.7, all four packages version-locked) running on React 18 with Mantine 8. This is not a mix-and-match decision -- Medplum React requires Mantine as a peer dependency, so the UI framework choice is made for us. The good news is that Mantine is excellent (clean API, strong TypeScript support, comprehensive component set).
+### Features — see [FEATURES.md](./FEATURES.md)
+**P1 (launch v1.5):** UX-01 full cascade (9 items from 29-02-PLAN); EFF-R14 split; per-type quality matrix; 14 extension entries + collapsible + dashboard partition; 21-color + Tabler-icon palette; empty-state UX; all 6 Phase-30 UAT follow-ups.
+**P2:** "Test connectivity" button; pre-probe extension counts; auto-select most-data extension.
+**P3:** CSV export; heat-column gradient; IPS `emptyReason`; semantic near-miss detection; validator auth.
+**Anti-features rejected:** auto-populate `validator.fhir.org`; local full FHIR validator in browser; retry-with-backoff on 5xx; all 21 tabs flat; auto-hide empty (destroys discoverability); rainbow palette; emoji icons.
 
-**Core technologies:**
-- **React 18.3.1**: UI framework -- stable, avoids unnecessary React 19 risk for a read-only tool
-- **@medplum/core + fhirtypes + react + react-hooks 5.1.7**: FHIR client, R4 types, FHIR-aware components, data hooks -- version-locked, must all match
-- **Mantine 8.3.18**: UI component library -- required peer of @medplum/react, serves as sole design system
-- **Vite 8**: Build/dev server -- fast HMR, proxy support for CORS, no SSR needed
-- **react-router-dom 7.x**: Routing -- 3-route app, URL-driven search state
-- **js-yaml 4.x**: Settings file parsing -- lightweight, no-dependency YAML parser
-- **TypeScript 5.7**: Type safety -- required for @medplum/fhirtypes value; pin to 5.x to avoid TS 6.x edge cases
+### Architecture — see [ARCHITECTURE.md](./ARCHITECTURE.md)
+Seven file:line-verified questions answered. 6 MII consumer sites enumerated; 7 EFF-R14 producers + 3 multi-metric consumers mapped; UX-01 lands 6 new files + 6 modified; probe cache = `useRef<Map>` in `useConformanceRun`; two `Tabs.List`s inside one `<Tabs>` context is safe; multi-type patient search param = per-type override map (Option A preferred).
 
-**Do not add:** Tailwind (conflicts with Mantine), react-query (competes with Medplum's cache), Redux/Zustand (unnecessary), Next.js (no SSR needed), Mantine 9 (React 19 only).
+### Top-5 Pitfalls — see [PITFALLS.md](./PITFALLS.md) for all 20
 
-### Expected Features
+1. **PHI gate bypass via refactoring** (#3) — future batching could hoist `isPhiAcknowledged` out of per-resource loop; revocation mid-run leaks PHI. **Prevent:** re-evaluate gate before EVERY outbound fetch. 29-02 Task 1 Test 4 + Task 4 Test 2 LOCK this.
+2. **22 concurrent FHIR searches on `/patients/:id`** (#11) — `keepMounted` × 21 tabs blows 6-per-origin limit + Blaze thread-pool saturation; TTI 5× degradation. **Prevent:** extension tabs drop `keepMounted`; collapse closed by default; count-only `_summary=count` on expand.
+3. **MII schema-widening silent breakage** (#13) — TS can't flag `===` between `string` and `string | string[]`. **Prevent:** ship helpers first (one commit), migrate call sites (second commit), widen schema (third).
+4. **Probe cache not invalidated on settings change** (#2) — URL swap causes silent demote to `server`. **Prevent:** reset probe on settings change + always-fresh on "Validate sample" click; include `externalValidatorUrl` in key.
+5. **EFF-R14 re-subscription loops** (#8) — missing `useMemo` on any provider value → "Maximum update depth exceeded". **Prevent:** `src/quality/metrics/_template.tsx` copied verbatim per provider; smoke test asserts no Max-Update-Depth.
 
-**Must have (table stakes):**
-- T1: Server connection configuration (URL, auth mode, settings.yaml)
-- T2: CapabilityStatement discovery (drives available resource types and search params)
-- T3: Resource type listing with counts
-- T4: Resource search with parameters (auto-generated from CapabilityStatement)
-- T5: Bundle pagination (cursor-based next/prev)
-- T6: JSON display (pretty-printed, syntax highlighted)
-- T7: Human-readable resource display (Medplum rendering components)
-- T8: Patient list with search (name, identifier, birthDate)
-- T9: Patient detail with clinical data organized by category
-- T10: Clickable cross-references between resources
-- T11: Error handling for server unavailability
-- T12: Loading states and feedback
+Additional high-value pitfalls: #1 AbortSignal not threaded through server tier; #5 severity drift across HAPI/Firely/IG-Publisher; #6 CORS root-cause surfacing; #7 shared context symbol → silent 7/8 data loss; #10 test-setup cascade; #15 color collision 14 vs 21; #19 design token drift; #20 deuteranopia 21→12 perceptual collapse.
 
-**Should have (differentiators):**
-- D1: MII Kerndatensatz module navigation (Diagnose, Prozedur, Laborbefund, etc.)
-- D2: Terminology resolution via MII Terminology Server ($lookup/$translate)
-- D3: Data quality dashboard (counts, completeness, coding coverage)
-- D5: Three-mode resource rendering (human-readable, clinical+raw split, developer/structure)
-- D10: _include/_revinclude for efficient patient queries
-
-**Defer (v2+):**
-- D4: Profile validation (complex; use server-side $validate if available)
-- D6: Clinical timeline view (high complexity, depends on stable browsing)
-- D9: Bulk terminology pre-resolution (optimization, not required for usability)
-
-### Architecture Approach
-
-The app follows a provider-tree architecture: SettingsProvider (loads settings.yaml) -> FhirClientProvider (creates MedplumClient, wraps in MedplumProvider) -> TerminologyProvider (separate client for MII Terminology Server with LRU cache) -> React Router -> Page components. Two separate MedplumClient instances serve Blaze (primary data) and the MII Terminology Server (code display resolution). Search state lives in URL params for browser navigation and shareability. MII module configuration is a static registry mapping German clinical domain names to FHIR resource types and profile URLs.
-
-**Major components:**
-1. **SettingsProvider** -- loads settings.yaml, exposes config via context; everything depends on this
-2. **FhirClientProvider** -- creates MedplumClient pointed at Blaze, handles auth modes (open/basic/bearer)
-3. **TerminologyProvider** -- separate client for MII Terminology Server, LRU cache, progressive enhancement pattern
-4. **MiiModuleRegistry** -- static mapping of MII modules (Person, Fall, Diagnose, Prozedur, Laborbefund, Medikation, Consent) to FHIR types + profile URLs
-5. **PatientBrowser** -- patient list + detail with MII module tabs
-6. **ResourceExplorer** -- generic resource type browsing with CapabilityStatement-driven search
-7. **QualityDashboard** -- resource counts via _summary=count, sample-based field completeness, coding coverage
-
-### Critical Pitfalls
-
-1. **MedplumClient assumes Medplum backend** -- Many Medplum React components fetch data internally via `useMedplum()`, which may invoke Medplum-specific API paths. Audit every component's source for internal fetch calls before using it. Build a compatibility matrix in Phase 1.
-2. **CORS blocks browser-to-Blaze requests** -- Different ports = different origins. Configure Vite dev proxy (`/fhir -> localhost:8080`) immediately. Plan reverse proxy for production deployment.
-3. **Blaze pagination is cursor-based, not offset-based** -- Cannot jump to arbitrary pages. Design Next/Previous UI with cached visited-page links. Display total from Bundle.total but do not promise page jumps.
-4. **Terminology server rate limiting and latency** -- Naive per-CodeableConcept $lookup creates request storms. Cache aggressively (LRU in-memory), render raw codes first then enhance asynchronously, set 2-3s timeouts.
-5. **Credentials in settings.yaml** -- Add settings.yaml to .gitignore from day one. Ship settings.example.yaml. Support environment variable overrides for sensitive values.
+---
 
 ## Implications for Roadmap
 
-### Phase 1: Foundation and Blaze Connectivity
-**Rationale:** Everything depends on connecting to Blaze and confirming Medplum components work against a non-Medplum server. This is the highest-risk phase -- if MedplumClient integration fails, the architecture pivots.
-**Delivers:** Working connection to Blaze, app shell with routing, settings management, validated Medplum component compatibility matrix.
-**Addresses:** T1 (server connection), T2 (CapabilityStatement), T11 (error handling), T12 (loading states)
-**Avoids:** Pitfall 1 (MedplumClient coupling), Pitfall 5 (CORS), Pitfall 10 (credentials in settings.yaml), Pitfall 14 (production proxy planning)
-**Gate:** Can we render a Patient resource from Blaze using Medplum components?
+Five phases over ~3-4 engineering weeks:
 
-### Phase 2: Resource Explorer
-**Rationale:** Generic resource browsing validates the core data flow (search -> paginate -> display -> navigate references) before adding patient-centric complexity. This phase exercises every architectural layer.
-**Delivers:** Browse any resource type, search with CapabilityStatement-driven parameters, paginate results, view resources in JSON and human-readable modes, click references to navigate.
-**Addresses:** T3 (resource listing), T4 (search), T5 (pagination), T6 (JSON display), T7 (human-readable display), T10 (cross-references), D5 (three-mode rendering)
-**Avoids:** Pitfall 3 (cursor pagination), Pitfall 4 (large bundles), Pitfall 11 (sort limitations), Pitfall 13 (Bundle.total absent)
+### Phase 31 — UX-01 External Validator Cascade (parallel-safe)
+**Rationale:** Zero file overlap with EFF-R14 or MII work; `29-02-PLAN.md` pre-litigated.
+**Delivers:** `cascadingValidator.ts`, `phiGate.ts`, `normalizers.ts`; active-strategy status line; settings schema; probe cache in `useConformanceRun`; blue timeout toast.
+**Avoids:** PHI gate bypass (#3); probe cache staleness (#2); AbortSignal threading through server tier (#1); CORS root-cause surfacing (#6); normalizer severity-drift test matrix (#5).
+**Research flag:** LOW — plan pre-litigated.
 
-### Phase 3: Patient-Centric Browsing and MII Modules
-**Rationale:** Patient-centric views are the core value proposition but depend on resource display being stable. MII module navigation is the primary differentiator and belongs here.
-**Delivers:** Patient list, patient detail with MII module tabs (Diagnose, Prozedur, Laborbefund, etc.), per-module resource queries.
-**Addresses:** T8 (patient list), T9 (patient detail), D1 (MII module navigation), D10 (_include/_revinclude)
-**Avoids:** Pitfall 8 (_include limitations -- use per-type queries as primary strategy)
+### Phase 32 — EFF-R14 QualityMetricsContext Split (parallel-safe; blocks Phase 35 matrix)
+**Rationale:** Internal refactor, API-preserving via facade. Unblocks UAT #6.
+**Delivers:** 7 per-metric providers under `src/quality/metrics/`; `<QualityMetricsProviders>` composer at `QualityLayout`; producer migrations; `OverviewStrip` + tab-label consumers migrated.
+**Avoids:** shared context symbol (#7); missing memoization (#8); panel co-location (#9); test-wrap explosion (#10) — composer ships as Task 1.
+**Research flag:** LOW — textbook React Context pattern.
 
-### Phase 4: Terminology Resolution
-**Rationale:** Terminology makes the app truly usable for clinicians and data managers (showing "Diabetes mellitus Typ 2" instead of "E11.9"), but the app is functional without it. Separating this into its own phase contains the complexity of caching, rate limiting, and CodeableConcept resolution logic.
-**Delivers:** MII Terminology Server integration, $lookup/$translate, LRU cache, progressive enhancement display pattern.
-**Addresses:** D2 (terminology resolution), D9 (bulk resolution, partial)
-**Avoids:** Pitfall 6 (rate limiting), Pitfall 7 (CodeableConcept complexity), Pitfall 15 (German system URIs)
+### Phase 33 — MII Schema Foundation + Extension-Modules Collapse UI
+**Rationale:** Mechanical codemod phase; no new data yet.
+**Delivers:** helpers (`fhirResourceTypesOf`, etc.); schema widening; `MiiModuleTab` fans out per-type via `Promise.all`; `MiiModuleTabs` partition + `<Collapse>`; Dashboard MII tile partition.
+**Avoids:** silent `.find()` breakage (#13); `extraQuery` collapse on multi-type (#12). Includes UAT #4 investigation pre-task.
+**Research flag:** MEDIUM — codemod may surface additional patterns; `grep -rn "fhirResourceType" src/` audit is a pre-task.
 
-### Phase 5: Data Quality Dashboard
-**Rationale:** Quality metrics depend on stable resource browsing and MII module definitions. This is high value but architecturally independent -- it can be built in parallel with Phase 4 if resources allow.
-**Delivers:** Resource counts per type, field completeness heatmap (sample-based), coding coverage metrics, optional lightweight profile conformance checks.
-**Addresses:** D3 (quality dashboard), D7 (field completeness), D8 (coding coverage)
-**Avoids:** Pitfall 9 (full validation rabbit hole -- use server-side $validate or lightweight checks only)
+### Phase 34 — 14 MII Extension Modules + Palette + Bundled Profiles
+**Rationale:** Data rollout; schema locked, helpers exist, UI shell exists.
+**Delivers:** 14 entries with per-type overrides; `scripts/fetch-mii-profiles.mjs` + `prepare` lifecycle; 7 custom `MantineColorsTuple`; 21 Tabler icons; dimmed empty-state + toggle + "Check on server" link; CC-BY-4.0 attribution.
+**Avoids:** color collision (#15); deuteranopia failure (#20); concurrent-fetch storm (#11); empty clutter (#16); per-type `patientSearchParam` mismatch (#14).
+**Research flag:** HIGH — per-module research needed against live MII IGs; color palette seed audit (`.planning/research/color-design-audit.md`).
 
-### Phase Ordering Rationale
+### Phase 35 — Phase-30 UAT Follow-ups + Per-Type Quality Matrix
+**Rationale:** Depends on Phase 32 (matrix) and Phase 33 (UAT #4/#5 propagation). Smaller plans; split freely.
+**Delivers:** UAT #1 Explorer Date/Status per-type extractor; UAT #2 HumanReadableView cleanup; UAT #3 mode removal + Developer→JSON rename; UAT #4 fix; UAT #5 scope/label; UAT #6 per-type matrix (7 sortable columns, drill-down).
+**Avoids:** UAT #1 test-baseline drift (#18) — TDD with single commits; matrix-before-EFF-R14 ordering (#17); token drift (#19).
+**Research flag:** LOW — UAT gaps well-scoped; matrix follows OverviewStrip patterns.
 
-- Foundation must come first because every other phase depends on a working Blaze connection and validated Medplum compatibility.
-- Resource Explorer before Patient Browser because generic browsing is simpler, validates the full data flow, and de-risks Medplum component integration.
-- Patient-centric views before terminology because the patient browser is the primary UX and is usable with raw codes.
-- Terminology separated from patient browsing to contain its unique complexity (caching, rate limiting, German code systems).
-- Quality dashboard last because it depends on both stable browsing and MII module definitions, and is the most independent feature.
+### Cross-Cutting VERIFY (every phase)
+- Design token compliance grep (no hardcoded hex or `color="indigo"` outside Mantine theme primitives)
+- Test baseline preserved (836 passing / 0 failed)
+- `npm run build` clean
+- Live-Blaze UAT per phase
 
-### Research Flags
+---
 
-Phases likely needing deeper research during planning:
-- **Phase 1:** Medplum component compatibility with Blaze is the biggest unknown. Requires hands-on testing, not just documentation review. Budget time for component auditing and potential fallback to custom FHIR client.
-- **Phase 3:** MII profile canonical URLs need validation against current published IGs. The module-to-resource-type mapping is solid but exact profile URLs may have changed.
-- **Phase 4:** MII Terminology Server rate limits, supported operations ($lookup, $translate, $expand), and latency characteristics need runtime validation.
-- **Phase 5:** Blaze $validate support and loaded profile availability need verification.
+## Conflicts / Tensions Resolved
 
-Phases with standard patterns (skip deep research):
-- **Phase 2:** Resource browsing with FHIR search, pagination, and JSON display follows well-documented FHIR patterns. Mantine table/tab components are straightforward.
+| Tension | Resolution |
+|---|---|
+| **Color granularity** — STACK hand-picked tuples; FEATURES category+icon; ARCHITECTURE 3-tier; PITFALLS category-based | **Tier 3 from the start: color + Tabler icon per module.** Category-color as hue-assignment algorithm (5-7 categories → 7 hues → 21 modules distinguished by icon+label). |
+| **Empty-state default** — ARCHITECTURE dimmed-visible; PITFALLS #16 auto-hide w/ toggle | **Dimmed-visible wins** (FEATURES §5.c explicitly calls auto-hide an anti-feature). Reconcile via "Show N empty" toggle. |
+| **Probe cache scope+key** — ARCHITECTURE `useRef<Map>` per-session; PITFALLS key includes `externalValidatorUrl` | **Both**: `useRef<Map>` scope + 3-tuple key `(serverUrl, externalValidatorUrl, resourceType)`. |
+| **Dashboard MII partition** — FEATURES Option (b) base+extension sections; ARCHITECTURE partition-or-toggle; UAT #5 per-patient vs server-wide | **Partition by category AND decide scoping in Phase 35 UAT #5** — orthogonal decisions. |
+| **Normalizer severity policy** — PITFALLS #5: do NOT auto-normalize across validators | **Record `validatorVariant`, surface in UI** ("Active strategy: external (HAPI)"); per-variant normalizer fixtures added to Task 2 tests. |
+
+No hard conflicts — docs amend, not contradict.
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
-|------|------------|-------|
-| Stack | HIGH | All versions verified via npm registry; dependency graph confirmed; peer dependencies validated |
-| Features | MEDIUM | Feature landscape based on training knowledge of FHIR tools; competitive analysis could not be web-verified |
-| Architecture | MEDIUM | MedplumClient fhirUrlPath option confirmed from type defs; actual Blaze compatibility needs runtime validation |
-| Pitfalls | MEDIUM-HIGH | CORS, pagination, large bundles, credentials are HIGH confidence; MedplumClient coupling and terminology server behavior are MEDIUM |
+|---|---|---|
+| Stack | **HIGH** | npm + packages.fhir.org verified 2026-04-23; peerDeps inspected in `/node_modules`; CC-BY-4.0 on Simplifier verified. |
+| Features | **HIGH/MEDIUM** | HIGH for UX-01 + matrix; MEDIUM for 21-module taxonomy (per-module FHIR-type arrays inferred) + 21-color strategy (design decision). |
+| Architecture | **HIGH** | Every integration claim file:line-verified. |
+| Pitfalls | **HIGH/MEDIUM** | HIGH for code-grounded (#1,2,7,8,10,11,12,13,15,16,17,18,19); MEDIUM-HIGH for analytical (#3,4,9,14,20); MEDIUM for per-vendor (#5,6). |
 
-**Overall confidence:** MEDIUM -- The stack is solid and well-verified. The architecture is sound in theory but depends on a critical assumption (MedplumClient works adequately against Blaze) that can only be validated by building Phase 1.
+**Overall confidence: HIGH.** Bounded delta on mature code; research anchored in live code + live registries.
 
-### Gaps to Address
+### Gaps to Address During Requirements
 
-- **MedplumClient vs. Blaze compatibility:** Must be validated in Phase 1 with hands-on testing. No amount of documentation review replaces actually rendering Blaze data through Medplum components.
-- **Basic auth handling:** MedplumClient is OAuth-oriented. Basic auth support (needed for some Blaze deployments) may require a custom fetch wrapper. Investigate in Phase 1.
-- **MII profile canonical URLs:** The module registry's profile URLs are based on training data and may be outdated. Validate against https://simplifier.net/organization/koordinationsstellemii during Phase 3 planning.
-- **MII Terminology Server behavior:** Rate limits, supported operations, and response latency are unknown. Test with real queries during Phase 4.
-- **Blaze $validate support:** Whether Blaze supports $validate with loaded MII profiles needs verification before committing to the quality dashboard's validation feature.
-- **SearchControl component:** This is Medplum's most powerful component for resource browsing but is the most likely to have Medplum-specific internal behavior. May need to be replaced with a custom search UI built on lower-level Medplum components.
-
-## Sources
-
-### Primary (HIGH confidence)
-- npm registry -- all package versions, peer dependencies, dependency graphs (verified 2026-04-11)
-- @medplum/core v5.1.7 TypeScript declarations -- MedplumClientOptions interface, baseUrl/fhirUrlPath options
-- @medplum/react v5.1.7 TypeScript declarations -- component exports, hook signatures
-- FHIR R4 specification -- pagination, search, CodeableConcept, Bundle structure
-- German FHIR system URIs (fhir.de) -- ICD-10-GM, OPS, ATC canonical URLs
-
-### Secondary (MEDIUM confidence)
-- Medplum React component behavior against non-Medplum servers -- inferred from API surface and documentation
-- Blaze FHIR server capabilities -- based on training data, may have improved in recent versions
-- MII Kerndatensatz module structure -- based on training data of MII profile ecosystem
-
-### Tertiary (LOW confidence)
-- MII profile canonical URLs -- may have changed across IG versions; validate during implementation
-- MII Terminology Server rate limits and latency -- assumed similar to other public FHIR terminology servers
-- Blaze $validate operation support -- needs runtime verification
+1. **Per-module `patientSearchParam` + `extraQuery` + `fhirResourceType` array for 14 extensions** — Phase 34 pre-task; parallel research deliverable.
+2. **Color palette seeds** — 7 custom hexes need design sign-off in `.planning/research/color-design-audit.md` (one-off Chrome deuteranopia pass).
+3. **`prebuild:profiles` script placement** — `build` only or `prepare` lifecycle? Recommend `prepare` for fresh-clone test reliability.
+4. **Dashboard MII tile scoping** (per-patient vs server-wide) — Phase 35 UAT #5 decision; propagates to 21 tiles.
+5. **Auto-expand Collapse on deep-link** — recommend YES per ARCHITECTURE Q4; UX sign-off.
+6. **Facade deprecation timeline** — recommend keep indefinitely (PDF export + snapshot capture need bulk reads).
+7. **Pre-GA MII package policy** — recommend bundle-with-warning.
+8. **CORS documentation depth** — one-page "External Validator Setup Guide" or inline settings.yaml comments?
 
 ---
-*Research completed: 2026-04-11*
-*Ready for roadmap: yes*
+
+## Sources (aggregated)
+
+### Primary (HIGH)
+- **npm registry `npm view`** (verified 2026-04-23): `fhir-package-loader@2.2.4`, `@mantine/core@8.3.18`+`9.1.0`, `@medplum/*@5.1.7`, `use-context-selector@2.0.0`, `zustand@5.0.12`, `jotai@2.19.1`
+- **packages.fhir.org** (verified 2026-04-23): all 14 MII extension package versions + CC-BY-4.0
+- **Installed declarations:** `@mantine/core/.../theme.types.d.ts:DefaultMantineColor`, `@medplum/react/package.json:peerDependencies`
+- **In-repo file:line:** `src/utils/mii-modules.ts`, `src/quality/QualityMetricsContext.tsx`, `src/components/quality/ValidationPanel.tsx`, `src/components/patients/MiiModuleTabs.tsx`, `src/hooks/useConformanceRun.ts`, `.planning/phases/29-backlog-ux/29-02-PLAN.md`, `.planning/phases/30-layout-redesign/30-UAT.md`
+- **FHIR R4 specs:** resource-operation-validate, CapabilityStatement, IPS Empty-Sections
+- **Mantine docs:** theming/colors, colors-generator
+- **CC BY 4.0 Deed**
+
+### Secondary (MEDIUM)
+- MII Simplifier + `build.fhir.org/ig/medizininformatik-initiative/` pages
+- Firely Simplifier Validator Playground; HAPI Tester; Inferno; Touchstone
+- Epic Chart Review / Cerner PowerChart / Medplum Chart Demo UI patterns
+- Great Expectations / dbt-expectations / Soda / OpenRefine DQ dashboards
+- Glasbey, Tableau 20, arXiv 2107.02270 color-blind-safe palettes
+
+### Tertiary (LOW)
+- Per-validator severity drift (analytical from FHIR R4 §OperationOutcome)
+- Vendor UI patterns (not publicly documented in depth)
+- Public validator CORS configurations (deterministic browser behavior; per-validator config not verified)
