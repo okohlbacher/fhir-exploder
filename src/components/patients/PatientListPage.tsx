@@ -4,10 +4,13 @@ import {
   Anchor,
   ActionIcon,
   Alert,
+  Avatar,
   Badge,
   Button,
+  Card,
   Code,
   Group,
+  Kbd,
   Modal,
   NumberInput,
   Select,
@@ -20,6 +23,7 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { IconSearch, IconX } from '@tabler/icons-react';
 import type { Bundle, Patient, Resource } from '@medplum/fhirtypes';
 import type { MedplumClient } from '@medplum/core';
 import type { PatientsOutletContext } from './PatientsLayout';
@@ -220,49 +224,118 @@ function getPatientName(patient: Patient): string {
   return parts.join(', ') || (patient.id ?? '');
 }
 
+/** Derive two-letter initials for the Name-cell avatar (Phase 30 Step 3). */
+function getInitials(patient: Patient): string {
+  if (patient.name && patient.name.length > 0) {
+    const n = patient.name[0];
+    const given = n.given?.[0]?.[0] ?? '';
+    const family = n.family?.[0] ?? '';
+    const combined = `${given}${family}`.toUpperCase();
+    if (combined) return combined.slice(0, 2);
+  }
+  if (patient.id) return patient.id.slice(0, 2).toUpperCase();
+  return '?';
+}
+
+/**
+ * CSS-only 20-bar sparkline placeholder (Phase 30 Step 3 — constant-weighted
+ * v1 per handoff). Signals "this patient has clinical data across a range" at
+ * a glance. Future revision can feed bucket densities from the resource
+ * summary sample.
+ */
+function TimeRangeSparkline({ active }: { active: boolean }) {
+  const bars = 20;
+  return (
+    <Group gap={1} aria-hidden="true" style={{ flexShrink: 0 }}>
+      {Array.from({ length: bars }).map((_, i) => (
+        <div
+          key={i}
+          style={{
+            width: 2,
+            height: active ? 6 + ((i * 3) % 8) : 4,
+            background: active
+              ? 'var(--mantine-color-indigo-5)'
+              : 'var(--mantine-color-gray-4)',
+            opacity: active ? 0.6 + (i % 3) * 0.1 : 0.35,
+            borderRadius: 1,
+          }}
+        />
+      ))}
+    </Group>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // PatientRow — single row; calls usePatientResourceSummary once and renders
 // the count + time-range cells from the shared result.
 // ---------------------------------------------------------------------------
 function PatientRow({
+  rowIndex,
   patient,
   client,
   onNavigate,
 }: {
+  rowIndex: number;
   patient: Patient;
   client: MedplumClient;
   onNavigate: (id: string) => void;
 }) {
   const summary = usePatientResourceSummary(patient.id ?? '', client);
+  const hasTimeRange = !!(summary.firstDate || summary.lastDate);
   return (
     <Table.Tr
       style={{ cursor: 'pointer' }}
       onClick={() => patient.id && onNavigate(patient.id)}
     >
+      <Table.Td
+        style={{
+          fontFamily: 'var(--font-mono, var(--mantine-font-family-monospace))',
+          color: 'var(--mantine-color-dimmed)',
+          fontVariantNumeric: 'tabular-nums',
+          width: 48,
+        }}
+      >
+        {rowIndex}
+      </Table.Td>
       <Table.Td>
-        <Anchor
-          size="sm"
-          fw={500}
-          href={`/patients/${patient.id}`}
-          onClick={(e) => {
-            e.preventDefault();
-            if (patient.id) onNavigate(patient.id);
-          }}
-        >
-          {getPatientName(patient)}
-        </Anchor>
+        <Group gap="sm" wrap="nowrap">
+          <Avatar
+            size={28}
+            radius="xl"
+            color={patient.gender === 'female' ? 'pink' : 'indigo'}
+            variant="light"
+          >
+            {getInitials(patient)}
+          </Avatar>
+          <Anchor
+            size="sm"
+            fw={500}
+            href={`/patients/${patient.id}`}
+            onClick={(e) => {
+              e.preventDefault();
+              if (patient.id) onNavigate(patient.id);
+            }}
+          >
+            {getPatientName(patient)}
+          </Anchor>
+        </Group>
       </Table.Td>
       <Table.Td>
         <Text size="sm">{patient.birthDate ?? ''}</Text>
       </Table.Td>
       <Table.Td>
         {patient.gender && (
-          <Badge size="sm" variant="light" color={patient.gender === 'female' ? 'pink' : 'blue'}>
+          <Badge size="sm" variant="light" color="gray">
             {patient.gender}
           </Badge>
         )}
       </Table.Td>
-      <Table.Td>{formatTimeRange(summary)}</Table.Td>
+      <Table.Td>
+        <Group gap="xs" wrap="nowrap">
+          <TimeRangeSparkline active={hasTimeRange} />
+          {formatTimeRange(summary)}
+        </Group>
+      </Table.Td>
       <Table.Td style={{ textAlign: 'right' }}>{formatCount(summary)}</Table.Td>
       <Table.Td onClick={(e) => e.stopPropagation()}>
         <RawPatientButton patient={patient} />
@@ -448,67 +521,168 @@ export function PatientListPage() {
     }
   };
 
+  // Phase 30 Step 3 — active-filter chip derivation. Each chip corresponds
+  // to a field in `activeSearch` (the submitted criteria, not live typing).
+  // Dismissing a chip clears its field in BOTH `searchParams` and
+  // `activeSearch` and bumps `searchVersion` so the `useEffect` re-runs.
+  const activeChips = useMemo(() => {
+    const chips: { key: keyof PatientSearchParams; label: string }[] = [];
+    if (activeSearch.name) chips.push({ key: 'name', label: `Name: ${activeSearch.name}` });
+    if (activeSearch.identifier)
+      chips.push({ key: 'identifier', label: `ID: ${activeSearch.identifier}` });
+    if (activeSearch.ageMin) chips.push({ key: 'ageMin', label: `Age ≥ ${activeSearch.ageMin}` });
+    if (activeSearch.ageMax) chips.push({ key: 'ageMax', label: `Age ≤ ${activeSearch.ageMax}` });
+    if (activeSearch.gender)
+      chips.push({ key: 'gender', label: `Gender: ${activeSearch.gender}` });
+    return chips;
+  }, [activeSearch]);
+
+  const clearChip = useCallback(
+    (key: keyof PatientSearchParams) => {
+      const next: PatientSearchParams = { ...activeSearch, [key]: '' };
+      setSearchParams(next);
+      setActiveSearch(next);
+      setSearchVersion((v) => v + 1);
+      // Sync URL — omit cleared fields.
+      const params = new URLSearchParams();
+      if (next.name) params.set('name', next.name);
+      if (next.identifier) params.set('identifier', next.identifier);
+      if (next.ageMin) params.set('ageMin', next.ageMin);
+      if (next.ageMax) params.set('ageMax', next.ageMax);
+      if (next.gender) params.set('gender', next.gender);
+      if (count !== DEFAULT_COUNT) params.set('_count', String(count));
+      setUrlParams(params);
+    },
+    [activeSearch, count, setUrlParams],
+  );
+
+  const clearAllChips = useCallback(() => {
+    const cleared: PatientSearchParams = {
+      name: '',
+      identifier: '',
+      ageMin: '',
+      ageMax: '',
+      gender: '',
+    };
+    setSearchParams(cleared);
+    setActiveSearch(cleared);
+    setSearchVersion((v) => v + 1);
+    setUrlParams(new URLSearchParams());
+  }, [setUrlParams]);
+
   return (
     <Stack gap="lg" p="md">
       <Title order={2}>Patients</Title>
 
-      <Group align="flex-end" gap="md" wrap="wrap">
-        <TextInput
-          label="Name"
-          placeholder="Search by name..."
-          value={searchParams.name}
-          onChange={updateField('name')}
-          onKeyDown={handleKeyDown}
-          style={{ minWidth: 220 }}
-        />
-        <TextInput
-          label="Identifier"
-          placeholder="ID, prefix*, or system|value"
-          value={searchParams.identifier}
-          onChange={updateField('identifier')}
-          onKeyDown={handleKeyDown}
-          style={{ minWidth: 220 }}
-        />
-        <NumberInput
-          label="Age from"
-          placeholder="Min"
-          value={searchParams.ageMin ? parseInt(searchParams.ageMin, 10) : ''}
-          onChange={(val) =>
-            setSearchParams((prev) => ({ ...prev, ageMin: val ? String(val) : '' }))
-          }
-          min={0}
-          max={150}
-          style={{ width: 90 }}
-        />
-        <NumberInput
-          label="Age to"
-          placeholder="Max"
-          value={searchParams.ageMax ? parseInt(searchParams.ageMax, 10) : ''}
-          onChange={(val) =>
-            setSearchParams((prev) => ({ ...prev, ageMax: val ? String(val) : '' }))
-          }
-          min={0}
-          max={150}
-          style={{ width: 90 }}
-        />
-        <Select
-          label="Gender"
-          placeholder="All"
-          value={searchParams.gender || null}
-          onChange={(val) =>
-            setSearchParams((prev) => ({ ...prev, gender: val ?? '' }))
-          }
-          data={[
-            { value: 'male', label: 'Male' },
-            { value: 'female', label: 'Female' },
-            { value: 'other', label: 'Other' },
-            { value: 'unknown', label: 'Unknown' },
-          ]}
-          clearable
-          style={{ width: 130 }}
-        />
-        <Button onClick={handleSearch}>Search Patients</Button>
-      </Group>
+      {/* Phase 30 Step 3 — filter bar collapsed into a single Card. Search
+          TextInput carries the ⌘K kbd hint and flexes to fill available
+          space. All labels/placeholders preserved so the existing patient-list
+          test contracts continue to pass. */}
+      <Card p="sm" radius="md">
+        <Group align="flex-end" gap="md" wrap="wrap">
+          <TextInput
+            label="Name"
+            placeholder="Search by name..."
+            value={searchParams.name}
+            onChange={updateField('name')}
+            onKeyDown={handleKeyDown}
+            leftSection={<IconSearch size={14} />}
+            rightSection={<Kbd size="xs">⌘K</Kbd>}
+            rightSectionWidth={44}
+            style={{ flex: '1 1 240px', minWidth: 220 }}
+          />
+          <TextInput
+            label="Identifier"
+            placeholder="ID, prefix*, or system|value"
+            value={searchParams.identifier}
+            onChange={updateField('identifier')}
+            onKeyDown={handleKeyDown}
+            style={{ minWidth: 220 }}
+          />
+          <Group gap={4} align="flex-end" wrap="nowrap">
+            <NumberInput
+              label="Age from"
+              placeholder="Min"
+              value={searchParams.ageMin ? parseInt(searchParams.ageMin, 10) : ''}
+              onChange={(val) =>
+                setSearchParams((prev) => ({
+                  ...prev,
+                  ageMin: val ? String(val) : '',
+                }))
+              }
+              min={0}
+              max={150}
+              style={{ width: 70 }}
+            />
+            <Text size="sm" c="dimmed" pb={8}>
+              –
+            </Text>
+            <NumberInput
+              label="Age to"
+              placeholder="Max"
+              value={searchParams.ageMax ? parseInt(searchParams.ageMax, 10) : ''}
+              onChange={(val) =>
+                setSearchParams((prev) => ({
+                  ...prev,
+                  ageMax: val ? String(val) : '',
+                }))
+              }
+              min={0}
+              max={150}
+              style={{ width: 70 }}
+            />
+          </Group>
+          <Select
+            label="Gender"
+            placeholder="All"
+            value={searchParams.gender || null}
+            onChange={(val) =>
+              setSearchParams((prev) => ({ ...prev, gender: val ?? '' }))
+            }
+            data={[
+              { value: 'male', label: 'Male' },
+              { value: 'female', label: 'Female' },
+              { value: 'other', label: 'Other' },
+              { value: 'unknown', label: 'Unknown' },
+            ]}
+            clearable
+            style={{ width: 130 }}
+          />
+          <Button onClick={handleSearch} ml="auto">
+            Search Patients
+          </Button>
+        </Group>
+      </Card>
+
+      {/* Active-filter chip row. Dismissing a chip clears that field and
+          re-runs the search; "Clear all" resets every field. */}
+      {activeChips.length > 0 && (
+        <Group gap="xs">
+          {activeChips.map((chip) => (
+            <Badge
+              key={chip.key}
+              variant="light"
+              color="indigo"
+              rightSection={
+                <ActionIcon
+                  size="xs"
+                  variant="transparent"
+                  color="indigo"
+                  aria-label={`Remove filter ${chip.label}`}
+                  onClick={() => clearChip(chip.key)}
+                >
+                  <IconX size={12} />
+                </ActionIcon>
+              }
+            >
+              {chip.label}
+            </Badge>
+          ))}
+          <Button size="xs" variant="subtle" color="gray" onClick={clearAllChips}>
+            Clear all
+          </Button>
+        </Group>
+      )}
 
       {error && (
         <Alert color="red" title="Search failed">
@@ -528,6 +702,7 @@ export function PatientListPage() {
         <Table striped highlightOnHover withTableBorder>
           <Table.Thead>
             <Table.Tr>
+              <Table.Th style={{ width: 48 }}>#</Table.Th>
               <Table.Th>Name</Table.Th>
               <Table.Th>Birth Date</Table.Th>
               <Table.Th>Gender</Table.Th>
@@ -537,9 +712,10 @@ export function PatientListPage() {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {patients.map((p) => (
+            {patients.map((p, idx) => (
               <PatientRow
                 key={p.id}
+                rowIndex={idx + 1}
                 patient={p}
                 client={client}
                 onNavigate={(id) => navigate(`/patients/${id}`)}
