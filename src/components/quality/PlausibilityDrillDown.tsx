@@ -1,5 +1,5 @@
 /**
- * PlausibilityDrillDown -- /quality/plausibility/:type sub-page.
+ * PlausibilityDrillDown — /quality/plausibility/:type sub-page.
  *
  * Runs temporal plausibility checks for a single resource type and
  * displays results via DrillDownShell (QDDEP-02 / Plan 25-03).
@@ -35,7 +35,7 @@ export function PlausibilityDrillDown() {
 
   return (
     <DrillDownShell
-      title={`${type} -- Plausibility drill-down`}
+      title={`${type} — Plausibility drill-down`}
       backHref="/quality"
       run={run}
       issues={run.issues}

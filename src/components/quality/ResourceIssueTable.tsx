@@ -1,5 +1,5 @@
 /**
- * ResourceIssueTable -- Phase 15, Plan 02.
+ * ResourceIssueTable — Phase 15, Plan 02.
  *
  * Shared per-resource issue table used by all three quality drill-down panels
  * (Completeness, Coverage, Validation). Renders NormalizedIssue[] as a
@@ -157,7 +157,7 @@ export function ResourceIssueTable({
     <>
       {filterBar}
       <Text size="sm" c="dimmed" mb="xs">
-        Showing {start}--{end} of {filtered.length} issues
+        Showing {start}–{end} of {filtered.length} issues
       </Text>
       <div style={{ maxHeight: 600, overflow: 'auto' }}>
         <Table striped highlightOnHover stickyHeader>
