@@ -7,14 +7,19 @@
  *
  * NOTE (per 27-RESEARCH.md Focus 1): NO existing test renders <App />, so
  * there is nothing to convert. This test proves the pattern works.
+ *
+ * The harness uses a minimal Suspense-around-Outlet shell that mirrors the
+ * production AppLayout structure (`<Suspense fallback={...}><Outlet/></Suspense>`)
+ * without instantiating Sidebar / settings modals — those would require the
+ * full Settings + Connection + Terminology provider tree which is unrelated
+ * to the lazy-loading behavior under test.
  */
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { MemoryRouter, Outlet, Routes, Route } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import { Suspense, lazy } from 'react';
 import { retry } from '../utils/lazyRetry';
-import { AppLayout } from '../components/layout/AppLayout';
 
 // ----- jsdom polyfills required by Mantine 8 -----
 class MockResizeObserver {
@@ -51,8 +56,8 @@ beforeAll(() => {
 });
 
 // Mock useOutletContext defensively — drill-downs typically expect a client
-// from their layout's outlet context. ThresholdsPage doesn't, but the mock is
-// harmless when unused.
+// from their layout's outlet context. ThresholdsPage doesn't, but the mock
+// is harmless when unused.
 const mockClient = {
   getBaseUrl: () => 'http://localhost:8080',
   searchResources: vi.fn().mockResolvedValue([]),
@@ -61,9 +66,11 @@ const mockClient = {
 };
 
 vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+  const actual = await vi.importActual<typeof import('react-router-dom')>(
+    'react-router-dom',
+  );
   return {
-    ...actual as object,
+    ...actual,
     useOutletContext: () => ({ client: mockClient }),
   };
 });
@@ -77,20 +84,30 @@ const LazyThresholdsPage = lazy(() =>
   })),
 );
 
+/**
+ * Minimal harness that mirrors AppLayout's Suspense placement
+ * (`<Suspense fallback={...}><Outlet /></Suspense>`) without dragging in
+ * Sidebar (which has settings/connection/terminology context dependencies
+ * unrelated to the lazy-load behavior under test).
+ */
+function SuspenseShell() {
+  return (
+    <Suspense fallback={<div data-testid="route-loading">Loading…</div>}>
+      <Outlet />
+    </Suspense>
+  );
+}
+
 describe('lazy routes', () => {
   it('shows route-loading fallback then resolves to ThresholdsPage content', async () => {
     render(
       <MantineProvider>
         <MemoryRouter initialEntries={['/quality/thresholds']}>
           <Routes>
-            <Route element={<AppLayout connectionStatus="connected" />}>
+            <Route element={<SuspenseShell />}>
               <Route
                 path="/quality/thresholds"
-                element={
-                  <Suspense fallback={<div data-testid="route-loading">Loading…</div>}>
-                    <LazyThresholdsPage />
-                  </Suspense>
-                }
+                element={<LazyThresholdsPage />}
               />
             </Route>
           </Routes>
@@ -105,9 +122,8 @@ describe('lazy routes', () => {
     if (loading) {
       expect(loading).toBeTruthy();
     }
-    // Eventually the page resolves. Use a heading lookup — ThresholdsPage
-    // renders a Mantine `Title` (heading role) with text including
-    // "threshold" copy. `findBy*` is the canonical lazy-aware assertion.
+    // Eventually the page resolves. ThresholdsPage renders a Mantine Title
+    // (heading role); `findBy*` is the canonical lazy-aware assertion.
     const heading = await screen.findByRole(
       'heading',
       undefined,

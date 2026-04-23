@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { lazy, useCallback } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
 import { DashboardPage } from './components/dashboard/DashboardPage';
@@ -12,19 +12,74 @@ import { PatientListPage } from './components/patients/PatientListPage';
 import { PatientDetailPage } from './components/patients/PatientDetailPage';
 import { QualityLayout } from './components/quality/QualityLayout';
 import { QualityOverviewPage } from './components/quality/QualityOverviewPage';
-import { ThresholdsPage } from './components/quality/ThresholdsPage';
 import { CohortsPage } from './components/quality/CohortsPage';
-import { CompletenessDrillDown } from './components/quality/CompletenessDrillDown';
-import { CodingDrillDown } from './components/quality/CodingDrillDown';
-import { PlausibilityDrillDown } from './components/quality/PlausibilityDrillDown';
-import { LabRangesDrillDown } from './components/quality/LabRangesDrillDown';
-import { DuplicatesDrillDown } from './components/quality/DuplicatesDrillDown';
-import { ReferencesDrillDown } from './components/quality/ReferencesDrillDown';
 import { ConnectionProvider } from './contexts/ConnectionContext';
 import { TerminologyProvider } from './contexts/TerminologyContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 import { useSettings } from './hooks/useSettings';
 import { useConnection } from './hooks/useConnection';
+import { retry } from './utils/lazyRetry';
+
+// ----------------------------------------------------------------------------
+// Lazy-loaded quality drill-downs (EFF-02 — Phase 27 Plan 02).
+//
+// Each `lazy(() => retry(() => import('...')))` declaration:
+//   1. Splits the component into its own Vite chunk (initial bundle shrinks).
+//   2. Wraps the dynamic import in `retry(...)` so a transient chunk-load
+//      failure (stale CDN cache after deploy, flaky network) is retried
+//      3 times with 100/300/900ms exponential backoff before surfacing.
+//   3. Re-shapes the named export to React.lazy's required default-export
+//      module shape — the components are exported by name (not default).
+//
+// IMPORTANT: lazy() MUST be called at module scope (outside any component
+// body) so React's lazy cache deduplicates the import across re-renders and
+// StrictMode double-invocation. See 27-RESEARCH.md Pitfall 2.
+//
+// FUTURE TESTERS: if you write a test that renders <App /> and asserts
+// content from one of these routes, you MUST use `await findBy*` (not
+// `getBy*`). The chunk loads asynchronously. See
+// `src/__tests__/lazy-routes.test.tsx` for the canonical pattern.
+//
+// NOT lazy (per 27-CONTEXT D-05): QualityOverviewPage (index landing),
+// CohortsPage, patient/explorer/settings/dashboard routes — these are
+// landing pages users hit on first load; lazy-loading them would cost a
+// spinner on initial nav.
+// ----------------------------------------------------------------------------
+const ThresholdsPage = lazy(() =>
+  retry(() => import('./components/quality/ThresholdsPage')).then((m) => ({
+    default: m.ThresholdsPage,
+  })),
+);
+const CompletenessDrillDown = lazy(() =>
+  retry(() => import('./components/quality/CompletenessDrillDown')).then((m) => ({
+    default: m.CompletenessDrillDown,
+  })),
+);
+const CodingDrillDown = lazy(() =>
+  retry(() => import('./components/quality/CodingDrillDown')).then((m) => ({
+    default: m.CodingDrillDown,
+  })),
+);
+const PlausibilityDrillDown = lazy(() =>
+  retry(() => import('./components/quality/PlausibilityDrillDown')).then((m) => ({
+    default: m.PlausibilityDrillDown,
+  })),
+);
+const LabRangesDrillDown = lazy(() =>
+  retry(() => import('./components/quality/LabRangesDrillDown')).then((m) => ({
+    default: m.LabRangesDrillDown,
+  })),
+);
+const DuplicatesDrillDown = lazy(() =>
+  retry(() => import('./components/quality/DuplicatesDrillDown')).then((m) => ({
+    default: m.DuplicatesDrillDown,
+  })),
+);
+const ReferencesDrillDown = lazy(() =>
+  retry(() => import('./components/quality/ReferencesDrillDown')).then((m) => ({
+    default: m.ReferencesDrillDown,
+  })),
+);
 
 function AppRoutes() {
   const { settings, usingDefaults } = useSettings();
