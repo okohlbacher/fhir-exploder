@@ -1,4 +1,4 @@
-import { lazy, useCallback } from 'react';
+import { lazy, useCallback, useEffect, useRef } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
 import { DashboardPage } from './components/dashboard/DashboardPage';
@@ -82,7 +82,7 @@ const ReferencesDrillDown = lazy(() =>
 );
 
 function AppRoutes() {
-  const { settings, usingDefaults } = useSettings();
+  const { settings, usingDefaults, loading } = useSettings();
   const connection = useConnection();
 
   const handleConnect = useCallback(() => {
@@ -92,6 +92,20 @@ function AppRoutes() {
   }, [settings, connection]);
 
   const connectionStatus = connection.state.status;
+
+  // Auto-connect on startup: once settings finish loading, if a server URL is
+  // configured and the connection is still idle, fire the same connect flow
+  // the manual button uses. One-shot per app mount — on error the sidebar
+  // indicator reflects "Unreachable" and the user can click Connect manually.
+  const autoConnectFiredRef = useRef(false);
+  useEffect(() => {
+    if (loading) return;
+    if (autoConnectFiredRef.current) return;
+    if (!settings?.fhir?.serverUrl) return;
+    if (connection.state.status !== 'idle') return;
+    autoConnectFiredRef.current = true;
+    connection.connect(settings);
+  }, [loading, settings, connection]);
 
   return (
     <TerminologyProvider settings={settings}>
