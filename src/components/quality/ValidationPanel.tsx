@@ -83,24 +83,39 @@ export function ValidationPanel(_props: ValidationPanelProps) {
 
   const serverUrl = client.getBaseUrl();
   const validatorUrl = settings?.validation?.validatorUrl;
+  const externalValidator = settings?.validation?.externalValidator;
 
-  // Banner dismissal is scoped per (serverUrl, validatorUrl) so a user who
-  // changes their validator URL sees the warning again.
+  // CR-01 fix (31-02): The PHI ack key MUST match the URL the cascade reads
+  // in `cascadingValidator.tryExternal` (isPhiAcknowledged(serverUrl, ext.url)).
+  // When the external tier is configured, it fires FIRST (before server tier),
+  // so key the acknowledgement against the external URL. Fall back to the
+  // server-tier validatorUrl only when the external tier is absent/disabled.
+  // See 31-REVIEW.md §CR-01 and 31-VERIFICATION.md Truth #1.
+  const phiGateUrl = useMemo<string | null>(() => {
+    if (externalValidator?.enabled && externalValidator.url) {
+      return externalValidator.url;
+    }
+    return validatorUrl ?? null;
+  }, [externalValidator?.enabled, externalValidator?.url, validatorUrl]);
+
+  // Banner dismissal is scoped per (serverUrl, phiGateUrl) so a user who
+  // changes either their external or server validator URL sees the warning again.
   const bannerKey = useMemo(
-    () => `${BANNER_KEY_PREFIX}:${serverUrl}|${validatorUrl ?? 'none'}`,
-    [serverUrl, validatorUrl],
+    () => `${BANNER_KEY_PREFIX}:${serverUrl}|${phiGateUrl ?? 'none'}`,
+    [serverUrl, phiGateUrl],
   );
   const [bannerDismissed, setBannerDismissed] = useLocalStorage<boolean>({
     key: bannerKey,
     defaultValue: false,
   });
 
-  // PHI acknowledgement is independent from the info-banner dismissal and
-  // is scoped per (serverUrl, validatorUrl) so a user who switches
-  // validator URLs must re-acknowledge before the next remote run.
+  // PHI acknowledgement: keyed against the URL that will actually receive
+  // outbound PHI. The cascade checks isPhiAcknowledged(serverUrl, ext.url)
+  // before any external fetch; this key MUST agree or the external tier is
+  // silently skipped (the CR-01 defect this fix resolves).
   const phiAckKeyStr = useMemo(
-    () => phiAckKey(serverUrl, validatorUrl ?? null),
-    [serverUrl, validatorUrl],
+    () => phiAckKey(serverUrl, phiGateUrl),
+    [serverUrl, phiGateUrl],
   );
   const [phiAcknowledged, setPhiAcknowledged] = useLocalStorage<boolean>({
     key: phiAckKeyStr,
@@ -243,10 +258,15 @@ export function ValidationPanel(_props: ValidationPanelProps) {
     URL.revokeObjectURL(url);
   };
 
-  // PHI gating only applies when a remote validator is configured — if the
-  // run is structural-only (local), no PHI leaves the browser so no
-  // acknowledgement is required. T-05-05-01 mitigation.
-  const requiresPhiAck = hasRemote && !phiAcknowledged;
+  // PHI gating applies when EITHER tier will POST PHI outbound:
+  //   - server tier active (hasRemote, driven by validation.validatorUrl)
+  //   - external tier active (externalValidator.enabled + url)
+  // External-only deployments MUST see the banner — CR-01 fix (31-02).
+  const hasExternal =
+    !!externalValidator?.enabled &&
+    typeof externalValidator.url === 'string' &&
+    externalValidator.url.trim().length > 0;
+  const requiresPhiAck = (hasRemote || hasExternal) && !phiAcknowledged;
 
   return (
     <Stack gap="md">
@@ -281,7 +301,7 @@ export function ValidationPanel(_props: ValidationPanelProps) {
         </Alert>
       )}
 
-      {hasRemote && !phiAcknowledged && (
+      {requiresPhiAck && (
         <Alert
           variant="light"
           color="orange"
@@ -291,7 +311,7 @@ export function ValidationPanel(_props: ValidationPanelProps) {
           <Stack gap="xs">
             <Text size="sm">{PHI_BANNER_COPY}</Text>
             <Text size="sm" fw={500}>
-              Validator URL: <code>{validatorUrl}</code>
+              Validator URL: <code>{phiGateUrl ?? ''}</code>
             </Text>
             <Group>
               <Button
