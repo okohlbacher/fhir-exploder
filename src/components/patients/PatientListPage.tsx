@@ -237,34 +237,6 @@ function getInitials(patient: Patient): string {
   return '?';
 }
 
-/**
- * CSS-only 20-bar sparkline placeholder (Phase 30 Step 3 — constant-weighted
- * v1 per handoff). Signals "this patient has clinical data across a range" at
- * a glance. Future revision can feed bucket densities from the resource
- * summary sample.
- */
-function TimeRangeSparkline({ active }: { active: boolean }) {
-  const bars = 20;
-  return (
-    <Group gap={1} aria-hidden="true" style={{ flexShrink: 0 }}>
-      {Array.from({ length: bars }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            width: 2,
-            height: active ? 6 + ((i * 3) % 8) : 4,
-            background: active
-              ? 'var(--mantine-color-indigo-5)'
-              : 'var(--mantine-color-gray-4)',
-            opacity: active ? 0.6 + (i % 3) * 0.1 : 0.35,
-            borderRadius: 1,
-          }}
-        />
-      ))}
-    </Group>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // PatientRow — single row; calls usePatientResourceSummary once and renders
 // the count + time-range cells from the shared result.
@@ -281,7 +253,6 @@ function PatientRow({
   onNavigate: (id: string) => void;
 }) {
   const summary = usePatientResourceSummary(patient.id ?? '', client);
-  const hasTimeRange = !!(summary.firstDate || summary.lastDate);
   return (
     <Table.Tr
       style={{ cursor: 'pointer' }}
@@ -330,12 +301,7 @@ function PatientRow({
           </Badge>
         )}
       </Table.Td>
-      <Table.Td>
-        <Group gap="xs" wrap="nowrap">
-          <TimeRangeSparkline active={hasTimeRange} />
-          {formatTimeRange(summary)}
-        </Group>
-      </Table.Td>
+      <Table.Td>{formatTimeRange(summary)}</Table.Td>
       <Table.Td style={{ textAlign: 'right' }}>{formatCount(summary)}</Table.Td>
       <Table.Td onClick={(e) => e.stopPropagation()}>
         <RawPatientButton patient={patient} />
