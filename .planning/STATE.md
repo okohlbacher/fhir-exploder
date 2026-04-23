@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: -- Hardening & Tech-Debt Sweep (in progress, started 2026-04-16)
 status: executing
-stopped_at: Phase 30 — executing step 0 (design tokens)
-last_updated: "2026-04-23T12:25:00.000Z"
-last_activity: 2026-04-23 -- Phase 30 started on feature branch; baseline green after 29.5 + 3 quick tasks
+stopped_at: Phase 30 complete on feature branch — UAT green, 5 gaps fixed, 6 off-phase follow-ups queued
+last_updated: "2026-04-23T13:50:00.000Z"
+last_activity: 2026-04-23 -- Phase 30 shipped 8 redesign steps + UAT + 5 in-scope fixes on gsd/phase-30-layout-redesign
 progress:
   total_phases: 10
-  completed_phases: 8
-  total_plans: 33
-  completed_plans: 31
-  percent: 80
+  completed_phases: 9
+  total_plans: 34
+  completed_plans: 33
+  percent: 90
 ---
 
 # Project State
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 30 — layout-redesign (feature branch `gsd/phase-30-layout-redesign`)
+**Current focus:** v1.4 milestone close-out — Phase 30 branch ready for PR; 6 off-phase follow-ups queued
 
 ## Current Position
 
 Phase: 29.5 (test-baseline-repair) — COMPLETE
-Phase: 30 (layout-redesign) — EXECUTING
-Plan: 30-01 (8 tasks: tokens, Sidebar, Dashboard, Patients, Quality, Explorer, Patient detail, Cohorts)
-Status: Rebased onto green main; beginning Step 0
-Last activity: 2026-04-23 -- Phase 30 feature branch rebased onto main; starting design tokens
+Phase: 30 (layout-redesign) — COMPLETE on `gsd/phase-30-layout-redesign`
+Plan: 30-01 (8 redesign steps + UAT walkthrough + 5 gap fixes) — all commits atomic on the feature branch
+Status: UAT resolved. Off-phase follow-ups listed in 30-UAT.md. Ready to open PR once a remote is added.
+Last activity: 2026-04-23 -- 5 in-scope UAT gaps fixed (server URL, cohort align, MII order, sparkline, pills contrast)
 
 Progress: [          ] 0% (0/7 phases)
 

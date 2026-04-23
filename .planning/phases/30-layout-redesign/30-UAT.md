@@ -1,9 +1,11 @@
 ---
-status: diagnosed
+status: resolved
 phase: 30-layout-redesign
 source: [30-01-SUMMARY.md]
 started: 2026-04-23T12:55:00Z
-updated: 2026-04-23T13:25:00Z
+updated: 2026-04-23T13:45:00Z
+resolved_in_phase: true      # 5 in-scope gaps fixed on this branch
+open_off_phase: 6            # 6 off-phase follow-ups deferred
 ---
 
 ## Current Test
@@ -201,7 +203,8 @@ blocked: 0
 ## Gaps
 
 - truth: "Server card should not display the FHIR server URL"
-  status: failed
+  status: resolved
+  resolved_commit: "7fd08c7"
   reason: "User reported: Looks good. But remove display of the FHIR server URL in the sidebar."
   severity: cosmetic
   test: 2
@@ -210,7 +213,8 @@ blocked: 0
   missing: []
   debug_session: ""
 - truth: "Tier-1 scope Card (/quality) — the Active cohort column label should align horizontally with the Resource types and Sample size labels at the top of the Card. Currently it sits lower."
-  status: failed
+  status: resolved
+  resolved_commit: "5b4fb93"
   reason: "User reported via screenshot: alignment of the cohort selection under /quality is not well aligned. The 'Active cohort' label is below the baseline of 'Resource types' / 'Sample size' because the inner Group uses align='flex-end' (to bottom-align the Manage cohorts button with the Select), which pushes the whole cohort column downward."
   severity: minor
   test: 6
@@ -219,7 +223,8 @@ blocked: 0
   missing: []
   debug_session: ""
 - truth: "MII module ordering: Person, Fall, Diagnose, Prozedur, Consent, Laborbefund, Medikation"
-  status: failed
+  status: resolved
+  resolved_commit: "c1bffd7"
   reason: "User reported: Looks good, but reorder in this order: Person, Fall, Diagnose, Prozedur, Consent, Laborbefund, Medikation."
   severity: minor
   test: 8
@@ -228,7 +233,8 @@ blocked: 0
   missing: []
   debug_session: ""
 - truth: "Remove the per-row sparkline from the /patients time-range column"
-  status: failed
+  status: resolved
+  resolved_commit: "517adf7"
   reason: "User reported via screenshot: 'What are the blue lines under timerange on the /patients page - remove'."
   severity: minor
   test: 11
@@ -246,7 +252,8 @@ blocked: 0
   missing: []
   debug_session: ""
 - truth: "MII pill tabs — contrast of the dimmed German-resource-type subtitle against the indigo active-pill background is too low to read"
-  status: failed
+  status: resolved
+  resolved_commit: "eec2331"
   reason: "User reported via screenshot: 'Colors of the Pills for MII Modules are poorly chosen (contrast of the gray on blue too low).' Introduced by Phase 30 Step 6 when MiiModuleTabs gained variant='pills' — the active pill background became solid indigo but the nested <Text c='dimmed'> subtitle kept its grey color, leaving ≈1.5:1 contrast."
   severity: major
   test: 18

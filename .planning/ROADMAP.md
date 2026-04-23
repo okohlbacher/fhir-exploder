@@ -51,7 +51,7 @@ Full details: [milestones/v1.3-ROADMAP.md](milestones/v1.3-ROADMAP.md)
 - [x] **Phase 28: Micro-Consistency Sweep** — `toRecord` helper replacement, en/em-dash unification, drop stale `eslint-disable`s, ref-type fixes (completed 2026-04-23)
 - [~] **Phase 29: Backlog UX** — SUPERSEDED 2026-04-23 by Phase 30. 29-01 (UX-02 OverviewStrip 9→7) obsolete (redesign drops RingProgress). 29-02 (UX-01 external validator) preserved for a future phase.
 - [x] **Phase 29.5: Test Baseline Repair** — 22 → 0 failing tests across 8 files (SettingsProvider/ConnectionProvider wrappers, fhirUrl/get mock additions, useSearchParams router mock, stale-DOM assertion updates). Test-setup-only (completed 2026-04-23). Unblocks Phase 30's `npm test` gate.
-- [ ] **Phase 30: Layout Redesign** — Port the handoff redesign (tokens, Sidebar, Dashboard, Patients, Quality, Explorer, Patient detail, Cohorts) across 8 single-commit steps. Layout + styling only; no business-logic changes.
+- [x] **Phase 30: Layout Redesign** — Port the handoff redesign (tokens, Sidebar, Dashboard, Patients, Quality, Explorer, Patient detail, Cohorts) across 8 single-commit steps + UAT + 5 gap fixes. Layout + styling only; no business-logic changes. Completed 2026-04-23 on branch `gsd/phase-30-layout-redesign`; 6 off-phase follow-ups recorded in `phases/30-layout-redesign/30-UAT.md` for future work.
 
 ### 📋 Backlog (unscheduled — 999.x)
 
