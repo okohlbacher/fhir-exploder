@@ -5,8 +5,7 @@
  * pre-migration observable behavior of QualityLayout so the SHELL-01
  * refactor (Task 3 — replace the triplicated "Not connected" alert with
  * `<ConnectionGatedOutlet>`) cannot silently break:
- *   1. the legacy-migration useEffect (Plan 21-04 / CHRT-04 — belt-and-suspenders
- *      copy of LEGACY_COHORT_KEY into RESOURCE_TYPES_STORAGE_KEY + removeItem),
+ *   1. the legacy-migration useEffect (Plan 21-04 / CHRT-04) fires on mount,
  *   2. the disconnected-state "Not connected" alert + link back to dashboard,
  *   3. the connected-state rendering of the Outlet under
  *      QualityMetricsProvider + MedplumProvider.
@@ -16,8 +15,13 @@
  * connection state and on ../../../quality/cohorts to spy on
  * migrateLegacyResourceTypeKey.
  *
- * This test MUST pass unchanged after Task 3's migration — that's the
- * regression fence contract.
+ * Phase 28 SWEEP-04: the original test 1 asserted that a belt-and-suspenders
+ * inline useEffect block in QualityLayout cleared LEGACY_COHORT_KEY even
+ * when the helper was stubbed. That inline essay was consolidated into the
+ * helper itself — QualityLayout now calls `migrateLegacyResourceTypeKey()`
+ * once with no retry layer. The regression fence narrows to "helper is
+ * invoked on mount"; the localStorage side-effect contract is pinned by
+ * the helper's direct unit tests in src/hooks/useCohorts.test.tsx.
  */
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
@@ -76,7 +80,6 @@ vi.mock('../../../quality/QualityMetricsContext', () => ({
 
 // Import AFTER mocks so the module-under-test picks them up.
 import { QualityLayout } from '../QualityLayout';
-import { LEGACY_COHORT_KEY, RESOURCE_TYPES_STORAGE_KEY } from '../../../quality/cohorts';
 
 // ----- jsdom polyfills required by Mantine 8 -----
 class MockResizeObserver {
@@ -125,7 +128,7 @@ function renderQualityAt(path: string) {
 }
 
 describe('QualityLayout — pre-migration regression fence', () => {
-  it('invokes migrateLegacyResourceTypeKey on mount and clears LEGACY_COHORT_KEY', () => {
+  it('invokes migrateLegacyResourceTypeKey exactly once on mount', () => {
     // Connected state so we actually mount the useEffect tree; the
     // effect runs regardless of connection status, but rendering the
     // tree exercises the same mount path as production.
@@ -134,20 +137,15 @@ describe('QualityLayout — pre-migration regression fence', () => {
       client: {},
       capability: { resourceType: 'CapabilityStatement' },
     };
-    // Seed the legacy key; the belt-and-suspenders inline effect should
-    // remove it even if the spied-helper doesn't.
-    window.localStorage.setItem(LEGACY_COHORT_KEY, 'Patient,Observation');
 
     renderQualityAt('/quality');
 
     // Helper spy called exactly once (mount-only effect, empty deps).
+    // Phase 28 SWEEP-04: the localStorage side-effect contract (legacy key
+    // cleared, new key seeded) is pinned by the helper's direct unit tests
+    // in src/hooks/useCohorts.test.tsx; this test fences only the wiring
+    // from QualityLayout's mount-time useEffect to the helper.
     expect(mocks.migrateSpy).toHaveBeenCalledTimes(1);
-    // Belt-and-suspenders block cleared the legacy key.
-    expect(window.localStorage.getItem(LEGACY_COHORT_KEY)).toBeNull();
-    // And copied the value into the new key (since new key was empty).
-    expect(window.localStorage.getItem(RESOURCE_TYPES_STORAGE_KEY)).toBe(
-      'Patient,Observation',
-    );
   });
 
   it('renders the Outlet (connected) without a "Not connected" alert', () => {

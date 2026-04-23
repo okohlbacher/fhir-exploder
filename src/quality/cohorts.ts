@@ -150,6 +150,13 @@ export function findActiveCohort(storage: CohortsStorage): CohortDefinition | nu
  *      renders, the user keeps the legacy key, and migration can succeed
  *      on a future mount after the environment is healthy.
  *
+ * Consolidated in Phase 28 SWEEP-04: previously this helper was called from
+ * `QualityLayout` followed by an inline belt-and-suspenders retry that
+ * duplicated the copy-forward-and-remove-legacy-key logic. The retry was a
+ * no-op in every scenario (if the helper's try/catch swallowed an error,
+ * the retry's try/catch swallowed the same error), so the helper is now
+ * the single source of truth — callers only need to invoke it once.
+ *
  * Ordering guarantee: Option A from 21-RESEARCH.md §"CRITICAL ordering"
  * — this helper runs from `QualityLayout` useEffect BEFORE child components
  * (including `QualityOverviewPage`'s `useLocalStorage({key: RESOURCE_TYPES_STORAGE_KEY})`)
