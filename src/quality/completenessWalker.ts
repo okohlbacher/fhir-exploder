@@ -21,6 +21,7 @@
  *    `perPath` exposes the diagnostic drill-down map.
  */
 import type { Resource, StructureDefinition } from '@medplum/fhirtypes';
+import { toRecord } from '../utils/fhir-helpers';
 
 export function requiredElementPaths(sd: StructureDefinition): string[] {
   const elements = sd.snapshot?.element ?? sd.differential?.element ?? [];
@@ -104,7 +105,7 @@ export function computeCompleteness(
     }
     if (missing.length > 0) {
       perResource.push({
-        resourceId: `${r.resourceType}/${(r as unknown as Record<string, unknown>).id ?? 'unknown'}`,
+        resourceId: `${r.resourceType}/${toRecord(r).id ?? 'unknown'}`,
         resourceType: r.resourceType ?? '',
         missingPaths: missing,
       });

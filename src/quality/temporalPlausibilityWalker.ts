@@ -16,6 +16,7 @@
  */
 import type { Resource, StructureDefinition } from '@medplum/fhirtypes';
 import type { IssueSeverity, NormalizedIssue } from './types';
+import { toRecord } from '../utils/fhir-helpers';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -370,7 +371,7 @@ export function checkTemporalPlausibility(
   } else {
     // Runtime fallback: shape-based discovery
     temporalPaths = discoverTemporalPathsByShape(
-      resource as unknown as Record<string, unknown>,
+      toRecord(resource),
       resource.resourceType ?? '',
     );
   }
@@ -436,7 +437,7 @@ export function normalizeTemporalIssues(
   resource: Resource,
 ): NormalizedIssue[] {
   return issues.map((i) => ({
-    resourceId: `${resource.resourceType}/${(resource as unknown as Record<string, unknown>).id ?? 'unknown'}`,
+    resourceId: `${resource.resourceType}/${toRecord(resource).id ?? 'unknown'}`,
     resourceType: resource.resourceType ?? '',
     field: i.path,
     description: `[${i.checkType}] ${i.diagnostics}`,

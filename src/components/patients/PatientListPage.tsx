@@ -25,12 +25,13 @@ import type { MedplumClient } from '@medplum/core';
 import type { PatientsOutletContext } from './PatientsLayout';
 import { PaginationControls } from '../explorer/PaginationControls';
 import { searchByIdentifierPrefix } from '../../utils/searchByIdentifierPrefix';
+import { toRecord } from '../../utils/fhir-helpers';
 
 // ---------------------------------------------------------------------------
 // extractDate — pull the most relevant clinical date from any FHIR resource
 // ---------------------------------------------------------------------------
 function extractDate(r: Resource): string | null {
-  const o = r as unknown as Record<string, unknown>;
+  const o = toRecord(r);
   // Direct date/dateTime fields
   for (const f of [
     'effectiveDateTime', 'performedDateTime', 'recordedDate', 'onsetDateTime',

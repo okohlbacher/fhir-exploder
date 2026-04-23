@@ -21,6 +21,7 @@ import {
   normalizeBrokenRefIssues,
 } from '../quality/referenceChecker';
 import { detectOrphans } from '../quality/orphanDetector';
+import { toRecord } from '../utils/fhir-helpers';
 import { useAsyncRun, type UseAsyncRunResult } from './useAsyncRun';
 import type { AsyncRunStatus } from './internal/asyncRunReducer';
 
@@ -73,10 +74,7 @@ export function useReferenceReport({
         Array<{ sourceId: string; sourceType: string; path: string }>
       >();
       for (const r of sample) {
-        // Cast preserved verbatim from pre-refactor; Phase 28 SWEEP-01 will
-        // migrate to `toRecord` helper.
-        const sourceId =
-          (r as unknown as Record<string, unknown>).id as string | undefined;
+        const sourceId = toRecord(r).id as string | undefined;
         const sourceType = r.resourceType;
         if (!sourceId) continue;
         const extracted = extractReferences(r);

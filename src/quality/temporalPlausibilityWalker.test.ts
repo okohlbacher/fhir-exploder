@@ -24,6 +24,7 @@ import {
   checkTemporalPlausibility,
   normalizeTemporalIssues,
 } from './temporalPlausibilityWalker';
+import { toRecord } from '../utils/fhir-helpers';
 
 // --- Mini profiles for testing ---
 
@@ -344,7 +345,7 @@ describe('Threat mitigations', () => {
     } as unknown as Resource;
     // Should not throw, and should not detect the deeply nested date
     const paths = discoverTemporalPathsByShape(
-      resource as unknown as Record<string, unknown>,
+      toRecord(resource),
       'CustomType',
     );
     // With depth limit of 10, the date at level 15 should not be found

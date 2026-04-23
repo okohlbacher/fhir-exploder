@@ -11,6 +11,7 @@
  */
 import type { Resource } from '@medplum/fhirtypes';
 import type { NormalizedIssue } from './types';
+import { toRecord } from '../utils/fhir-helpers';
 
 const BATCH_SIZE = 25;
 
@@ -51,7 +52,7 @@ export function sortKeys(obj: unknown): unknown {
  */
 export function canonicalize(resource: Resource): string {
   const clone: Record<string, unknown> = {
-    ...(resource as unknown as Record<string, unknown>),
+    ...toRecord(resource),
   };
   delete clone.id;
   delete clone.meta;
@@ -103,7 +104,7 @@ export async function findContentHashDuplicates(
     for (let j = 0; j < batch.length; j++) {
       const hash = hashes[j];
       const member = {
-        id: `${resourceType}/${(batch[j] as unknown as Record<string, unknown>).id ?? 'unknown'}`,
+        id: `${resourceType}/${toRecord(batch[j]).id ?? 'unknown'}`,
         resourceType,
       };
       const bucket = groups.get(hash);

@@ -22,6 +22,7 @@ import {
 } from '../quality/codingCoverageWalker';
 import { codingSamples } from './fixtures/fhir-samples';
 import type { Resource } from '@medplum/fhirtypes';
+import { toRecord } from '../utils/fhir-helpers';
 
 describe('classifyCodedFields (QUAL-03)', () => {
   it('classifies a CodeableConcept with both system+code as systemCode', () => {
@@ -168,7 +169,7 @@ describe('aggregateCoverage (QUAL-03)', () => {
     expect(report.perResource).toBeDefined();
     expect(report.perResource).toHaveLength(2);
     const textOnlyEntry = report.perResource!.find(
-      (r) => r.resourceId === `Condition/${(codingSamples.conditionTextOnly as unknown as Record<string, unknown>).id ?? 'unknown'}`,
+      (r) => r.resourceId === `Condition/${toRecord(codingSamples.conditionTextOnly).id ?? 'unknown'}`,
     );
     expect(textOnlyEntry).toBeDefined();
     expect(textOnlyEntry!.issues.length).toBeGreaterThan(0);

@@ -40,6 +40,7 @@ import type {
   CodedClassification,
   PerTypeCoverageReport,
 } from './types';
+import { toRecord } from '../utils/fhir-helpers';
 
 /** Allowlist of keys that appear on genuine CodeableConcepts. */
 const CC_KEYS = new Set(['coding', 'text', 'extension', 'id']);
@@ -203,7 +204,7 @@ export function aggregateCoverage(sample: Resource[]): PerTypeCoverageReport {
 
     if (resourceIssues.length > 0) {
       perResource.push({
-        resourceId: `${r.resourceType}/${(r as unknown as Record<string, unknown>).id ?? 'unknown'}`,
+        resourceId: `${r.resourceType}/${toRecord(r).id ?? 'unknown'}`,
         resourceType: r.resourceType ?? '',
         issues: resourceIssues,
       });

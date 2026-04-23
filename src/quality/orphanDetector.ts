@@ -17,6 +17,7 @@
 import type { Resource } from '@medplum/fhirtypes';
 import type { NormalizedIssue } from './types';
 import { getProfileForType } from './profiles';
+import { toRecord } from '../utils/fhir-helpers';
 
 /**
  * Minimal R4 fallback map for types without a bundled MII profile.
@@ -106,9 +107,9 @@ export function detectOrphans(resources: Resource[]): NormalizedIssue[] {
       // Extract the top-level field name from "Type.field".
       const fieldName = requiredPath.split('.').slice(1).join('.');
       if (!fieldName) continue;
-      const value = (r as unknown as Record<string, unknown>)[fieldName];
+      const value = toRecord(r)[fieldName];
       if (!hasReference(value)) {
-        const id = (r as unknown as Record<string, unknown>).id ?? 'unknown';
+        const id = toRecord(r).id ?? 'unknown';
         issues.push({
           resourceId: `${type}/${id}`,
           resourceType: type,

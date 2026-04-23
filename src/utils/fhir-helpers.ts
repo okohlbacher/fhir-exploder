@@ -5,9 +5,15 @@ import type { CodeableConcept, Resource } from '@medplum/fhirtypes';
  * Centralizes the `as unknown as Record<string, unknown>` double-cast
  * needed because some Resource union members (e.g. VisionPrescription)
  * lack an index signature.
+ *
+ * Generic overload added in Phase 28 SWEEP-01 for non-Resource call
+ * sites (e.g. ElementDefinition sub-objects in profileConformanceChecker
+ * and useConformanceRun).
  */
-export function toRecord(resource: Resource): Record<string, unknown> {
-  return resource as unknown as Record<string, unknown>;
+export function toRecord(resource: Resource): Record<string, unknown>;
+export function toRecord<T extends object>(value: T): Record<string, unknown>;
+export function toRecord(value: object): Record<string, unknown> {
+  return value as unknown as Record<string, unknown>;
 }
 
 /**

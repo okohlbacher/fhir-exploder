@@ -25,6 +25,7 @@ import {
   normalizeConformanceIssues,
 } from '../quality/profileConformanceChecker';
 import { dedupeIssues, resolveBackends } from '../quality/validationBackends';
+import { toRecord } from '../utils/fhir-helpers';
 
 export type ConformanceRunStatus =
   | 'idle'
@@ -68,7 +69,7 @@ function collectBindingUrls(profile: StructureDefinition | null): string[] {
   const elements = profile.snapshot?.element ?? [];
   const urls = new Set<string>();
   for (const el of elements) {
-    const binding = (el as unknown as Record<string, unknown>).binding as
+    const binding = toRecord(el).binding as
       | { strength: string; valueSet: string }
       | undefined;
     if (binding?.valueSet && binding.strength !== 'example') {
@@ -172,7 +173,7 @@ export function useConformanceRun({
 
           await Promise.all(
             batch.map(async (r) => {
-              const resourceId = `${r.resourceType}/${(r as unknown as Record<string, unknown>).id ?? 'unknown'}`;
+              const resourceId = `${r.resourceType}/${toRecord(r).id ?? 'unknown'}`;
 
               // Conformance checker (new)
               const conformanceIssues = validateConformance(r, profile, expandedValueSets);
@@ -191,7 +192,7 @@ export function useConformanceRun({
               }));
               batchLegacyIssues.push(...attributed);
               batchByResource[resourceId] = {
-                resourceId: ((r as unknown as Record<string, unknown>).id as string) ?? 'unknown',
+                resourceId: (toRecord(r).id as string) ?? 'unknown',
                 issues: deduped,
               };
             }),
