@@ -1,5 +1,7 @@
 ---
 created: 2026-04-14T17:30:00.000Z
+closed: 2026-04-23
+resolution: superseded-by-phase-30
 title: Shrink OverviewStrip to 7 metric tiles; move Total resources / Resource types to a status line above
 area: ui
 files:
@@ -7,6 +9,14 @@ files:
   - src/components/quality/QualityOverviewPage.tsx
 source: feedback/feedback-2026-04-14T16-58-51-549Z_2dcf9656.json
 ---
+
+> **Closed 2026-04-23 — superseded by Phase 30 (layout redesign).**
+> Phase 30 Step 4 drops `RingProgress` tiles entirely and replaces the strip
+> with uppercase label + big mono number + 3-px fill bar + per-type quality
+> matrix. This goes further than the 7-tile reduction proposed here and
+> delivers the same at-a-glance quality dashboard intent. See
+> `.planning/phases/30-layout-redesign/30-01-PLAN.md` (Task 5) and
+> `.planning/phases/30-layout-redesign/handoff/INSTRUCTIONS.md` (Step 4).
 
 ## Problem
 
