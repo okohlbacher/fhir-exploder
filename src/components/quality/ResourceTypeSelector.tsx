@@ -18,6 +18,7 @@
  * rename.
  */
 import { MultiSelect, Text } from '@mantine/core';
+import { useMemo } from 'react';
 
 export interface ResourceTypeSelectorProps {
   types: string[];
@@ -30,12 +31,23 @@ export function ResourceTypeSelector({
   value,
   onChange,
 }: ResourceTypeSelectorProps) {
+  // Surface currently-selected types at the top of the dropdown so users can
+  // see and manage their selection without scrolling a long list (Phase 23
+  // UAT T-6.3 C). Selected items appear first in their selection order,
+  // followed by the rest of `types` in the caller's original order.
+  const sortedData = useMemo(() => {
+    const selectedSet = new Set(value);
+    const selected = value.filter((v) => types.includes(v));
+    const rest = types.filter((t) => !selectedSet.has(t));
+    return [...selected, ...rest];
+  }, [types, value]);
+
   return (
     <div>
       <MultiSelect
         label="Resource types"
         placeholder="All resource types"
-        data={types}
+        data={sortedData}
         value={value}
         onChange={onChange}
         searchable
