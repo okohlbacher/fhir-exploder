@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.4
 milestone_name: -- Hardening & Tech-Debt Sweep (in progress, started 2026-04-16)
 status: executing
-stopped_at: Phase 29.5 scaffolded (test baseline repair)
-last_updated: "2026-04-23T10:20:00.000Z"
-last_activity: 2026-04-23 -- Phase 29.5 inserted for test baseline repair; Phase 30 redesign parked on feature branch
+stopped_at: Phase 29.5 complete — baseline green; Phase 30 ready to resume on feature branch
+last_updated: "2026-04-23T10:35:00.000Z"
+last_activity: 2026-04-23 -- Phase 29.5 complete (22→0 failing tests); Phase 30 feature branch awaits rebase onto green main
 progress:
   total_phases: 9
   completed_phases: 8
@@ -21,14 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-16)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 29.5 — test-baseline-repair (blocks Phase 30 redesign)
+**Current focus:** Phase 30 — layout-redesign (feature branch `gsd/phase-30-layout-redesign`, awaiting rebase onto green main)
 
 ## Current Position
 
-Phase: 29.5 (test-baseline-repair) — EXECUTING
-Plan: 29.5-01 (single plan, 3 tasks)
-Status: Repair pre-existing test failures on main
-Last activity: 2026-04-23 -- Phase 29.5 inserted; 22 failing tests diagnosed (SettingsProvider + fhirUrl mock)
+Phase: 29.5 (test-baseline-repair) — COMPLETE
+Phase: 30 (layout-redesign) — SCAFFOLDED on feature branch, ready to resume
+Plan: 30-01 (8 tasks: tokens, Sidebar, Dashboard, Patients, Quality, Explorer, Patient detail, Cohorts)
+Status: Baseline green; rebase phase 30 branch then begin Step 0
+Last activity: 2026-04-23 -- 22→0 failing tests; npm run build + npm test both clean on main
 
 Progress: [          ] 0% (0/7 phases)
 
