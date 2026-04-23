@@ -67,7 +67,7 @@ export function ResourceIssueTable({
     }
   }, [initialFieldFilter]);
 
-  const filtered = useMemo(() => {
+  const { filtered, pageItems, totalPages, start, end } = useMemo(() => {
     let result = issues;
 
     if (severityFilter !== 'All severities') {
@@ -81,21 +81,23 @@ export function ResourceIssueTable({
       );
     }
 
-    return [...result].sort((a, b) => {
+    const filtered = [...result].sort((a, b) => {
       const sa = SEVERITY_ORDER[a.severity] ?? 99;
       const sb = SEVERITY_ORDER[b.severity] ?? 99;
       if (sa !== sb) return sa - sb;
       return a.resourceId.localeCompare(b.resourceId);
     });
-  }, [issues, severityFilter, fieldFilter]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const pageItems = filtered.slice(
-    (page - 1) * PAGE_SIZE,
-    page * PAGE_SIZE,
-  );
-  const start = (page - 1) * PAGE_SIZE + 1;
-  const end = Math.min(page * PAGE_SIZE, filtered.length);
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const pageItems = filtered.slice(
+      (page - 1) * PAGE_SIZE,
+      page * PAGE_SIZE,
+    );
+    const start = (page - 1) * PAGE_SIZE + 1;
+    const end = Math.min(page * PAGE_SIZE, filtered.length);
+
+    return { filtered, pageItems, totalPages, start, end };
+  }, [issues, severityFilter, fieldFilter, page]);
 
   // Empty state: no issues at all
   if (issues.length === 0) {
