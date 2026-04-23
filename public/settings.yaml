@@ -31,3 +31,16 @@ terminology:
 #     low: 0
 #     high: 500
 #     unit: "mg/dL"
+
+# External FHIR validator cascade (Phase 31 UX-01)
+# Enables a 3-tier cascade: external → server $validate → local checker.
+# Every external call is PHI-gated (acknowledge PHI flow before first
+# fetch) and AbortController-wrapped with a 15-second default timeout.
+# The optional `label` overrides the URL-pattern heuristic that picks
+# the variant suffix shown in the status line (HAPI / Firely / IG-Publisher).
+# validation:
+#   externalValidator:
+#     url: "https://hapi.fhir.org/baseR4"
+#     enabled: false         # set true to activate the external tier
+#     timeoutMs: 15000       # optional; default 15000
+#     label: ""              # optional; blank = auto-detect from URL

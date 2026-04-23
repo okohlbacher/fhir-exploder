@@ -67,6 +67,29 @@ function deepMerge(defaults: AppSettings, partial: Record<string, unknown>): App
       rawValidatorUrl && rawValidatorUrl.length > 0
         ? rawValidatorUrl
         : defaults.validation?.validatorUrl;
+    // D-07 + D-18: external validator cascade block. Field-level narrowing
+    // mirrors validatorUrl/batchSize pattern — invalid url drops the entire
+    // block; invalid timeoutMs falls back to 15000.
+    let externalValidator:
+      | { url: string; enabled: boolean; timeoutMs: number; label?: string }
+      | undefined = undefined;
+    if (validation.externalValidator && typeof validation.externalValidator === 'object') {
+      const ext = validation.externalValidator as Record<string, unknown>;
+      const extUrl = typeof ext.url === 'string' ? ext.url.trim() : '';
+      const extEnabled = typeof ext.enabled === 'boolean' ? ext.enabled : false;
+      const extTimeoutMs =
+        typeof ext.timeoutMs === 'number' && Number.isFinite(ext.timeoutMs) && ext.timeoutMs > 0
+          ? ext.timeoutMs
+          : 15000;
+      const extLabel =
+        typeof ext.label === 'string' && ext.label.trim().length > 0
+          ? ext.label.trim()
+          : undefined;
+      if (extUrl.length > 0) {
+        externalValidator = { url: extUrl, enabled: extEnabled, timeoutMs: extTimeoutMs };
+        if (extLabel) externalValidator.label = extLabel;
+      }
+    }
     result.validation = {
       ...defaults.validation,
       validatorUrl,
@@ -74,6 +97,7 @@ function deepMerge(defaults: AppSettings, partial: Record<string, unknown>): App
         typeof validation.batchSize === 'number' && Number.isFinite(validation.batchSize)
           ? validation.batchSize
           : (defaults.validation?.batchSize ?? 25),
+      ...(externalValidator ? { externalValidator } : {}),
     };
   }
 
