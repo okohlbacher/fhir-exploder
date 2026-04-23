@@ -2,151 +2,61 @@
 phase: 31-ux-01-external-validator-cascade
 reviewed: 2026-04-23T00:00:00Z
 depth: standard
-files_reviewed: 17
+files_reviewed: 2
 files_reviewed_list:
-  - src/quality/phiGate.ts
-  - src/quality/normalizers.ts
-  - src/quality/cascadingValidator.ts
-  - src/quality/types.ts
-  - src/quality/remoteValidator.ts
-  - src/quality/structuralValidator.ts
-  - src/quality/__tests__/phiGate.test.ts
-  - src/quality/__tests__/normalizers.test.ts
-  - src/quality/__tests__/cascadingValidator.test.ts
-  - src/quality/__tests__/fixtures/normalizers/hapi-required-binding.json
-  - src/quality/__tests__/fixtures/normalizers/firely-preferred-binding.json
-  - src/quality/__tests__/fixtures/normalizers/ig-publisher-slice-fail.json
-  - src/config/types.ts
-  - src/config/settings.ts
-  - public/settings.yaml
-  - src/hooks/useConformanceRun.ts
   - src/components/quality/ValidationPanel.tsx
+  - src/components/quality/__tests__/ValidationPanel.phi-gate.integration.test.tsx
 findings:
-  critical: 1
+  critical: 0
   warning: 3
-  info: 4
+  info: 5
   total: 8
 status: issues_found
 ---
 
-# Phase 31: Code Review Report
+# Phase 31: Code Review Report (post 31-02 gap closure)
 
 **Reviewed:** 2026-04-23
 **Depth:** standard
-**Files Reviewed:** 17
-**Status:** issues_found
+**Files Reviewed:** 2 (gap-closure scope) — full Phase-31 surface still tracked via prior open findings
+**Status:** issues_found (carry-over warnings/info from initial review remain open)
 
 ## Summary
 
-Phase 31 UX-01 introduces a three-tier cascading FHIR validator (external → server → local) with a PHI-acknowledgement gate, probe-cache demotion, AbortController plumbing, and a variant-detection heuristic. The module boundaries are clean, the contracts are heavily commented, and the test suite is comprehensive (including regression locks for D-09 and a known-limitation lock for D-18). Documentation-to-code alignment is excellent.
+Phase 31-02 closes the Critical CR-01 defect from the initial review: ValidationPanel now derives the PHI ack key from the URL the cascade actually reads. Specifically, `phiGateUrl` resolves to `externalValidator.url` when the external tier is enabled and falls back to `validation.validatorUrl` only when the external tier is absent or disabled. The PHI banner trigger has been broadened from `hasRemote && !phiAcknowledged` to `(hasRemote || hasExternal) && !phiAcknowledged`, so external-only deployments (the most-likely UX-01 demo topology) now correctly surface the gate. The displayed Validator URL string is also updated to render `phiGateUrl`.
 
-However, the review identifies **one Critical bug that prevents the Tier-1 external validator from ever running in production**: the PHI acknowledgement UI is keyed against `settings.validation.validatorUrl` (the server-tier URL), while `cascadingValidator.tryExternal` gates on `settings.validation.externalValidator.url`. The two URLs are distinct, so the acknowledgement the user grants never satisfies the gate the external tier reads. In addition, the hook-level AbortController cleanup captures the controller at mount time and does not honor the D-20 "unmount aborts in-flight fetches" contract after the first run re-creates the controller.
+A new integration test (`ValidationPanel.phi-gate.integration.test.tsx`, 272 lines, three cases) exercises the wire-up end-to-end: external-only, both-tiers-with-differing-URLs, and server-only. The test renders the real panel, clicks the acknowledge button, and asserts both the localStorage key and that fetch is dispatched against the external URL. This is the regression lock the original CR-01 explicitly called for ("an end-to-end wire-up test would have caught this").
 
-Lesser findings include an empty-dep cleanup that clobbers a freshly-created probe cache on mount, a `cancel()` path that does not abort the in-flight external fetch, and a few information-level items.
+**CR-01 is resolved.** No new Critical issues are introduced by 31-02.
 
-## Critical Issues
+The remaining open findings from the original 31-REVIEW.md (WR-01, WR-02, WR-03, IN-01..IN-04) were intentionally deferred per the 31-02 SUMMARY and remain open — none of the underlying files (`useConformanceRun.ts`, `cascadingValidator.ts`, `phiGate.ts`, `phiGate.test.ts`) were modified in this gap closure. They are preserved verbatim below for traceability.
 
-### CR-01: PHI acknowledgement is keyed against the wrong validator URL — external tier is un-reachable from the UI
+A small number of new minor findings are recorded against the 31-02 changes themselves (banner-dismissal scope interaction, `phiGateUrl` whitespace handling consistency, unused `mockPost` in the new integration test, and a strengthen-the-regression-lock suggestion).
 
-**Files:**
-- `src/components/quality/ValidationPanel.tsx:101-108, 249, 284, 301`
-- `src/quality/cascadingValidator.ts:132`
-- `src/quality/phiGate.ts:21-23`
+## Resolved (carried over from 31-REVIEW.md @ f109d83)
 
-**Issue:**
-`ValidationPanel` computes the PHI ack key from the **server-tier** validator URL:
+### CR-01 (RESOLVED in 31-02): PHI acknowledgement is now keyed against the cascade-read URL
 
-```ts
-const validatorUrl = settings?.validation?.validatorUrl;          // server tier
-const phiAckKeyStr = useMemo(
-  () => phiAckKey(serverUrl, validatorUrl ?? null),
-  [serverUrl, validatorUrl],
-);
-const [phiAcknowledged, setPhiAcknowledged] = useLocalStorage<boolean>({
-  key: phiAckKeyStr,
-  defaultValue: false,
-});
-```
+**Files:** `src/components/quality/ValidationPanel.tsx:84-99, 103-123, 264-269, 304, 314`
 
-The PHI banner is also gated on `hasRemote` (which is driven by `validatorUrl`, not `externalValidator.url` — see `validationBackends.ts:38-40`). When the user clicks "I acknowledge", the value is written under `...phiAcknowledged.v1:{serverUrl}|{validatorUrl}`.
+**Resolution:** `ValidationPanel` now computes `phiGateUrl` (lines 94-99) as `externalValidator.url` when enabled, else `validatorUrl ?? null`. Both `bannerKey` (line 104) and `phiAckKeyStr` (line 117) are derived from `phiGateUrl`, matching the key `cascadingValidator.tryExternal` reads via `isPhiAcknowledged(serverUrl, ext.url)`. The banner-trigger predicate `requiresPhiAck` (line 269) now fires for external-only deployments via the added `hasExternal` clause. Validator URL display in the banner body (line 314) reads `phiGateUrl ?? ''`.
 
-Meanwhile `cascadingValidator.tryExternal` reads the gate with `ext.url` (the **external-tier** URL):
+The new integration test `ValidationPanel.phi-gate.integration.test.tsx` covers the three relevant topologies (external-only, both, server-only) and asserts:
+1. Banner renders with the correct URL.
+2. Acknowledgement lands at the same key the cascade reads (`phiAckKey(SERVER_URL, EXT_URL)` for external-tier; `phiAckKey(SERVER_URL, SERVER_VAL_URL)` for server-only).
+3. For Test A and Test B, `fetch` is actually dispatched against the external URL after acknowledgement — proving the UI/cascade wire-up.
 
-```ts
-// cascadingValidator.ts:132
-if (!isPhiAcknowledged(opts.serverUrl, ext.url)) {
-  return null;
-}
-```
-
-`phiAckKey` formats the key from the URL passed in (`phiGate.ts:22`), so the key the cascade looks up is `...phiAcknowledged.v1:{serverUrl}|{externalValidator.url}`. When the two URLs differ (and they are semantically different settings keys — server-tier `$validate` endpoint vs. external cascading validator), the cascade never finds an acknowledgement and the external tier is silently skipped on every run.
-
-Concretely this breaks two of the most likely deployment topologies:
-
-1. **External-only configured (common UX-01 demo)**: user sets only `validation.externalValidator.url`. `hasRemote` is `false` → no PHI banner is shown → user has no way to acknowledge. Gate returns false → external tier never runs, cascade always falls through to server/local. Phase 31 is effectively disabled.
-2. **Both configured**: user sees the banner (driven by `hasRemote`), acknowledges, but the acknowledgement lands at the server-tier key. Gate on `ext.url` still returns false → external tier still never runs.
-
-This contradicts D-09 ("PHI gate re-evaluated before every outbound fetch") — the gate is correctly placed, but the two sides (UI write, cascade read) do not share a key.
-
-Test Test 1 in `cascadingValidator.test.ts:77` sets localStorage under `phiAckKey(SERVER_URL, EXT_URL)` directly, bypassing `ValidationPanel` — the bug is invisible to unit tests because they seed the correct key manually. An end-to-end wire-up test would have caught this.
-
-**Fix:**
-Key the UI ack against the external-tier URL (and, when feasible, show the banner whenever an external validator is *or* a server validator is configured):
-
-```ts
-// ValidationPanel.tsx
-const extValidatorUrl = settings?.validation?.externalValidator?.enabled
-  ? settings?.validation?.externalValidator?.url
-  : null;
-const serverValidatorUrl = settings?.validation?.validatorUrl ?? null;
-
-// Key against whichever tier will actually fire outbound. If both are set,
-// the external tier is tried first, so gate on ext url.
-const phiKeyUrl = extValidatorUrl ?? serverValidatorUrl;
-const phiAckKeyStr = useMemo(
-  () => phiAckKey(serverUrl, phiKeyUrl),
-  [serverUrl, phiKeyUrl],
-);
-
-// Banner should appear when EITHER tier will POST PHI outbound.
-const requiresPhiAck =
-  (hasRemote || !!extValidatorUrl) && !phiAcknowledged;
-```
-
-Additionally, the server-tier call in `cascadingValidator.tryServer` is NOT currently PHI-gated (only `tryExternal` is). If the server tier is reachable in a deployment where PHI outflow is regulated, the gate must cover both. The simplest version of that fix: gate on "any outbound URL" — compute the URL that will actually be used and check `isPhiAcknowledged(serverUrl, thatUrl)` in `tryServer` as well, with the UI and cascade agreeing on the same key.
-
-Add an integration test that drives the PHI banner in `ValidationPanel`, clicks acknowledge, and verifies that a subsequent cascade run actually issues the external fetch (vs. the current unit tests that pre-seed localStorage).
+The unit-suite-blind-spot called out in the original CR-01 is closed. Note that the auxiliary suggestion in the original CR-01 fix — extending PHI gating to `tryServer` so the server tier is also gated — remains unaddressed in 31-02 and is NOT re-raised here because (a) the original CR-01 framed it as an additional consideration rather than a defect, and (b) the 31-02 SUMMARY does not claim to address it. If that broadening is desired, it should be filed as a separate phase.
 
 ## Warnings
 
-### WR-01: Unmount abort captures the mount-time AbortController — subsequent runs leak on unmount
+### WR-01 (OPEN, carried from f109d83): Unmount abort captures the mount-time AbortController — subsequent runs leak on unmount
 
-**File:** `src/hooks/useConformanceRun.ts:349-355`
-**Issue:**
-The unmount-safety `useEffect` captures `abortRef.current` at mount:
+**File:** `src/hooks/useConformanceRun.ts:349-355` (file unchanged in 31-02)
 
-```ts
-useEffect(() => {
-  const controller = abortRef.current;
-  return () => {
-    cancelledRef.current = true;
-    controller.abort();       // closes over the mount-time controller
-  };
-}, []);
-```
+**Issue:** The unmount-safety `useEffect` captures `abortRef.current` at mount; `start()` replaces the ref on every run, so subsequent runs leak on unmount.
 
-But `start()` at line 158 replaces the ref on every run:
-
-```ts
-abortRef.current = new AbortController();
-```
-
-After the first run, the closed-over `controller` refers to the **original** controller (already-abortable, but no fetch is attached). When the user unmounts mid-second-run, `controller.abort()` fires on the stale controller, not the current in-flight one. The D-20 contract claims unmount aborts in-flight external AND server fetches; this is only true for the first run.
-
-Also note the effect returns cleanup against a ref — React warns against this pattern because the ref value at cleanup time is not guaranteed to match the ref value at effect-setup time. The idiomatic fix reads the ref inside the cleanup, not the captured value.
-
-**Fix:**
-Read the ref inside the cleanup so the abort always fires against whatever controller is currently active:
+**Fix:** Read the ref inside the cleanup so the abort always fires against whatever controller is currently active.
 
 ```ts
 useEffect(() => {
@@ -157,140 +67,119 @@ useEffect(() => {
 }, []);
 ```
 
-Add a regression test mirroring `useSampleWalker.test.tsx:197-243`: start a run, then start a second run, unmount mid-second-run, assert the second controller's signal fires `aborted`.
+(See original 31-REVIEW.md @ f109d83 §WR-01 for full rationale and suggested regression test.)
 
-### WR-02: `cancel()` does not abort in-flight fetches — Cancel button leaves up to 15 s of network traffic pending
+### WR-02 (OPEN, carried from f109d83): `cancel()` does not abort in-flight fetches
 
-**File:** `src/hooks/useConformanceRun.ts:344-346`
-**Issue:**
-```ts
-const cancel = useCallback(() => {
-  cancelledRef.current = true;
-}, []);
-```
+**File:** `src/hooks/useConformanceRun.ts:344-346` (file unchanged in 31-02)
 
-Cancel only flips the batch-loop guard. The currently running external fetch (with its 15 s default timeout) will continue to completion — POSTing full resource bodies (including PHI) to the external validator even though the user explicitly asked to stop. This is a privacy-relevant UX gap for a data-quality tool whose threat model is PHI outflow.
+**Issue:** `cancel()` only flips the batch-loop guard. The currently running external fetch (with its 15 s default timeout) continues to completion — POSTing PHI to the external validator even though the user explicitly asked to stop.
 
-Related: the `tryExternal` catch arm at `cascadingValidator.ts:168-171` distinguishes caller-abort from timeout by checking `opts.abort.signal.aborted`. If `cancel()` calls `abortRef.current.abort()`, the current fetch's signal chain will propagate via the `chainListener` (line 141), the fetch rejects with AbortError, and the catch arm re-throws — which `useConformanceRun`'s outer try/catch turns into status `error` (not `cancelled`). The cancel flow should either:
-(a) Set `cancelledRef.current = true` then call `abortRef.current.abort()` AND update the outer try/catch to check `cancelledRef.current` in the catch arm, treating AbortError-after-cancel as `cancelled` (not `error`).
-(b) Introduce a second AbortController for caller-cancel (distinct from unmount-abort) so the two are separable.
+**Fix (option a):** Add `abortRef.current.abort()` to `cancel()` and update the outer try/catch in `start()` to translate AbortError-after-cancel into status `cancelled` (not `error`). See original 31-REVIEW.md §WR-02 for the full snippet.
 
-**Fix (option a):**
-```ts
-const cancel = useCallback(() => {
-  cancelledRef.current = true;
-  abortRef.current.abort();
-}, []);
+### WR-03 (OPEN, carried from f109d83): Probe-cache reset effect wipes a freshly-created empty cache on every mount
 
-// in start(), outer catch:
-} catch (err) {
-  if (cancelledRef.current) {
-    setStatus('cancelled');
-    return;
-  }
-  setStatus('error');
-  setErrorMessage(err instanceof Error ? err.message : String(err));
-}
-```
+**File:** `src/hooks/useConformanceRun.ts:128-135` (file unchanged in 31-02)
 
-### WR-03: Probe-cache reset effect wipes a freshly-created empty cache on every mount
+**Issue:** The effect runs on mount and clears a Map that was just created empty. Harmless today; bites once probe-cache persistence is added.
 
-**File:** `src/hooks/useConformanceRun.ts:128-135`
-**Issue:**
-```ts
-const extSerialized = JSON.stringify(settings?.validation?.externalValidator ?? null);
-useEffect(() => {
-  clearProbeCache(probeCacheRef.current);
-  setActiveStrategy(null);
-  setActiveStrategyVariant(null);
-}, [extSerialized]);
-```
-
-The effect runs on mount (React's behavior for effects with a populated dep value) and clears a Map that was just created empty on the previous line (`new Map()`). Harmless today but:
-1. It fires two extra `setState` calls on mount that can cause a render-loop if a parent conditionally renders this hook mid-settings-load.
-2. If future work introduces a persistence layer for the probe cache (plausible — a per-session cache is today's design but a per-server cache is a natural extension), this effect will clobber the hydrated state on mount.
-
-**Fix:**
-Skip the first run with a mount guard:
-
-```ts
-const didMountRef = useRef(false);
-useEffect(() => {
-  if (!didMountRef.current) {
-    didMountRef.current = true;
-    return;
-  }
-  clearProbeCache(probeCacheRef.current);
-  setActiveStrategy(null);
-  setActiveStrategyVariant(null);
-}, [extSerialized]);
-```
+**Fix:** Skip the first run with a `didMountRef` mount guard (see original 31-REVIEW.md §WR-03).
 
 ## Info
 
-### IN-01: `res.json()` throwing after 200 OK silently demotes without a notify
+### IN-01 (OPEN, carried from f109d83): `res.json()` throwing after 200 OK silently demotes without a notify reason
 
-**File:** `src/quality/cascadingValidator.ts:158-160, 178-180`
-**Issue:**
-If the external validator returns HTTP 200 with a body that isn't valid JSON (misconfigured reverse proxy, HTML error page at 200, truncated response), `res.json()` throws a `SyntaxError`. That lands in the final generic catch arm (line 179) and fires `notify('demote', ...)` — which is silent per `useConformanceRun.ts:273-275`. The user sees no explanation of why the external tier didn't fire; they only see "server" in the status line.
+**File:** `src/quality/cascadingValidator.ts:158-160, 178-180` (file unchanged in 31-02)
 
-This is arguably correct (the underlying error is opaque) but worth a comment acknowledging it, and the `notify` call could include an optional `reason` field the UI can render on hover of the status line.
+**Fix:** Add a comment acknowledging the case OR extend `notify('demote', { from, to, reason })` so the UI can surface why the external tier was skipped.
 
-**Fix:**
-Add a comment at line 160 noting that invalid-JSON-at-200 falls into the demote path, OR extend the notify payload:
+### IN-02 (OPEN, carried from f109d83): `phiAckKey` key-scope test does not cover the null-external collision case
+
+**File:** `src/quality/__tests__/phiGate.test.ts:43-46` (file unchanged in 31-02)
+
+**Fix:** Add an assertion verifying `phiAckKey('http://a|none', null)` is not equal to `phiAckKey('http://a', 'none')`.
+
+### IN-03 (OPEN, carried from f109d83): D-18 heuristic order of checks — comment the precedence
+
+**File:** `src/quality/cascadingValidator.ts:103-122` (file unchanged in 31-02)
+
+**Fix:** Add a comment documenting why HAPI must come first in the `detectValidatorVariant` precedence chain.
+
+### IN-04 (OPEN, carried from f109d83): `detectValidatorVariant` URL parsing failure path uses empty host silently
+
+**File:** `src/quality/cascadingValidator.ts:107-113` (file unchanged in 31-02)
+
+**Fix:** Return `null` from the `new URL()` catch arm rather than falling through with an empty host, so a malformed URL always yields `null`.
+
+### IN-05 (NEW in 31-02): `phiGateUrl` does not trim the external-tier URL even though `hasExternal` does
+
+**File:** `src/components/quality/ValidationPanel.tsx:94-99, 265-268`
+
+**Issue:** `hasExternal` (line 265) defends against whitespace-only `externalValidator.url` values via `.trim().length > 0`. `phiGateUrl` (line 94-99) does not — it accepts any truthy `externalValidator.url` and uses it verbatim as the gate key. The two predicates can therefore disagree for a settings.yaml entry like `url: "  "`:
+
+- `hasExternal` → false (so `requiresPhiAck` falls through to the `hasRemote`-only branch).
+- `phiGateUrl` → `"  "` (so `phiAckKeyStr` = `phiAckKey(serverUrl, "  ")`).
+
+The cascade also reads `ext.url` directly with no trim, so today the two sides accidentally agree — the cascade also won't fire because of the same whitespace value. This is therefore not a correctness bug, only a robustness/consistency smell. If a future change adds trimming to `cascadingValidator.tryExternal` it should also apply to `phiGateUrl`, and the two should ideally derive from a single helper.
+
+**Fix:** Either trim once and reuse, or document that whitespace-only URLs are out of scope and validated upstream:
+
 ```ts
-opts.notify?.('demote', { from: 'external', to: 'server', reason: String(err) });
+const trimmedExtUrl = externalValidator?.url?.trim() ?? '';
+const phiGateUrl = useMemo<string | null>(() => {
+  if (externalValidator?.enabled && trimmedExtUrl) {
+    return trimmedExtUrl;
+  }
+  return validatorUrl ?? null;
+}, [externalValidator?.enabled, trimmedExtUrl, validatorUrl]);
+
+const hasExternal = !!externalValidator?.enabled && trimmedExtUrl.length > 0;
 ```
 
-### IN-02: `phiAckKey` key-scope test does not cover the null-external collision case
+### IN-06 (NEW in 31-02): Banner-dismissal key now changes when external tier is toggled, re-showing a previously-dismissed banner
 
-**File:** `src/quality/__tests__/phiGate.test.ts:43-46`
-**Issue:**
-Test 6 covers the `|` separator between server and external, but not the `'none'` literal. `phiAckKey('http://a|none', null)` and `phiAckKey('http://a', 'none')` both render to `...http://a|none|none` and `...http://a|none` respectively — they differ, but it is NOT obvious from the current test. Users with a malformed `serverUrl` that already contains the literal string `|none` could collide unexpectedly with the fresh-server-no-external case.
+**File:** `src/components/quality/ValidationPanel.tsx:103-110`
+
+**Issue:** `bannerKey` is now derived from `phiGateUrl`. A user who dismisses the Blaze-`$validate`-unsupported info banner with only `validation.validatorUrl` set, then later sets `externalValidator.enabled = true` with a different external URL, will see the dismissed banner re-appear because the key changes. This is documented in the new comment at line 101-102 ("a user who changes either their external or server validator URL sees the warning again") and is arguably correct behavior — but the banner content is about Blaze `$validate` server support, not about which validator URL is configured, so re-showing it on validator-URL change is a stretch. The dismissal scope was already per `(serverUrl, validatorUrl)` pre-31-02, so this is an extension of an existing pattern rather than a regression.
+
+**Fix (optional):** Scope `bannerKey` to `serverUrl` only, since the banner copy is about server capability not validator choice:
+
+```ts
+const bannerKey = useMemo(
+  () => `${BANNER_KEY_PREFIX}:${serverUrl}`,
+  [serverUrl],
+);
+```
+
+Defer if the per-(server, validator) scope is intentional.
+
+### IN-07 (NEW in 31-02): Integration test declares `mockPost` and never asserts against it
+
+**File:** `src/components/quality/__tests__/ValidationPanel.phi-gate.integration.test.tsx:85, 148-150`
+
+**Issue:** `mockPost` is wired into `mockClient.post` but never asserted against in any of the three cases. It exists as a defensive default in case a code path inside `useConformanceRun` calls `client.post()` rather than `fetch`, but its presence implies an assertion that isn't there. This is a low-cost cleanup: either add an assertion ("client.post was NOT called for the external tier") to lock the contract that the cascade goes through `fetch`, or drop the mock and let the test fail loudly if the implementation changes.
+
+**Fix:** Add an assertion that `mockPost` was not invoked during the external-tier path, OR remove the unused mock. Prefer the assertion (it locks an invariant the original CR-01 implicitly relied on):
+
+```ts
+expect(mockPost).not.toHaveBeenCalled();
+```
+
+### IN-08 (NEW in 31-02): Tests would benefit from an explicit pre-click "ack key not yet set" assertion
+
+**File:** `src/components/quality/__tests__/ValidationPanel.phi-gate.integration.test.tsx:181-188, 225-235, 263-270`
+
+**Issue:** `beforeEach` clears localStorage — correct — and the tests assert the post-click value of the ack key. But none of them assert the key is `null` BEFORE the click. A future refactor that defaulted the `useLocalStorage` hook to `true` would make these tests pass for the wrong reason (banner click would be a no-op and the cascade would still fire because the gate already returned true). A pre-click assertion strengthens the regression lock.
+
+The existing `screen.findByText(/PHI will be sent/i)` already implies the banner was shown (which only happens when not-yet-acknowledged), so the regression coverage exists indirectly. This is therefore a "make the lock airtight" suggestion, not a defect.
 
 **Fix:**
-Add an assertion:
 ```ts
-it('Test 6b: null external does not collide with literal "none"', () => {
-  expect(phiAckKey('http://a|none', null)).not.toBe(phiAckKey('http://a', 'none'));
+expect(window.localStorage.getItem(phiAckKey(SERVER_URL, EXT_URL))).toBeNull();
+fireEvent.click(ackButton);
+await waitFor(() => {
+  expect(window.localStorage.getItem(phiAckKey(SERVER_URL, EXT_URL))).toBe('true');
 });
-```
-
-### IN-03: D-18 heuristic order of checks — `firely` substring can appear in tenant paths
-
-**File:** `src/quality/cascadingValidator.ts:103-122`
-**Issue:**
-The `lower.includes('firely')` check on line 114 is order-dependent: if a HAPI instance is deployed at `https://firely-mirror.example/hapi-fhir-jpaserver/`, the `/hapi-fhir-jpaserver/` pattern on line 113 wins (correct). But `https://firely.example/hapi-fhir-jpaserver/` also contains both — HAPI wins, still correct. The risk case: `https://firely-test.fhir.org/baseR4` — `.fhir.org` wins, labels as HAPI, which is the documented W-3 known limitation. Fine.
-
-But `https://ig-publisher.firely.com/...` would match `/ig-publisher` in the IG-Publisher branch only if the check order is reversed. Current order: HAPI → Firely → IG-Publisher. `.firely.com` + no `/ig-publisher/` ⇒ Firely. Correct by the spec but subtle.
-
-**Fix:**
-Add a short comment describing the precedence order and why HAPI must come first (`.fhir.org` is the broadest pattern and should not be stolen by a tenant-path match).
-
-### IN-04: `detectValidatorVariant` URL parsing failure path uses empty host silently
-
-**File:** `src/quality/cascadingValidator.ts:107-113`
-**Issue:**
-```ts
-try {
-  host = new URL(url).host.toLowerCase();
-} catch {
-  host = '';
-}
-```
-
-When `url` is malformed (say `http://` with no host), `host` falls through as empty. The `host.endsWith('.fhir.org')` check on line 113 returns false for empty string, which is correct. But the `lower.includes(...)` branches at lines 113-120 still run against the raw `url` string. A user who pastes a malformed URL will get a non-null variant purely from the raw substring match — e.g., `detectValidatorVariant('not-a-url-but-mentions-firely')` returns `'Firely'`.
-
-**Fix:**
-Fall through to `null` when `new URL()` throws, so a malformed URL always yields `null` (prompting the user to fix the setting):
-
-```ts
-let host = '';
-try {
-  host = new URL(url).host.toLowerCase();
-} catch {
-  return null;
-}
 ```
 
 ---
@@ -298,3 +187,5 @@ try {
 _Reviewed: 2026-04-23_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
+_Scope: 31-02 gap closure (ValidationPanel.tsx, ValidationPanel.phi-gate.integration.test.tsx)_
+_Carry-over: 7 open findings (WR-01..03, IN-01..04) preserved from 31-REVIEW.md @ f109d83 — underlying files unchanged in 31-02_
