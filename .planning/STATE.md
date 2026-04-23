@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: Validation, Performance & MII Extensions
-status: defining_requirements
-stopped_at: v1.5 scoped — research spawn pending
-last_updated: "2026-04-23T14:45:00.000Z"
-last_activity: 2026-04-23 -- v1.5 scoped (UX-01 validator, EFF-R14 split, 6 UAT followups, 14 MII extension modules)
+status: ready_to_execute
+stopped_at: v1.5 fully scoped — REQUIREMENTS.md + ROADMAP.md committed; ready to plan Phase 31
+last_updated: "2026-04-23T15:30:00.000Z"
+last_activity: 2026-04-23 -- v1.5 roadmap complete (5 phases 31-35, 31 REQ-IDs)
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-23)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.5 — running parallel research phase before requirements definition.
+**Current focus:** v1.5 ready for Phase 31 planning. Research (4 docs + synthesis), requirements (31 REQ-IDs), and roadmap (5 phases) all committed. Next: `/gsd-plan-phase 31` to decompose the UX-01 validator cascade phase into plans.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 31 — UX-01 External Validator Cascade (ready to plan)
 Plan: —
-Status: Defining requirements (research phase pending)
-Last activity: 2026-04-23 -- Milestone v1.5 started. Continuing phase numbering from 30.
+Status: Requirements + roadmap complete; awaiting phase decomposition
+Last activity: 2026-04-23 -- Milestone v1.5 fully scoped (5 phases, 31 REQ-IDs). Parallel-safe starting pair: Phase 31 + Phase 32.
 
 ## Performance Metrics
 
