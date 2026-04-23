@@ -77,6 +77,7 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 - [ ] **UX-01** (deferred from Phase 29): External FHIR validator cascade (external → server `$validate` → local structural) with PHI gate, AbortController, probe cache, and `normalizeOperationOutcomeIssue` — `29-02-PLAN.md` preserved verbatim in the archive
 - [ ] **EFF-R14** (deferred from Phase 27): Split `QualityMetricsContext` so single-metric updates re-render only their own tile (Option A: per-metric context providers; NOT `useSyncExternalStore`)
+- [x] **Phase 31 (UX-01) — external FHIR validator cascade** *(complete 2026-04-23)* — Three-tier cascade (external HTTP → server `$validate` → local structural) with PHI gate alignment, OperationOutcome normalizer extraction, AbortSignal threading, CORS heuristic, probe cache, and Active-strategy status line. VAL-01..VAL-05 satisfied.
 - [ ] **Phase 30 UAT follow-ups (6)**: Explorer Date/Status per-resource-type extractor; HumanReadableView extension cleanup (identifier-system tooltip, address-extension modal); ResourceDetailPage remove *Clinical + raw* + rename *Developer → JSON*; empty per-patient MII/FHIR panel investigation; Dashboard MII tile count scoping or explicit labelling; per-type quality matrix card under Counts tab
 - [ ] **Phase 999.1**: 14 MII Kerndatensatz extension modules (Onkologie, Kardiologie, Intensivmedizin, Bildgebung, Pathologie, Mikrobiologie, Molekulargenetik, Seltene Erkrankungen, Symptom, Biobank, Studie, Dokument, MTB, PRO). Requires multi-type module schema, 21-tab UI grouping, per-module patient search param (some use `subject=`), Mantine color strategy for 21 modules.
 
@@ -200,4 +201,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-23 — v1.5 Validation, Performance & MII Extensions scoped. Four scope groups: UX-01 external validator (execute preserved 29-02 plan), EFF-R14 per-metric QualityMetricsContext split, 6 Phase-30 UAT follow-ups, and the 14 MII Kerndatensatz extension modules with a collapsible Extension-modules section below base tabs. 4-researcher parallel research phase enabled. Est. 3-4 weeks.*
+*Last updated: 2026-04-23 — v1.5 in progress. Phase 31 (UX-01 external validator cascade) complete: three-tier cascade with PHI gate alignment (CR-01 closed), OperationOutcome normalizer, AbortSignal threading, probe cache, Active-strategy status line. VAL-01..VAL-05 satisfied. Next: Phase 32 EFF-R14 QualityMetricsContext split.*
