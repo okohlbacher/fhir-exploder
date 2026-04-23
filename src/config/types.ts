@@ -22,11 +22,12 @@ export interface AppSettings {
     /** Batch size for Plan 05's batch validator. Defaults to 25. */
     batchSize?: number;
     /**
-     * External FHIR validator cascade (e.g. a HAPI or Firely instance).
-     * When `enabled` + `url` are set, the Validation tab runs a 3-tier
-     * cascade: external → server $validate → local structural checker.
-     * Every external fetch is PHI-gated (see src/quality/phiGate.ts)
-     * and AbortController-wrapped with `timeoutMs` (default 15000).
+     * `externalValidator` block — external FHIR validator cascade (e.g.
+     * a HAPI or Firely instance). When `enabled` + `url` are set, the
+     * Validation tab runs a 3-tier cascade: external → server $validate
+     * → local structural checker. Every external fetch is PHI-gated
+     * (see src/quality/phiGate.ts) and AbortController-wrapped with
+     * `timeoutMs` (default 15000).
      *
      * Phase 31 UX-01 (D-07 + D-18).
      */
