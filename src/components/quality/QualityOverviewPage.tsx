@@ -387,22 +387,22 @@ export function QualityOverviewPage() {
             value={resourceTypes}
             onChange={setResourceTypes}
           />
-          <Group gap="xs" align="flex-end" wrap="nowrap" style={{ minWidth: 0 }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <ActiveCohortSelect
-                resolvedPatientCount={resolvedPatientCount}
-                resolutionStatus={resolutionStatus}
-              />
-            </div>
+          <Stack gap={4} style={{ minWidth: 0 }}>
+            <ActiveCohortSelect
+              resolvedPatientCount={resolvedPatientCount}
+              resolutionStatus={resolutionStatus}
+            />
             <Button
-              variant="light"
-              leftSection={<IconUsersGroup size={16} />}
+              variant="subtle"
+              size="compact-xs"
+              leftSection={<IconUsersGroup size={12} />}
               onClick={() => navigate('/quality/cohorts')}
               aria-label="Manage cohorts. Define, view, and activate patient cohorts."
+              style={{ alignSelf: 'flex-start' }}
             >
               Manage cohorts
             </Button>
-          </Group>
+          </Stack>
           <SampleSizeControl value={sampleSize} onChange={setSampleSize} />
         </SimpleGrid>
       </Card>
