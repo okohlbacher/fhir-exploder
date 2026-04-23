@@ -364,82 +364,105 @@ export function CohortsPage(): JSX.Element {
         across sessions.
       </Text>
 
-      {/* --- Saved cohorts card (S2 + 22-S3 toolbar) --- */}
-      <Paper withBorder radius="sm" p="md">
-        <Stack gap="sm">
-          <Group justify="space-between" align="center" wrap="wrap">
-            <Title order={4}>Saved cohorts</Title>
-            <FileButton
-              onChange={handleImportFile}
-              accept=".json,application/json"
-            >
-              {(fileProps) => (
-                <Button
-                  {...fileProps}
-                  variant="default"
-                  leftSection={<IconUpload size={16} />}
-                  aria-label="Import cohort from FDPG JSON file"
-                >
-                  Import
-                </Button>
-              )}
-            </FileButton>
-          </Group>
-          {!hydrated ? (
-            <Skeleton height={80} />
-          ) : cohorts.length === 0 ? (
-            <Stack gap="xs">
-              <Text size="sm" fw={500}>
-                No cohorts yet
-              </Text>
-              <Text size="sm" c="dimmed">
-                Create your first cohort using the form below. Saved cohorts
-                appear here and can be activated from the dashboard toolbar.
-              </Text>
-            </Stack>
-          ) : (
-            <Stack gap="sm">
-              {cohorts.map((c) => (
-                <SavedCohortRow
-                  key={c.id}
-                  cohort={c}
-                  isActive={c.id === activeCohortId}
-                  onEdit={setEditingCohort}
-                  onDuplicate={handleDuplicate}
-                  onExport={handleExport}
-                  onDelete={setDeletingCohort}
-                />
-              ))}
-            </Stack>
-          )}
-        </Stack>
-      </Paper>
+      {/* Phase 30 Step 7 — 2-col layout (1fr for the saved-cohorts table,
+          380 px for the new-cohort builder preview). Collapses to a single
+          column below 960 px so narrow viewports still stack vertically. */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns:
+            'min(100%, calc(100vw - 2 * var(--mantine-spacing-xl)))',
+          gap: 'var(--mantine-spacing-md)',
+        }}
+        className="cohorts-grid"
+      >
+        <style>{`
+          @media (min-width: 960px) {
+            .cohorts-grid {
+              grid-template-columns: 1fr 380px !important;
+              align-items: start;
+            }
+          }
+        `}</style>
 
-      {/* --- New cohort builder card (S3) --- */}
-      <Paper withBorder radius="sm" p="md">
-        <Stack gap="md">
-          <Title order={4}>New cohort</Title>
-          <Text size="sm" c="dimmed">
-            Combine any of the criteria below. A patient qualifies for the
-            cohort only if they match ALL provided criteria (AND
-            composition).
-          </Text>
-          {!hydrated ? (
-            <Skeleton height={320} />
-          ) : (
-            <DatesProvider settings={{ locale: 'en' }}>
-              <CohortBuilderForm
-                existingNames={existingNames}
-                onSaved={() => {
-                  /* Reset is handled inside CohortBuilderForm; parent
-                     just needs to know the cohorts array changed, which
-                     it already observes via useCohorts. */
-                }}
-              />
-            </DatesProvider>
-          )}
-        </Stack>
-      </Paper>
+        {/* --- Left: Saved cohorts card (S2 + 22-S3 toolbar) --- */}
+        <Paper withBorder radius="sm" p="md">
+          <Stack gap="sm">
+            <Group justify="space-between" align="center" wrap="wrap">
+              <Title order={4}>Saved cohorts</Title>
+              <FileButton
+                onChange={handleImportFile}
+                accept=".json,application/json"
+              >
+                {(fileProps) => (
+                  <Button
+                    {...fileProps}
+                    variant="default"
+                    leftSection={<IconUpload size={16} />}
+                    aria-label="Import cohort from FDPG JSON file"
+                  >
+                    Import
+                  </Button>
+                )}
+              </FileButton>
+            </Group>
+            {!hydrated ? (
+              <Skeleton height={80} />
+            ) : cohorts.length === 0 ? (
+              <Stack gap="xs">
+                <Text size="sm" fw={500}>
+                  No cohorts yet
+                </Text>
+                <Text size="sm" c="dimmed">
+                  Create your first cohort using the form on the right. Saved
+                  cohorts appear here and can be activated from the dashboard
+                  toolbar.
+                </Text>
+              </Stack>
+            ) : (
+              <Stack gap="sm">
+                {cohorts.map((c) => (
+                  <SavedCohortRow
+                    key={c.id}
+                    cohort={c}
+                    isActive={c.id === activeCohortId}
+                    onEdit={setEditingCohort}
+                    onDuplicate={handleDuplicate}
+                    onExport={handleExport}
+                    onDelete={setDeletingCohort}
+                  />
+                ))}
+              </Stack>
+            )}
+          </Stack>
+        </Paper>
+
+        {/* --- Right: New cohort builder preview card (S3) --- */}
+        <Paper withBorder radius="sm" p="md">
+          <Stack gap="md">
+            <Title order={4}>New cohort</Title>
+            <Text size="sm" c="dimmed">
+              Combine any of the criteria below. A patient qualifies for the
+              cohort only if they match ALL provided criteria (AND
+              composition).
+            </Text>
+            {!hydrated ? (
+              <Skeleton height={320} />
+            ) : (
+              <DatesProvider settings={{ locale: 'en' }}>
+                <CohortBuilderForm
+                  existingNames={existingNames}
+                  onSaved={() => {
+                    /* Reset is handled inside CohortBuilderForm; parent
+                       just needs to know the cohorts array changed, which
+                       it already observes via useCohorts. */
+                  }}
+                />
+              </DatesProvider>
+            )}
+          </Stack>
+        </Paper>
+      </div>
 
       {/* --- Edit / Delete modals --- */}
       <EditCohortModal

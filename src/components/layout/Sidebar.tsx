@@ -1,10 +1,19 @@
 import { useState } from 'react';
-import { AppShell, Box, Group, NavLink, Stack, Text, UnstyledButton } from '@mantine/core';
+import {
+  AppShell,
+  Badge,
+  Box,
+  Card,
+  Group,
+  NavLink,
+  Stack,
+  Text,
+  UnstyledButton,
+} from '@mantine/core';
 import {
   IconDashboard,
   IconDatabase,
   IconUsers,
-  IconUsersGroup,
   IconChartBar,
   IconSettings,
 } from '@tabler/icons-react';
@@ -22,12 +31,36 @@ interface SidebarProps {
 
 const STATUS_CONFIG: Record<
   ConnectionStatus,
-  { color: string; label: string; pulse: boolean }
+  { color: string; label: string; badge: string; badgeColor: string; pulse: boolean }
 > = {
-  idle: { color: '#adb5bd', label: 'FHIR server: Not connected', pulse: false },
-  connecting: { color: '#adb5bd', label: 'FHIR server: Connecting…', pulse: true },
-  connected: { color: '#40c057', label: 'FHIR server: Connected', pulse: false },
-  error: { color: '#fa5252', label: 'FHIR server: Unreachable', pulse: false },
+  idle: {
+    color: '#adb5bd',
+    label: 'FHIR server: Not connected',
+    badge: 'Disconnected',
+    badgeColor: 'gray',
+    pulse: false,
+  },
+  connecting: {
+    color: '#adb5bd',
+    label: 'FHIR server: Connecting…',
+    badge: 'Connecting',
+    badgeColor: 'gray',
+    pulse: true,
+  },
+  connected: {
+    color: '#40c057',
+    label: 'FHIR server: Connected',
+    badge: 'Connected',
+    badgeColor: 'green',
+    pulse: false,
+  },
+  error: {
+    color: '#fa5252',
+    label: 'FHIR server: Unreachable',
+    badge: 'Unreachable',
+    badgeColor: 'red',
+    pulse: false,
+  },
 };
 
 /**
@@ -35,54 +68,135 @@ const STATUS_CONFIG: Record<
  * path match (useMatch `end: true`). Undefined / false activates the row
  * on the path OR any descendant (useMatch `end: false`) — used for
  * section roots whose children should highlight the parent row.
+ *
+ * `children` adds an expanded sub-nav when the user is anywhere under the
+ * section's `to` path (Phase 30 redesign Step 1 — Quality gets Overview,
+ * Cohorts, Thresholds children).
  */
 type NavItem = {
   label: string;
   icon: typeof IconDashboard;
   to: string;
   exact?: boolean;
+  children?: NavChild[];
+};
+
+type NavChild = {
+  label: string;
+  to: string;
+  /**
+   * When true, the child row's active state is also subtracted from the
+   * parent row's active state (Option B — most-specific-wins). Defaults to
+   * true for non-exact parent paths, which is what Quality / Cohorts /
+   * Thresholds expect.
+   */
+  suppressParent?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', icon: IconDashboard, to: '/', exact: true },
   { label: 'Explorer', icon: IconDatabase, to: '/explorer' },
   { label: 'Patients', icon: IconUsers, to: '/patients' },
-  { label: 'Quality', icon: IconChartBar, to: '/quality' },
-  { label: 'Cohorts', icon: IconUsersGroup, to: '/quality/cohorts', exact: true },
+  {
+    label: 'Quality',
+    icon: IconChartBar,
+    to: '/quality',
+    children: [
+      { label: 'Overview', to: '/quality', suppressParent: false },
+      { label: 'Cohorts', to: '/quality/cohorts', suppressParent: true },
+      { label: 'Thresholds', to: '/quality/thresholds', suppressParent: true },
+    ],
+  },
 ];
 
 /**
- * One sidebar nav row. Computes its own `active` state via `useMatch`,
+ * Styles for the active-row left rail (2px indigo) and panel bg. Applied via
+ * Mantine's `styles` prop so we keep NavLink's native data-active contract
+ * (the Sidebar.test.tsx suite asserts `data-active="true"` on active rows).
+ */
+const ACTIVE_ROW_STYLES = {
+  root: {
+    borderLeft: '2px solid transparent',
+    paddingLeft: '10px',
+  },
+} as const;
+
+function activeStylesWhen(active: boolean) {
+  return active
+    ? {
+        root: {
+          borderLeft: '2px solid var(--mantine-color-indigo-6)',
+          paddingLeft: '10px',
+          backgroundColor: 'var(--panel, #fff)',
+        },
+      }
+    : ACTIVE_ROW_STYLES;
+}
+
+/**
+ * Top-level sidebar nav row. Computes its own `active` state via `useMatch`,
  * so nested routes (e.g. `/patients/123`) highlight their section root
  * (e.g. the Patients row at `/patients`) without a custom matcher.
  *
- * **Option B — most-specific-wins.** The Quality row at `/quality` has
- * `exact: false`, so `useMatch({ path: '/quality', end: false })` also
- * matches `/quality/cohorts` by descendant rules. We suppress that by
- * subtracting a Cohorts-descendant match: when the user is anywhere
- * under `/quality/cohorts`, the Quality row's active state is forced
- * to false — only the Cohorts row lights up. ROADMAP Phase 26 success
- * criterion #3 says 'section root' (singular), which this enforces.
- *
- * Note on the Mantine NavLink + RouterNavLink composition: `@mantine/core`
- * NavLink with `component={RouterNavLink}` does NOT pass through
- * react-router's render-prop `isActive`, so we drive `active` via the
- * `useMatch` hook at this row level.
+ * **Option B — most-specific-wins.** For rows that have `children`, when the
+ * user is under a child path whose `suppressParent` is true the parent row's
+ * active state is forced to false — only the child row lights up. ROADMAP
+ * Phase 26 success criterion #3 says 'section root' (singular), which this
+ * enforces (now generalised for Thresholds as well as Cohorts).
  */
 function SidebarRow({ item }: { item: NavItem }) {
   const match = useMatch({ path: item.to, end: item.exact ?? false });
-  // Option B: suppress the Quality section when a Cohorts descendant is
-  // active. `/quality/cohorts` highlights ONLY Cohorts.
+  // Suppress the parent when a child with suppressParent=true is active.
+  // Hooks must be called unconditionally — evaluate all potential children
+  // every render, then decide.
   const cohortsMatch = useMatch({ path: '/quality/cohorts', end: false });
-  const active =
-    item.to === '/quality' ? !!match && !cohortsMatch : !!match;
+  const thresholdsMatch = useMatch({ path: '/quality/thresholds', end: false });
+  const suppressed =
+    item.to === '/quality' ? !!cohortsMatch || !!thresholdsMatch : false;
+  const active = !!match && !suppressed;
+
+  // Show children when the user is anywhere under `item.to` (any match,
+  // including before suppression) — the sub-nav should expand on
+  // /quality/cohorts and /quality/thresholds even though the parent row
+  // itself is dimmed.
+  const underSection = !!match;
+  const children = item.children && underSection ? item.children : undefined;
+
+  return (
+    <>
+      <NavLink
+        component={RouterNavLink}
+        to={item.to}
+        label={item.label}
+        leftSection={<item.icon size={20} />}
+        active={active}
+        styles={activeStylesWhen(active)}
+      />
+      {children?.map((child) => (
+        <SidebarChildRow key={child.to} child={child} />
+      ))}
+    </>
+  );
+}
+
+function SidebarChildRow({ child }: { child: NavChild }) {
+  // Overview is exact-match on /quality; the other children default to
+  // descendant-match. Infer from the path: children at the parent path use
+  // exact (to avoid matching descendants); deeper paths use descendant.
+  // Simpler heuristic: any child that also matches the parent path uses
+  // exact=true. Here Overview has to='/quality' === parent → exact.
+  const isOverview = child.to === '/quality';
+  const match = useMatch({ path: child.to, end: isOverview });
+  const active = !!match;
   return (
     <NavLink
       component={RouterNavLink}
-      to={item.to}
-      label={item.label}
-      leftSection={<item.icon size={20} />}
+      to={child.to}
+      label={child.label}
       active={active}
+      styles={activeStylesWhen(active)}
+      // Indent children visually under the parent icon.
+      pl={44}
     />
   );
 }
@@ -92,11 +206,6 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
   const termHealth = useTerminologyHealth();
   const termStatus = TERMINOLOGY_STATUS_CONFIG[termHealth];
 
-  // Settings row is the second exact-match site (was Sidebar.tsx:115 using
-  // the old exact pathname comparison against '/settings'). Migrated to
-  // useMatch end:true to match the NAV_ITEMS pattern; no sub-routes exist
-  // under /settings, so end:true is behaviourally identical to the prior
-  // check.
   const settingsMatch = useMatch({ path: '/settings', end: true });
 
   const [fhirModalOpen, setFhirModalOpen] = useState(false);
@@ -108,44 +217,67 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
         <Text fw={600} size="lg">
           FHIR Exploder
         </Text>
-        <Stack gap="xs" mt="xs">
-          <UnstyledButton onClick={() => setFhirModalOpen(true)}>
-            <Group gap="xs">
-              <Box
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  backgroundColor: status.color,
-                  animation: status.pulse
-                    ? 'pulse 1.5s ease-in-out infinite'
-                    : undefined,
-                }}
-              />
-              <Text size="xs" c="dimmed" td="underline" style={{ cursor: 'pointer' }}>
-                {status.label}
-              </Text>
-            </Group>
-          </UnstyledButton>
-          <UnstyledButton onClick={() => setTermModalOpen(true)}>
-            <Group gap="xs">
-              <Box
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  backgroundColor: termStatus.color,
-                  animation: termStatus.pulse
-                    ? 'pulse 1.5s ease-in-out infinite'
-                    : undefined,
-                }}
-              />
-              <Text size="xs" c="dimmed" td="underline" style={{ cursor: 'pointer' }}>
-                {termStatus.label}
-              </Text>
-            </Group>
-          </UnstyledButton>
-        </Stack>
+
+        {/* Server card — consolidates the prior FHIR + Terminology status pills
+            into a single surface. Clicking the FHIR row (or anywhere on the
+            card header) opens the FHIR settings modal; clicking the
+            Terminology row opens the terminology modal. Text strings
+            ("FHIR server: X", "Terminology: Y") are preserved so the V-15
+            sidebar terminology test contract still holds. */}
+        <Card withBorder p="sm" radius="md" mt="xs">
+          <Stack gap={6}>
+            <UnstyledButton onClick={() => setFhirModalOpen(true)}>
+              <Group justify="space-between" gap="xs" wrap="nowrap">
+                <Text size="xs" fw={600} c="dimmed" tt="uppercase" lts="0.5px">
+                  Server
+                </Text>
+                <Badge color={status.badgeColor} variant="light" size="xs">
+                  {status.badge}
+                </Badge>
+              </Group>
+            </UnstyledButton>
+
+            <UnstyledButton onClick={() => setFhirModalOpen(true)}>
+              <Group gap="xs" wrap="nowrap">
+                <Box
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: status.color,
+                    animation: status.pulse
+                      ? 'pulse 1.5s ease-in-out infinite'
+                      : undefined,
+                    flexShrink: 0,
+                  }}
+                />
+                <Text size="xs" c="dimmed" style={{ cursor: 'pointer' }}>
+                  {status.label}
+                </Text>
+              </Group>
+            </UnstyledButton>
+
+            <UnstyledButton onClick={() => setTermModalOpen(true)}>
+              <Group gap="xs" wrap="nowrap">
+                <Box
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: termStatus.color,
+                    animation: termStatus.pulse
+                      ? 'pulse 1.5s ease-in-out infinite'
+                      : undefined,
+                    flexShrink: 0,
+                  }}
+                />
+                <Text size="xs" c="dimmed" style={{ cursor: 'pointer' }}>
+                  {termStatus.label}
+                </Text>
+              </Group>
+            </UnstyledButton>
+          </Stack>
+        </Card>
       </AppShell.Section>
 
       <AppShell.Section grow>
@@ -161,6 +293,7 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
           label="Settings"
           leftSection={<IconSettings size={20} />}
           active={!!settingsMatch}
+          styles={activeStylesWhen(!!settingsMatch)}
         />
       </AppShell.Section>
 

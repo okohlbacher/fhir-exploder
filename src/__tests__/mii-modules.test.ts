@@ -6,16 +6,16 @@ describe('MII_MODULES configuration', () => {
     expect(MII_MODULES).toHaveLength(7);
   });
 
-  it('contains all expected module keys', () => {
+  it('contains all expected module keys (Phase 30 UAT-8 order)', () => {
     const keys = MII_MODULES.map((m) => m.key);
     expect(keys).toEqual([
       'person',
+      'fall',
       'diagnose',
       'prozedur',
+      'consent',
       'laborbefund',
       'medikation',
-      'fall',
-      'consent',
     ]);
   });
 

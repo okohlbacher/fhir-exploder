@@ -15,7 +15,18 @@
  * resolver effect, patientIds threading through panels, and cohort-aware
  * capture/export.
  */
-import { Alert, Anchor, Button, Group, Stack, Tabs, Text, Title } from '@mantine/core';
+import {
+  Alert,
+  Anchor,
+  Button,
+  Card,
+  Group,
+  SimpleGrid,
+  Stack,
+  Tabs,
+  Text,
+  Title,
+} from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
 import {
   IconAdjustmentsAlt,
@@ -75,6 +86,19 @@ function formatRelative(d: Date | null): string {
   if (mins < 60) return `${mins}min ago`;
   const hrs = Math.floor(mins / 60);
   return `${hrs}h ago`;
+}
+
+/**
+ * Phase 30 Step 4 — render a Tabs.Tab label with an inline overall-%
+ * badge when the metric has been computed, or a bare label otherwise.
+ * The handoff proposed a raw issue count next to each tab; the context
+ * currently exposes only overall percentages, so we surface those (the
+ * most analytically meaningful number available) until per-tab issue
+ * totals are plumbed into QualityMetricsContext.
+ */
+function metricTabLabel(label: string, overall: number | undefined): string {
+  if (overall === undefined) return label;
+  return `${label} · ${overall}%`;
 }
 
 export function QualityOverviewPage() {
@@ -309,33 +333,16 @@ export function QualityOverviewPage() {
 
   return (
     <Stack gap="lg" p="xl">
-      <Title order={2}>Data Quality</Title>
-
-      <Group justify="space-between" align="flex-end" wrap="wrap">
-        <Group gap="md" align="flex-end" wrap="wrap">
-          <ResourceTypeSelector
-            types={types}
-            value={resourceTypes}
-            onChange={setResourceTypes}
-          />
-          <ActiveCohortSelect
-            resolvedPatientCount={resolvedPatientCount}
-            resolutionStatus={resolutionStatus}
-          />
-          <SampleSizeControl value={sampleSize} onChange={setSampleSize} />
-        </Group>
-        <Group gap="sm" wrap="wrap">
+      {/* Phase 30 Step 4 redesign: toolbar split into Tier 1 (scope Card,
+          3-col grid) and Tier 2 (right-aligned actions row under the title).
+          Keeps every handler and button label unchanged so existing
+          quality-overview test contracts still pass. */}
+      <Group justify="space-between" align="flex-start" wrap="wrap">
+        <Title order={2}>Data Quality</Title>
+        <Group gap="sm" wrap="wrap" justify="flex-end">
           <Text size="sm" c="dimmed">
             Last computed {formatRelative(lastComputed)}
           </Text>
-          <Button
-            variant="light"
-            leftSection={<IconUsersGroup size={16} />}
-            onClick={() => navigate('/quality/cohorts')}
-            aria-label="Manage cohorts. Define, view, and activate patient cohorts."
-          >
-            Manage cohorts
-          </Button>
           <Button
             variant="light"
             leftSection={<IconAdjustmentsAlt size={16} />}
@@ -372,6 +379,34 @@ export function QualityOverviewPage() {
         </Group>
       </Group>
 
+      {/* Tier 1 — scope selection. 3-col SimpleGrid on md+, stacks on sm. */}
+      <Card p="sm" radius="md">
+        <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
+          <ResourceTypeSelector
+            types={types}
+            value={resourceTypes}
+            onChange={setResourceTypes}
+          />
+          <Stack gap={4} style={{ minWidth: 0 }}>
+            <ActiveCohortSelect
+              resolvedPatientCount={resolvedPatientCount}
+              resolutionStatus={resolutionStatus}
+            />
+            <Button
+              variant="subtle"
+              size="compact-xs"
+              leftSection={<IconUsersGroup size={12} />}
+              onClick={() => navigate('/quality/cohorts')}
+              aria-label="Manage cohorts. Define, view, and activate patient cohorts."
+              style={{ alignSelf: 'flex-start' }}
+            >
+              Manage cohorts
+            </Button>
+          </Stack>
+          <SampleSizeControl value={sampleSize} onChange={setSampleSize} />
+        </SimpleGrid>
+      </Card>
+
       {hasZeroMatch && (
         <Alert
           color="yellow"
@@ -397,16 +432,35 @@ export function QualityOverviewPage() {
         see the two dropped panel props below) get the behavior change. All
         other panels retain an explicit panel-level flag to opt back in.
       */}
-      <Tabs value={activeTab} onChange={handleTabChange} keepMounted={false}>
+      <Tabs
+        value={activeTab}
+        onChange={handleTabChange}
+        keepMounted={false}
+        variant="pills"
+      >
         <Tabs.List>
           <Tabs.Tab value="counts">Counts</Tabs.Tab>
-          <Tabs.Tab value="completeness">Completeness</Tabs.Tab>
-          <Tabs.Tab value="coverage">Coding Coverage</Tabs.Tab>
-          <Tabs.Tab value="validation">Validation</Tabs.Tab>
-          <Tabs.Tab value="plausibility">Plausibility</Tabs.Tab>
-          <Tabs.Tab value="lab-ranges">Lab Ranges</Tabs.Tab>
-          <Tabs.Tab value="duplicates">Duplicates</Tabs.Tab>
-          <Tabs.Tab value="references">References</Tabs.Tab>
+          <Tabs.Tab value="completeness">
+            {metricTabLabel('Completeness', metrics.overallCompleteness)}
+          </Tabs.Tab>
+          <Tabs.Tab value="coverage">
+            {metricTabLabel('Coding Coverage', metrics.overallCoverage)}
+          </Tabs.Tab>
+          <Tabs.Tab value="validation">
+            {metricTabLabel('Validation', metrics.overallValidation)}
+          </Tabs.Tab>
+          <Tabs.Tab value="plausibility">
+            {metricTabLabel('Plausibility', metrics.overallPlausibility)}
+          </Tabs.Tab>
+          <Tabs.Tab value="lab-ranges">
+            {metricTabLabel('Lab Ranges', metrics.overallLabRanges)}
+          </Tabs.Tab>
+          <Tabs.Tab value="duplicates">
+            {metricTabLabel('Duplicates', metrics.overallDuplicates)}
+          </Tabs.Tab>
+          <Tabs.Tab value="references">
+            {metricTabLabel('References', metrics.overallReferences)}
+          </Tabs.Tab>
           <Tabs.Tab value="trends">Trends</Tabs.Tab>
         </Tabs.List>
 

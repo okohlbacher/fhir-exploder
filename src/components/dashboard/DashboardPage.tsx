@@ -2,26 +2,32 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
+  Box,
   Card,
+  Collapse,
   Grid,
   Group,
-  RingProgress,
+  Progress,
   SimpleGrid,
   Stack,
   Text,
   Title,
+  UnstyledButton,
 } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import {
   IconAlertCircle,
   IconAlertTriangle,
+  IconChevronDown,
+  IconChevronRight,
   IconCircleCheck,
-  IconDatabase,
 } from '@tabler/icons-react';
 import type { ConnectionState } from '../../fhir/types';
 import type { AppSettings } from '../../config/types';
 import { parseResourceTypes } from '../../fhir/capability';
 import { useResourceCounts } from '../../hooks/useResourceCounts';
 import { groupByCategory, CATEGORY_ORDER } from '../../utils/fhir-categories';
+import { MII_MODULES } from '../../utils/mii-modules';
 import { ServerInfoCard } from './ServerInfoCard';
 
 interface DashboardPageProps {
@@ -52,6 +58,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   Other: 'gray',
 };
 
+const MONO_NUMERIC: React.CSSProperties = {
+  fontFamily: 'var(--font-mono, var(--mantine-font-family-monospace))',
+  fontVariantNumeric: 'tabular-nums',
+};
+
 export function DashboardPage({
   settings,
   usingDefaults,
@@ -59,6 +70,11 @@ export function DashboardPage({
   onConnect,
 }: DashboardPageProps) {
   const navigate = useNavigate();
+  // Phase 30 redesign Step 2: sections open by default — the category
+  // breakdown and MII overview are the primary dashboard content, not
+  // hidden drill-downs.
+  const [categoryOpened, { toggle: toggleCategory }] = useDisclosure(true);
+  const [miiOpened, { toggle: toggleMii }] = useDisclosure(true);
 
   const resourceTypes = useMemo(() => {
     if (connectionState.status === 'connected') {
@@ -117,6 +133,11 @@ export function DashboardPage({
 
   const totalResources = categoryStats.reduce((s, c) => s + c.totalCount, 0);
   const populatedCategories = categoryStats.filter((c) => c.populatedTypes > 0);
+  const patientCount =
+    typeof counts['Patient'] === 'number' ? counts['Patient'] : null;
+  const typesWithData = Object.values(counts).filter(
+    (c) => typeof c === 'number' && c > 0,
+  ).length;
 
   const isConnected = connectionState.status === 'connected';
 
@@ -190,128 +211,225 @@ export function DashboardPage({
             </Group>
           </Group>
 
-          {/* Summary strip */}
-          <SimpleGrid cols={{ base: 1, sm: 3 }}>
-            <Card withBorder padding="lg">
-              <Group justify="space-between">
-                <div>
-                  <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                    Total Resources
-                  </Text>
-                  <Text size="xl" fw={700}>
-                    {totalResources.toLocaleString()}
-                  </Text>
-                </div>
-                <IconDatabase size={32} color="var(--mantine-color-blue-5)" />
-              </Group>
-            </Card>
-            <Card withBorder padding="lg">
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                Resource Types
-              </Text>
-              <Text size="xl" fw={700}>
-                {resourceTypeNames.length}
-              </Text>
-              <Text size="xs" c="dimmed">
-                from CapabilityStatement
-              </Text>
-            </Card>
-            <Card withBorder padding="lg">
-              <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
-                With Data
-              </Text>
-              <Text size="xl" fw={700}>
-                {Object.values(counts).filter(
-                  (c) => typeof c === 'number' && c > 0
-                ).length}
-              </Text>
-              <Text size="xs" c="dimmed">
-                types containing resources
-              </Text>
-            </Card>
+          {/* Summary strip (Phase 30 Step 2 — 4 cards, added Patients tile) */}
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }}>
+            <SummaryTile
+              label="Total Resources"
+              value={totalResources}
+              hint="across all types"
+            />
+            <SummaryTile
+              label="Resource Types"
+              value={resourceTypeNames.length}
+              hint="from CapabilityStatement"
+            />
+            <SummaryTile
+              label="With Data"
+              value={typesWithData}
+              hint="types containing resources"
+            />
+            <SummaryTile
+              label="Patients"
+              value={patientCount}
+              hint={patientCount === null ? 'loading…' : 'patient records'}
+            />
           </SimpleGrid>
 
-          {/* Category tiles — only show categories that have data */}
-          <Title order={4}>Data by Category</Title>
-          <Grid>
-            {(populatedCategories.length > 0
-              ? populatedCategories
-              : categoryStats
-            ).map((stat) => {
-              const color = CATEGORY_COLORS[stat.category] ?? 'gray';
-              const pct =
-                stat.totalTypes > 0
-                  ? Math.round((stat.populatedTypes / stat.totalTypes) * 100)
-                  : 0;
+          {/* Data by category (open by default) */}
+          <SectionHeader
+            title="Data by Category"
+            opened={categoryOpened}
+            onToggle={toggleCategory}
+          />
+          <Collapse in={categoryOpened}>
+            <Grid>
+              {(populatedCategories.length > 0
+                ? populatedCategories
+                : categoryStats
+              ).map((stat) => {
+                const color = CATEGORY_COLORS[stat.category] ?? 'gray';
+                const pct =
+                  stat.totalTypes > 0
+                    ? Math.round((stat.populatedTypes / stat.totalTypes) * 100)
+                    : 0;
 
-              // Top types by count for this category
-              const topTypes = stat.types
-                .filter((t) => typeof counts[t.type] === 'number' && (counts[t.type] as number) > 0)
-                .sort(
-                  (a, b) =>
-                    (counts[b.type] as number) - (counts[a.type] as number)
-                )
-                .slice(0, 4);
+                const topTypes = stat.types
+                  .filter(
+                    (t) =>
+                      typeof counts[t.type] === 'number' &&
+                      (counts[t.type] as number) > 0,
+                  )
+                  .sort(
+                    (a, b) =>
+                      (counts[b.type] as number) - (counts[a.type] as number),
+                  )
+                  .slice(0, 4);
 
-              if (stat.populatedTypes === 0 && populatedCategories.length > 0) return null;
+                if (stat.populatedTypes === 0 && populatedCategories.length > 0)
+                  return null;
 
-              return (
-                <Grid.Col key={stat.category} span={{ base: 12, sm: 6, md: 4 }}>
-                  <Card
-                    withBorder
-                    padding="lg"
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => navigate('/explorer')}
-                  >
-                    <Group justify="space-between" mb="xs">
-                      <Text fw={600}>{stat.category}</Text>
-                      <RingProgress
-                        size={50}
-                        thickness={4}
-                        roundCaps
-                        sections={[
-                          { value: pct, color: `var(--mantine-color-${color}-5)` },
-                        ]}
-                        label={
-                          <Text size="xs" ta="center" fw={700}>
-                            {stat.populatedTypes}
-                          </Text>
-                        }
+                return (
+                  <Grid.Col key={stat.category} span={{ base: 12, sm: 6, md: 4 }}>
+                    <Card
+                      withBorder
+                      padding="lg"
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => navigate('/explorer')}
+                    >
+                      <Group gap="xs" mb={4}>
+                        <Box
+                          w={8}
+                          h={8}
+                          style={{
+                            borderRadius: 2,
+                            background: `var(--mantine-color-${color}-6)`,
+                          }}
+                        />
+                        <Text fw={600}>{stat.category}</Text>
+                      </Group>
+                      <Text
+                        size="xl"
+                        fw={600}
+                        style={MONO_NUMERIC}
+                        mb={6}
+                      >
+                        {stat.totalCount.toLocaleString()}
+                      </Text>
+                      <Progress
+                        value={pct}
+                        color={color}
+                        size={3}
+                        radius="xl"
+                        mb="xs"
                       />
-                    </Group>
-                    <Text size="sm" c="dimmed" mb="xs">
-                      {stat.totalCount.toLocaleString()} resources in{' '}
-                      {stat.populatedTypes}/{stat.totalTypes} types
-                    </Text>
-                    {topTypes.length > 0 && (
-                      <Stack gap={2}>
-                        {topTypes.map((t) => (
-                          <Group key={t.type} justify="space-between">
-                            <Text
-                              size="xs"
-                              c={color}
-                              style={{ cursor: 'pointer' }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/explorer/${t.type}`);
-                              }}
-                            >
-                              {t.type}
-                            </Text>
-                            <Text size="xs" c="dimmed">
-                              {(counts[t.type] as number).toLocaleString()}
-                            </Text>
-                          </Group>
-                        ))}
+                      <Text size="xs" c="dimmed" mb="xs">
+                        {stat.populatedTypes}/{stat.totalTypes} types populated
+                      </Text>
+                      {topTypes.length > 0 && (
+                        <Stack gap={2}>
+                          {topTypes.map((t) => (
+                            <Group key={t.type} justify="space-between">
+                              <Text
+                                size="xs"
+                                c={color}
+                                style={{ cursor: 'pointer' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/explorer/${t.type}`);
+                                }}
+                              >
+                                {t.type}
+                              </Text>
+                              <Text size="xs" c="dimmed" style={MONO_NUMERIC}>
+                                {(counts[t.type] as number).toLocaleString()}
+                              </Text>
+                            </Group>
+                          ))}
+                        </Stack>
+                      )}
+                    </Card>
+                  </Grid.Col>
+                );
+              })}
+            </Grid>
+          </Collapse>
+
+          {/* MII module overview (open by default) — Phase 30 Step 2. */}
+          <SectionHeader
+            title="MII Kerndatensatz Modules"
+            opened={miiOpened}
+            onToggle={toggleMii}
+          />
+          <Collapse in={miiOpened}>
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }}>
+              {MII_MODULES.map((module) => {
+                const c = counts[module.fhirResourceType];
+                const n = typeof c === 'number' ? c : null;
+                const empty = n === null || n === 0;
+                return (
+                  <Card
+                    key={module.key}
+                    withBorder
+                    padding="md"
+                    radius="md"
+                    style={{
+                      cursor: 'pointer',
+                      opacity: empty ? 0.55 : 1,
+                    }}
+                    onClick={() => navigate('/patients')}
+                  >
+                    <Group justify="space-between" wrap="nowrap" align="flex-start">
+                      <Stack gap={2} style={{ minWidth: 0 }}>
+                        <Text fw={600} size="sm">
+                          {module.germanLabel}
+                        </Text>
+                        <Text
+                          size="xs"
+                          c="dimmed"
+                          style={{
+                            fontFamily:
+                              'var(--font-mono, var(--mantine-font-family-monospace))',
+                          }}
+                        >
+                          {module.fhirResourceType}
+                        </Text>
                       </Stack>
-                    )}
+                      <Text size="xl" fw={600} style={MONO_NUMERIC}>
+                        {n === null ? '—' : n.toLocaleString()}
+                      </Text>
+                    </Group>
                   </Card>
-                </Grid.Col>
-              );
-            })}
-          </Grid>
+                );
+              })}
+            </SimpleGrid>
+          </Collapse>
         </>
       )}
     </Stack>
+  );
+}
+
+// --- local helpers ---
+
+interface SummaryTileProps {
+  label: string;
+  value: number | null;
+  hint: string;
+}
+
+function SummaryTile({ label, value, hint }: SummaryTileProps) {
+  return (
+    <Card withBorder padding="lg">
+      <Text size="xs" c="dimmed" tt="uppercase" fw={700} lts="0.5px">
+        {label}
+      </Text>
+      <Text fw={600} style={{ ...MONO_NUMERIC, fontSize: 34, lineHeight: 1.1 }} mt={4}>
+        {value === null ? '—' : value.toLocaleString()}
+      </Text>
+      <Text size="xs" c="dimmed" mt={2}>
+        {hint}
+      </Text>
+    </Card>
+  );
+}
+
+interface SectionHeaderProps {
+  title: string;
+  opened: boolean;
+  onToggle: () => void;
+}
+
+function SectionHeader({ title, opened, onToggle }: SectionHeaderProps) {
+  return (
+    <UnstyledButton onClick={onToggle} aria-expanded={opened}>
+      <Group gap="xs">
+        {opened ? (
+          <IconChevronDown size={16} />
+        ) : (
+          <IconChevronRight size={16} />
+        )}
+        <Title order={4}>{title}</Title>
+      </Group>
+    </UnstyledButton>
   );
 }
