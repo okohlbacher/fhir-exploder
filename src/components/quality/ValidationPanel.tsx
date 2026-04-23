@@ -48,6 +48,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import type { MedplumClient } from '@medplum/core';
+import type { OperationOutcomeIssue } from '@medplum/fhirtypes';
 import type { QualityOutletContext } from './QualityLayout';
 import { useSettings } from '../../hooks/useSettings';
 import { useQualityMetrics } from '../../quality/QualityMetricsContext';
@@ -58,7 +59,6 @@ import { resolveBackends } from '../../quality/validationBackends';
 import { useConformanceRun } from '../../hooks/useConformanceRun';
 import { createTerminologyClient } from '../../terminology/terminologyClient';
 import { phiAckKey } from '../../quality/phiGate';
-import { normalizeOperationOutcomeIssue } from '../../quality/normalizers';
 import { ValidationIssueList } from './ValidationIssueList';
 import { ResourceIssueTable } from './ResourceIssueTable';
 import { RunProgress } from './RunProgress';
@@ -161,22 +161,19 @@ export function ValidationPanel(_props: ValidationPanelProps) {
 
   const canExport = run.status === 'complete' || run.status === 'cancelled';
 
-  // Normalized issues from conformance checker (already NormalizedIssue[])
+  // Normalized issues from the cascade + conformance checker (already NormalizedIssue[]).
+  // Post-Phase-31, run.issues is the single canonical source — the cascade
+  // (external → server → local) dedupes against validateConformance output
+  // inside useConformanceRun before publishing to run.issues (B-2).
   const conformanceIssues = run.issues;
 
-  // Normalized issues from legacy backends for the Resources tab
-  const legacyNormalizedIssues = useMemo((): NormalizedIssue[] => {
-    return run.legacyIssues.map((issue) =>
-      normalizeOperationOutcomeIssue(issue, issue._resourceId ?? 'unknown/unknown'),
-    );
-  }, [run.legacyIssues]);
-
-  // Merge conformance + legacy normalized issues for the Resources tab
+  // Merge conformance issues (dedupe by resourceId + field + description).
+  // The cascade pre-dedupes at source, but this pass keeps the invariant
+  // explicit so any future producer cannot silently inflate the rollup.
   const allNormalizedIssues = useMemo((): NormalizedIssue[] => {
-    // Dedupe by resourceId + field + description
     const seen = new Set<string>();
     const merged: NormalizedIssue[] = [];
-    for (const issue of [...conformanceIssues, ...legacyNormalizedIssues]) {
+    for (const issue of conformanceIssues) {
       const key = `${issue.resourceId}|${issue.field}|${issue.description}`;
       if (!seen.has(key)) {
         seen.add(key);
@@ -184,7 +181,31 @@ export function ValidationPanel(_props: ValidationPanelProps) {
       }
     }
     return merged;
-  }, [conformanceIssues, legacyNormalizedIssues]);
+  }, [conformanceIssues]);
+
+  // B-1 (revision): ValidationIssueList was originally authored against the
+  // legacy AttributedIssue shape (OperationOutcomeIssue + _resourceId).
+  // Post-cascade, the cascade returns already-normalized issues directly —
+  // back-convert the normalized stream into the AttributedIssue shape the
+  // existing renderer expects.
+  // Severity maps NormalizedIssue's 3-value union ('error'|'warning'|'info')
+  // into OperationOutcome's 4-value severity: info stays 'information',
+  // warning/error pass through. Code and diagnostics are rebuilt from
+  // description by splitting on the ' -- ' separator the normalizer uses.
+  const validationIssueListSource = useMemo(() => {
+    return allNormalizedIssues.map((n) => {
+      const [codePart = '', diagPart = ''] = n.description.split(' -- ');
+      const severityForOutcome: OperationOutcomeIssue['severity'] =
+        n.severity === 'info' ? 'information' : n.severity;
+      return {
+        severity: severityForOutcome,
+        code: (codePart.trim() || 'informational') as OperationOutcomeIssue['code'],
+        diagnostics: diagPart.trim() || undefined,
+        expression: n.field ? [n.field] : undefined,
+        _resourceId: n.resourceId,
+      };
+    });
+  }, [allNormalizedIssues]);
 
   // Phase 18 / Plan 18-02: push overallValidation rollup to QualityMetricsContext
   // on terminal status (complete|cancelled). Gate prevents mid-run flicker
@@ -206,7 +227,7 @@ export function ValidationPanel(_props: ValidationPanelProps) {
       computedAt: new Date().toISOString(),
       status: run.status,
       progress: run.progress,
-      issues: run.legacyIssues,
+      issues: allNormalizedIssues, // B-1 (revision): cascade-normalized + conformance merged + deduped
       byResource: run.byResource,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -384,7 +405,7 @@ export function ValidationPanel(_props: ValidationPanelProps) {
         </Alert>
       )}
 
-      {run.status === 'complete' && allNormalizedIssues.length === 0 && run.legacyIssues.length === 0 && (
+      {run.status === 'complete' && allNormalizedIssues.length === 0 && (
         <Alert variant="light" color="green" icon={<IconCheck size={20} />}>
           No conformance issues found in the sampled {run.progress.total}{' '}
           resources.
@@ -392,8 +413,16 @@ export function ValidationPanel(_props: ValidationPanelProps) {
       )}
 
       {(run.status === 'complete' || run.status === 'cancelled') &&
-        (allNormalizedIssues.length > 0 || run.legacyIssues.length > 0) && (
+        allNormalizedIssues.length > 0 && (
           <Stack gap="xs">
+            {run.activeStrategy && (
+              <Text size="xs" c="dimmed">
+                Active strategy:{' '}
+                {run.activeStrategyVariant
+                  ? `${run.activeStrategy} (${run.activeStrategyVariant})`
+                  : run.activeStrategy}
+              </Text>
+            )}
             <Text size="sm" c="dimmed">
               {allNormalizedIssues.length} issues across{' '}
               {Object.keys(run.byResource).length} resources
@@ -404,7 +433,7 @@ export function ValidationPanel(_props: ValidationPanelProps) {
                 <Tabs.Tab value="resources">Resources</Tabs.Tab>
               </Tabs.List>
               <Tabs.Panel value="issues" pt="md">
-                <ValidationIssueList issues={run.legacyIssues} />
+                <ValidationIssueList issues={validationIssueListSource} />
               </Tabs.Panel>
               <Tabs.Panel value="resources" pt="md">
                 <ResourceIssueTable issues={allNormalizedIssues} />
