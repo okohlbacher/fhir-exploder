@@ -60,7 +60,12 @@ vi.mock('react-router-dom', () => ({
 // readResource mock for the patient fetch. The client object is stable across
 // renders so PatientDetailPage's useEffect does not re-run on every render.
 const mockReadResource = vi.fn();
-const mockClient = { readResource: mockReadResource };
+const mockGet = vi.fn(async () => ({ resourceType: 'Bundle', total: 0 }));
+const mockClient = {
+  readResource: mockReadResource,
+  get: mockGet,
+  fhirUrl: (url: string) => ({ toString: () => url }),
+};
 
 vi.mock('@medplum/react-hooks', () => ({
   useMedplum: () => mockClient,
@@ -130,7 +135,7 @@ describe('PatientDetailPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('patient-header')).toBeDefined();
+      expect(screen.getByText('MII Modules')).toBeDefined();
     });
 
     // SegmentedControl rendered with both options
@@ -143,8 +148,9 @@ describe('PatientDetailPage', () => {
     expect(screen.getByText('Laborbefund')).toBeDefined();
     expect(screen.getByText('Medikation')).toBeDefined();
     expect(screen.getByText('Fall')).toBeDefined();
-    // Patient name shows in breadcrumb trailing text
-    expect(screen.getByText('Anna Mueller')).toBeDefined();
+    // Patient name shows in breadcrumb trailing text AND PatientHeaderCard title
+    // (two instances after the redesign — use getAllByText).
+    expect(screen.getAllByText('Anna Mueller').length).toBeGreaterThan(0);
   });
 
   it('defaults to MII Modules view (D-10) -- MII tab labels visible, FHIR view text not', async () => {
@@ -158,7 +164,7 @@ describe('PatientDetailPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('patient-header')).toBeDefined();
+      expect(screen.getByText('MII Modules')).toBeDefined();
     });
 
     // MII tabs rendered

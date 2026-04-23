@@ -14,7 +14,7 @@ export function mockMedplumClientForTerminology(
   options: MockTerminologyOptions = {},
 ): MedplumClient {
   const get = vi.fn(async (path: string) => {
-    if (path === 'metadata') {
+    if (path === 'metadata' || path.endsWith('/metadata')) {
       if (options.metadataReachable === false) throw new Error('ECONNREFUSED');
       return { resourceType: 'CapabilityStatement' };
     }
@@ -26,5 +26,6 @@ export function mockMedplumClientForTerminology(
     }
     throw new Error(`No mock registered for path: ${path}`);
   });
-  return { get } as unknown as MedplumClient;
+  const fhirUrl = (path: string) => ({ toString: () => path });
+  return { get, fhirUrl } as unknown as MedplumClient;
 }

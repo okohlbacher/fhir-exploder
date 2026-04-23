@@ -215,7 +215,9 @@ describe('QualityOverviewPage (QUAL-01)', () => {
     mockUseResourceCounts.mockReturnValue({ Patient: 120, Condition: 250, Observation: 'loading' });
     renderPage();
     expect(screen.getByText('Total resources')).toBeDefined();
-    expect(screen.getByText('Resource types')).toBeDefined();
+    // "Resource types" appears as the OverviewStrip tile label AND as the
+    // ResourceTypeSelector MultiSelect label — expect at least one.
+    expect(screen.getAllByText('Resource types').length).toBeGreaterThanOrEqual(1);
     // Plan 18-04 expanded the strip from 4 tiles to 9 tiles; the labels for
     // the metric tiles now come from METRIC_LABELS in src/quality/thresholds.ts.
     // Note: "Completeness" appears in BOTH the SummaryCard label AND the
@@ -230,13 +232,15 @@ describe('QualityOverviewPage (QUAL-01)', () => {
     expect(screen.getByText('2')).toBeDefined();
   });
 
-  it('renders the counts table with Patient and Condition rows, and a loading spinner for Observation', () => {
+  it('renders the counts table with Patient and Condition rows (loading rows are hidden by default)', () => {
     mockUseResourceCounts.mockReturnValue({ Patient: 120, Condition: 250, Observation: 'loading' });
     renderPage();
     // Resource-type link cells are anchors
     expect(screen.getByRole('link', { name: 'Patient' })).toBeDefined();
     expect(screen.getByRole('link', { name: 'Condition' })).toBeDefined();
-    expect(screen.getByRole('link', { name: 'Observation' })).toBeDefined();
+    // Observation row is hidden while loading (ResourceCountsPanel filters
+    // non-numeric counts when includeEmpty=false, the default).
+    expect(screen.queryByRole('link', { name: 'Observation' })).toBeNull();
     // Counts text
     expect(screen.getByText('120')).toBeDefined();
     expect(screen.getByText('250')).toBeDefined();
@@ -454,7 +458,9 @@ describe('OverviewStrip 9-tile expansion (DQ-12 / Plan 18-04)', () => {
     });
     // The 9 tiles by label
     expect(screen.getByText('Total resources')).toBeDefined();
-    expect(screen.getByText('Resource types')).toBeDefined();
+    // "Resource types" appears as the OverviewStrip tile label AND as the
+    // ResourceTypeSelector MultiSelect label — expect at least one.
+    expect(screen.getAllByText('Resource types').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Completeness')).toBeDefined();
     expect(screen.getByText('Coding coverage')).toBeDefined();
     expect(screen.getByText('Validation')).toBeDefined();

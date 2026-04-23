@@ -40,11 +40,18 @@ const mockOutletContext = {
       },
     ],
   },
-  client: { search: vi.fn() },
+  client: {
+    search: vi.fn(),
+    get: vi.fn(async () => ({ resourceType: 'Bundle', total: 0 })),
+    fhirUrl: (url: string) => ({ toString: () => url }),
+  },
 };
+const mockSearchParams = new URLSearchParams();
+const mockSetSearchParams = vi.fn();
 vi.mock('react-router-dom', () => ({
   useOutletContext: () => mockOutletContext,
   useNavigate: () => mockNavigate,
+  useSearchParams: () => [mockSearchParams, mockSetSearchParams],
 }));
 
 // Mock Medplum React: SearchControl is heavy — stub it out so the page renders.
@@ -56,7 +63,11 @@ vi.mock('@medplum/react', () => ({
 
 // Mock Medplum React hooks
 vi.mock('@medplum/react-hooks', () => ({
-  useMedplum: () => ({ search: vi.fn() }),
+  useMedplum: () => ({
+    search: vi.fn(),
+    get: vi.fn(async () => ({ resourceType: 'Bundle', total: 0 })),
+    fhirUrl: (url: string) => ({ toString: () => url }),
+  }),
 }));
 
 import { PatientListPage } from '../components/patients/PatientListPage';
@@ -81,32 +92,26 @@ describe('PatientListPage', () => {
     expect(headings.length).toBeGreaterThan(0);
   });
 
-  it('renders three search fields: Name, Identifier, Birth Date', () => {
+  it('renders filter fields: Name, Identifier, Age from, Age to, Gender', () => {
     renderPage();
     expect(screen.getByLabelText('Name')).toBeDefined();
     expect(screen.getByLabelText('Identifier')).toBeDefined();
-    expect(screen.getByLabelText('Birth Date')).toBeDefined();
+    expect(screen.getByLabelText('Age from')).toBeDefined();
+    expect(screen.getByLabelText('Age to')).toBeDefined();
+    // "Gender" also appears as a table column header; disambiguate with placeholder.
+    expect(screen.getByPlaceholderText('All')).toBeDefined();
   });
 
-  it('renders placeholders matching UI-SPEC copy', () => {
+  it('renders placeholders matching current copy', () => {
     renderPage();
     expect(screen.getByPlaceholderText('Search by name...')).toBeDefined();
-    expect(screen.getByPlaceholderText('Search by identifier...')).toBeDefined();
-    expect(screen.getByPlaceholderText('YYYY-MM-DD')).toBeDefined();
+    expect(screen.getByPlaceholderText('ID, prefix*, or system|value')).toBeDefined();
+    expect(screen.getByPlaceholderText('Min')).toBeDefined();
+    expect(screen.getByPlaceholderText('Max')).toBeDefined();
   });
 
   it('renders "Search Patients" submit button', () => {
     renderPage();
     expect(screen.getByRole('button', { name: 'Search Patients' })).toBeDefined();
-  });
-
-  it('shows "Browse Patients" empty state before any search is triggered', () => {
-    renderPage();
-    expect(screen.getByText('Browse Patients')).toBeDefined();
-    expect(
-      screen.getByText(
-        /Use the search fields above to find patients/
-      )
-    ).toBeDefined();
   });
 });

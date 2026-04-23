@@ -29,8 +29,20 @@ Object.defineProperty(window, 'matchMedia', {
 // --- Mocks --------------------------------------------------------------
 
 const mockNavigate = vi.fn();
-const mockSearch = vi.fn();
-const mockClient = { search: mockSearch };
+const mockGet = vi.fn<(url: string) => Promise<{ resourceType: string; total: number }>>(
+  async () => ({ resourceType: 'Bundle', total: 0 }),
+);
+const mockClient = {
+  get: mockGet,
+  // `fhirUrl(url)` is called with one pre-assembled URL in FhirResourcesView
+  // (`Type?param=Patient/id&_summary=count&_count=0`). Return an object whose
+  // toString() echoes the url so the test asserts the real URL shape.
+  fhirUrl: (url: string) => ({ toString: () => url }),
+};
+
+function extractTypeFromUrl(url: string): string {
+  return url.split('?')[0];
+}
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
@@ -86,7 +98,8 @@ function renderView(capability: CapabilityStatement, patientId = 'abc-123') {
 
 beforeEach(() => {
   mockNavigate.mockReset();
-  mockSearch.mockReset();
+  mockGet.mockReset();
+  mockGet.mockResolvedValue({ resourceType: 'Bundle', total: 0 });
 });
 
 // --- Tests --------------------------------------------------------------
@@ -106,14 +119,14 @@ describe('FhirResourcesView', () => {
       { type: 'Medication', params: ['code'] },
     ]);
 
-    mockSearch.mockImplementation((type: string) => {
-      // Return positive counts so rows remain visible.
+    mockGet.mockImplementation(async (url: string) => {
+      const type = extractTypeFromUrl(url);
       const totals: Record<string, number> = {
         Condition: 12,
         Observation: 45,
         Encounter: 8,
       };
-      return Promise.resolve({ resourceType: 'Bundle', total: totals[type] ?? 0 });
+      return { resourceType: 'Bundle', total: totals[type] ?? 0 };
     });
 
     await act(async () => {
@@ -141,22 +154,24 @@ describe('FhirResourcesView', () => {
       { type: 'Encounter', params: ['subject'] },
     ]);
 
-    mockSearch.mockResolvedValue({ resourceType: 'Bundle', total: 1 });
+    mockGet.mockResolvedValue({ resourceType: 'Bundle', total: 1 });
 
     await act(async () => {
       renderView(capability, 'pat-7');
     });
 
     await waitFor(() => {
-      expect(mockSearch).toHaveBeenCalled();
+      expect(mockGet).toHaveBeenCalled();
     });
 
-    // Assert the two distinct query strings
-    const calls = mockSearch.mock.calls;
-    const conditionCall = calls.find((c) => c[0] === 'Condition');
-    const encounterCall = calls.find((c) => c[0] === 'Encounter');
-    expect(conditionCall?.[1]).toBe('patient=Patient/pat-7&_summary=count');
-    expect(encounterCall?.[1]).toBe('subject=Patient/pat-7&_summary=count');
+    // Assert the two distinct URL shapes: Condition uses patient=, Encounter uses subject=.
+    const urls = mockGet.mock.calls.map((c) => c[0]);
+    expect(
+      urls.some((u) => u.startsWith('Condition?') && u.includes('patient=Patient/pat-7')),
+    ).toBe(true);
+    expect(
+      urls.some((u) => u.startsWith('Encounter?') && u.includes('subject=Patient/pat-7')),
+    ).toBe(true);
   });
 
   it('hides resource types with a count of 0', async () => {
@@ -165,9 +180,10 @@ describe('FhirResourcesView', () => {
       { type: 'Procedure', params: ['patient'] },
     ]);
 
-    mockSearch.mockImplementation((type: string) => {
+    mockGet.mockImplementation(async (url: string) => {
+      const type = extractTypeFromUrl(url);
       const totals: Record<string, number> = { Condition: 5, Procedure: 0 };
-      return Promise.resolve({ resourceType: 'Bundle', total: totals[type] ?? 0 });
+      return { resourceType: 'Bundle', total: totals[type] ?? 0 };
     });
 
     await act(async () => {
@@ -185,7 +201,7 @@ describe('FhirResourcesView', () => {
     const capability = buildCapability([
       { type: 'Condition', params: ['patient'] },
     ]);
-    mockSearch.mockResolvedValue({ resourceType: 'Bundle', total: 3 });
+    mockGet.mockResolvedValue({ resourceType: 'Bundle', total: 3 });
 
     await act(async () => {
       renderView(capability);
@@ -237,7 +253,7 @@ describe('FhirResourcesView', () => {
       { type: 'Condition', params: ['patient'] },
       { type: 'Observation', params: ['patient'] },
     ]);
-    mockSearch.mockResolvedValue({ resourceType: 'Bundle', total: 0 });
+    mockGet.mockResolvedValue({ resourceType: 'Bundle', total: 0 });
 
     await act(async () => {
       renderView(capability);

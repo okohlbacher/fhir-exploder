@@ -34,16 +34,22 @@ vi.mock('../hooks/useTerminologyHealth', () => ({
 
 import { useTerminologyHealth } from '../hooks/useTerminologyHealth';
 import { Sidebar } from '../components/layout/Sidebar';
+import { SettingsProvider } from '../contexts/SettingsContext';
+import { ConnectionProvider } from '../contexts/ConnectionContext';
 
 function renderSidebar() {
   return render(
     <MemoryRouter>
       <MantineProvider>
-        <AppShell navbar={{ width: 240, breakpoint: 0 }}>
-          <AppShell.Navbar>
-            <Sidebar connectionStatus="connected" />
-          </AppShell.Navbar>
-        </AppShell>
+        <SettingsProvider>
+          <ConnectionProvider>
+            <AppShell navbar={{ width: 240, breakpoint: 0 }}>
+              <AppShell.Navbar>
+                <Sidebar connectionStatus="connected" />
+              </AppShell.Navbar>
+            </AppShell>
+          </ConnectionProvider>
+        </SettingsProvider>
       </MantineProvider>
     </MemoryRouter>,
   );

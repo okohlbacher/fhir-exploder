@@ -33,19 +33,17 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 /**
- * Medplum's real ResourceTable requires the full R4 StructureDefinition bundle
- * to be indexed via @medplum/definitions (not installed in this project). Its
- * rendering therefore cannot be exercised directly in jsdom. We mock the one
- * Medplum component HumanReadableView uses to observe exactly what resource
- * reaches it after useResolvedResource settles — the integration contract
- * Plan 04 Task 2 cares about. This keeps V-05 / V-14 assertable at the
- * component boundary without pulling ~5 MB of schema fixtures into the test.
+ * HumanReadableView now renders the local `<ResourcePropertyTable>` (not
+ * Medplum's `ResourceTable`). We mock that component to observe exactly which
+ * resource reaches it after `useResolvedResource` settles — the integration
+ * contract V-05 / V-14 cares about. Mocking here sidesteps the full
+ * StructureDefinition indexing that would otherwise be required.
  */
-vi.mock('@medplum/react', () => ({
-  ResourceTable: ({ value }: { value: Resource | undefined }) => {
+vi.mock('../components/explorer/ResourcePropertyTable', () => ({
+  ResourcePropertyTable: ({ resource }: { resource: Resource | undefined }) => {
     const display =
-      (value as Condition | undefined)?.code?.coding?.[0]?.display ?? '(none)';
-    const code = (value as Condition | undefined)?.code?.coding?.[0]?.code ?? '(none)';
+      (resource as Condition | undefined)?.code?.coding?.[0]?.display ?? '(none)';
+    const code = (resource as Condition | undefined)?.code?.coding?.[0]?.code ?? '(none)';
     return (
       <div>
         <span data-testid="rt-display">{display}</span>

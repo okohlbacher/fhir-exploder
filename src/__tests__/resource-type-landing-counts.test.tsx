@@ -58,6 +58,7 @@ vi.mock('@medplum/react-hooks', () => ({
   useMedplum: () => ({ search: vi.fn() }),
 }));
 
+import { fireEvent } from '@testing-library/react';
 import { ResourceTypeLanding } from '../components/explorer/ResourceTypeLanding';
 
 describe('ResourceTypeLanding count display', () => {
@@ -101,6 +102,10 @@ describe('ResourceTypeLanding count display', () => {
     });
 
     render(<MantineProvider><ResourceTypeLanding /></MantineProvider>);
+
+    // When countsReady and !showEmpty, error rows are filtered out (empty +
+    // non-numeric are both hidden). Click "Show empty" to surface them.
+    fireEvent.click(screen.getByRole('button', { name: /Show empty/ }));
 
     const errorBadges = screen.getAllByText('Error');
     expect(errorBadges.length).toBeGreaterThanOrEqual(3);
