@@ -1,37 +1,34 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.4
-milestone_name: -- Hardening & Tech-Debt Sweep (in progress, started 2026-04-16)
-status: executing
-stopped_at: Phase 30 complete on feature branch — UAT green, 5 gaps fixed, 6 off-phase follow-ups queued
-last_updated: "2026-04-23T13:50:00.000Z"
-last_activity: 2026-04-23 -- Phase 30 shipped 8 redesign steps + UAT + 5 in-scope fixes on gsd/phase-30-layout-redesign
+milestone: v1.5
+milestone_name: (pending — run /gsd-new-milestone to scope)
+status: milestone_shipped
+stopped_at: v1.4 shipped 2026-04-23 — awaiting v1.5 scoping
+last_updated: "2026-04-23T14:15:00.000Z"
+last_activity: 2026-04-23 -- v1.4 archived (11 phases, 35 plans, 51 tasks)
 progress:
-  total_phases: 10
-  completed_phases: 9
-  total_plans: 34
-  completed_plans: 33
-  percent: 90
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-16)
+See: .planning/PROJECT.md (updated 2026-04-23)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.4 milestone close-out — Phase 30 branch ready for PR; 6 off-phase follow-ups queued
+**Current focus:** Planning v1.5 — candidate scope includes UX-01 external validator (deferred from v1.4 Phase 29), Phase-30 UAT follow-ups, EFF-R14 (QualityMetricsContext split), and the Phase 999.1 MII extension modules.
 
 ## Current Position
 
-Phase: 29.5 (test-baseline-repair) — COMPLETE
-Phase: 30 (layout-redesign) — COMPLETE on `gsd/phase-30-layout-redesign`
-Plan: 30-01 (8 redesign steps + UAT walkthrough + 5 gap fixes) — all commits atomic on the feature branch
-Status: UAT resolved. Off-phase follow-ups listed in 30-UAT.md. Ready to open PR once a remote is added.
-Last activity: 2026-04-23 -- 5 in-scope UAT gaps fixed (server URL, cohort align, MII order, sparkline, pills contrast)
+Milestone: v1.4 shipped 2026-04-23
+Next: Run `/gsd-new-milestone` to scope v1.5 (interactive — requirements → roadmap)
 
-Progress: [          ] 0% (0/7 phases)
+Progress: v1.4 complete
 
 ## Performance Metrics
 

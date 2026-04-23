@@ -59,28 +59,48 @@ Connect to a Blaze FHIR server and make its contents human-readable and navigabl
 - [x] **CHRT-06**: MII FDPG Codex Structured Query v3 import/export with 1 MB cap + prototype-pollution defence — Phase 22
 - [x] **CHRT-07**: Cohort CRUD — Edit (with D-10 cache invalidation), Duplicate ("(copy)" suffix), Delete (clears active) — Phase 22
 
+### Validated (v1.4 — shipped 2026-04-23)
+
+Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs satisfied; UX-01 (external validator cascade) deferred to v1.5, UX-02 (OverviewStrip rings) satisfied via Phase 30's more aggressive redesign.
+
+- [x] **CLOSE-01..07**: v1.3 close-out — 3 code-review warnings (W1/W2/W3), 2 integration notes (I1/I2), 8 live-Blaze UAT, nyquist sign-off path — Phase 23
+- [x] **FOUND-01..04**: Cross-mount count cache, per-server `Map<serverUrl, QualityMetricsCache>` with 2-entry LRU, `useAsyncRun<TIssue>` hook, closure-scoped cancellation throughout — Phase 24
+- [x] **QDDEP-01..06**: `perPathExamples` in `PerTypeCoverageReport`, `<DrillDownShell>`, `useSampleWalker<T>`, drop `keepMounted` on Completeness + Coding, shared `SortableTh`, `<RunProgress>` — Phase 25
+- [x] **SHELL-01..05**: `<ConnectionGatedOutlet>`, `searchByIdentifierPrefix`, sidebar nested-route activation (`useMatch`), `Anchor component={Link}` standardization, useCallback-wrapped `setSettings` — Phase 26
+- [x] **EFF-01..03**: `ResourceIssueTable` pagination memo, `React.lazy()` drill-down routes with chunk-load retry, `rollup-plugin-visualizer` treemap — Phase 27 (EFF-R14 per-metric context split explicitly deferred to v1.5+)
+- [x] **SWEEP-01..04**: `toRecord` helper sweep, en/em-dash unification, 4 drill-down eslint-disables dropped, ref-type fixes — Phase 28
+- [x] **UX-02** (formally Phase 29, shipped via Phase 30): OverviewStrip ring reduction — satisfied by Phase 30's complete ring drop
+- [x] **TEST-REPAIR-01..02** (Phase 29.5): 22 → 0 baseline test failures (`SettingsProvider` / `ConnectionProvider` wrappers, `fhirUrl` mock, `useSearchParams` router mock, stale-DOM assertion updates). Unblocked the Phase 30 test gate with zero production changes.
+- [x] **UX-REDESIGN-01..08** (Phase 30): Design tokens (IBM Plex + indigo + warm neutrals) + 7-view restyle — Sidebar Server card + nested Quality sub-nav; Dashboard 4-card strip + MII Kerndatensatz tile grid; Patients list filter card + active-filter chips + row-index + initials avatar; Quality 2-tier toolbar + no-ring `OverviewStrip` + pills tabs + inline overall-%; Explorer 240-px `<ResourceTypeRail>` + Category breadcrumb; Patient detail 3-col header + Raw JSON/`$everything` actions + pills MII tabs; Cohorts 2-col grid
+
+### Active (v1.5 candidates — pending scope)
+
+- [ ] **UX-01** (deferred from Phase 29): External FHIR validator cascade (external → server `$validate` → local structural) with PHI gate, AbortController, probe cache, and `normalizeOperationOutcomeIssue` — `29-02-PLAN.md` preserved verbatim in the archive
+- [ ] **EFF-R14** (deferred from Phase 27): Split `QualityMetricsContext` so single-metric updates re-render only their own tile (Option A: per-metric context providers; NOT `useSyncExternalStore`)
+- [ ] **Phase 30 UAT follow-ups (6)**: Explorer Date/Status per-resource-type extractor; HumanReadableView extension cleanup (identifier-system tooltip, address-extension modal); ResourceDetailPage remove *Clinical + raw* + rename *Developer → JSON*; empty per-patient MII/FHIR panel investigation; Dashboard MII tile count scoping or explicit labelling; per-type quality matrix card under Counts tab
+- [ ] **Phase 999.1**: 14 MII Kerndatensatz extension modules (Onkologie, Kardiologie, Intensivmedizin, Bildgebung, Pathologie, Mikrobiologie, Molekulargenetik, Seltene Erkrankungen, Symptom, Biobank, Studie, Dokument, MTB, PRO). Requires multi-type module schema, 21-tab UI grouping, per-module patient search param (some use `subject=`), Mantine color strategy for 21 modules.
+
 ## Current State
 
-**Phase 24 complete 2026-04-17** — data-fetching foundation done. 4 plans: FOUND-01 (module-scope `countCache` Map in `useResourceCounts`), FOUND-02 (LRU-2 `QualityMetricsCache` registry replacing two singleton patterns), FOUND-03 (`useAsyncRun<TIssue>` primitive + 4 report hooks migrated, -46% LOC), FOUND-04 (`cancelledRef` eliminated, closure-scoped `let cancelled` throughout). Test suite: 22 pre-existing failures | 750 passed (+33 new tests). 3 code-review warnings deferred to Phase 24.1 gap closure (array-dep stabilization in 4 hooks, stale-state window in `useReferenceReport`).
+**v1.4 shipped 2026-04-23** — 11 phases (23-30 plus 29.5; 29 superseded), 35 plans, 51 tasks, 175 commits on main. Production-code diff: src/ +7,611 / −2,360 across 108 files. Test suite: 836 passed / 22 todo / 3 skipped / 0 failed. `npm run build` clean. See [MILESTONES.md](MILESTONES.md) for the full accomplishments list.
 
-Quality dashboard retains its **9 tabs** with the Overview tile strip; the `/quality` toolbar now carries two peer controls — `Resource types` (renamed from the legacy "Cohort" MultiSelect) and an **Active cohort** Select that scopes all 7 analysis panels. Cohort management lives at `/quality/cohorts` with interactive builder, saved-cohorts list with three-dot Menu (Edit / Duplicate / Export / Delete), FHIRPath criterion card (Validate against live server), and toolbar Import button for MII FDPG SQ v3 JSON.
+**App shape after v1.4:**
 
-**localStorage keys** now in use: `quality.thresholds.v1`, `quality.trends.v1`, `quality.cohorts.v1`, `quality.activeCohortId.v1`, `quality.resourceTypes.v1` (migrated from legacy `quality.cohort.v1`).
+- **Chrome.** Sidebar now consolidates the two status pills into a single Server card (uppercase label, Connected badge, terminology row) with click-to-modal on each row. Quality sub-nav renders as indented children (Overview / Cohorts / Thresholds) on `/quality/*` with the "most-specific-wins" active-row rule. Active rows get a 2-px indigo left rail + white background.
+- **Dashboard.** Four-tile summary strip (Total Resources / Resource Types / With Data / Patients) with big mono tabular values, two collapsible sections open by default: "Data by Category" (swatch + mono count + 3-px progress bar, no rings) and "MII Kerndatensatz Modules" (4-col grid tile per module).
+- **Patients.** Single `<Card>` filter bar (search + `⌘K` kbd hint, age-min / age-max with en-dash, gender, search button right-pushed). Active-filter chip row below dismisses per-filter plus Clear all. Table gains leading row-index mono cell and 28-px initials avatar in Name cell.
+- **Quality.** Two-tier toolbar — title + action buttons on top, scope (Resource types / Active cohort / Sample size) in a `<Card>` below. `SummaryCard` restyled: uppercase dimmed label, `within` / `near` / `breach` badge top-right, big mono value, 3-px fill bar (RingProgress removed entirely). Tabs use `variant="pills"` with inline overall-% (e.g. `Completeness · 92%`).
+- **Explorer.** 240-px `<ResourceTypeRail>` left of every `/explorer/*` route — search input, grouped-by-category list with monospace type names + dimmed mono counts + indigo active rail. Breadcrumb reads `Explorer › <Category> › <Type>`.
+- **Patient detail.** 3-col `PatientHeaderCard` (64-px avatar / name + badges + demographics / Raw JSON button + `$everything` icon). MII module tabs render as pills with contrast-fixed subtitles. `MII_MODULES` order: Person, Fall, Diagnose, Prozedur, Consent, Laborbefund, Medikation.
+- **Cohorts.** 2-column layout (`1fr / 380px` on desktop, stacks on <960 px) — saved-cohorts table left, live builder preview right.
 
-## Current Milestone: v1.4 Hardening & Tech-Debt Sweep
+**Design system.** IBM Plex Sans + Mono fonts (preloaded via `index.html`); Mantine theme uses `primaryColor: 'indigo'`, warm-neutral gray ramp override, radii `sm/md/lg = 4/6/10 px`, component defaults on Card / Table / Button / Tabs.
 
-**Goal:** Ship v1.3 cleanly (close documented warnings + human UAT), then fix the architectural drift flagged by the cross-AI code review (2026-04-16) before it compounds in future feature work.
+**localStorage keys** unchanged from v1.3: `quality.thresholds.v1`, `quality.trends.v1`, `quality.cohorts.v1`, `quality.activeCohortId.v1`, `quality.resourceTypes.v1`.
 
-**Target features:**
-- ✓ Close v1.3 tech debt — CLOSE-01 through CLOSE-08 all resolved (Phase 23 complete)
-- Data-fetching foundation — cross-mount cache for `useResourceCounts`, shared `useAsyncRun` state machine for the 4 report hooks, `Map<serverUrl>` quality cache
-- Quality module dedup — `useSampleWalker` (unifies completeness + coding), `<DrillDownShell>` (collapses 5 drill-downs), `perPathExamples` in `PerTypeCoverageReport` (halves coding drill-down calls), drop `keepMounted` eager fetch, shared `SortableTh`
-- App-shell dedup — `<ConnectionGatedOutlet>` for 3 layouts, `searchByIdentifierPrefix` helper, sidebar nested-route activation, `Anchor component={Link}` standardization, `SettingsContext` clean `useCallback`
-- Efficiency polish — `QualityMetricsContext` re-render split, `React.lazy()` drill-down routes, `useResourceCounts` effect-dep memoization, `ResourceIssueTable` pagination memo
-- Micro-consistency sweep — replace 13+ `as unknown as Record<string, unknown>` sites with existing `toRecord` helper, unify en-/em-dash usage, ref-type fixes, drop now-redundant `eslint-disable`s
-- Backlog UX — External FHIR validator integration (T1), OverviewStrip tile reduction 9→7 + status-line header (T2)
+## Next Milestone: v1.5 (pending scope)
 
-**Key context:** Inputs consolidated from `.planning/CODE-REVIEW-2026-04-16.md` (15 findings R1-R15), `.planning/v1.3-PLAN-DRAFT.md`, v1.3 tech-debt carry-forward (`.planning/milestones/v1.3-MILESTONE-AUDIT.md`), and `.planning/todos/pending/`. Estimated ~9-10 engineering days across 7 phases (23-29).
+Run `/gsd-new-milestone` to formally scope. Candidate inputs listed under **Active (v1.5 candidates)** above.
 
 ### Out of Scope
 
@@ -162,4 +182,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-23 — Phase 28 Micro-Consistency Sweep shipped: 22 `as unknown as Record` casts migrated to `toRecord<T extends object>` generic overload, 3 ASCII `--` sites in JSX converted to proper em/en-dashes, 4 drill-down eslint-disables dropped along with their redundant auto-start effects (absorbed by useAsyncRun `autoStart:true`), QualityLayout 58→35 LOC (Phase 26 soft-miss closed — essay moved to `migrateLegacyResourceTypeKey`), PatientListPage useMemo+disable replaced with `useState(() => computeInitialFromUrl())`. 1 documented override on DrillDownShell ref type (Rule 4: plan assumed button, TS proved anchor is correct). All 4 SWEEP requirements delivered; VERIFICATION 8/8.*
+*Last updated: 2026-04-23 — v1.4 Hardening & Tech-Debt Sweep shipped. 11 phases (23-30 + 29.5; 29 superseded by 30), 35 plans, 51 tasks, 175 main commits. Layout redesign (Phase 30) landed mid-milestone across 7 views with 19-step UAT walkthrough; 5 in-scope nits fixed, 6 off-phase follow-ups queued for v1.5. Test suite 836 passing, 0 failing. Audit status: `tech_debt` — one requirement (UX-01 external validator) deferred to v1.5, plus the standing nyquist-compliance pattern carried forward from v1.3.*
