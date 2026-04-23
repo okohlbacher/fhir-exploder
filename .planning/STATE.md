@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.5
-milestone_name: (pending — run /gsd-new-milestone to scope)
-status: milestone_shipped
-stopped_at: v1.4 shipped 2026-04-23 — awaiting v1.5 scoping
-last_updated: "2026-04-23T14:15:00.000Z"
-last_activity: 2026-04-23 -- v1.4 archived (11 phases, 35 plans, 51 tasks)
+milestone_name: Validation, Performance & MII Extensions
+status: defining_requirements
+stopped_at: v1.5 scoped — research spawn pending
+last_updated: "2026-04-23T14:45:00.000Z"
+last_activity: 2026-04-23 -- v1.5 scoped (UX-01 validator, EFF-R14 split, 6 UAT followups, 14 MII extension modules)
 progress:
   total_phases: 0
   completed_phases: 0
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-23)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Planning v1.5 — candidate scope includes UX-01 external validator (deferred from v1.4 Phase 29), Phase-30 UAT follow-ups, EFF-R14 (QualityMetricsContext split), and the Phase 999.1 MII extension modules.
+**Current focus:** v1.5 — running parallel research phase before requirements definition.
 
 ## Current Position
 
-Milestone: v1.4 shipped 2026-04-23
-Next: Run `/gsd-new-milestone` to scope v1.5 (interactive — requirements → roadmap)
-
-Progress: v1.4 complete
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements (research phase pending)
+Last activity: 2026-04-23 -- Milestone v1.5 started. Continuing phase numbering from 30.
 
 ## Performance Metrics
 

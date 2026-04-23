@@ -98,9 +98,27 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 **localStorage keys** unchanged from v1.3: `quality.thresholds.v1`, `quality.trends.v1`, `quality.cohorts.v1`, `quality.activeCohortId.v1`, `quality.resourceTypes.v1`.
 
-## Next Milestone: v1.5 (pending scope)
+## Current Milestone: v1.5 Validation, Performance & MII Extensions
 
-Run `/gsd-new-milestone` to formally scope. Candidate inputs listed under **Active (v1.5 candidates)** above.
+**Goal:** Close the v1.4 carry-over (external FHIR validator cascade, `QualityMetricsContext` re-render split, six Phase-30 UAT follow-ups) and ship the 14 MII Kerndatensatz extension modules with a collapsible **Extension modules** section below the base MII tabs on `/patients/:id`.
+
+**Target features (four scope groups):**
+
+1. **UX-01 external FHIR validator cascade** — Execute `29-02-PLAN.md` verbatim. Three-tier validator (external → server `$validate` → local structural) gated by the existing PHI acknowledgment, wrapped in `AbortController` with 15 s timeout, per-`(serverUrl, resourceType)` probe cache, `normalizeOperationOutcomeIssue` mapper, and "Active strategy: external / server / local" status line in `ValidationPanel`.
+2. **EFF-R14 QualityMetricsContext split** — Per-metric context providers (Option A). Single metric update must re-render only its own tile instead of all ≤8 panels. Risk-weighted refactor across ~20 files; no public API changes to consumers.
+3. **Phase-30 UAT follow-ups (6)** — Explorer Date/Status per-resource-type extractor; HumanReadableView extension cleanup (identifier-system → tooltip, address-extension JSON → modal, extensions section at bottom); ResourceDetailPage remove *Clinical + raw* view + rename *Developer* tab → *JSON*; investigate empty per-patient MII/FHIR Resources panels on Synthea test patient; Dashboard MII tile count scoping or explicit server-wide label; per-type quality matrix card under Counts tab (blocked on EFF-R14).
+4. **MII extension modules (Phase 999.1 promoted)** — Schema change: `MiiModule.fhirResourceType: string | string[]` + `category: 'base' | 'extension'` field. Collapsible **Extension modules** heading below the 7 base-module tabs on `/patients/:id`. Per-module patient search param (some use `subject=` not `patient=`). Empty-state UX for zero-resource extension modules. Color strategy: per-category palette or shape/icon differentiation (Mantine's 14 colors don't cover 21 modules). Optional relevance filtering (hide extension modules with no matching resources).
+
+**Ordering:**
+- UX-01 validator and EFF-R14 are independent; can parallelize.
+- MII extensions depend on the schema change (multi-type + category fields) landing first.
+- Per-type quality matrix (Phase-30 follow-up #3) depends on EFF-R14 per-metric context providers.
+
+**Key context:**
+- Phase numbering continues from 30 (v1.4's last phase). No `--reset-phase-numbers`.
+- Design system unchanged — Phase 30 tokens (IBM Plex, indigo, warm neutrals) remain baseline.
+- Estimate: ~3-4 focused engineering weeks — larger than v1.4 (7 days). Single milestone, not split.
+- 4-researcher parallel research step is enabled to explore MII extension module profiles and color strategy before requirements definition.
 
 ### Out of Scope
 
@@ -182,4 +200,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-23 — v1.4 Hardening & Tech-Debt Sweep shipped. 11 phases (23-30 + 29.5; 29 superseded by 30), 35 plans, 51 tasks, 175 main commits. Layout redesign (Phase 30) landed mid-milestone across 7 views with 19-step UAT walkthrough; 5 in-scope nits fixed, 6 off-phase follow-ups queued for v1.5. Test suite 836 passing, 0 failing. Audit status: `tech_debt` — one requirement (UX-01 external validator) deferred to v1.5, plus the standing nyquist-compliance pattern carried forward from v1.3.*
+*Last updated: 2026-04-23 — v1.5 Validation, Performance & MII Extensions scoped. Four scope groups: UX-01 external validator (execute preserved 29-02 plan), EFF-R14 per-metric QualityMetricsContext split, 6 Phase-30 UAT follow-ups, and the 14 MII Kerndatensatz extension modules with a collapsible Extension-modules section below base tabs. 4-researcher parallel research phase enabled. Est. 3-4 weeks.*
