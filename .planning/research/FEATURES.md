@@ -1,252 +1,506 @@
-# Feature Research — v1.4 Hardening & Tech-Debt Sweep
+# Feature Research — v1.5 Validation, Performance & MII Extensions
 
-**Domain:** FHIR data quality auditing tool (FHIR Exploder), subsequent milestone
-**Researched:** 2026-04-16
-**Scope:** ONLY the two new user-visible features (T1, T2). Refactor work R1-R15 is internal architecture and intentionally excluded.
-**Confidence:** HIGH — both features are scoped narrowly and have well-established prior art (FHIR R4 spec for `$validate`; observability dashboard patterns for status lines).
+**Domain:** FHIR data quality auditing / MII-Kerndatensatz-native explorer for a local Blaze server
+**Researched:** 2026-04-23
+**Confidence:** HIGH for UX-01 (FHIR R4 spec is authoritative, prior-art exists in Firely/HAPI/Inferno/Touchstone); HIGH for per-type matrix (dashboard patterns well-established); MEDIUM for 21-module taxonomy (clinical-chart prior art is vendor-specific and not openly documented; MII extension-module list is confirmed from the MII site but complete resource-type mapping is inferred from existing `mii-modules.ts` plus MII FHIR IGs); MEDIUM for the 21-color strategy (categorical palette research is mature but medical-specialty color standards do NOT exist — this is a design choice, not a compliance requirement).
 
-> NOTE: This file replaces the v1.0 ecosystem feature research (2026-04-11). Prior version covered table-stakes for the FHIR explorer as a whole; v1.4 is a hardening milestone with only two new user-visible features, so the research is correspondingly narrow. The v1.0 ecosystem material is preserved in `.planning/MILESTONES.md` and the original audit artifacts.
+> NOTE: This file covers ONLY the NEW v1.5 features. Existing v1.0–v1.4 features (patient list, explorer rail, three display modes, 7 base MII tabs, 7 quality panels, OverviewStrip, thresholds, trends, PDF export, cohorts) are OUT OF SCOPE per `<milestone_context>`. See `.planning/milestones/v1.4-research/FEATURES.md` for the v1.4 feature baseline.
 
-## Existing-feature inventory (DO NOT re-research)
+## Scope Overview
 
-Already shipped in v1.0–v1.3 and explicitly out of this research's scope:
+v1.5 ships four feature groups, researched below as distinct landscapes:
 
-- Patient browser, generic resource explorer, three display modes (human/clinical+raw/developer)
-- Reference click-through, `_include` / `_revinclude`, MII Kerndatensatz module tabs
-- Terminology server resolution with LRU cache + graceful fallback
-- Quality dashboard (9 tabs): counts, completeness, coding, validation, conformance, plausibility, lab ranges, duplicates, references/orphans, cohorts, thresholds, trends
-- PDF export, threshold configuration, trend history
-- Cohorts (interactive builder, FHIRPath, FDPG SQ v3 import/export, CRUD, active-cohort scoping)
-- Settings via `settings.yaml` (server URL + auth, terminology, validation.validatorUrl, batchSize, plausibility, referenceRanges)
+1. **External FHIR validator cascade** (UX-01) — three-tier (external → server `$validate` → local) with active-strategy indicator
+2. **21-module patient-detail UX** — base (7) + extension (14) split with a collapsible "Extension modules" section
+3. **Per-type quality matrix card** (Phase-30 UAT follow-up #3) — Resource type / Complete% / Coverage% / Validation% / References% / Dup / Issues table under the Counts tab
+4. **Color strategy for 21 modules** — cross-cutting: applies to MII pill tabs, Dashboard MII tile grid, ClinicalTimeline badges, and extension-module badges/chips
+5. **Empty-state UX for extension modules** — cross-cutting: what to show on /patients/:id when an Onkologie/Pathologie/MTB module has zero resources for the current patient
 
-The relevant existing scaffolding for v1.4 work:
+EFF-R14 (`QualityMetricsContext` per-metric split) is a pure internal refactor — no user-visible feature change — so it does not have a feature landscape. It is covered here only as a **dependency** for the per-type quality matrix (feature #3).
 
-- `src/quality/remoteValidator.ts` — already POSTs to `{validatorUrl}/{ResourceType}/$validate?profile={canonical}` via a dedicated MedplumClient instance, returns `outcome.issue ?? []`, degrades to a single `error/exception` issue on network failure (T-05-05-02 mitigation).
-- `src/quality/validationBackends.ts` — `resolveBackends(settings, resourceType)` returns ordered backends `[structural, ...maybeRemote]` and reports `{ hasRemote, hasProfile, validatorUrl }`.
-- `src/components/quality/ValidationPanel.tsx` — already shows three Badges (`Conformance` blue, `Terminology` green/gray, `Remote (configured)` / `Remote (not configured)` green/gray) plus the Blaze-`$validate`-unsupported dismissible banner and the PHI-acknowledgement gate.
-- `src/components/quality/OverviewStrip.tsx` — current 9-tile `SimpleGrid` (`GRID_COLS = { base: 1, xs: 2, sm: 3, md: 4, lg: 5, xl: 9 }`) renders 2 informational tiles (Total resources, Resource types, fed by `summary` prop) followed by 7 metric `SummaryCard` rings (completeness/coverage/validation/plausibility/labRanges/duplicates/references), with the metric tiles wired through `useQualityMetrics()` + `useThresholds()` and clickable to `/quality?tab=...`.
+## Feature Landscape — 1. External FHIR validator cascade (UX-01)
 
-This means v1.4 is mostly **wiring + UX**, not new infrastructure. T1's work is primarily: detect server `$validate` capability, decide a 3-way priority, surface the active strategy, add a "Test connectivity" affordance. T2's work is: drop two cells from a SimpleGrid, render a status line, rebalance the grid columns, update one test.
+### 1.a Table Stakes (Users Expect These)
 
-## Feature Landscape — T1: External FHIR `$validate` integration
-
-### T1 table stakes (users expect these)
-
-| Feature | Why expected | Complexity | Notes |
+| Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| 3-tier priority cascade: external validator → server `$validate` → local structural checker | Existing config already supports external; users expect "use the best available" without manual switching. Today the local check runs unconditionally even when the server *does* implement `$validate`. | MEDIUM | Decision tree on every Validate-sample run. Capability probe must be cached per `serverUrl` to avoid repeating the metadata fetch on every Run. |
-| Capability probe via `CapabilityStatement.rest.resource.operation` | Standard FHIR R4 mechanism for "does this server support $validate?" — `GET {base}/metadata`, walk `rest[].resource[].operation[]` for `name === 'validate'`. Blaze publishes a CapabilityStatement; capability is already fetched in `QualityLayout` (passed via `QualityOutletContext`). HEAD/OPTIONS are NOT idiomatic for FHIR operation discovery. | LOW | The capability is already in scope (`useOutletContext<QualityOutletContext>()` in ValidationPanel exposes `capability`). The probe is "find `validate` operation in the existing CapabilityStatement", no extra fetch needed. Cache result; recompute on server-URL change (matches existing cohort-cache invalidation pattern from D-10). |
-| URL shape: `POST {base}/{ResourceType}/$validate` (type-level) | Per [FHIR R4 spec](https://hl7.org/fhir/R4/resource-operation-validate.html): two URL forms exist (`[base]/{Resource}/$validate` type-level and `[base]/{Resource}/{id}/$validate` instance-level). For sampled resources where the goal is "would this be acceptable as a create", type-level is correct. Instance-level is for `mode=update/delete`. The existing `remoteValidator.ts` already uses type-level. | LOW | No code change — existing implementation matches the spec. `?profile={canonical}` query param appended when MII profile is known (already implemented). |
-| Payload: raw resource JSON in body (NOT Parameters wrapper) | FHIR R4 spec accepts both: raw resource POST OR a `Parameters` resource with named `resource` parameter and optional `mode`/`profile` parameters. Raw JSON is the simpler form and what HAPI/`validator.fhir.org`/Azure/AWS HealthLake/InterSystems all accept. The Parameters form is needed only when the caller must pass `mode=create/update/delete` server-side. For a quality auditor running ad-hoc validation on existing resources, raw POST is the right default. | LOW | Existing `remoteValidator.ts` uses raw POST. Document the choice in code comment. |
-| Response: `OperationOutcome.issue[]` with severities `fatal/error/warning/information` | Per FHIR R4: $validate ALWAYS returns `OperationOutcome` with HTTP **200 OK** regardless of whether the resource passed (validation outcome is in the body, not the status code). HTTP 4xx/5xx mean the validator itself failed. This is a common pitfall — implementations that treat HTTP 422 as "failed validation" are incorrect per spec, though some servers (notably HAPI) historically returned 422. The existing `remoteValidator.ts` catches errors via `client.post(...).catch` which already handles both cases correctly. | LOW | Existing severity mapping in `ValidationPanel.tsx` already collapses `fatal\|error → error`, `warning → warning`, default → `info`. |
-| Surface active strategy in the Validation panel status line | User has no way to tell which backend ran. The current Badge row says `Remote (configured)` but conflates "configured" with "active". Required UX: replace the static badges with a single-line status that reports the actual runtime decision per resource type, e.g. `Validating Condition via External validator @ https://validator.fhir.org/validator` or `Validating Condition via Server $validate (Blaze 0.27)` or `Validating Condition via local MII profile bundle`. | MEDIUM | Compose label from `BackendResolution` plus capability-probe result. Update on `resourceType` change (since some types have profiles and others don't, and Blaze may publish $validate on some types but not others). |
-| Settings UI: paste validator URL + "Test connectivity" button | The `validation.validatorUrl` field is currently silently configured via `settings.yaml`. Users editing YAML get no feedback until they run validation and see network errors. Test-connectivity = `GET {validatorUrl}/metadata` → check that returned `CapabilityStatement.rest[].resource[].operation` includes a `validate` operation. Returns "Reachable, supports $validate on N resource types" / "Reachable but no $validate" / "Unreachable: <message>". | MEDIUM | Settings UI exists for server URL/auth; add a `validation` section. The validator client factory (`createValidatorClient`) already exists in `remoteValidator.ts`. |
-| Per-run timeout with user-visible cancellation | Validators can take 30-60s per resource on cold start (HAPI's snapshot generation, terminology lookups). Existing `useConformanceRun` already has a Cancel button — verify it actually aborts the in-flight fetch (not just stops processing the next resource). FHIR validators typically expose their own `-validation-timeout` flag, but client-side timeout is independent. | LOW | Wire `AbortController` through `createValidatorClient`'s `fetch` call (currently passes through directly). Default 30s timeout per resource, configurable via `settings.validation.timeoutMs`. |
-| Network/payload error UX: clear message, not crash | Existing implementation already returns a single `error/exception` issue on remote failure rather than throwing. Keep that behavior. Add: differentiate "validator unreachable" (network error) vs. "validator returned 4xx/5xx" (validator misbehaved) vs. "validator returned non-OperationOutcome body" (wrong endpoint configured). | LOW | Three distinct error messages map to one issue row; user sees actionable text. |
+| Three-tier cascade: external → server `$validate` → local structural | The user's current pain point is "Blaze doesn't implement `$validate`, so we only get the bundled-MII structural check". Table-stakes because it directly closes the v1.4 deferred UX-01 request and has a preserved plan (`29-02-PLAN.md`) with lockdown decisions D-07..D-16. | M | `src/quality/cascadingValidator.ts` per the plan. Cascade decision is per `(serverUrl, resourceType)` — some types have `$validate` on Blaze, others don't. |
+| Capability probe via existing `CapabilityStatement` | FHIR R4 canonical mechanism: walk `rest[].resource[].operation[]` for `name === 'validate'`. `QualityLayout` already fetches the CapabilityStatement and exposes it via `useOutletContext<QualityOutletContext>()` — no new HTTP. | S | Zero-HTTP addition if we reuse existing capability. Memoize per `serverUrl` (matches Phase 24 `Map<serverUrl, ...>` foundation). |
+| Active-strategy indicator on ValidationPanel | Today the `ValidationPanel` shows 3 static badges (Conformance / Terminology / Remote (configured)) that conflate "configured" with "active". Users cannot tell which tier ran. REQ: replace the static badge row with a one-line status: `Active strategy: external` \| `Active strategy: server` \| `Active strategy: local` reading from the probe cache. | S | Single `<Text>` line above the issues table. Per 29-02 `must_haves`: "sourced from the probe cache for the currently selected resource type". |
+| PHI acknowledgment gate before external tier | `quality.validation.phiAcknowledged.v1:{serverUrl}|{externalUrl}` already exists as an inline gate in `ValidationPanel.tsx:72,100-107,235,270-294`. Must be EXTRACTED to `src/quality/phiGate.ts` so `cascadingValidator.ts` can consult it non-UI-ly. Regression test: `vi.spyOn(global, 'fetch')` must observe zero external fetches before consent. | S | Plan D-09. Extraction is ≤30 LOC shared across two consumers; writing the fetch-spy regression is the hard part. |
+| `AbortController` + 15s timeout per external call | Users expect "if this is slow, cancel it gracefully". 15s is the plan's locked default. On timeout, fall back to server tier and show a blue Mantine toast: `External validator timed out after 15s — falling back to server`. | S | Plan D-10. `notifications.show({ color: 'blue', autoClose: 5000, ... })`. |
+| `normalizeOperationOutcomeIssue` mapper shared between Resources tab and external tier | Prevents drift. Extract `ValidationPanel.tsx:167-178` to `src/quality/normalizers.ts`. ≥5 unit tests: severity mapping, location fallback, code extraction, extension handling, empty-issue fallback. | S | Plan D-12. |
+| Settings schema: `validation.externalValidator: { url, enabled, timeoutMs }` | Backward-compatible extension of existing `validation.validatorUrl`. `enabled: false` default so config migration is additive. Documented in `public/settings.yaml` as a commented example block. | S | Plan D-07. |
+| Probe cache invalidation on server-URL change | Matches the D-10 cohort-cache pattern: when user switches servers, previous probe result is stale. | S | Clear probe Map entries whose key starts with old serverUrl. Already established pattern from Phase 24. |
+| Suppress "Blaze `$validate` unsupported" banner when `hasRemote === true` | Current banner claims "we'll run local structural"; if external is configured the actual path is external, not local. Conflicting messaging is worse than no messaging. | S | One conditional guard at the banner render site. |
 
-### T1 differentiators (nice-to-have, not blocking)
+**Complexity rollup:** 1 plan (29-02) already written with locked decisions, 3 new source files + 3 test files + touches to 6 existing files. Total: **M** (medium). Single phase.
 
-| Feature | Value proposition | Complexity | Notes |
+### 1.b Differentiators (Competitive Advantage)
+
+| Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Validator profile-pack selection (e.g. "MII KDS 2024" vs "US Core 6") | Today the only profile passed is the bundled MII canonical. A multi-pack future is mentioned in the todo file ("profile pack selection") but is YAGNI for v1.4 since the app's other quality engines all assume MII. Keep the slot in the settings schema; do not implement UI. | MEDIUM | Reserve `settings.validation.externalValidator.profilePack: 'mii-kds' \| 'us-core' \| string`. Default `'mii-kds'`. |
-| Per-validator-type retry with exponential backoff | Validators behind a CDN/cache may 503 once and succeed on retry. Adds value for production deployment, low value for a local exploration tool. | MEDIUM | Defer. The existing single-attempt behavior with a clear error message is acceptable for v1.4. |
-| Batch validation via `Bundle/$validate` | Some validators accept a transaction Bundle and validate every entry. Could reduce the per-resource RTT. HAPI supports this; `validator.fhir.org` historically did not. | HIGH | Defer — requires response unbundling and per-entry result mapping. Not aligned with the v1.4 "Hardening" theme. |
-| Auth on the validator endpoint (basic / bearer) | Production validators behind a reverse proxy may require auth. The existing FHIR-server settings already support `mode: 'open' \| 'basic' \| 'bearer'`. Mirror that schema for the validator. The todo file mentions "optional auth" so this is in-scope-but-likely-deferred. | MEDIUM | Add `settings.validation.externalValidator.auth: { mode, username?, password?, token? }`. Settings UI must explicitly warn that bearer tokens stored in `settings.yaml` are plaintext — same warning the FHIR server auth already shows. |
-| Cache validator OperationOutcome by resource hash | If the user re-runs validation on an unchanged sample, hit a cache rather than re-POSTing. Aligns with v1.4's data-fetching foundation theme (Phase 24's `Map<serverUrl, ...>` cache pattern). | MEDIUM | Defer. Validation is rare enough that this is premature optimization; risks cache-staleness if profile pack changes. |
-| Abort-on-tab-switch | If the user navigates away from the Validation tab mid-run, cancel the in-flight requests. Already partially handled by `useConformanceRun`'s cancel mechanism but not wired to React's unmount. | LOW | Cleanup function in `useEffect` that calls `run.cancel()` on unmount. Worth doing during Phase 29; one-line change. |
+| "Test connectivity" button next to validator URL in Settings | Firely Simplifier's Validator Playground has a dropdown picker; HAPI Tester has a banner. None offer a single-click "is the URL I pasted actually a validator?" probe. Returns: reachable / reachable but no `$validate` / unreachable. | M | `GET {validatorUrl}/metadata` → search operation array. Slightly more than the cascade itself but isolated to the Settings UI surface. DEFERRED per 29-02 (not in must_haves); flag as v1.5 P2 addition if cycles permit. |
+| Per-resource-type active-strategy (not one strategy for the whole run) | Blaze may publish `$validate` on Observation but not on MedicationStatement. The cascade decision is per-type, not per-run. Surface that in the status line: `Validating Condition via server · Validating Observation via local`. | M | Requires the status line to be per-type. If the run covers 1 type at a time (current behavior per `ValidationPanel`'s single-type Select), this is already cheap. |
+| Latency annotation on the active-strategy line | `Validating via external · avg 2.3s/resource`. Trust-building for users comparing validators. | S | Track p50 per probe-cache entry. Defer — adds instrumentation slot without proven user ask. |
+| Dismiss-per-session toast for timeout fallbacks | Show "external→server" toast once, not every time. Reduces notification fatigue on a slow validator. | S | Simple session-scoped Set. Worth doing. |
 
-### T1 anti-features (commonly requested, often problematic)
+### 1.c Anti-Features (Commonly Requested, Often Problematic)
 
-| Feature | Why requested | Why problematic | Alternative |
+| Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| Build a local full FHIR validator in the browser | Full offline operation; no PHI leaves the machine | Full FHIR validation requires snapshot generation, terminology resolution, slicing/discriminator logic, FHIRPath evaluation, profile chasing — tens of thousands of lines, megabytes of bundled data. The official FHIR validator is a JVM library; transpiling/porting is unrealistic. The todo file explicitly lists this as a non-goal. | Keep the structural checker (already shipped in v1.0) for offline use; rely on external validator for high-fidelity. Document the gap in the existing dismissible banner. |
-| Auto-detect and silently use validator.fhir.org if no validator configured | Saves the user a config step | (1) Surprising network egress with PHI to a third party. (2) Public validator has no SLA and is rate-limited. (3) Violates the existing PHI-acknowledgement gate's intent (explicit consent before each new validator URL). | Keep the explicit-config requirement. Phase 29 settings UI can suggest validator.fhir.org as an example URL, but never auto-populate. |
-| Server-side `mode=create/update/delete` validation | Validators can simulate "would this conflict with an existing resource on update" | The app is read-only by charter (PROJECT.md Out of Scope); there are no create/update/delete operations to validate. `mode=none` (the default) is correct here. | Hardcode `mode=none` (which is implicit when no `mode` parameter is sent). |
-| Stream OperationOutcome partial results during long validations | Show issues as they arrive rather than waiting for the full response | FHIR `$validate` is a single request/response operation; there is no streaming spec. The HAPI HTTP server returns one OperationOutcome at the end. Implementing this would require a non-standard SSE/websocket layer that no validator implements. | Show a per-resource progress bar (already exists in `ValidationPanel`) so the user sees forward progress within a sample, even if each individual `$validate` call is monolithic. |
-| Support FHIR R5 / R6 validators while the app is R4 | "Future-proofing" | The bundled profiles and resource shape are R4 (`@medplum/fhirtypes` is R4). Pointing an R4 resource at an R5 validator yields false-positive structure errors. Cross-version validation is its own large topic. | Document (in the Test-connectivity feedback) that the validator must support R4. Future R5 support is a separate milestone. |
+| Auto-populate `validator.fhir.org` when no validator configured | "Just make it work" | Surprising PHI egress to a third-party service. Public validator has no SLA, rate-limited. Violates the explicit PHI-acknowledgment gate's intent. v1.4 FEATURES.md flagged this exact anti-feature. | Keep explicit-config requirement. Settings UI may SUGGEST `https://validator.fhir.org/validator` as a placeholder but never auto-populate. |
+| Build a local full FHIR validator in browser | "Full offline operation; no PHI egress" | Full FHIR validation = snapshot generation, terminology, slicing/discriminator, FHIRPath evaluation, profile chasing — JVM-size dependency. The official validator is Java. No credible JS port exists. | Keep the structural checker (v1.0) for offline use; rely on external validator for high-fidelity. Document the gap inline. |
+| Retry with exponential backoff on validator 5xx | "Validators behind a CDN may 503 once" | Adds latency on the common failure case (misconfiguration, not flake). A local tool's user wants fast feedback. | Single attempt + clear error message. User can re-run if they believe it was transient. |
+| Stream partial OperationOutcome | "Show issues as they arrive" | FHIR `$validate` is request/response, not streaming. No SSE/websocket spec. Cross-validator implementations don't support it. | Per-resource progress bar (already exists in `RunProgress`). |
+| Server-side `mode=create/update/delete` validation | "Simulate conflicts on update" | App is read-only by charter. `mode=none` (default) is correct. | Hardcode `mode` absent. |
 
-## Feature Landscape — T2: OverviewStrip 9→7 + status-line header
+### 1.d Prior-Art Reference
 
-### T2 table stakes (users expect these)
+| Tool | Active-validator disclosure pattern | What we borrow |
+|------|-------------------------------------|----------------|
+| [Firely Simplifier Validation Playground](https://simplifier.net/organization/firely/news/192) | Dropdown picker: "validator to use" (new .NET / legacy .NET / Java). Shows issues inline, annotated on the resource. | Dropdown is too heavyweight for our use case (we auto-cascade, not pick). Borrow the inline annotation idea via the existing `ResourceIssueTable` drill-down. |
+| [HAPI FHIR Tester](https://hapifhir.io/hapi-fhir/docs/validation/instance_validator.html) | Banner with current endpoint URL | Minimalist. Borrow: show external URL in the status line when tier === external. |
+| [Inferno Framework](https://inferno-framework.github.io/docs/writing-tests/fhir-validation.html) | Labels each test with its endpoint; silent-skip when capability absent | Silent-skip is wrong for us (user gets no feedback). Borrow: surface the fallback decision in a toast. |
+| [Touchstone (AEGIS)](https://touchstone.aegis.net/) | Requires the validator URL upfront, no auto-discovery | Too rigid. Our cascade auto-discovers server capability; Touchstone's "config-first" model is exactly what we're avoiding. |
+| [validator.fhir.org](https://validator.fhir.org/) | Web form — paste resource, get OperationOutcome | Single-shot, no cascade. Reference for the default external URL in Settings. |
 
-| Feature | Why expected | Complexity | Notes |
+## Feature Landscape — 2. 21-module patient-detail UX
+
+### 2.a Table Stakes (Users Expect These)
+
+| Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Separate cardinality info from quality metrics | Mixing a counter ("12,785 resources") with a percentage ring ("Completeness 87%") in the same visual class confuses what's "good vs bad". Information-architecture rule from observability dashboards: golden-signal metrics get the prominent position, context/cardinality goes into a header bar. | LOW | Drop two cells from `SimpleGrid` in `OverviewStrip.tsx`. Move presentation into a status `Group` rendered above the strip in `QualityOverviewPage.tsx`. |
-| Status line: "N resources · M types · Last computed Xm ago" | The proposal is the standard "data freshness indicator" pattern. `N resources · M types` is the data-scope summary; `Last computed Xm ago` is the freshness signal. Standard separator: middle dot (`·`) or pipe (`\|`). | LOW | The "Last computed" caption already exists in `QualityOverviewPage` per the todo. Re-use its formatter. |
-| Rebalanced grid for 7 tiles | 9-column XL row had ~133px tiles which clipped the ring + label. 7-column XL row gives ~170px, comfortable for the ring + 2-line label. Below XL, the existing breakpoints (`base: 1, xs: 2, sm: 3, md: 4, lg: 5`) need a recheck — at `lg=5` and 7 tiles you get a 5+2 layout (last row half-full); consider `lg: 4` so two even rows of 4+3 or `lg: 7` if width allows. The todo proposes `{ base: 1, xs: 2, sm: 3, md: 4, lg: 4, xl: 7 }`, which is reasonable. | LOW | One literal change in `GRID_COLS`. |
-| Test updates: assertions for the moved labels | `quality-overview.test.tsx` likely asserts presence of "Total resources" / "Resource types" labels somewhere — those move from the strip to the header but should still be detectable. | LOW | Re-target the `getByText` calls to the header status element. Prefer a `data-testid="overview-status"` so the assertion is structural rather than positional. |
-| Skeleton loading state for the status line | The strip already renders a 9-tile Skeleton during `isLoading`. The new status line needs its own Skeleton (a single text-row Skeleton is enough) so the page doesn't visibly reflow when load completes. | LOW | Wrap the status line in `{isLoading ? <Skeleton h={20} w={280} /> : <Group>...</Group>}`. |
+| Schema: `MiiModule.fhirResourceType: string \| string[]` + `category: 'base' \| 'extension'` | Current type is `fhirResourceType: string` (single type). Extension modules map to MULTIPLE resource types: Onkologie = `Condition` + `Procedure`; Bildgebung = `DiagnosticReport` + `ImagingStudy`; Pathologie = `DiagnosticReport` + `Specimen`; MTB = `ServiceRequest`. Hardcoding single-type breaks them. | M | Discriminated field. `mii-modules.ts` has 7 entries; extending to 21 is the mechanical part; the type union + all consumer call-sites (MiiModuleTab, ClinicalTimeline, FhirResourcesView, DashboardPage MII tile grid) need to handle the `string \| string[]` branch. |
+| Collapsible "Extension modules" section below the 7 base pill tabs on `/patients/:id` | Per `<milestone_context>`: "collapsible Extension modules section below the 7 base-module tabs". Matches `<details>`/Mantine `Collapse` idiom already used on Dashboard's "Data by Category" and "MII Kerndatensatz Modules" collapsible sections. Respects user's locked `MII_MODULES` ordering for the 7 base tabs. | M | Mantine `<Collapse>` + controlled `opened` state in `localStorage` key `patients.extensionModules.expanded.v1` so the user's preference persists. Default: **collapsed** — 14 extra tabs is too much on first visit. |
+| Per-module `patientSearchParam` already on `MiiModule` | Already in schema (`src/utils/mii-modules.ts:29`). Some extension modules still use `subject=` instead of `patient=` — this field absorbs that variation without a per-call-site conditional. Existing modules use `patient` except Person (uses `_id`). | S | Add `subject` as the param for modules whose primary resource uses `subject=Reference(Patient)`: ResearchStudy (N/A — not patient-scoped), DocumentReference (`patient`), Specimen (`subject`), ImagingStudy (`patient`), ServiceRequest (`patient` works). |
+| Module name + FHIR type subtitle on every tab | Already the pattern on the 7 base tabs (`TabPillLabel`): German primary / FHIR resource type secondary. For multi-type modules, show the primary resource type or a count (e.g., `Bildgebung · DiagnosticReport + ImagingStudy`). | S | Reuse `TabPillLabel`. Multi-type label: show `N types` or join with `+` sign for 2-type cases. |
+| Empty-state UX for zero-resource modules (see landscape #5 below) | 14 extension modules × N patients — most will be empty for most patients. UX must not make the user wade through 14 empty tabs. | M | See landscape #5. |
+| Dashboard MII tile grid extension: ALL 21 modules or only 7 base with "+ 14 extensions" summary tile | Dashboard MII tile grid (per Phase 30) shows server-wide counts in a 4-col grid. Adding 14 more tiles = 21 tiles = 6 rows at 4-col. Too visually dense. | M | Two options: (a) keep dashboard at 7 base + one summary tile linking to a dedicated MII modules page; (b) show all 21 with a "Base modules" / "Extension modules" section split mirroring the patient page. Recommend (b) for consistency. |
 
-### T2 differentiators (nice-to-have)
+**Complexity rollup:** Schema change (S) + 14 new module entries (S) + collapsible section (S) + DashboardPage extension (S) + empty-state UX (M) + per-module patient-search-param verification (S). Total: **L** (large) — likely a single phase spanning 2-3 plans.
 
-| Feature | Value proposition | Complexity | Notes |
+### 2.b Differentiators (Competitive Advantage)
+
+| Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Click-to-refresh on "Last computed Xm ago" | Standard dashboard pattern: clicking the freshness timestamp recomputes. Saves a trip to the toolbar's existing Re-run button. | LOW | The todo is silent on this; the original feedback says "move … to a status over the strip" — it does NOT request click-to-refresh. Defer unless the user asks; adds an interaction surface that wasn't requested. |
-| Tooltip on "Resource types" with the type list | Power-user disclosure: hover to see which 18 types are in scope. | LOW | Mantine `Tooltip` over the `M types` text. Defer — the Counts tab already shows the breakdown. |
-| Auto-tick "Xm ago" every 30 seconds | Without auto-update, the timestamp goes stale on a long-open tab and lies. | LOW | `setInterval` in a `useEffect`. Worth doing — costs almost nothing, prevents user confusion. |
-| Live-update badge ("Stale" when >24h since computed) | Per Smashing Magazine's [2025 real-time dashboards article](https://www.smashingmagazine.com/2025/09/ux-strategies-real-time-dashboards/), freshness indicators are most useful when they shift state. | LOW | Optional polish; the existing trend-history feature already addresses long-term staleness more rigorously. Defer. |
+| "Relevance filtering" — hide extension modules with zero resources by default | Respects the Phase 30 Dashboard pattern (MII tiles with count 0 render at 55% opacity, em-dash). On `/patients/:id`, pre-probe counts per module and hide zero-count extensions behind a "Show N empty modules" toggle. | M | Requires a pre-probe (`_summary=count`) across 14 extension modules' primary resource types at patient-detail mount. 14 parallel HEAD-like GETs = ~500-800ms cold. Defer to first-open of the collapsible section to avoid delaying the Person/Fall/Diagnose first-paint. |
+| Extension-module counts in the collapsible section header | `Extension modules (3 with data / 14 total)` — user learns at a glance how many apply to this patient BEFORE expanding. | S | Derived from the pre-probe above. |
+| Badge on each extension module showing per-patient count | Small dimmed count next to module label when >0: `Onkologie · 3`. Matches Explorer rail dimmed counts. | S | Data already available from pre-probe. |
+| "Jump to extension with most data" shortcut | For a cancer patient with 50 Onkologie-Conditions, open Onkologie directly when collapsible expands. | S | Auto-select the highest-count extension module on first expand. |
+| German-label-first sort within extension section | Base modules keep their curated order (Person, Fall, Diagnose, …). Extension modules are alphabetical by German label (Biobank, Bildgebung, Dokument, Intensivmedizin, Kardiologie, Mikrobiologie, Molekulargenetik, MTB, Onkologie, Pathologie, PRO, Seltene Erkrankungen, Studie, Symptom). Predictable muscle memory. | S | `MII_EXTENSION_MODULES.sort((a,b) => a.germanLabel.localeCompare(b.germanLabel, 'de'))` once at definition. |
 
-### T2 anti-features (commonly requested, often problematic)
+### 2.c Anti-Features (Commonly Requested, Often Problematic)
 
-| Feature | Why requested | Why problematic | Alternative |
+| Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| Make the cardinality tiles "still clickable" by linking them in the status line | "I clicked Total resources before to drill in" | The Total resources tile was never a drill-down per existing UI-SPEC (`OverviewStrip.tsx` lines 102-112: "informational, NOT clickable, no onClick prop"). Promoting it to a clickable status link reverses a deliberate decision and adds an interaction surface that the test suite will need to cover. | Keep the status line as plain text per the existing contract; the Counts tab remains the canonical drill-in. |
-| Replace the 7 metric rings with a single combined "Health" score | "Simplify further" | A combined score hides which dimension is bad — a high coverage with low completeness aggregates to a meaningless middle value. Per Kahn et al., the dimensions are intentionally orthogonal. | Keep 7 rings; the redesign is about classification (info vs metric), not aggregation. |
-| Split the strip into two strips ("Conformance row" vs "Plausibility row") | "More semantic grouping" | Doubles vertical real estate above the panel content. v1.3 has 9 tabs in addition to the strip — vertical budget is already tight. | Keep one strip with 7 tiles; the metric icons (`IconCircleCheck` for completeness, `IconShieldCheck` for validation, etc.) already convey category. |
-| Sort tiles by breach severity (errors first) | Surface breaches | Metric position is currently in Kahn order (a stable, learnable convention). Re-ordering on every render based on data state breaks muscle memory and complicates the deep-link routing in `METRIC_ROUTES`. | Use the existing `breached` color treatment to surface alerts; keep the position stable. |
-| Move the metric tiles into the sidebar | "Save horizontal space on the dashboard" | The strip's purpose is at-a-glance status; putting it in the sidebar buries it behind a nav element and breaks the click→tab deep-link. | Keep horizontal strip; out of scope for T2. |
+| Auto-hide extension modules without data entirely (no toggle) | "Less clutter" | Hidden modules are undiscoverable — a user who doesn't know Pathologie exists will never learn it's an option. Violates the "FHIR Exploder = browse ecosystem without deep FHIR expertise" core value. | Collapse-by-default + "Show N empty modules" explicit toggle. Modules exist, user can find them. |
+| All 21 tabs in one flat row | "One tab row is simpler" | 21 tabs at ~100px each = 2100px. Exceeds viewport on any realistic display. Forces horizontal scroll or pill-wrap. Both are cognitive hell. | Base/extension split with collapsible extensions. Done. |
+| "Smart" grouping (Diagnostik together: Onkologie, Pathologie, Molekulargenetik) | "Clinical logic" | Adds a second taxonomic layer that users have to learn. MII itself does NOT group extensions beyond "base vs extension". Imposing our grouping is opinionated mid-scope. | Alphabetical within extensions. Refactor if MII ever publishes an official grouping. |
+| Render every extension tab's content eagerly on patient-load | "Snappy tab switches" | 14 parallel patient-scoped searches on every patient visit = 14×200ms = 2.8s extra cold load. For a patient with zero cancer data, that's 14× wasted round-trips. | Lazy-render each extension tab's content on first activation (matches current `MiiModuleTabs` `keepMounted` semantics — mount on first switch, keep mounted thereafter). |
+| Pin user-favorite extension modules to the top | "Power users want their specialties first" | Adds preference-persistence complexity, conflicts with the "discover the ecosystem" core value, and cohort scoping already exists for power-user slicing. | Alphabetical order + collapse state memory in localStorage is enough. |
+
+### 2.d Prior-Art Reference
+
+| Tool | Taxonomy handling | What we borrow |
+|------|-------------------|----------------|
+| [Epic Chart Review](https://epicsupport.sites.uiowa.edu/epic-resources/chart-review) | Tabbed interface with specialty-specific customization; users can customize which tabs show and which are hidden, with Bookmarks tab for key items | Customization-first philosophy — but we apply "show empty modules" toggle rather than per-user pinning. Epic bookmarks are out of scope for a read-only tool. |
+| [Cerner PowerChart Ambulatory](https://cstcernerhelp.healthcarebc.ca/Applications/PowerChart/Ambulatory_Organizer/Ambulatory_Organizer_in_PowerChart.htm) | Three tabs (AMB Summary / AMB Custom / Future Orders); 3-column summary layout; user-based customization with expand/collapse defaults per component | Collapse-by-default for heavy sections matches our "collapse extensions" default. |
+| [Medplum Chart Demo](https://github.com/medplum/medplum-chart-demo) | Left panel patient history, center panel notes; uses `PatientTimeline`, `Tabs`, `ResourceAvatar`; composes multiple FHIR resources into tabs | Confirms the "tabs per resource type" pattern is idiomatic in Medplum's own reference. |
+| IPS (International Patient Summary) empty-section handling | FHIR-standard: `Composition.section.emptyReason` with codes `unavailable` / `notasked` / `asked-declined` | Philosophy: absence has semantics. Our empty-state UX inherits this — "no data" ≠ "module doesn't exist". |
+
+## Feature Landscape — 3. Per-type quality matrix card (Phase-30 UAT #3)
+
+### 3.a Table Stakes (Users Expect These)
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Columns: Resource type / Complete% / Coverage% / Validation% / References% / Dup / Issues / chevron | Phase 30 handoff spec (from 30-01-SUMMARY.md deferred item #1 and Step 4 commit). Matches per-metric columns users already understand from the OverviewStrip. | S | Layout is `Mantine <Table>` + `SortableTh` (already extracted in Phase 25). |
+| Sortable by every column | Users want "show me the WORST type for Validation%" at a glance. | S | `SortableTh` handles sort state; each column provides accessor. |
+| Clickable row → drill-down to the resource-type's panel (or the per-resource issue list filtered to that type) | Matches the existing drill-down pattern (v1.2 DQ-01) where metric tiles navigate to `/quality?tab=X`. The matrix row should navigate to the issue list filtered to that type. | S | Reuse existing `ResourceIssueTable` routing; add optional `?resourceType=X` filter query param. |
+| Conditional formatting (cell color by breach) | Users scan tables for red first. Threshold breach per cell in a metric's column should show red text + subtle red cell background. Matches OverviewStrip's breach treatment. | S | Reuse `isBreached(key, value)` per cell. |
+| Lives under `Counts` tab (not a new tab) | Phase 30 scoping: "per-type quality matrix card under Counts tab". User already goes to Counts for per-type numbers. | S | New `<Card>` below the existing counts table. |
+| EFF-R14 per-metric context split is a PREREQUISITE | `QualityMetricsContext` today exposes only overall aggregates (7 `overall*` numbers). The matrix needs per-`(resourceType, metric)` values. EFF-R14 splits the context so each metric owns its per-type record. | L | EFF-R14 itself is a pure refactor but MUST land before the matrix. ~20 files touched; no public API change from consumer standpoint. |
+
+**Complexity rollup:** Matrix itself is S. EFF-R14 prerequisite is L. Total **M+L** — EFF-R14 as one phase, matrix as a follow-up plan.
+
+### 3.b Differentiators (Competitive Advantage)
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Heat-column per metric (green→yellow→red gradient cell background) | At-a-glance heat-map read. Great Expectations' Data Docs use this; dbt's Elementary dashboard uses this. For 20+ types the visual scan is much faster than numbers alone. | M | CSS variables per-cell based on percent. Risks conflicting with OverviewStrip's binary breach treatment — pick a consistent rule (we use text color only for cells; reserve cell background for breach). |
+| Mini-sparkline per row showing 7-day trend | Users inherit trends-history from v1.2. Per-type trend visibility is absent. | M | `trendsHistory` already stores per-snapshot data; extracting per-type is schema-dependent. Defer until trends schema explicitly records per-type. |
+| Column chooser | 7 columns may be too many on narrow viewports. | M | Defer. Matrix is new; ship with all columns visible; re-evaluate. |
+| Export matrix to CSV | Parity with PDF export, but tabular. Useful for data stewards. | S | `downloadString` helper from `fdpgCodec` era already in the codebase. Defer past the MVP. |
+
+### 3.c Anti-Features (Commonly Requested, Often Problematic)
+
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| Real-time auto-refresh of matrix every 30s | "Live quality view" | Recomputing is expensive (sampling + walker per type). Quality metrics change slowly. Live refresh is a battery/bandwidth cost without proportional value. | Explicit Recompute button (already exists in the Quality toolbar). Auto-tick only the "Last computed Xm ago" label. |
+| Combined "Overall Quality" rank column | "Which type is the worst overall?" | Combining orthogonal Kahn dimensions into one score hides which dimension failed. Already established as an anti-feature in v1.4 FEATURES.md. | Separate columns + sort-by. User picks the dimension. |
+| Nested matrix (resource type × profile) | "Some types have multiple profiles" | Two-axis matrices are hard to scan; most users care about the type, not the profile. | Keep the matrix one row per resource type. If a type has multiple profiles, show the worst-breach one and link to profile-specific drill-down. |
+| Rank types by breach severity | "Put the worst first" | Default sort should be stable (alphabetical by type). Users learn position; re-sorting on every render breaks muscle memory. Same argument as OverviewStrip v1.4 anti-feature. | Default alphabetical. User can sort by any column. |
+
+### 3.d Prior-Art Reference
+
+| Tool | Per-table matrix pattern | What we borrow |
+|------|--------------------------|----------------|
+| [Great Expectations Data Docs](https://www.getorchestra.io/guides/data-quality-with-dbt-great-expectations) | Auto-generated HTML reports with per-expectation tables, pass/fail status per check, sortable columns | Auto-generate from engine output pattern; sortable columns. |
+| [dbt-expectations + Elementary](https://www.metaplane.dev/blog/dbt-expectations) | Per-model test-result dashboards; heat-cell coloring; links to failed row samples | Heat-cell coloring on breach (we already do this on OverviewStrip). Failed-row drill-down (we already have this via `ResourceIssueTable`). |
+| [Soda Core dashboards](https://atlan.com/open-source-data-quality-tools/) | Per-table / per-column monitors; alert severity columns; history sparklines | Per-table view confirms the pattern. Alert severity columns match our breach treatment. |
+| [OpenRefine faceting](https://openrefine.org/docs/manual/facets) | Per-column facets with text/numeric/duplicates/blank count displays; visual inline indicators | Confirms "per-column metric display" is an established idiom in data-quality tooling. OpenRefine's duplicates/blank facets map directly onto our Dup/Completeness columns. |
+
+## Feature Landscape — 4. Color strategy for 21 modules
+
+### 4.a Table Stakes (Users Expect These)
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Every module has a deterministic visible color | Already the pattern: `MiiModule.badgeColor` on all 7 base modules. Cannot ship 21 modules with 14 unstyled tabs. | S | Deterministic = same module → same color across sessions and surfaces (tab, badge, timeline, dashboard tile). |
+| Mantine's 14-color palette (`blue`, `indigo`, `violet`, `grape`, `pink`, `red`, `orange`, `yellow`, `lime`, `green`, `teal`, `cyan`, `gray`, `dark`) does NOT cover 21 unique modules | 21 > 14. Picking colors randomly = duplicates = confusion. | — | Math. |
+| Accessibility: WCAG contrast on every color against white and indigo pill background | Already a Phase 30 UAT item (pill contrast fix for MII tabs, eec2331). Any 21-color palette must pass AA (4.5:1) for text on the pill. | S | Enforce at palette-selection time, not runtime. |
+| Deuteranopia-safe (no red/green adjacency) | ~1% of males have deuteranopia. A 21-color palette has high risk of placing red and green next to each other in a tab bar. | M | Sort by perceptual luminance + hue, alternate cool/warm. |
+| Color is NEVER the sole discriminator | UX standard: color + shape / icon / label. We already do this (label + FHIR-type subtitle + badge color). | S | Inherit. The pill label + subtitle does the heavy lifting; color is secondary. |
+
+### 4.b Differentiators (Competitive Advantage)
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| Per-category palette: base modules share a muted indigo family, extension modules use distinctive hues | Visual grouping of "base" vs "extension" reinforces the hierarchy without a border. | M | Base modules in 7 shades of indigo/gray (muted, foundational). Extension modules get the colorful end of the palette — matches "these are domain-specific, attention-grabbing". |
+| Category-grouped palette (future-proof): Diagnostik modules (Pathologie, Mikrobiologie, Molekulargenetik) share a hue family | If MII publishes categorization later, we're aligned. If not, still visually communicative (three diagnostik modules lighting up together in timeline = visible cluster). | M | Assign hues by likely grouping: Diagnostik → cyan/teal family; Onkologie/Seltene Erkrankungen/Kardiologie → warm family; Dokument/Studie/PRO → neutral/gray family. |
+| Deterministic hash-to-color for unknown modules | Future-proofing: a 22nd module appears, the palette doesn't need curated extension. | S | `hash(module.key) % 20` into a curated 20-color Glasbey-like palette. Defer until we actually have an unknown module; curated is better for MVP. |
+| Palette generation via Glasbey algorithm (maximally perceptually distinct) | 32 maximally-distinct colors, CAM02-UCS color space. Published 2007. Widely used in data-viz for categorical sets >14. | M | Overkill for 21 modules; hand-curate from Mantine palette shades (e.g., `indigo.6`, `indigo.3`, `teal.6`, `teal.3`, …) to get 21 distinct values within the existing theme. Glasbey is the fallback if curation fails. |
+| Per-module icon via Tabler Icons | Color + icon = two-channel differentiation. Covers color-blind users without relying on shape. | M | `IconMicroscope` for Pathologie/Mikrobiologie, `IconDna` for Molekulargenetik, `IconHeart` for Kardiologie, `IconLungs` for Intensivmedizin, etc. Tabler Icons ships ~5000+ glyphs; 21 fits easily. This is the HIGHEST-leverage differentiator — replaces the color-crisis entirely. |
+
+### 4.c Anti-Features (Commonly Requested, Often Problematic)
+
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| ICD-10 / body-system color coding | "Clinical convention" | There is NO such convention. Different EHR vendors use different palettes. Epic ≠ Cerner ≠ Medplum. Imposing one invents a standard. | Our own palette, deterministic, documented. |
+| Generate random colors per module at runtime | "Easiest to implement for 14+ modules" | Random = non-deterministic across sessions = broken muscle memory. Also risks low-contrast or deuteranopia-hostile picks. | Hand-curated 21-color palette checked into `mii-modules.ts`. |
+| Rainbow palette (evenly-spaced hues) | "Maximum distinction" | Bright saturated hues fatigue the eye in a tab bar. Low-luminance differences between reds/greens trip deuteranopia. | Muted mid-luminance palette from Mantine's `.4`/`.6` shades. |
+| Using just two colors (e.g., indigo for base, teal for extension) | "Simpler" | Can't distinguish one extension module from another by color alone — falls back entirely to the label. Loses the quick-scan affordance that base modules enjoy today. | Base = muted indigo family; extensions = distinct (but harmonized) hues per module. |
+| Emoji or flag icons in tab labels | "Universal, colorful" | Emoji rendering varies by OS; cross-platform inconsistency. Flags are political. Tabler line icons are safer. | Tabler Icons per module. |
+
+### 4.d Concrete palette proposal (to seed Requirements phase)
+
+```ts
+// 7 base modules — cool/muted family (existing v1.4 assignments preserved)
+person       → 'blue'    (blue.6)
+fall         → 'indigo'  (indigo.6)
+diagnose     → 'teal'    (teal.6)
+prozedur     → 'violet'  (violet.6)
+consent      → 'pink'    (pink.6)    // slightly warm outlier = governance
+laborbefund  → 'cyan'    (cyan.6)
+medikation   → 'orange'  (orange.6)
+
+// 14 extension modules — assigned to avoid clashing with base and
+// maintain hue-family grouping where clinical intent permits:
+onkologie          → 'red'     (red.7)     // gravity; distinct from pink
+pathologie         → 'grape'   (grape.6)   // diagnostik family
+mikrobiologie      → 'lime'    (lime.7)    // diagnostik family
+molekulargenetik   → 'yellow'  (yellow.7)  // diagnostik family
+bildgebung         → 'cyan'    (cyan.4)    // lighter cyan, offset from laborbefund
+intensivmedizin    → 'red'     (red.5)     // urgency; lighter than onkologie
+kardiologie        → 'pink'    (pink.8)    // heart; darker pink offset from consent
+symptom            → 'orange'  (orange.4)  // lighter orange offset from medikation
+seltene_erkrankungen → 'violet' (violet.3)  // uncommon; lighter violet offset from prozedur
+biobank            → 'gray'    (gray.7)    // tissue/storage; neutral
+studie             → 'gray'    (gray.5)    // research; neutral
+dokument           → 'dark'    (dark.4)    // reference; dark neutral
+mtb                → 'indigo'  (indigo.3)  // tumor board; lighter indigo offset from fall
+pro                → 'green'   (green.6)   // patient-reported; distinct green
+```
+
+**Caveats:** Several extension modules reuse base-module hues at different shades (Kardiologie = `pink.8`, Consent = `pink.6`). In a tab bar this is distinguishable; in a small timeline dot it's NOT. ClinicalTimeline will need a per-extension icon to disambiguate small-footprint surfaces. Recommend the **icon + color** pairing as the canonical strategy. The table above is a starting point; final palette should be verified with an online deuteranopia simulator before committing to `mii-modules.ts`.
+
+### 4.e Prior-Art Reference
+
+| Source | Palette approach | What we borrow |
+|--------|------------------|----------------|
+| [Glasbey et al. palette (GitHub)](https://github.com/taketwo/glasbey) | 32 maximally-distinct colors, CAM02-UCS perceptual space | Reference for 21 distinct hues. Use as fallback if curated fails deuteranopia. |
+| [Tableau 20 / viridis categorical](https://colorcet.holoviz.org/user_guide/Categorical.html) | 20-color categorical palette, color-blind-safe | Tableau20 is a well-established 20-color set; can be imported and remapped. |
+| [Mantine 14-color palette](https://mantine.dev/theming/colors/) | 10 shades × 14 named colors = 140 tokens; no categorical-specific guidance | Use shade offset to stretch 14 colors to 21. |
+| [Deuteranopia Color Palette Guide](https://designsystemproblems.com/accessibility-compliance/deuteranopia-color-palette/) | Avoid red+green adjacency; use blue/yellow axis; luminance variation | Sort palette by luminance, alternate hue families. |
+| [Accessible Color Sequences for Data Visualization (arXiv 2107.02270)](https://arxiv.org/pdf/2107.02270) | Formal method for generating color-blind-safe categorical palettes | Algorithmic reference for future automation. |
+
+## Feature Landscape — 5. Empty-state UX for extension modules
+
+### 5.a Table Stakes (Users Expect These)
+
+| Feature | Why Expected | Complexity | Notes |
+|---------|--------------|------------|-------|
+| Empty module is VISIBLE (discoverability) | Core value of FHIR Exploder = "browse the ecosystem". Hiding modules entirely hides discoverability. An Onkologie tab that says "no oncology data for this patient" teaches the user the module exists. | S | Default: show all with reduced opacity (0.55, matching the Phase 30 Dashboard MII tile empty-state convention). |
+| Empty-state CONTENT is specific, not generic | `"No data found"` → `"No Onkologie data (Condition, Procedure) found for this patient."` — user learns which FHIR types were queried. Matches Phase 30 UAT's mention of the current empty-state text on the Diagnose tab. | S | Template: `"No ${module.germanLabel} data (${fhirResourceTypes.join(', ')}) found for this patient."` |
+| User toggle "Show N empty modules" | For users who want dense patient views, hide the empties. Progressive-disclosure pattern. | S | State in `localStorage.patients.hideEmptyExtensions.v1`; default: show all (discoverability wins for new users). |
+| Link to Explorer filtered to the module's resource type | When a tab is empty, give the user a way to check whether the type has ANY data on the server: `"Check all ${fhirResourceType} resources on this server →"` link. | S | Existing `/explorer/:type` route already supports direct navigation. |
+| Loading skeleton during per-module count probe | During the extension collapsible's first open (pre-probe in §2.b), user sees skeleton states, not flickering empty-state copy. | S | Mantine `<Skeleton>` already widely used. |
+
+### 5.b Differentiators (Competitive Advantage)
+
+| Feature | Value Proposition | Complexity | Notes |
+|---------|-------------------|------------|-------|
+| IPS-style `emptyReason` display | If a server serializes `Composition.section.emptyReason` for a given module, surface it: `"unavailable"`, `"notasked"`, `"asked-declined"`. Teaches users the DIFFERENCE between "we didn't ask" and "the patient refused". | M | Most Blaze servers will NOT have IPS-style sections, so surface only when present. Very low-cost check: search for IPS Composition for this patient, inspect sections. Defer — Blaze typically lacks this; implement only when user reports IPS-style content. |
+| "Search this module across all patients on the server" link | When a module is empty for ONE patient but not others, the user may want to find patients who DO have oncology data. | M | Cohort builder already exists; link to `/quality/cohorts?new=condition-code&system=...`. Nice but cohort-builder integration adds scope. |
+| Contextual explanation on first empty-module encounter | On first visit to an empty tab, explain why extension modules matter and what's in them: "Extension modules capture specialized domains beyond the base MII Kerndatensatz. Onkologie specifically contains structured tumor data per ADT-GEKID." | S | Dismissible tip, shown once per module per user (localStorage `patients.extensionModules.explained.${module.key}.v1`). |
+| Suggested data-fix action when near-miss detected | If Onkologie has no data but patient has Condition resources with ICD-10-GM C-codes, nudge: "This patient has 3 Conditions with C-codes that could be Onkologie data if a profile is attached." | L | Requires semantic analysis of patient data against module definitions. Defer to v1.6+ or later. High value, high effort. |
+
+### 5.c Anti-Features (Commonly Requested, Often Problematic)
+
+| Feature | Why Requested | Why Problematic | Alternative |
+|---------|---------------|-----------------|-------------|
+| Hide empty modules entirely (no toggle) | "Less clutter" | Destroys discoverability; new users never learn what modules exist. Blocks the core value prop. | Opacity dimming + explicit toggle. |
+| Render empty tabs as "disabled" (cannot be clicked) | "Visual affordance: disabled = empty" | Mantine `<Tabs.Tab disabled>` blocks click entirely. User can't see the empty-state copy, can't click the "check this type on server" link, can't learn about the module. | Always clickable. Dim opacity + empty-state content inside. |
+| Auto-generate placeholder data / mock resources | "So the UI doesn't look broken" | Dishonest. Misleads users about what's on the server. Ethical issue for a quality auditor. | Honest empty-state copy. |
+| Omit the module from the list if its FHIR type doesn't exist on server | "Server lacks the type entirely, module is moot" | Confuses "server lacks the type" with "patient has no data of this type". A server WITH Condition but NO oncology-profiled Condition resources should still show Onkologie tab. The server-capability check is independent from the patient-data check. | Always show modules whose primary type the server supports (per CapabilityStatement); dim when patient has no data. |
+| Per-tab badge with "0" count | "Clear count" | Visible zero = noise on 14 extension modules for most patients. 14 red zeros = visual alarm. | Use dimmed opacity (no badge) for zero; show count only when >0. |
+
+### 5.d Prior-Art Reference
+
+| Source | Empty-state approach | What we borrow |
+|--------|----------------------|----------------|
+| [IPS Empty Sections and Missing Data](https://build.fhir.org/ig/HL7/fhir-ips/branches/master/en/Empty-Sections-and-Missing-Data.html) | `Composition.section.emptyReason` with codes `unavailable`, `notasked`, `asked-declined` | Philosophy: absence has semantics. Our empty-state copy acknowledges "queried, found none" vs "module not supported". |
+| [Medplum Patient Summary sections](https://www.medplum.com/docs/react) | `PatientSummary` renders section-per-resource-type; empty sections render a terse "None" | Minimal empty-state: dim + single-line copy is enough when the section label is clear. |
+| [Progressive Disclosure pattern (ui-patterns.com)](https://ui-patterns.com/patterns/ProgressiveDisclosure) | "Show more" reveals more information; rarely used features in secondary screens | Toggle "Show N empty modules" is a textbook application. |
+| [Firely Simplifier validator UI](https://simplifier.net/organization/firely/news/192) | Filter by severity; inline annotated results | Filter-by-severity parallel = filter-by-has-data for our tabs. |
 
 ## Feature Dependencies
 
 ```
-T1 — External $validate
-├─ requires ─> capability probe over CapabilityStatement
-│              (already fetched in QualityLayout via QualityOutletContext)
-├─ requires ─> settings.validation.validatorUrl
-│              (already in src/config/types.ts:14-22)
-├─ requires ─> createRemoteBackend in remoteValidator.ts
-│              (already exists, wire format spec-compliant)
-├─ enhances ─> existing 3-state Backend Badge row in ValidationPanel
-│              (replace with strategy status line)
-├─ enhances ─> Settings UI (test-connectivity affordance)
-│              (new addition — slot exists, UI does not yet)
-└─ conflicts with ─> the dismissible "Blaze $validate unsupported" banner
-                     when external validator is configured
-                     (banner copy currently assumes local-fallback;
-                      needs conditional copy or auto-dismiss when
-                      strategy === 'external')
+[UX-01 Validator Cascade]
+  ├──requires──> [existing CapabilityStatement fetch in QualityLayout]
+  ├──requires──> [existing phiAcknowledged inline gate in ValidationPanel (EXTRACT to phiGate.ts)]
+  ├──requires──> [existing legacyIssues mapper inline in ValidationPanel (EXTRACT to normalizers.ts)]
+  └──enhances──> [existing ValidationPanel 3-badge backend indicator row]
 
-T2 — OverviewStrip 9→7 + status header
-├─ requires ─> existing summary prop (CountSummary { total, typeCount })
-│              (already passed in OverviewStripProps)
-├─ requires ─> "Last computed" caption already in QualityOverviewPage
-│              (per todo file)
-├─ enhances ─> SummaryCard ring legibility at narrow widths
-│              (already partially fixed in this session per todo)
-└─ conflicts with ─> none — pure CSS/layout move
-                     (one test file needs label-target updates)
+[EFF-R14 Per-metric Context split]  (PREREQUISITE for feature #3)
+  └──enhances──> [existing QualityMetricsContext with per-type record storage per metric]
 
-T1 ──independent of── T2
-   (different files, different concerns; can land in either order
-    or in parallel within Phase 29)
+[Per-type Quality Matrix]
+  ├──requires──> [EFF-R14 per-metric context split]
+  └──enhances──> [existing /quality?tab=counts page with new matrix card below counts table]
+
+[21-module patient-detail]
+  ├──requires──> [Schema change: MiiModule.fhirResourceType: string | string[], category: 'base' | 'extension']
+  ├──requires──> [existing MiiModuleTab component (parameterize for multi-type queries)]
+  ├──requires──> [existing patientSearchParam on MiiModule (verify per extension module)]
+  ├──enhances──> [existing /patients/:id MiiModuleTabs (add collapsible extensions section)]
+  ├──enhances──> [existing Dashboard MII tile grid (split into base + extension sections)]
+  └──enhances──> [existing ClinicalTimeline type-badge rendering (per-module icon + color)]
+
+[21-module color strategy]
+  ├──cross-cuts──> [21-module patient-detail]
+  ├──cross-cuts──> [Dashboard MII tiles]
+  ├──cross-cuts──> [ClinicalTimeline type badges]
+  └──cross-cuts──> [Per-type Quality Matrix row-coloring if module-scoped]
+
+[Empty-state UX for extensions]
+  └──cross-cuts──> [21-module patient-detail]
 ```
 
-### Dependency notes
+### Dependency Notes
 
-- **T1 requires capability probe**: The `QualityLayout` already fetches CapabilityStatement and passes it as `capability` via `useOutletContext<QualityOutletContext>()`. No new fetch needed; T1's probe is "search the existing CapabilityStatement for `rest[].resource[].operation[].name === 'validate'`". This is an in-memory predicate, not a new API call.
-- **T1 conflicts with the dismissible banner**: When external validator is configured AND the server lacks `$validate`, the current banner ("This server does not implement $validate. Phase 5 runs structural validation locally") is incorrect — the app will use the external validator, not the local checker. Two options: (a) suppress the banner when `hasRemote === true` (simpler), or (b) change the copy to explain the cascade. Pick (a) for v1.4.
-- **T2 enhances SummaryCard**: The proposal's stated goal is to give each ring more pixels. Verify after refactor that the lg breakpoint (4 columns × 7 tiles = 4+3 layout) doesn't visually weight the second row inconsistently — may want `lg: 7` if the dashboard width permits, or keep `lg: 4` and accept the half-row.
-- **T1 ↔ T2 are independent**: Different files, different concerns. Phase 29 can ship them in either order. The plan-draft estimates them at L (T1) and S (T2), so T2 is the warm-up.
+- **UX-01 is independent of EFF-R14 and 21-module features.** Different files, different concerns. Can parallelize within v1.5.
+- **Per-type Quality Matrix requires EFF-R14 first.** `QualityMetricsContext` currently exposes only `overall*` aggregates. The matrix needs per-`(resourceType, metric)` cells. EFF-R14 splits the context to per-metric providers that expose their own per-type records. Without this split, the matrix must either duplicate the metric-computation engines (bad) or force re-renders of all panels on every cell update (worse, the exact regression EFF-R14 prevents).
+- **21-module features depend on the schema change FIRST.** `fhirResourceType: string \| string[]` and `category` field must land before the 14 new entries are added, otherwise existing consumers (`MiiModuleTab`, `FhirResourcesView`, `ClinicalTimeline`, `DashboardPage`) break on first multi-type encounter. One small schema plan; then a second plan adds 14 entries + the collapsible section.
+- **Color strategy is cross-cutting.** Applies once in `mii-modules.ts` and propagates to every surface that consumes `MiiModule.badgeColor`. No phase-ordering constraint — can land with the 14-entry add. Recommend bundling: schema change → entries + palette → collapsible UI.
+- **Empty-state UX depends on 21-module features.** 7 base modules already have empty states; only the 14 extensions need new treatment. But the UX is part of the extension rollout, not a separable phase.
+- **Phase-30 UAT follow-ups #1, #2, #4 and #5 are independent of everything else.** Explorer Date/Status per-type extractor; HumanReadableView extension cleanup; remove Clinical+Raw tab + rename Developer→JSON; investigate empty MII/FHIR panels for Synthea. These are 4 small plans with no inter-dependency; bundle into a single phase or split freely.
 
-## MVP Definition (for v1.4 scope)
+## MVP Definition (v1.5 scope)
 
-### Launch with (Phase 29)
+### Launch With (v1.5 ship)
 
-T1 (External validator) — minimum to ship:
-- [ ] **T1.a** — 3-tier priority: external > server `$validate` > local structural — predicated on capability probe over the existing CapabilityStatement. *Why essential: solves the user feedback ("FHIR server does not support $validate") with semantic correctness.*
-- [ ] **T1.b** — Active strategy surfaced in ValidationPanel as a single status line (replaces or augments the current 3-Badge row). *Why essential: without this the user can't tell which backend ran, defeating the purpose of the cascade.*
-- [ ] **T1.c** — Settings UI: paste validator URL + "Test connectivity" button (returns reachability + `$validate` support summary). *Why essential: editing `settings.yaml` blind is the current pain point.*
-- [ ] **T1.d** — Conditional copy on the existing `$validate-unsupported` banner: suppress when `hasRemote === true`. *Why essential: prevents stale messaging contradicting the actual backend in use.*
-- [ ] **T1.e** — Per-fetch `AbortController` plumbed through `createValidatorClient`, default 30s timeout. *Why essential: a misconfigured/slow validator must not freeze the panel.*
+**UX-01 validator cascade** — every item from `29-02-PLAN.md` must_haves:
 
-T2 (OverviewStrip) — minimum to ship:
-- [ ] **T2.a** — Drop "Total resources" + "Resource types" tiles from `SimpleGrid`; render `N resources · M types · Last computed Xm ago` status line above. *Why essential: the requested feature.*
-- [ ] **T2.b** — Rebalance `GRID_COLS` for 7 tiles: `{ base: 1, xs: 2, sm: 3, md: 4, lg: 4, xl: 7 }`. *Why essential: 9-col grid math no longer applies; tiles will mis-size without this.*
-- [ ] **T2.c** — Update `quality-overview.test.tsx` to find the moved labels in the status line (prefer `data-testid="overview-status"`). *Why essential: tests will fail without this.*
-- [ ] **T2.d** — Update `18-UI-SPEC.md` Layout Contract to reflect new structure. *Why essential: the spec is the canonical reference; drift breaks future work.*
-- [ ] **T2.e** — Skeleton loading state for the status line. *Why essential: prevents visible reflow on initial load.*
+- [ ] Extract PHI gate to `src/quality/phiGate.ts` with regression test
+- [ ] Extract `normalizeOperationOutcomeIssue` to `src/quality/normalizers.ts` with ≥5 unit tests
+- [ ] `src/quality/cascadingValidator.ts` with 3-tier decision
+- [ ] `validation.externalValidator: { url, enabled, timeoutMs }` in settings schema
+- [ ] `useConformanceRun` calls `validateWithCascade` on external-capable path
+- [ ] Active-strategy status line in `ValidationPanel` sourced from probe cache
+- [ ] 15s `AbortController` + Mantine blue-toast on timeout
+- [ ] Banner-suppression when `hasRemote === true`
+- [ ] Both pending todos moved to `.planning/todos/completed/`
 
-### Add after validation (v1.5+)
+**EFF-R14 context split** — prerequisite for per-type matrix:
 
-- [ ] **T1 deferred** — Validator auth (`mode/username/password/token` block) — gated on user reporting they have a behind-auth validator. Schema slot in `settings.validation.externalValidator.auth` is reserved.
-- [ ] **T1 deferred** — Profile-pack selection UI — gated on US Core / non-MII users actually appearing.
-- [ ] **T1 deferred** — Validator-result cache by resource hash — gated on profiler showing $validate as a hot path.
-- [ ] **T1 deferred** — Abort-on-tab-switch cleanup — one-line `useEffect` cleanup, ship in any subsequent phase.
-- [ ] **T2 deferred** — Auto-tick "Xm ago" every 30s — low-cost polish.
-- [ ] **T2 deferred** — Click-to-refresh on the timestamp — only if user requests it.
+- [ ] Per-metric context providers (Option A per PROJECT.md)
+- [ ] Single metric update re-renders only its own tile
+- [ ] All existing consumer imports unchanged (no public API break)
 
-### Future consideration (v2+)
+**21-module patient-detail UX:**
 
-- [ ] Local in-browser FHIR validator (likely never — out of scope per todo non-goal)
-- [ ] Bundle/$validate batch mode
-- [ ] Streaming partial OperationOutcome (no spec for this)
-- [ ] R5/R6 validator support
+- [ ] Schema: `MiiModule.fhirResourceType: string \| string[]` + `category: 'base' \| 'extension'`
+- [ ] 14 new module entries in `mii-modules.ts` (per `<milestone_context>` list)
+- [ ] Collapsible "Extension modules" section below base tabs on `/patients/:id`
+- [ ] `MiiModuleTab` handles multi-type queries (merge N bundles into one issue view)
+- [ ] Per-module `patientSearchParam` verified for each of 14 extensions
+- [ ] Dashboard MII tile grid split into Base (7) + Extensions (14)
+- [ ] ClinicalTimeline type badges handle multi-type modules
+
+**Per-type Quality Matrix** (blocked on EFF-R14):
+
+- [ ] Matrix card under `/quality?tab=counts` (after counts table)
+- [ ] Columns: Resource type, Complete%, Coverage%, Validation%, References%, Dup, Issues, chevron
+- [ ] Sortable via existing `SortableTh`
+- [ ] Row click → drill-down (filtered `ResourceIssueTable`)
+- [ ] Breach coloring via `isBreached` per cell
+
+**Color strategy:**
+
+- [ ] Hand-curated 21-color palette in `mii-modules.ts` (per §4.d proposal)
+- [ ] Per-extension Tabler icon (21 unique icons, verified accessible)
+- [ ] Deuteranopia simulation check on final palette
+
+**Empty-state UX for extensions:**
+
+- [ ] Modules with zero resources rendered at 0.55 opacity
+- [ ] Empty-state copy includes FHIR types queried
+- [ ] "Show N empty modules" localStorage toggle
+- [ ] "Check all X on server" link to `/explorer/:type`
+
+**Phase-30 UAT follow-ups (6 items):**
+
+- [ ] Explorer Date/Status per-resource-type extractor (Patient→birthDate+active, Condition→onsetDateTime+clinicalStatus, …)
+- [ ] HumanReadableView extension cleanup (identifier-system tooltip, address-extension modal, extensions section at bottom with table)
+- [ ] Remove Clinical+Raw view mode; rename Developer → JSON
+- [ ] Investigate empty MII/FHIR Resources panels on Synthea test patient
+- [ ] Dashboard MII tile counts: scope to current patient OR explicit server-wide label
+- [ ] (Per-type quality matrix — covered above)
+
+### Add After Validation (v1.6+)
+
+- [ ] Settings UI "Test connectivity" button for validator URL (UX-01 differentiator)
+- [ ] Per-session toast deduplication for timeout fallbacks
+- [ ] Pre-probe extension modules on collapsible expand → show count badges
+- [ ] "Jump to extension with most data" auto-select
+- [ ] Column chooser for quality matrix
+- [ ] CSV export of quality matrix
+- [ ] Mini-sparkline per matrix row (requires per-type trend history)
+
+### Future Consideration (v2+)
+
+- [ ] Heat-column gradient on quality matrix (design-review gated)
+- [ ] IPS-style `emptyReason` display on empty modules
+- [ ] Semantic "near-miss" detection (Conditions with C-codes → suggest Onkologie profile)
+- [ ] Cohort-builder integration from empty-module "search across patients" link
+- [ ] Validator profile-pack selection (MII KDS vs US Core vs other)
+- [ ] Validator auth (basic/bearer)
+- [ ] Validator-result cache by resource hash
+- [ ] Batch `Bundle/$validate` mode
+- [ ] Full local FHIR validator in browser (unlikely ever)
 
 ## Feature Prioritization Matrix
 
-| Feature | User value | Implementation cost | Priority |
+| Feature | User Value | Implementation Cost | Priority |
 |---------|------------|---------------------|----------|
-| T1.a 3-tier cascade with capability probe | HIGH | LOW (capability already fetched) | P1 |
-| T1.b Active strategy status line | HIGH | MEDIUM (label composition logic) | P1 |
-| T1.c Settings UI: URL + Test connectivity | HIGH | MEDIUM (new UI surface) | P1 |
-| T1.d Conditional banner suppression | MEDIUM | LOW (one conditional) | P1 |
-| T1.e AbortController + timeout | MEDIUM | LOW (one fetch override) | P1 |
-| T1 Validator auth | LOW until requested | MEDIUM | P3 |
-| T1 Profile-pack selection | LOW (MII-only today) | MEDIUM | P3 |
-| T1 Result cache | LOW | MEDIUM | P3 |
-| T2.a Drop tiles + add status line | HIGH | LOW | P1 |
-| T2.b Rebalance GRID_COLS | HIGH | LOW | P1 |
-| T2.c Update tests | HIGH (tests must pass) | LOW | P1 |
-| T2.d Update UI-SPEC | MEDIUM | LOW | P1 |
-| T2.e Skeleton state | MEDIUM | LOW | P1 |
-| T2 Auto-tick timestamp | LOW | LOW | P2 |
-| T2 Click-to-refresh | LOW (not requested) | LOW | P3 |
+| UX-01 cascade (all 29-02 must_haves) | HIGH | M (plan already written) | P1 |
+| EFF-R14 per-metric context split | MEDIUM (no user-visible) | L (~20 files) | P1 (matrix prereq) |
+| Per-type quality matrix | HIGH | S (after EFF-R14) | P1 |
+| Schema: multi-type + category | HIGH (blocks 14 modules) | S | P1 |
+| 14 extension module entries | HIGH | S | P1 |
+| Collapsible extensions section | HIGH | S | P1 |
+| Dashboard base/extension split | MEDIUM | S | P1 |
+| 21-color + icon palette | HIGH (affects all surfaces) | M | P1 |
+| Empty-state dimmed-opacity + copy | HIGH | S | P1 |
+| "Show N empty modules" toggle | MEDIUM | S | P1 |
+| Explorer Date/Status extractor | MEDIUM (UAT-recorded) | M | P1 |
+| HumanReadableView extension cleanup | HIGH (UAT-flagged major) | M | P1 |
+| Clinical+Raw removal / Developer→JSON rename | MEDIUM | S | P1 |
+| Synthea empty MII/FHIR investigation | HIGH (UAT-flagged major) | M | P1 |
+| Dashboard MII tile scope/label | MEDIUM | S | P1 |
+| Validator "Test connectivity" button | MEDIUM | M | P2 |
+| Per-module pre-probe counts | MEDIUM | M | P2 |
+| "Jump to most data" auto-select | LOW | S | P2 |
+| CSV export quality matrix | LOW | S | P3 |
+| Heat-column gradient matrix | LOW (visual nit) | M | P3 |
+| IPS `emptyReason` support | LOW (rare server config) | M | P3 |
+| Semantic near-miss detection | HIGH (if accurate) | L | P3 |
+| Validator auth / profile-pack | LOW until requested | M | P3 |
 
-**Priority key:** P1 = ship in Phase 29 v1.4; P2 = ship in v1.4 if cycles permit, otherwise defer; P3 = defer to a later milestone with explicit triggering condition.
+**Priority key:**
+- P1: Must have for v1.5 launch
+- P2: Ship in v1.5 if cycles permit, otherwise v1.6
+- P3: Defer to v1.6+ with explicit trigger condition
 
-## Comparable products / prior art
+## Competitor Feature Analysis
 
-| Concern | What others do | Our approach |
-|---------|----------------|--------------|
-| Server-side $validate cascade | HAPI FHIR's HAPI Tester UI lets the user pick the validator endpoint; Inferno test-suite probes capability and skips tests if absent; Touchstone (Aegis) requires the validator URL upfront. | Auto-cascade with explicit "Test connectivity" affordance — better UX than Touchstone's manual config, more robust than Inferno's silent-skip. |
-| Capability probe | Inferno fetches `/metadata` once per session, caches, walks operations. fhir-validator-wrapper reads the OperationDefinition by canonical. | Use the CapabilityStatement we already fetched in `QualityLayout`; no new HTTP. |
-| Active-strategy disclosure | HAPI Tester shows a banner with the current endpoint; Postman FHIR collections show endpoint URL in the request bar; Inferno labels each test with its endpoint. | Single status line in ValidationPanel: `Validating {Type} via {Strategy}` — minimal UI weight, learnable on first read. |
-| Validator timeout | HAPI defaults to 60s socket timeout; FHIR validator CLI exposes `-validation-timeout` flag; AWS HealthLake $validate caps at 25s per request. | 30s default per resource, configurable via `settings.validation.timeoutMs`; sits between AWS's tight cap and HAPI's generous default. |
-| Dashboard summary header pattern | Grafana puts data-source freshness in the panel's header bar (`Last update: 12:34:56`). Datadog uses a top-right "Live"/"Paused"/"Stale" badge. Tremor (open-source dashboards) uses an explicit Subheader element with `lastUpdatedAt`. | Status line above the strip: `N resources · M types · Last computed Xm ago` — matches the Tremor convention. |
-| Freshness indicator | Smashing Magazine 2025 review of real-time dashboard UX recommends: timestamp + relative ("3m ago") + optional manual refresh. Modern KPI patterns (per Material Tailwind, Untitled UI) put `Updated 5m ago` in a header bar separated from the metric tiles. | Match: relative time, no auto-refresh button (the toolbar's existing Re-run is the canonical refresh). |
+| Feature | Epic Chart Review | Cerner PowerChart | Medplum Chart Demo | Our Approach (v1.5) |
+|---------|-------------------|-------------------|-------------------|---------------------|
+| Large taxonomy handling | Specialty-customizable tabs with Bookmarks | 3-tab Ambulatory (Summary / Custom / Future Orders) + Table of Contents | Flat tabs composed per-app | Base (7) + collapsible Extensions (14). Icon + color per module. |
+| Empty section display | User-hidden via customization | Collapse-by-default on custom components | Terse "None" | Opacity dim + empty copy + "Show N empty" toggle + "Check on server" link |
+| User personalization | Heavy (tab order, bookmarks, custom tabs) | Moderate (component arrangement, default expand) | None (app-specific) | Minimal (collapse state + show-empty toggle in localStorage). No drag-reorder, no user-custom tabs. |
+| Multi-resource-type per section | Implicit (tabs bundle related orders/meds/docs) | Implicit | Explicit (section composes multiple types) | Explicit: `fhirResourceType: string \| string[]` on the module |
 
-## Risks & callouts (carried over from v1.4 plan-draft)
+| Feature | Firely Simplifier | HAPI Tester | Inferno | Touchstone | Our Approach (v1.5) |
+|---------|-------------------|-------------|---------|------------|---------------------|
+| Validator selection | Dropdown (new .NET / legacy / Java) | Single endpoint | Auto-detect capability, silent-skip | Manual config-first | Auto-cascade: external → server $validate → local. Status line shows active tier. |
+| Config UX | Playground dropdown | Text field | Config file | Upfront paste | Settings YAML + future "Test connectivity" button |
+| Empty/failed feedback | Inline annotated issues on resource | Error banner | Per-test endpoint label + skip reason | Test-script output | Active-strategy status line + timeout toast + OperationOutcome normalized to `ResourceIssueTable` |
 
-- **T1 scope creep** — the v1.4 plan-draft's risk callout explicitly says: "keep to 'configure URL, probe connectivity, surface active strategy' for v1.4; do NOT implement a local full-validator." This research's T1 P1 list respects that boundary.
-- **T1 PHI gating** — the existing PHI-acknowledgement gate (Phase 7, `quality.validation.phiAcknowledged.v1` localStorage key) MUST continue to fire when external validator is configured AND the strategy resolves to `external`. Do not let the cascade silently skip the PHI prompt when both server `$validate` and external validator are available.
-- **T1 capability cache invalidation** — must clear when `serverUrl` changes (matches the D-10 cohort-cache pattern and Phase 24's `Map<serverUrl, ...>` foundation that lands first in v1.4).
-- **T2 GRID_COLS lg breakpoint** — the proposed `lg: 4` produces a 4+3 second-row layout. Verify visual weight is acceptable; the alternative `lg: 7` may overfill a 1280px dashboard. Test on the actual breakpoint widths before committing the literal.
+| Feature | Great Expectations | dbt-expectations / Elementary | Soda | OpenRefine | Our Approach (v1.5) |
+|---------|---------------------|------------------------------|------|------------|---------------------|
+| Per-table quality view | Auto-generated Data Docs, pass/fail per check | Per-model test dashboard + history sparklines | Per-table monitors + alerts | Per-column facets | Per-resource-type matrix: Complete/Coverage/Validation/References/Dup/Issues cols, sortable, click-through. |
+| Breach visualization | Color-coded status (pass/fail) | Heat cell coloring | Alert severity columns | Inline count indicators | Threshold-based breach coloring (red text on breach); reuse existing `isBreached`. |
+| Failed-row drill-down | Sample failed rows in Data Docs | Links to failed row samples | Drill-into records | Click facet value to filter | Click matrix row → filtered `ResourceIssueTable` (existing primitive). |
 
 ## Sources
 
 ### Authoritative (HIGH confidence)
 
-- [FHIR R4 — Resource Operation Validate](https://hl7.org/fhir/R4/resource-operation-validate.html) — URL forms (type-level vs instance-level), supported parameters (`resource`, `mode`, `profile`), response format (OperationOutcome with severities), HTTP 200 convention regardless of validation outcome.
-- [FHIR R4 — CapabilityStatement](https://hl7.org/fhir/capabilitystatement.html) — `rest[].resource[].operation[]` is where per-resource operations like `$validate` are advertised.
-- [HAPI FHIR Documentation — Instance Validator](https://hapifhir.io/hapi-fhir/docs/validation/instance_validator.html) — confirms the wire format used by HAPI's `$validate` endpoint matches the spec.
-- [HAPI FHIR Documentation — Client Configuration](https://hapifhir.io/hapi-fhir/docs/client/client_configuration.html) — typical timeout patterns (connect timeout, socket timeout).
-- [HL7 FHIR Validation Overview](https://hl7.org/fhir/validation.html) — explains the layered validation model (structure, profile, terminology, business rules).
-- [Microsoft Learn — Validate FHIR resources against profiles in Azure Health Data Services](https://learn.microsoft.com/en-us/azure/healthcare-apis/fhir/validation-against-profiles) — confirms `?profile=` query parameter is the standard way to request profile-specific validation.
-- [AWS HealthLake — $validate operation](https://docs.aws.amazon.com/healthlake/latest/devguide/reference-fhir-operations-validate.html) — confirms AWS's implementation matches the spec form.
-- Existing in-repo: `src/quality/remoteValidator.ts` — current implementation already spec-compliant: `POST {validatorUrl}/{ResourceType}/$validate?profile={canonical}` with raw resource JSON body, returns `outcome.issue ?? []`.
-- Existing in-repo: `src/quality/validationBackends.ts` — current `resolveBackends()` orders backends as `[structural, ...maybeRemote]` with `hasRemote/hasProfile/validatorUrl` predicates.
-- Existing in-repo: `src/components/quality/ValidationPanel.tsx` — current Badge row + dismissible banner + PHI acknowledgement gate to extend.
-- Existing in-repo: `src/components/quality/OverviewStrip.tsx` — current `SimpleGrid` + `GRID_COLS` + `METRIC_ORDER` to refactor.
-- Existing in-repo: `.planning/v1.4-PLAN-DRAFT.md` — Phase 29 scoping for both T1 and T2; risk callouts.
-- Existing in-repo: `.planning/todos/pending/2026-04-14-add-external-validator-integration-for-full-fhir-validate.md` — original feedback + non-goals.
-- Existing in-repo: `.planning/todos/pending/2026-04-14-reduce-overview-strip-tile-count-move-totals-to-header.md` — original feedback + proposed `GRID_COLS`.
+- [FHIR R4 — Resource Operation Validate](https://hl7.org/fhir/R4/resource-operation-validate.html) — URL forms, payload shape, OperationOutcome response convention
+- [FHIR R4 — CapabilityStatement](https://hl7.org/fhir/capabilitystatement.html) — `rest[].resource[].operation[]` discovery mechanism
+- [HAPI FHIR — Instance Validator](https://hapifhir.io/hapi-fhir/docs/validation/instance_validator.html) — wire format reference
+- [MII — Extension Modules of the MII Core Data Set](https://www.medizininformatik-initiative.de/en/extension-modules-mii-core-data-set) — confirmed modules: Microbiology, Pathology, Molecular Genetics, Intensive Care, Biobank, Research Projects
+- [MII — Microbiology Module](https://www.medizininformatik-initiative.de/de/kerndatensatz-erweiterungsmodul-mikrobiologie) — FHIR profile reference
+- [MII — Biobank Module (2026.0.0)](https://www.medizininformatik-initiative.de/de/ankuendigung-zur-kommentierung-des-kerndatensatzmoduls-biobank-bioprobendaten-version-202600-der) — current FHIR profile version
+- [MII — Pathology Module](https://www.medizininformatik-initiative.de/de/kerndatensatz-erweiterungsmodul-diagnostik-pathologie-befund) — IHE-PaLM-based profile
+- [IPS — Empty Sections and Missing Data](https://build.fhir.org/ig/HL7/fhir-ips/branches/master/en/Empty-Sections-and-Missing-Data.html) — `emptyReason` convention
+- [IPS — Absent and Unknown Data CodeSystem](http://hl7.org/fhir/uv/ips/STU1.1/CodeSystem-absent-unknown-uv-ips.html) — `unavailable` / `notasked` / `asked-declined` codes
+- In-repo: `.planning/phases/29-backlog-ux/29-02-PLAN.md` — locked UX-01 plan with all must_haves and decisions D-07..D-16
+- In-repo: `.planning/phases/30-layout-redesign/30-UAT.md` — 11 UAT gaps, 5 resolved + 6 off-phase follow-ups
+- In-repo: `src/components/patients/MiiModuleTabs.tsx` — pills tab variant with `TabPillLabel` (already contrast-fixed)
+- In-repo: `src/utils/mii-modules.ts` — existing 7-module schema + `patientSearchParam` + `extraQuery` pattern
+- In-repo: `src/components/quality/ValidationPanel.tsx` — current inline PHI gate at lines 72/100-107/235/270-294; inline OperationOutcome mapper at 167-178
+- In-repo: `src/components/quality/OverviewStrip.tsx` — existing 9-tile grid (note: v1.4 FEATURES.md already planned 9→7 reduction, which Phase 30 implemented as ring-free 7-tile)
 
-### Secondary (MEDIUM confidence — current ecosystem patterns)
+### Prior Art (MEDIUM confidence — vendor UI patterns not publicly documented in depth)
 
-- [Smashing Magazine — UX Strategies for Real-Time Dashboards (Sep 2025)](https://www.smashingmagazine.com/2025/09/ux-strategies-real-time-dashboards/) — data freshness indicator pattern, "Live/Stale/Paused" status, manual refresh control.
-- [Tremor — Copy-and-paste Tailwind dashboard components](https://www.tremor.so/) — header subhead pattern with `lastUpdatedAt`.
-- [Material Tailwind PRO — KPI Cards](https://www.material-tailwind.com/blocks/kpi-cards) — modern KPI layout with timestamp in header bar.
-- [Untitled UI — React Dashboards](https://www.untitledui.com/react/components/dashboards) — KPI tile + status header convention.
-- [InterSystems Developer Community — New FHIR Server Profile-based Validation](https://community.intersystems.com/post/new-fhir-server-profile-based-validation) — confirms `?profile=` convention across vendors.
+- [Firely Simplifier Validation Playground 2025.5](https://simplifier.net/organization/firely/news/192) — validator dropdown picker UI
+- [validator.fhir.org](https://validator.fhir.org/) — web-based FHIR validator reference
+- [HL7 Conformance Testing](https://www.fhir.org/conformance-testing/) — lists Touchstone, Inferno, Crucible
+- [Inferno Framework](https://inferno-framework.github.io/docs/writing-tests/fhir-validation.html) — validation test suite patterns
+- [Touchstone (AEGIS)](https://touchstone.aegis.net/touchstone/userguide/html/release-notes/web.html) — upfront-config validator model
+- [Epic Chart Review — University of Iowa training](https://epicsupport.sites.uiowa.edu/epic-resources/chart-review) — tab customization pattern
+- [Cerner PowerChart Ambulatory Organizer](https://cstcernerhelp.healthcarebc.ca/Applications/PowerChart/Ambulatory_Organizer/Ambulatory_Organizer_in_PowerChart.htm) — 3-tab + 3-column structure
+- [Medplum Charting docs](https://www.medplum.com/docs/charting) — PatientTimeline + Tabs composition guidance
+- [Medplum Chart Demo](https://github.com/medplum/medplum-chart-demo) — reference implementation of tabs-per-resource pattern
 
-### Confidence summary
+### Data Quality Dashboards (MEDIUM confidence)
 
-- T1 wire format / payload / capability-probe approach: **HIGH** (FHIR R4 spec is authoritative; multiple vendor implementations confirm).
-- T1 timeout/abort patterns: **MEDIUM** (HAPI's defaults documented; client-side defaults are a judgment call).
-- T1 active-strategy UX: **MEDIUM** (no canonical FHIR convention; the proposed status-line approach is the simplest pattern that meets the user feedback).
-- T2 dashboard pattern: **HIGH** (consistent across Grafana, Tremor, Material Tailwind, Untitled UI; Smashing Magazine 2025 review confirms it's current best practice).
-- T2 implementation cost: **HIGH** (it's a localized SimpleGrid edit + one test file; the surrounding architecture is unchanged).
+- [Great Expectations Data Docs](https://www.getorchestra.io/guides/data-quality-with-dbt-great-expectations) — auto-generated per-expectation HTML reports
+- [dbt-expectations + Elementary](https://www.metaplane.dev/blog/dbt-expectations) — per-model test dashboards
+- [Soda Core](https://atlan.com/open-source-data-quality-tools/) — per-table monitors
+- [OpenRefine faceting](https://openrefine.org/docs/manual/facets) — per-column quality facet patterns
+
+### Color & Accessibility (HIGH confidence)
+
+- [Glasbey palette](https://github.com/taketwo/glasbey) — maximally-distinct 32-color categorical palette
+- [colorcet Categorical palettes](https://colorcet.holoviz.org/user_guide/Categorical.html) — glasbey, glasbey_bw variants
+- [Accessible Color Sequences for Data Visualization (arXiv 2107.02270)](https://arxiv.org/pdf/2107.02270) — formal color-blind-safe palette generation
+- [Deuteranopia Color Palette Guide](https://designsystemproblems.com/accessibility-compliance/deuteranopia-color-palette/) — avoid red+green adjacency, use luminance + blue-yellow axis
+- [Mantine color theming](https://mantine.dev/theming/colors/) — 14-color × 10-shade system
+- [UX Collective — Color blindness in user interfaces](https://uxdesign.cc/color-blindness-in-user-interfaces-66c27331b858) — never color-only; pair with icon/label
+
+### UX Patterns (MEDIUM confidence)
+
+- [Progressive Disclosure (ui-patterns.com)](https://ui-patterns.com/patterns/ProgressiveDisclosure) — "Show more" toggles
+- [UXmatters — Designing for Progressive Disclosure](https://www.uxmatters.com/mt/archives/2020/05/designing-for-progressive-disclosure.php) — when to defer info
 
 ---
-*Feature research for: FHIR Exploder v1.4 Phase 29 backlog UX (T1 external validator, T2 OverviewStrip refactor)*
-*Researched: 2026-04-16*
+
+*Feature research for: FHIR Exploder v1.5 Validation, Performance & MII Extensions*
+*Researched: 2026-04-23*
+*Note: Extension-module FHIR-type mappings (Onkologie = Condition+Procedure; Bildgebung = DiagnosticReport+ImagingStudy; etc.) in `<milestone_context>` are taken as authoritative for this research — they come from the milestone scope doc. Any discrepancy with a specific MII profile version (e.g., if Molekulargenetik 2026.0.0 adds a third type) should be reconciled during Requirements.*
