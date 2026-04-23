@@ -80,6 +80,7 @@ Progress: [          ] 0% (0/7 phases)
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260423-ezd | Auto-connect to FHIR server on startup if URL is already configured in settings | 2026-04-23 | 3e2784a | [260423-ezd-auto-connect-to-fhir-server-on-startup-i](./quick/260423-ezd-auto-connect-to-fhir-server-on-startup-i/) |
+| 260423-gz9 | Improve date range picker UX — type ranges and fast year navigation | 2026-04-23 | d98a3c5 | [260423-gz9-improve-date-range-picker-ux-type-ranges](./quick/260423-gz9-improve-date-range-picker-ux-type-ranges/) |
 
 ## Session Continuity
 
