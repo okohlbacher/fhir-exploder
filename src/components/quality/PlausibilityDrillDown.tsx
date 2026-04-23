@@ -4,7 +4,6 @@
  * Runs temporal plausibility checks for a single resource type and
  * displays results via DrillDownShell (QDDEP-02 / Plan 25-03).
  */
-import { useEffect } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
 import type { QualityOutletContext } from './QualityLayout';
 import { useSampleSize } from './SampleSizeControl';
@@ -18,20 +17,15 @@ export function PlausibilityDrillDown() {
   const [sampleSize] = useSampleSize();
   const { settings } = useSettings();
 
+  // usePlausibilityReport uses useAsyncRun with autoStart:true, so the hook
+  // auto-fires on mount and whenever its internal deps change (including
+  // resourceType). No imperative start() needed here.
   const run = usePlausibilityReport({
     client,
     resourceType: type,
     sampleSize,
     settings: settings ?? null,
   });
-
-  // Auto-start on mount
-  useEffect(() => {
-    if (type && run.status === 'idle') {
-      run.start();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type]);
 
   return (
     <DrillDownShell

@@ -4,7 +4,6 @@
  * Runs lab reference range checks for Observations and displays
  * results via DrillDownShell (QDDEP-02 / Plan 25-03).
  */
-import { useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import type { QualityOutletContext } from './QualityLayout';
 import { useSampleSize } from './SampleSizeControl';
@@ -17,19 +16,14 @@ export function LabRangesDrillDown() {
   const [sampleSize] = useSampleSize();
   const { settings } = useSettings();
 
+  // useLabRangesReport uses useAsyncRun with autoStart:true, so the hook
+  // auto-fires on mount and whenever its internal deps change. No
+  // imperative start() needed here.
   const run = useLabRangesReport({
     client,
     sampleSize,
     settings: settings ?? null,
   });
-
-  // Auto-start on mount
-  useEffect(() => {
-    if (run.status === 'idle') {
-      run.start();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <DrillDownShell
