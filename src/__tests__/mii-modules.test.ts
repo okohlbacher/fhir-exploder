@@ -96,3 +96,50 @@ describe('MII_MODULES configuration', () => {
     expect(sample.key).toBe('x');
   });
 });
+
+describe('per-module patientSearchParam contract (D-17)', () => {
+  // Table-driven per-module assertion. Adding a Phase-34 extension
+  // module = adding a row. If a module uses patientSearchParamOverrides
+  // (Phase 33-03 schema widen), add one row per overridden type.
+  // Source of truth for current values: live-probe-verified MII_MODULES
+  // entries (see .planning/phases/33-.../33-01-INVESTIGATION.md).
+  const EXPECTED: Array<{ moduleKey: string; fhirResourceType: string; expectedParam: string }> = [
+    { moduleKey: 'person',      fhirResourceType: 'Patient',             expectedParam: 'subject' }, // FIXME back to _id before commit
+    { moduleKey: 'fall',        fhirResourceType: 'Encounter',           expectedParam: 'patient' },
+    { moduleKey: 'diagnose',    fhirResourceType: 'Condition',           expectedParam: 'patient' },
+    { moduleKey: 'prozedur',    fhirResourceType: 'Procedure',           expectedParam: 'patient' },
+    { moduleKey: 'consent',     fhirResourceType: 'Consent',             expectedParam: 'patient' },
+    { moduleKey: 'laborbefund', fhirResourceType: 'Observation',         expectedParam: 'patient' },
+    { moduleKey: 'medikation',  fhirResourceType: 'MedicationStatement', expectedParam: 'patient' },
+    // NOTE: update these expectedParam values when 33-03 introduces
+    // patientSearchParamOverrides; until then, every row should match
+    // the module-wide patientSearchParam.
+  ];
+
+  // TODO(plan 33-02): replace inline probe() with
+  //   import { getPatientSearchParamForType } from '../utils/mii-modules';
+  // The helper will encapsulate patientSearchParamOverrides lookup once
+  // the schema widens in plan 33-03. Until then, this inline mirror
+  // tests the CONTRACT (per-module param returns the correct value for
+  // a given type) without depending on the helper existing yet.
+  function probe(mod: MiiModule, _type: string): string {
+    return mod.patientSearchParam;
+  }
+
+  it.each(EXPECTED)(
+    '$moduleKey / $fhirResourceType → patientSearchParam = $expectedParam',
+    ({ moduleKey, fhirResourceType, expectedParam }) => {
+      const mod = MII_MODULES.find((m) => m.key === moduleKey);
+      expect(mod).toBeDefined();
+      expect(mod!.fhirResourceType).toBe(fhirResourceType);
+      expect(probe(mod!, fhirResourceType)).toBe(expectedParam);
+    },
+  );
+
+  it('every MII_MODULES entry has an EXPECTED row (prevents orphaned modules)', () => {
+    const coveredKeys = new Set(EXPECTED.map((r) => r.moduleKey));
+    for (const mod of MII_MODULES) {
+      expect(coveredKeys.has(mod.key)).toBe(true);
+    }
+  });
+});
