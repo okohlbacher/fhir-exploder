@@ -9,7 +9,7 @@ import type { CapabilityStatement } from '@medplum/fhirtypes';
 import type { MedplumClient } from '@medplum/core';
 import { useConnection } from '../../hooks/useConnection';
 import { ConnectionGatedOutlet } from '../layout/ConnectionGatedOutlet';
-import { QualityMetricsProvider } from '../../quality/QualityMetricsContext';
+import { QualityMetricsProviders } from '../../quality/metrics';
 import { migrateLegacyResourceTypeKey } from '../../quality/cohorts';
 
 export type QualityOutletContext = { capability: CapabilityStatement; client: MedplumClient };
@@ -25,9 +25,9 @@ export function QualityLayout() {
     <ConnectionGatedOutlet>
       {state.status === 'connected' && (
         <MedplumProvider medplum={state.client}>
-          <QualityMetricsProvider>
+          <QualityMetricsProviders>
             <Outlet context={{ capability: state.capability, client: state.client } satisfies QualityOutletContext} />
-          </QualityMetricsProvider>
+          </QualityMetricsProviders>
         </MedplumProvider>
       )}
     </ConnectionGatedOutlet>

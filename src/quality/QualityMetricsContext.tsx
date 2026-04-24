@@ -27,41 +27,33 @@
  * to avoid mid-run tile flicker (pitfall 2 in 18-RESEARCH.md).
  * Producers MUST push `undefined` (NOT 0) when the denominator is invalid — the
  * OverviewStrip renders undefined as an em-dash per D-17/D-18.
- */
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-
-/**
- * Per-metric duplicates breakdown. Components are pushed by DuplicatesPanel
- * after each terminal-status run; the context derives `overallDuplicates`
- * from this map (RESOLVED 2026-04-14 — RESEARCH Q1: true per-type averaging,
- * NOT single-type conservative rollup).
  *
- * - `patient`: % clean from the patient pass (undefined until patient pass runs)
- * - `hashByType[T]`: % clean for content-hash dedup of resource type T
- *   (undefined until the user has selected T and run the panel)
- *
- * Types not yet run are EXCLUDED from the average — they contribute
- * `undefined`, NOT 0. The average widens organically as more types run.
+ * Phase 32 (EFF-R14) split: this module is now a FACADE. The 7 per-metric
+ * context symbols + providers live under ./metrics/. Consumers that need
+ * per-metric render isolation MUST import use<Metric>Rollup() from
+ * ./metrics instead of useQualityMetrics() — facade consumers re-render
+ * on any metric change (by design, for bulk-read call sites like the
+ * capture/export handlers in QualityOverviewPage).
  */
-export interface DuplicatesBreakdown {
-  patient?: number;
-  hashByType: Record<string, number>;
-}
+import { useMemo } from 'react';
+import {
+  useCompletenessRollup,
+  useCoverageRollup,
+  useValidationRollup,
+  usePlausibilityRollup,
+  useLabRangesRollup,
+  useReferencesRollup,
+  useDuplicatesRollup,
+} from './metrics';
+import type { DuplicatesBreakdown, DuplicatesContribution } from './metrics/DuplicatesContext';
 
-/**
- * Single contribution emitted by DuplicatesPanel after a terminal-status run.
- * Either component may be undefined if that pass did not produce a usable
- * cleanliness number (e.g., patient pass skipped because no patient sample).
- */
-export interface DuplicatesContribution {
-  patient?: number;
-  hashType?: { resourceType: string; percentClean: number };
-}
+// Re-export for API-stability (Pitfall 4 guard — D-04).
+export type { DuplicatesBreakdown, DuplicatesContribution } from './metrics/DuplicatesContext';
 
 export interface QualityMetricsContextValue {
-  /** Arithmetic mean of per-type completeness percentages (0-100). Undefined until Plan 03 sets. */
+  /** Arithmetic mean of per-type completeness percentages (0-100). */
   overallCompleteness: number | undefined;
-  /** Arithmetic mean of per-type coverage percentages (0-100). Undefined until Plan 04 sets. */
+  /** Arithmetic mean of per-type coverage percentages (0-100). */
   overallCoverage: number | undefined;
   overallValidation: number | undefined;
   overallPlausibility: number | undefined;
@@ -89,113 +81,45 @@ export interface QualityMetricsContextValue {
   setDuplicatesContribution: (contribution: DuplicatesContribution | 'reset') => void;
 }
 
-const Ctx = createContext<QualityMetricsContextValue | null>(null);
-
-const EMPTY_DUPLICATES_BREAKDOWN: DuplicatesBreakdown = { hashByType: {} };
-
-function deriveOverallDuplicates(b: DuplicatesBreakdown): number | undefined {
-  const components: number[] = [];
-  if (b.patient !== undefined) components.push(b.patient);
-  for (const v of Object.values(b.hashByType)) {
-    if (v !== undefined) components.push(v);
-  }
-  if (components.length === 0) return undefined;
-  const sum = components.reduce((a, b) => a + b, 0);
-  return Math.round(sum / components.length);
-}
-
-export function QualityMetricsProvider({ children }: { children: ReactNode }) {
-  const [overallCompleteness, setCompleteness] = useState<number | undefined>(undefined);
-  const [overallCoverage, setCoverage] = useState<number | undefined>(undefined);
-  const [overallValidation, setOverallValidation] = useState<number | undefined>(undefined);
-  const [overallPlausibility, setOverallPlausibility] = useState<number | undefined>(undefined);
-  const [overallLabRanges, setOverallLabRanges] = useState<number | undefined>(undefined);
-  const [overallReferences, setOverallReferences] = useState<number | undefined>(undefined);
-  const [duplicatesBreakdown, setDuplicatesBreakdownState] =
-    useState<DuplicatesBreakdown>(EMPTY_DUPLICATES_BREAKDOWN);
-
-  const setDuplicatesContribution = useCallback(
-    (contribution: DuplicatesContribution | 'reset') => {
-      if (contribution === 'reset') {
-        setDuplicatesBreakdownState(EMPTY_DUPLICATES_BREAKDOWN);
-        return;
-      }
-      setDuplicatesBreakdownState((prev) => {
-        const nextHash = { ...prev.hashByType };
-        if (contribution.hashType) {
-          nextHash[contribution.hashType.resourceType] = contribution.hashType.percentClean;
-        }
-        return {
-          patient: contribution.patient !== undefined ? contribution.patient : prev.patient,
-          hashByType: nextHash,
-        };
-      });
-    },
-    [],
-  );
-
-  const overallDuplicates = useMemo(
-    () => deriveOverallDuplicates(duplicatesBreakdown),
-    [duplicatesBreakdown],
-  );
-
-  const value = useMemo(
-    () => ({
-      overallCompleteness,
-      overallCoverage,
-      overallValidation,
-      overallPlausibility,
-      overallLabRanges,
-      overallDuplicates,
-      overallReferences,
-      duplicatesBreakdown,
-      setCompleteness,
-      setCoverage,
-      setOverallValidation,
-      setOverallPlausibility,
-      setOverallLabRanges,
-      setOverallReferences,
-      setDuplicatesContribution,
-    }),
-    [
-      overallCompleteness,
-      overallCoverage,
-      overallValidation,
-      overallPlausibility,
-      overallLabRanges,
-      overallDuplicates,
-      overallReferences,
-      duplicatesBreakdown,
-      setDuplicatesContribution,
-    ],
-  );
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
-}
-
 /**
- * Consumer hook. Outside the provider (e.g., isolated unit tests) returns
- * a no-op fallback so consumers render without crashing.
+ * Facade hook: composes the 7 per-metric rollup hooks into the pre-split
+ * QualityMetricsContextValue shape. **For bulk-read consumers only**
+ * (capture handler, PDF export handler). Per-metric consumers (7 tiles,
+ * 7 tab labels, 7 producer sites) MUST call the specific use<Metric>Rollup()
+ * hook from './metrics' for render isolation (Phase 32 EFF-R14 contract).
+ *
+ * Outside the 7-provider tree the underlying hooks return their no-op
+ * fallbacks — the composed shape mirrors the pre-split no-op object, so
+ * tests that render consumers without wrapping still render without
+ * crashing (behavior preserved from the old :179-200 fallback).
  */
 export function useQualityMetrics(): QualityMetricsContextValue {
-  const ctx = useContext(Ctx);
-  if (!ctx) {
-    return {
-      overallCompleteness: undefined,
-      overallCoverage: undefined,
-      overallValidation: undefined,
-      overallPlausibility: undefined,
-      overallLabRanges: undefined,
-      overallDuplicates: undefined,
-      overallReferences: undefined,
-      duplicatesBreakdown: EMPTY_DUPLICATES_BREAKDOWN,
-      setCompleteness: () => {},
-      setCoverage: () => {},
-      setOverallValidation: () => {},
-      setOverallPlausibility: () => {},
-      setOverallLabRanges: () => {},
-      setOverallReferences: () => {},
-      setDuplicatesContribution: () => {},
-    };
-  }
-  return ctx;
+  const completeness = useCompletenessRollup();
+  const coverage = useCoverageRollup();
+  const validation = useValidationRollup();
+  const plausibility = usePlausibilityRollup();
+  const labRanges = useLabRangesRollup();
+  const references = useReferencesRollup();
+  const duplicates = useDuplicatesRollup();
+
+  return useMemo<QualityMetricsContextValue>(
+    () => ({
+      overallCompleteness: completeness.value,
+      overallCoverage: coverage.value,
+      overallValidation: validation.value,
+      overallPlausibility: plausibility.value,
+      overallLabRanges: labRanges.value,
+      overallReferences: references.value,
+      overallDuplicates: duplicates.overall,
+      duplicatesBreakdown: duplicates.breakdown,
+      setCompleteness: completeness.set,
+      setCoverage: coverage.set,
+      setOverallValidation: validation.set,
+      setOverallPlausibility: plausibility.set,
+      setOverallLabRanges: labRanges.set,
+      setOverallReferences: references.set,
+      setDuplicatesContribution: duplicates.contribute,
+    }),
+    [completeness, coverage, validation, plausibility, labRanges, references, duplicates],
+  );
 }
