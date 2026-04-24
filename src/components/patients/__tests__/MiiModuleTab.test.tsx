@@ -64,6 +64,7 @@ vi.mock('@medplum/react-hooks', () => ({
 
 import { MiiModuleTab } from '../MiiModuleTab';
 import type { MiiModule } from '../../../utils/mii-modules';
+import { EmptyExtensionsProvider } from '../../../hooks/useEmptyExtensionsCoordinator';
 
 // --- Helpers ------------------------------------------------------------
 
@@ -79,7 +80,9 @@ function makeClient(responder: BundleResponder) {
 function renderTab(module: MiiModule, patientId = 'p1') {
   return render(
     <MantineProvider>
-      <MiiModuleTab module={module} patientId={patientId} />
+      <EmptyExtensionsProvider patientId={patientId}>
+        <MiiModuleTab module={module} patientId={patientId} />
+      </EmptyExtensionsProvider>
     </MantineProvider>,
   );
 }
@@ -278,5 +281,100 @@ describe('MiiModuleTab fan-out (MII-EXT-03)', () => {
     const typeBUrl = urls.find((u) => u.includes('TypeB'));
     expect(typeAUrl).toContain('category=foo');
     expect(typeBUrl).toContain('category=fallback');
+  });
+});
+
+// --- Plan 34-05: empty-state UX tests (MII-EXT-14) -----------------------
+
+describe('MiiModuleTab empty-state (MII-EXT-14, Plan 34-05)', () => {
+  const onkologieModule: MiiModule = {
+    key: 'onkologie',
+    germanLabel: 'Onkologie',
+    fhirResourceType: 'Condition',
+    category: 'extension',
+    badgeColor: 'oncology',
+    patientSearchParam: 'patient',
+    icon: 'IconRadioactive',
+  };
+
+  const personModule: MiiModule = {
+    key: 'person',
+    germanLabel: 'Person',
+    fhirResourceType: 'Patient',
+    category: 'base',
+    badgeColor: 'blue',
+    patientSearchParam: '_id',
+    icon: 'IconUser',
+  };
+
+  it('extension module + 0 resources renders opacity 0.55 + em-dash copy', async () => {
+    // Checker fix (nyquist_compliance): use data-testid + getComputedStyle
+    // rather than a brittle [style*="opacity: 0.55"] attribute selector,
+    // which depends on Mantine 8's inline-style serialization format.
+    const client = makeClient(() =>
+      Promise.resolve({ resourceType: 'Bundle', entry: [] }),
+    );
+    mocks.client = client;
+
+    await act(async () => {
+      renderTab(onkologieModule);
+    });
+
+    const copy = await screen.findByText('— no Onkologie data for this patient');
+    expect(copy).toBeTruthy();
+    const wrapper = await screen.findByTestId('empty-state-wrapper');
+    expect(getComputedStyle(wrapper).opacity).toBe('0.55');
+  });
+
+  it('extension module + ≥1 resource renders opacity 1 table (unchanged Phase 34-04 render)', async () => {
+    const client = makeClient(() =>
+      Promise.resolve({
+        resourceType: 'Bundle',
+        entry: [
+          {
+            resource: {
+              resourceType: 'Condition',
+              id: 'c1',
+              code: { text: 'Test' },
+              recordedDate: '2024-01-01',
+            },
+          },
+        ],
+      }),
+    );
+    mocks.client = client;
+
+    const { container } = await act(async () => renderTab(onkologieModule));
+
+    await waitFor(() => {
+      expect(container.querySelector('table')).not.toBeNull();
+    });
+    // When populated, the empty-state wrapper must NOT be in the DOM.
+    expect(screen.queryByTestId('empty-state-wrapper')).toBeNull();
+    expect(screen.queryByText(/— no/)).toBeNull();
+  });
+
+  it('base module + 0 resources keeps Phase 33 copy + opacity 1 (base exemption)', async () => {
+    // Base modules hit a SEPARATE empty-state branch (Phase 33 copy, no
+    // dimming). Our wrapper is tagged with a distinct testid so we can
+    // assert no-opacity-0.55 robustly: either the wrapper is absent, or
+    // present with opacity '1'.
+    const client = makeClient(() =>
+      Promise.resolve({ resourceType: 'Bundle', entry: [] }),
+    );
+    mocks.client = client;
+
+    await act(async () => {
+      renderTab(personModule);
+    });
+
+    const copy = await screen.findByText('No Person data found for this patient.');
+    expect(copy).toBeTruthy();
+    const wrapper = screen.queryByTestId('empty-state-wrapper');
+    if (wrapper) {
+      expect(getComputedStyle(wrapper).opacity).not.toBe('0.55');
+    }
+    // If the base branch doesn't render the empty-state-wrapper at all,
+    // that's also correct (base is exempt from the Phase 34 dimming wrap).
   });
 });
