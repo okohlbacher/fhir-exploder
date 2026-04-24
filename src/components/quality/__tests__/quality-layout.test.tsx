@@ -8,7 +8,7 @@
  *   1. the legacy-migration useEffect (Plan 21-04 / CHRT-04) fires on mount,
  *   2. the disconnected-state "Not connected" alert + link back to dashboard,
  *   3. the connected-state rendering of the Outlet under
- *      QualityMetricsProvider + MedplumProvider.
+ *      QualityMetricsProviders + MedplumProvider.
  *
  * Mirrors DrillDownShell.test.tsx setup (MantineProvider + MemoryRouter,
  * jsdom polyfills). Uses vi.mock on ../../../hooks/useConnection to toggle
@@ -68,13 +68,19 @@ vi.mock('@medplum/react', async () => {
   };
 });
 
-// QualityMetricsProvider — pass-through stub; the connected-state tree
+// QualityMetricsProviders — pass-through stub; the connected-state tree
 // then renders the outlet child without pulling in the quality metrics
-// runtime.
-vi.mock('../../../quality/QualityMetricsContext', () => ({
-  QualityMetricsProvider: ({ children }: { children: React.ReactNode }) => (
+// runtime. Phase 32 EFF-R14 split: the composer lives at
+// ../../../quality/metrics; the facade-path useQualityMetrics() stub
+// stays under the original module path so any code path importing the
+// facade still resolves to a no-op.
+vi.mock('../../../quality/metrics', () => ({
+  QualityMetricsProviders: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="quality-metrics-provider">{children}</div>
   ),
+}));
+
+vi.mock('../../../quality/QualityMetricsContext', () => ({
   useQualityMetrics: () => ({}),
 }));
 
@@ -160,7 +166,7 @@ describe('QualityLayout — pre-migration regression fence', () => {
     expect(screen.getByTestId('outlet-child')).toBeTruthy();
     // No "Not connected" alert.
     expect(screen.queryByText(/Not connected to a FHIR server/i)).toBeNull();
-    // QualityMetricsProvider is present in the connected tree.
+    // QualityMetricsProviders is present in the connected tree.
     expect(screen.getByTestId('quality-metrics-provider')).toBeTruthy();
   });
 
@@ -179,7 +185,7 @@ describe('QualityLayout — pre-migration regression fence', () => {
     expect(link.getAttribute('href')).toBe('/');
     // No Outlet child.
     expect(screen.queryByTestId('outlet-child')).toBeNull();
-    // No QualityMetricsProvider in the disconnected tree.
+    // No QualityMetricsProviders in the disconnected tree.
     expect(screen.queryByTestId('quality-metrics-provider')).toBeNull();
   });
 
