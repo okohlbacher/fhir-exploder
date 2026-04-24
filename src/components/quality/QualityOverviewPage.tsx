@@ -60,6 +60,15 @@ import { useTrendsHistory } from '../../hooks/useTrendsHistory';
 import { useCohorts } from '../../hooks/useCohorts';
 import { resolveCohort, clearCohortResolutionCache } from '../../quality/cohortResolver';
 import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import {
+  useCompletenessRollup,
+  useCoverageRollup,
+  useValidationRollup,
+  usePlausibilityRollup,
+  useLabRangesRollup,
+  useReferencesRollup,
+  useDuplicatesRollup,
+} from '../../quality/metrics';
 import { captureSnapshot } from '../../quality/trendsHistory';
 import { exportQualityPdf } from '../../quality/pdfExport';
 import { RESOURCE_TYPES_STORAGE_KEY } from '../../quality/cohorts';
@@ -200,8 +209,17 @@ export function QualityOverviewPage() {
     scopedPatientIds,
   );
 
-  // Plan 19-03: capture snapshot + export PDF handlers.
+  // Plan 19-03: capture snapshot + export PDF handlers (facade read for bulk).
   const metrics = useQualityMetrics();
+  // Phase 32 (EFF-R14): per-metric hooks feed the 7 tab labels below so a
+  // single metric update re-renders only its tab label, not all 7.
+  const completeness = useCompletenessRollup();
+  const coverage = useCoverageRollup();
+  const validation = useValidationRollup();
+  const plausibility = usePlausibilityRollup();
+  const labRanges = useLabRangesRollup();
+  const references = useReferencesRollup();
+  const duplicates = useDuplicatesRollup();
   const { getActiveThreshold } = useThresholds();
   const { snapshots, append } = useTrendsHistory();
   const [exporting, setExporting] = useState(false);
@@ -441,25 +459,25 @@ export function QualityOverviewPage() {
         <Tabs.List>
           <Tabs.Tab value="counts">Counts</Tabs.Tab>
           <Tabs.Tab value="completeness">
-            {metricTabLabel('Completeness', metrics.overallCompleteness)}
+            {metricTabLabel('Completeness', completeness.value)}
           </Tabs.Tab>
           <Tabs.Tab value="coverage">
-            {metricTabLabel('Coding Coverage', metrics.overallCoverage)}
+            {metricTabLabel('Coding Coverage', coverage.value)}
           </Tabs.Tab>
           <Tabs.Tab value="validation">
-            {metricTabLabel('Validation', metrics.overallValidation)}
+            {metricTabLabel('Validation', validation.value)}
           </Tabs.Tab>
           <Tabs.Tab value="plausibility">
-            {metricTabLabel('Plausibility', metrics.overallPlausibility)}
+            {metricTabLabel('Plausibility', plausibility.value)}
           </Tabs.Tab>
           <Tabs.Tab value="lab-ranges">
-            {metricTabLabel('Lab Ranges', metrics.overallLabRanges)}
+            {metricTabLabel('Lab Ranges', labRanges.value)}
           </Tabs.Tab>
           <Tabs.Tab value="duplicates">
-            {metricTabLabel('Duplicates', metrics.overallDuplicates)}
+            {metricTabLabel('Duplicates', duplicates.overall)}
           </Tabs.Tab>
           <Tabs.Tab value="references">
-            {metricTabLabel('References', metrics.overallReferences)}
+            {metricTabLabel('References', references.value)}
           </Tabs.Tab>
           <Tabs.Tab value="trends">Trends</Tabs.Tab>
         </Tabs.List>
