@@ -4,8 +4,13 @@
  * Layout (per UI-SPEC.md Layout Contract):
  *   Tiles 1-2: Informational (Total resources, Resource types) — fed by `summary` prop, not clickable.
  *   Tiles 3-9: Metric tiles in Kahn order (completeness, coverage, validation, plausibility,
- *              lab ranges, duplicates, references) — value from QualityMetricsContext, threshold
- *              from useThresholds, breach computed via isBreached, click navigates to /quality?tab=...
+ *              lab ranges, duplicates, references) — each rendered as a <MetricTile/> that
+ *              subscribes to exactly ONE per-metric context for render isolation.
+ *
+ * Phase 32 (EFF-R14) split: the metric-value switch previously in this file
+ * has moved into the 7 leaf tile components inside MetricTile.tsx. Each
+ * leaf subscribes to ONE per-metric hook; setCompleteness(42) re-renders
+ * only CompletenessTile — verified by Plan 32-04's Profiler test.
  *
  * Per D-12 only OVERALL scores breach-color; per-type rows inside panels are untouched.
  * Per D-14 undefined values render as em-dash via SummaryCard (no breach signal).
@@ -25,16 +30,10 @@ import {
   IconShieldCheck,
 } from '@tabler/icons-react';
 import type { ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { SummaryCard } from './SummaryCard';
 import type { CountSummary } from '../../quality/counts';
-import { useQualityMetrics } from '../../quality/QualityMetricsContext';
-import { useThresholds } from '../../hooks/useThresholds';
-import {
-  METRIC_LABELS,
-  METRIC_ROUTES,
-  type MetricKey,
-} from '../../quality/thresholds';
+import { MetricTile } from './MetricTile';
+import type { MetricKey } from '../../quality/thresholds';
 
 export interface OverviewStripProps {
   summary: CountSummary;
@@ -64,10 +63,6 @@ const METRIC_ICONS: Record<MetricKey, ReactNode> = {
 const GRID_COLS = { base: 1, xs: 2, sm: 3, md: 4, lg: 5, xl: 9 };
 
 export function OverviewStrip({ summary, isLoading }: OverviewStripProps) {
-  const metrics = useQualityMetrics();
-  const { isBreached, getActiveThreshold } = useThresholds();
-  const navigate = useNavigate();
-
   if (isLoading) {
     return (
       <SimpleGrid cols={GRID_COLS} spacing="sm">
@@ -77,25 +72,6 @@ export function OverviewStrip({ summary, isLoading }: OverviewStripProps) {
       </SimpleGrid>
     );
   }
-
-  const metricValueOf = (key: MetricKey): number | undefined => {
-    switch (key) {
-      case 'completeness':
-        return metrics.overallCompleteness;
-      case 'coverage':
-        return metrics.overallCoverage;
-      case 'validation':
-        return metrics.overallValidation;
-      case 'plausibility':
-        return metrics.overallPlausibility;
-      case 'labRanges':
-        return metrics.overallLabRanges;
-      case 'duplicates':
-        return metrics.overallDuplicates;
-      case 'references':
-        return metrics.overallReferences;
-    }
-  };
 
   return (
     <SimpleGrid cols={GRID_COLS} spacing="sm">
@@ -111,36 +87,10 @@ export function OverviewStrip({ summary, isLoading }: OverviewStripProps) {
         icon={<IconListDetails size={18} />}
       />
 
-      {/* Tiles 3-9: metric tiles, all clickable, all breach-aware */}
-      {METRIC_ORDER.map((key) => {
-        const value = metricValueOf(key);
-        const threshold = getActiveThreshold(key);
-        const breached = isBreached(key, value);
-        const label = METRIC_LABELS[key];
-        const tabRoute = METRIC_ROUTES[key];
-
-        // aria-label per UI-SPEC Copywriting Contract
-        const ariaLabel =
-          value === undefined
-            ? `${label}: no data yet. Click to open ${label} tab.`
-            : breached
-              ? `${label}: ${value}%, breached, threshold: ${threshold}%. Click to open ${label} tab.`
-              : `${label}: ${value}%. Click to open ${label} tab.`;
-
-        return (
-          <SummaryCard
-            key={key}
-            label={label}
-            value={value !== undefined ? `${value}%` : '—'}
-            icon={METRIC_ICONS[key]}
-            ringValue={value}
-            breached={breached}
-            threshold={breached && threshold !== null ? threshold : undefined}
-            onClick={() => navigate(`/quality?tab=${tabRoute}`)}
-            ariaLabel={ariaLabel}
-          />
-        );
-      })}
+      {/* Tiles 3-9: per-metric tiles — each subscribes to exactly ONE hook */}
+      {METRIC_ORDER.map((key) => (
+        <MetricTile key={key} metricKey={key} icon={METRIC_ICONS[key]} />
+      ))}
     </SimpleGrid>
   );
 }
