@@ -15,29 +15,60 @@
 export interface MiiModule {
   /** Stable key used for tab state and URL identifiers (lowercase, ASCII). */
   key: string;
+
   /** Primary German label displayed in tabs and badges. */
   germanLabel: string;
-  /** FHIR R4 resource type queried for this module. */
-  fhirResourceType: string;
+
+  /**
+   * FHIR R4 resource type(s) queried for this module.
+   *
+   * Narrow-schema single string for simple 1:1 modules (e.g. Diagnose → Condition).
+   * Array for multi-type modules in Phase 34 (e.g. Bildgebung →
+   * ['ImagingStudy', 'DiagnosticReport']).
+   *
+   * Consumers MUST use `fhirResourceTypesOf(mod)` to normalise; direct
+   * `=== resource.resourceType` comparisons are a type error against the union.
+   */
+  fhirResourceType: string | string[];
+
+  /**
+   * Classification used to partition tab/tile layout:
+   *  - 'base'       — the 7 MII Kerndatensatz modules always visible
+   *  - 'extension'  — MII extension modules (oncology, imaging, etc.)
+   *                   shown inside a Collapse block / toggle
+   *
+   * REQUIRED. No default — every new module must explicitly declare
+   * its category so layout partitions are deterministic.
+   */
+  category: 'base' | 'extension';
+
   /** Mantine color token used for badges and tab indicators. */
   badgeColor: string;
-  /**
-   * FHIR search parameter used to scope queries to a patient.
-   * Most types use `patient`; kept as a per-module field so we can adapt
-   * per type without scattering conditionals through the UI.
-   */
+
+  /** Default FHIR search parameter used to scope queries to a patient. */
   patientSearchParam: string;
+
   /**
-   * Optional additional query parameters appended to every search for this
-   * module. Example: `category=laboratory` to narrow the Laborbefund tab
-   * from ALL Observations to only lab results (excludes vital-signs,
-   * social-history, survey observations which would otherwise appear and
-   * mislead users — e.g. "Tobacco smoking status" under Lab values).
-   *
-   * String is appended verbatim (already URL-encoded). Leave undefined
-   * when no extra filter applies.
+   * Per-type overrides for the patient search param (D-04).
+   * Example: `{ Observation: 'subject', Condition: 'patient' }`.
+   * Falls back to `patientSearchParam` when a type is not in the map.
+   */
+  patientSearchParamOverrides?: Record<string, string>;
+
+  /**
+   * Module-wide extra query appended to every search URL (e.g.
+   * `category=laboratory`). String is appended verbatim (already
+   * URL-encoded). Undefined means "no extra filter".
    */
   extraQuery?: string;
+
+  /**
+   * Per-type extra query overrides (D-04). Example for a multi-type module:
+   * `{ Observation: 'category=laboratory', DiagnosticReport: undefined }`.
+   * `getExtraQueryForType()` checks this map first, then falls back to
+   * `extraQuery`.
+   */
+  extraQueryByType?: Record<string, string>;
 }
 
 // Order reflects the Phase 30 UAT feedback (test 8): surface administrative
@@ -61,6 +92,7 @@ export const MII_MODULES: MiiModule[] = [
     key: 'person',
     germanLabel: 'Person',
     fhirResourceType: 'Patient',
+    category: 'base',
     badgeColor: 'blue',
     patientSearchParam: '_id',
   },
@@ -68,6 +100,7 @@ export const MII_MODULES: MiiModule[] = [
     key: 'fall',
     germanLabel: 'Fall',
     fhirResourceType: 'Encounter',
+    category: 'base',
     badgeColor: 'indigo',
     patientSearchParam: 'patient',
   },
@@ -75,6 +108,7 @@ export const MII_MODULES: MiiModule[] = [
     key: 'diagnose',
     germanLabel: 'Diagnose',
     fhirResourceType: 'Condition',
+    category: 'base',
     badgeColor: 'teal',
     patientSearchParam: 'patient',
   },
@@ -82,6 +116,7 @@ export const MII_MODULES: MiiModule[] = [
     key: 'prozedur',
     germanLabel: 'Prozedur',
     fhirResourceType: 'Procedure',
+    category: 'base',
     badgeColor: 'violet',
     patientSearchParam: 'patient',
   },
@@ -89,6 +124,7 @@ export const MII_MODULES: MiiModule[] = [
     key: 'consent',
     germanLabel: 'Consent',
     fhirResourceType: 'Consent',
+    category: 'base',
     badgeColor: 'pink',
     patientSearchParam: 'patient',
   },
@@ -96,6 +132,7 @@ export const MII_MODULES: MiiModule[] = [
     key: 'laborbefund',
     germanLabel: 'Laborbefund',
     fhirResourceType: 'Observation',
+    category: 'base',
     badgeColor: 'cyan',
     patientSearchParam: 'patient',
     // Observations cover labs, vital-signs, social-history, survey, etc.
@@ -108,6 +145,7 @@ export const MII_MODULES: MiiModule[] = [
     key: 'medikation',
     germanLabel: 'Medikation',
     fhirResourceType: 'MedicationStatement',
+    category: 'base',
     badgeColor: 'orange',
     patientSearchParam: 'patient',
   },
@@ -160,23 +198,16 @@ export function findModuleForType(
  * Returns the patient search param for a specific (module, type) pair.
  *
  * Falls back to module-wide `patientSearchParam` when no override exists.
- * Per D-04, the plan-33-03 widen adds
- * `patientSearchParamOverrides?: Record<string, string>` to `MiiModule`;
- * this helper is ready for that now (checks for the optional map via a
- * type-cast) but works identically against the narrow schema.
- *
- * The `as unknown as { ... }` cast is deliberate: it lets plan 33-02 ship
- * WITHOUT widening the `MiiModule` interface. Plan 33-03 will remove the
- * cast by adding the optional fields to the interface directly.
+ * Per D-04, `MiiModule.patientSearchParamOverrides?: Record<string, string>`
+ * holds the per-type overrides; this helper consumes the map directly now
+ * that plan 33-03 has widened the interface (the plan-33-02 forward-compat
+ * cast has been removed).
  */
 export function getPatientSearchParamForType(
   mod: MiiModule,
   type: string,
 ): string {
-  const overrides = (mod as unknown as {
-    patientSearchParamOverrides?: Record<string, string>;
-  }).patientSearchParamOverrides;
-  return overrides?.[type] ?? mod.patientSearchParam;
+  return mod.patientSearchParamOverrides?.[type] ?? mod.patientSearchParam;
 }
 
 /**
@@ -184,16 +215,13 @@ export function getPatientSearchParamForType(
  *
  * Per D-05: returns `string | undefined` (NOT `string` with empty
  * fallback). Callers conditionally append: `if (q) url += '&' + q;`.
- * Checks `extraQueryByType[type]` first (plan 33-03 widen), falls back
- * to the module-wide `extraQuery`. The cast is the same deliberate
- * forward-compat shim as `getPatientSearchParamForType`.
+ * Checks `extraQueryByType[type]` first, falls back to the module-wide
+ * `extraQuery`. The plan-33-02 forward-compat cast has been removed now
+ * that plan 33-03 widens the interface with the optional map.
  */
 export function getExtraQueryForType(
   mod: MiiModule,
   type: string,
 ): string | undefined {
-  const byType = (mod as unknown as {
-    extraQueryByType?: Record<string, string>;
-  }).extraQueryByType;
-  return byType?.[type] ?? mod.extraQuery;
+  return mod.extraQueryByType?.[type] ?? mod.extraQuery;
 }
