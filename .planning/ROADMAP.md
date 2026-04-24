@@ -219,7 +219,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 23-30 (v1.4) | v1.4 | 35/35 | ✅ Shipped | 2026-04-23 |
 | 31. UX-01 External Validator Cascade | v1.5 | 2/2 | Complete    | 2026-04-23 |
 | 32. EFF-R14 QualityMetricsContext Split | v1.5 | 4/4 | Complete    | 2026-04-24 |
-| 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 0/? | 📋 Not started | — |
+| 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 1/7 | In Progress|  |
 | 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 0/? | 📋 Not started | — |
 | 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 0/? | 📋 Not started | — |
 
