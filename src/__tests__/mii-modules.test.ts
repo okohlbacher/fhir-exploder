@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { MII_MODULES, type MiiModule } from '../utils/mii-modules';
+import {
+  MII_MODULES,
+  type MiiModule,
+  fhirResourceTypesOf,
+  findModuleForType,
+  getPatientSearchParamForType,
+  getExtraQueryForType,
+} from '../utils/mii-modules';
 
 describe('MII_MODULES configuration', () => {
   it('exports the 7 MII Kerndatensatz base modules', () => {
@@ -116,15 +123,12 @@ describe('per-module patientSearchParam contract (D-17)', () => {
     // the module-wide patientSearchParam.
   ];
 
-  // TODO(plan 33-02): replace inline probe() with
-  //   import { getPatientSearchParamForType } from '../utils/mii-modules';
-  // The helper will encapsulate patientSearchParamOverrides lookup once
-  // the schema widens in plan 33-03. Until then, this inline mirror
-  // tests the CONTRACT (per-module param returns the correct value for
-  // a given type) without depending on the helper existing yet.
-  function probe(mod: MiiModule, _type: string): string {
-    return mod.patientSearchParam;
-  }
+  // Contract probes the real helper from src/utils/mii-modules (landed in
+  // plan 33-02, MII-EXT-01). The helper encapsulates
+  // patientSearchParamOverrides lookup once the schema widens in plan 33-03;
+  // until then, every row here resolves to the module-wide
+  // patientSearchParam and this table locks the per-module contract for
+  // Phase 34's 14-module data drop.
 
   it.each(EXPECTED)(
     '$moduleKey / $fhirResourceType → patientSearchParam = $expectedParam',
@@ -132,7 +136,7 @@ describe('per-module patientSearchParam contract (D-17)', () => {
       const mod = MII_MODULES.find((m) => m.key === moduleKey);
       expect(mod).toBeDefined();
       expect(mod!.fhirResourceType).toBe(fhirResourceType);
-      expect(probe(mod!, fhirResourceType)).toBe(expectedParam);
+      expect(getPatientSearchParamForType(mod!, fhirResourceType)).toBe(expectedParam);
     },
   );
 
@@ -141,5 +145,87 @@ describe('per-module patientSearchParam contract (D-17)', () => {
     for (const mod of MII_MODULES) {
       expect(coveredKeys.has(mod.key)).toBe(true);
     }
+  });
+});
+
+describe('helpers (MII-EXT-01)', () => {
+  describe('fhirResourceTypesOf', () => {
+    it('normalises narrow-schema single string to one-element array', () => {
+      const person = MII_MODULES.find((m) => m.key === 'person')!;
+      expect(fhirResourceTypesOf(person)).toEqual(['Patient']);
+    });
+    it('returns array input as-is (forward-compat for plan 33-03 widen)', () => {
+      const stub = {
+        fhirResourceType: ['ImagingStudy', 'DiagnosticReport'],
+      } as unknown as MiiModule;
+      expect(fhirResourceTypesOf(stub)).toEqual(['ImagingStudy', 'DiagnosticReport']);
+    });
+  });
+
+  describe('findModuleForType', () => {
+    it('finds module by single type', () => {
+      expect(findModuleForType('Condition')?.key).toBe('diagnose');
+      expect(findModuleForType('Patient')?.key).toBe('person');
+    });
+    it('returns undefined for unknown type', () => {
+      expect(findModuleForType('NonExistentType')).toBeUndefined();
+    });
+    it('accepts custom module array (multi-type fixture)', () => {
+      const multi = [
+        {
+          key: 'bildgebung',
+          germanLabel: 'Bildgebung',
+          fhirResourceType: ['ImagingStudy', 'DiagnosticReport'] as unknown as string,
+          badgeColor: 'cyan',
+          patientSearchParam: 'patient',
+        },
+      ] as MiiModule[];
+      expect(findModuleForType('DiagnosticReport', multi)?.key).toBe('bildgebung');
+      expect(findModuleForType('ImagingStudy', multi)?.key).toBe('bildgebung');
+    });
+  });
+
+  describe('getPatientSearchParamForType', () => {
+    it('returns module-wide patientSearchParam when no override', () => {
+      const person = MII_MODULES.find((m) => m.key === 'person')!;
+      expect(getPatientSearchParamForType(person, 'Patient')).toBe('_id');
+      const fall = MII_MODULES.find((m) => m.key === 'fall')!;
+      expect(getPatientSearchParamForType(fall, 'Encounter')).toBe('patient');
+    });
+    it('overrides map beats module-wide value (forward-compat for plan 33-03)', () => {
+      const stub = {
+        key: 'x',
+        germanLabel: 'X',
+        fhirResourceType: 'TypeA',
+        badgeColor: 'gray',
+        patientSearchParam: 'patient',
+        patientSearchParamOverrides: { TypeA: 'subject' },
+      } as unknown as MiiModule;
+      expect(getPatientSearchParamForType(stub, 'TypeA')).toBe('subject');
+    });
+  });
+
+  describe('getExtraQueryForType', () => {
+    it('returns module-wide extraQuery when set', () => {
+      const labor = MII_MODULES.find((m) => m.key === 'laborbefund')!;
+      expect(getExtraQueryForType(labor, 'Observation')).toBe('category=laboratory');
+    });
+    it('returns undefined (NOT empty string) when not set', () => {
+      const person = MII_MODULES.find((m) => m.key === 'person')!;
+      expect(getExtraQueryForType(person, 'Patient')).toBeUndefined();
+    });
+    it('extraQueryByType beats module-wide extraQuery (D-05)', () => {
+      const stub = {
+        key: 'x',
+        germanLabel: 'X',
+        fhirResourceType: 'TypeA',
+        badgeColor: 'gray',
+        patientSearchParam: 'patient',
+        extraQuery: 'category=fallback',
+        extraQueryByType: { TypeA: 'category=foo' },
+      } as unknown as MiiModule;
+      expect(getExtraQueryForType(stub, 'TypeA')).toBe('category=foo');
+      expect(getExtraQueryForType(stub, 'TypeB')).toBe('category=fallback');
+    });
   });
 });
