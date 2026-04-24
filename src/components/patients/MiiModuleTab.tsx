@@ -10,6 +10,7 @@ import {
   getExtraQueryForType,
 } from '../../utils/mii-modules';
 import { toRecord } from '../../utils/fhir-helpers';
+import { useEmptyExtensionsPublisher } from '../../hooks/useEmptyExtensionsCoordinator';
 
 interface MiiModuleTabProps {
   module: MiiModule;
@@ -104,6 +105,18 @@ export function MiiModuleTab({ module, patientId }: MiiModuleTabProps) {
     return () => { cancelled = true; };
   }, [client, module, patientId]);
 
+  // Plan 34-05 (MII-EXT-14): publish per-(patientId, moduleKey) emptiness
+  // up to the EmptyExtensionsProvider so MiiModuleTabs can count and
+  // optionally hide empty extension pills. Only extension modules
+  // contribute — base 7 are exempt from the hide-empty toggle (D-21).
+  // While loading, isEmpty is false so the toggle doesn't flicker.
+  const isExtension = module.category === 'extension';
+  const isEmpty = !loading && resources.length === 0;
+  useEmptyExtensionsPublisher({
+    moduleKey: module.key,
+    isEmpty: isExtension && isEmpty,
+  });
+
   if (loading) {
     return (
       <Stack gap="sm" pt="md">
@@ -115,6 +128,26 @@ export function MiiModuleTab({ module, patientId }: MiiModuleTabProps) {
   }
 
   if (resources.length === 0) {
+    if (isExtension) {
+      // CONTEXT D-18: visible + 0.55 opacity + em-dash copy. The
+      // data-testid="empty-state-wrapper" enables robust test assertions
+      // via getByTestId + getComputedStyle (Mantine 8's inline-style
+      // serialization is not stable enough for [style*="opacity: 0.55"]
+      // attribute selectors — checker fix for nyquist_compliance).
+      return (
+        <Center
+          py="xl"
+          style={{ opacity: 0.55 }}
+          data-testid="empty-state-wrapper"
+        >
+          <Text c="dimmed">— no {module.germanLabel} data for this patient</Text>
+        </Center>
+      );
+    }
+    // Base modules keep Phase 33 copy + full opacity (D-21 exemption).
+    // Note: the base empty branch DOES NOT carry the empty-state-wrapper
+    // testid — tests use its absence (or opacity !== '0.55') to confirm
+    // base exemption.
     return (
       <Center py="xl">
         <Text c="dimmed">No {module.germanLabel} data found for this patient.</Text>
