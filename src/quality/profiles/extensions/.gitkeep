@@ -1,0 +1,3 @@
+# Empty sentinel so git tracks this directory.
+# Generated profile JSONs land alongside this file via scripts/fetch-mii-profiles.mjs.
+# See src/quality/profiles/extensions/ATTRIBUTION.md for CC-BY-4.0 attribution.

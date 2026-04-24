@@ -19,3 +19,27 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+================================================================
+BUNDLED MII STRUCTUREDEFINITION PROFILES — CC-BY-4.0
+
+The JSON files under src/quality/profiles/extensions/ are derived from
+the Medizininformatik-Initiative (MII) Kerndatensatz FHIR Implementation
+Guides and are licensed under Creative Commons Attribution 4.0
+International (CC-BY-4.0). The original profiles are (c) their respective
+authors. See src/quality/profiles/extensions/ATTRIBUTION.md for per-package
+attribution, canonical URLs, and bundled versions.
+
+Modifications from the original packages: trimmed to the subset of
+StructureDefinition fields used by the FHIR Exploder completeness walker
+({ url, name, type, snapshot.element[{ path, min, max, mustSupport,
+sliceName, type, required-binding }] }). No semantic changes to the
+profile definitions themselves.
+
+The FHIR Exploder source code (everything NOT under
+src/quality/profiles/extensions/) remains MIT-licensed per the body of
+this file above.
+
+License text:
+  CC-BY-4.0: https://creativecommons.org/licenses/by/4.0/legalcode
+================================================================

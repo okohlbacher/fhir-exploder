@@ -1,0 +1,1359 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "https://www.medizininformatik-initiative.de/fhir/ext/modul-onko/StructureDefinition/mii-pr-onko-therapieempfehlung-kombinationstherapie",
+  "name": "MII_PR_Onko_Therapieempfehlung_Kombinationstherapie",
+  "type": "RequestGroup",
+  "snapshot": {
+    "element": [
+      {
+        "path": "RequestGroup",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "path": "RequestGroup.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.meta",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Meta"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.meta.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.meta.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.meta.versionId",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "id"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.meta.lastUpdated",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "instant"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.meta.source",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "uri"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.meta.profile",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "canonical",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/StructureDefinition"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.meta.security",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Coding"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.meta.tag",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Coding"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.implicitRules",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "uri"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.language",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.text",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Narrative"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.contained",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Resource"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.identifier",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Identifier"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.instantiatesCanonical",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "canonical"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.instantiatesUri",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "uri"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.basedOn",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Resource"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.replaces",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Resource"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.groupIdentifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Identifier"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.status",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "RequestStatus"
+            }
+          ],
+          "strength": "required",
+          "description": "Codes identifying the lifecycle stage of a request.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/request-status|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.intent",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "RequestIntent"
+            }
+          ],
+          "strength": "required",
+          "description": "Codes indicating the degree of authority/intentionality associated with a request.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/request-intent|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.priority",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "RequestPriority"
+            }
+          ],
+          "strength": "required",
+          "description": "Identifies the level of importance to be assigned to actioning the request.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/request-priority|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.code",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.subject",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Patient"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.encounter",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Encounter"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.authoredOn",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.author",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Device",
+              "http://hl7.org/fhir/StructureDefinition/Practitioner",
+              "http://hl7.org/fhir/StructureDefinition/PractitionerRole"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.reasonCode",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.reasonReference",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "https://www.medizininformatik-initiative.de/fhir/ext/modul-onko/StructureDefinition/mii-pr-onko-diagnose-primaertumor"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.note",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Annotation"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.prefix",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.title",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.description",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.textEquivalent",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.priority",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "RequestPriority"
+            }
+          ],
+          "strength": "required",
+          "description": "Identifies the level of importance to be assigned to actioning the request.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/request-priority|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.code",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.documentation",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "RelatedArtifact"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.condition",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.condition.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.condition.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.condition.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.condition.kind",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionConditionKind"
+            }
+          ],
+          "strength": "required",
+          "description": "The kind of condition for the action.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-condition-kind|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.condition.expression",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Expression"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.relatedAction",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.relatedAction.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.relatedAction.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.relatedAction.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.relatedAction.actionId",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "id"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.relatedAction.relationship",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionRelationshipType"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines the types of relationships between actions.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-relationship-type|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.relatedAction.offset[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Duration"
+          },
+          {
+            "code": "Range"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.timing[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          },
+          {
+            "code": "Age"
+          },
+          {
+            "code": "Period"
+          },
+          {
+            "code": "Duration"
+          },
+          {
+            "code": "Range"
+          },
+          {
+            "code": "Timing"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.participant",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Patient",
+              "http://hl7.org/fhir/StructureDefinition/Practitioner",
+              "http://hl7.org/fhir/StructureDefinition/PractitionerRole",
+              "http://hl7.org/fhir/StructureDefinition/RelatedPerson",
+              "http://hl7.org/fhir/StructureDefinition/Device"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.type",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.groupingBehavior",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionGroupingBehavior"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines organization behavior of a group.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-grouping-behavior|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.selectionBehavior",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionSelectionBehavior"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines selection behavior of a group.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-selection-behavior|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.requiredBehavior",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionRequiredBehavior"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines expectations around whether an action or action group is required.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-required-behavior|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.precheckBehavior",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionPrecheckBehavior"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines selection frequency behavior for an action or group.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-precheck-behavior|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.cardinalityBehavior",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionCardinalityBehavior"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines behavior for an action or a group for how many times that item may be repeated.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-cardinality-behavior|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.resource",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Resource"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.prefix",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.title",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.description",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.textEquivalent",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.priority",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "RequestPriority"
+            }
+          ],
+          "strength": "required",
+          "description": "Identifies the level of importance to be assigned to actioning the request.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/request-priority|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.action.code",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.documentation",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "RelatedArtifact"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.condition",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.condition.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.condition.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.condition.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.condition.kind",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionConditionKind"
+            }
+          ],
+          "strength": "required",
+          "description": "The kind of condition for the action.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-condition-kind|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.action.condition.expression",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Expression"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.relatedAction",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.relatedAction.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.relatedAction.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.relatedAction.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.relatedAction.actionId",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "id"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.relatedAction.relationship",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionRelationshipType"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines the types of relationships between actions.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-relationship-type|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.action.relatedAction.offset[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Duration"
+          },
+          {
+            "code": "Range"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.timing[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          },
+          {
+            "code": "Age"
+          },
+          {
+            "code": "Period"
+          },
+          {
+            "code": "Duration"
+          },
+          {
+            "code": "Range"
+          },
+          {
+            "code": "Timing"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.participant",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Patient",
+              "http://hl7.org/fhir/StructureDefinition/Practitioner",
+              "http://hl7.org/fhir/StructureDefinition/PractitionerRole",
+              "http://hl7.org/fhir/StructureDefinition/RelatedPerson",
+              "http://hl7.org/fhir/StructureDefinition/Device"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.type",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.groupingBehavior",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionGroupingBehavior"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines organization behavior of a group.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-grouping-behavior|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.action.selectionBehavior",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionSelectionBehavior"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines selection behavior of a group.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-selection-behavior|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.action.requiredBehavior",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionRequiredBehavior"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines expectations around whether an action or action group is required.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-required-behavior|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.action.precheckBehavior",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionPrecheckBehavior"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines selection frequency behavior for an action or group.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-precheck-behavior|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.action.cardinalityBehavior",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ActionCardinalityBehavior"
+            }
+          ],
+          "strength": "required",
+          "description": "Defines behavior for an action or a group for how many times that item may be repeated.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/action-cardinality-behavior|4.0.1"
+        }
+      },
+      {
+        "path": "RequestGroup.action.action.resource",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "https://www.medizininformatik-initiative.de/fhir/ext/modul-onko/StructureDefinition/mii-pr-onko-therapieempfehlung-medikation"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "RequestGroup.action.action.action",
+        "min": 0,
+        "max": "*"
+      }
+    ]
+  }
+}

@@ -1,0 +1,671 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "https://www.medizininformatik-initiative.de/fhir/modul-studie/StructureDefinition/mii-pr-studie-ein-auschluss-kriterium",
+  "name": "MII_PR_Studie_EinAuschlussKriterium",
+  "type": "EvidenceVariable",
+  "snapshot": {
+    "element": [
+      {
+        "path": "EvidenceVariable",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "path": "EvidenceVariable.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.meta",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Meta"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.implicitRules",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "uri"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.language",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.text",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Narrative"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.contained",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Resource"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.url",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "uri"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.identifier",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Identifier"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.version",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.name",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.title",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.shortTitle",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.subtitle",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.status",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "PublicationStatus"
+            }
+          ],
+          "strength": "required",
+          "description": "The lifecycle status of an artifact.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/publication-status|4.0.1"
+        }
+      },
+      {
+        "path": "EvidenceVariable.date",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.publisher",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.contact",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "ContactDetail"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.description",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "markdown"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.note",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Annotation"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.useContext",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "UsageContext"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.jurisdiction",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.copyright",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "markdown"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.approvalDate",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.lastReviewDate",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.effectivePeriod",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Period"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.topic",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.author",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "ContactDetail"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.editor",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "ContactDetail"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.reviewer",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "ContactDetail"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.endorser",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "ContactDetail"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.relatedArtifact",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "RelatedArtifact"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.type",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "EvidenceVariableType"
+            }
+          ],
+          "strength": "required",
+          "description": "The possible types of variables for exposures or outcomes (E.g. Dichotomous, Continuous, Descriptive).",
+          "valueSet": "http://hl7.org/fhir/ValueSet/variable-type|4.0.1"
+        }
+      },
+      {
+        "path": "EvidenceVariable.characteristic",
+        "min": 1,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.extension",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.extension",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "sliceName": "linkId",
+        "type": [
+          {
+            "code": "Extension",
+            "profile": [
+              "http://hl7.org/fhir/5.0/StructureDefinition/extension-EvidenceVariable.characteristic.linkId"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.extension",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "sliceName": "definitionReference",
+        "type": [
+          {
+            "code": "Extension",
+            "profile": [
+              "http://hl7.org/fhir/5.0/StructureDefinition/extension-EvidenceVariable.characteristic.definitionReference"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.extension",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "sliceName": "definitionCanonical",
+        "type": [
+          {
+            "code": "Extension",
+            "profile": [
+              "http://hl7.org/fhir/5.0/StructureDefinition/extension-EvidenceVariable.characteristic.definitionCanonical"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.extension",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "sliceName": "definitionByTypeAndValue",
+        "type": [
+          {
+            "code": "Extension",
+            "profile": [
+              "http://hl7.org/fhir/5.0/StructureDefinition/extension-EvidenceVariable.characteristic.definitionByTypeAndValue"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.extension",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "sliceName": "definitionByCombination",
+        "type": [
+          {
+            "code": "Extension",
+            "profile": [
+              "http://hl7.org/fhir/5.0/StructureDefinition/extension-EvidenceVariable.characteristic.definitionByCombination"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.description",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.definition[x]",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Group"
+            ]
+          },
+          {
+            "code": "canonical",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/ActivityDefinition"
+            ]
+          },
+          {
+            "code": "CodeableConcept"
+          },
+          {
+            "code": "Expression"
+          },
+          {
+            "code": "DataRequirement"
+          },
+          {
+            "code": "TriggerDefinition"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.definition[x]",
+        "min": 0,
+        "max": "0",
+        "sliceName": "definitionReference",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Group"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.definition[x]",
+        "min": 0,
+        "max": "0",
+        "sliceName": "definitionCanonical",
+        "type": [
+          {
+            "code": "canonical",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/ActivityDefinition"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.definition[x]",
+        "min": 0,
+        "max": "0",
+        "sliceName": "definitionDataRequirement",
+        "type": [
+          {
+            "code": "DataRequirement"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.definition[x]",
+        "min": 0,
+        "max": "0",
+        "sliceName": "definitionTriggerDefinition",
+        "type": [
+          {
+            "code": "TriggerDefinition"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.usageContext",
+        "min": 0,
+        "max": "0",
+        "type": [
+          {
+            "code": "UsageContext"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.exclude",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "boolean"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.participantEffective[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          },
+          {
+            "code": "Period"
+          },
+          {
+            "code": "Duration"
+          },
+          {
+            "code": "Timing"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.timeFromStart",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Duration"
+          }
+        ]
+      },
+      {
+        "path": "EvidenceVariable.characteristic.groupMeasure",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "GroupMeasure"
+            }
+          ],
+          "strength": "required",
+          "description": "Possible group measure aggregates (E.g. Mean, Median).",
+          "valueSet": "http://hl7.org/fhir/ValueSet/group-measure|4.0.1"
+        }
+      }
+    ]
+  }
+}

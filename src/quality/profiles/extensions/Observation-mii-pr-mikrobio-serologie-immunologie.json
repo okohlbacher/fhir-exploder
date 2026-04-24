@@ -1,0 +1,9 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "https://www.medizininformatik-initiative.de/fhir/modul-mikrobio/StructureDefinition/mii-pr-mikrobio-serologie-immunologie",
+  "name": "MII_PR_Mikrobio_Serologie_Immunologie",
+  "type": "Observation",
+  "snapshot": {
+    "element": []
+  }
+}

@@ -1,0 +1,1857 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "https://www.medizininformatik-initiative.de/fhir/ext/modul-mtb/StructureDefinition/LogicalModel/mii-lm-mtb",
+  "name": "MII_LM_MTB",
+  "type": "https://www.medizininformatik-initiative.de/fhir/ext/modul-mtb/StructureDefinition/LogicalModel/mii-lm-mtb",
+  "snapshot": {
+    "element": [
+      {
+        "path": "mii-lm-mtb",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "path": "mii-lm-mtb.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "http://hl7.org/fhirpath/System.String",
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Zeitraum",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "Period"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.KrankengeschichteFamilie",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/FamilyMemberHistory"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Vorbefund",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/DiagnosticReport",
+              "http://hl7.org/fhir/StructureDefinition/Observation"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.NGSBericht",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/DiagnosticReport"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.MolekularPathologieBefund",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/DiagnosticReport"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.LeitlinieDokumentation",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.LeitlinienbehandlungStatus",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Einwilligung",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Einwilligung.Status",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Diagnose",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Diagnose.WHOGradZNS",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Diagnose.OncoTree",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Diagnose.TumorausbreitungED",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Diagnose.TumorausbreitungED.Wert",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Diagnose.TumorausbreitungED.Zeitpunkt",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Diagnose.TumorausbreitungMTB",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Diagnose.TumorausbreitungMTB.Wert",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Diagnose.TumorausbreitungMTB.Zeitpunkt",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Vortherapie",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Vortherapie.Kategorie",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Vortherapie.Startdatum",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Vortherapie.Enddatum",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Vortherapie.Diagnose",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Condition"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Vortherapie.Therapiestatusgrund",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Vortherapie.Therapieplan",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/CarePlan"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Vortherapie.Therapielinie",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "unsignedInt"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.Vortherapie.Zulassungsstatus",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.ECOG",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.ECOG.Datum",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.ECOG.AllgemeinerLeistungszustand",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Erstellungsdatum",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Protokollauszug",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.StatusBegruendung",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.UmgesetzteEmpfehlung",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Consent",
+              "http://hl7.org/fhir/StructureDefinition/DiagnosticReport",
+              "http://hl7.org/fhir/StructureDefinition/MedicationStatement",
+              "http://hl7.org/fhir/StructureDefinition/Observation",
+              "http://hl7.org/fhir/StructureDefinition/Procedure"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Behandlungsepisode",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/ClinicalImpression"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Therapieempfehlungen",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Therapieempfehlungen.StuetzendeMolekularAlterationen",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Observation"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Therapieempfehlungen.StuetzendeEntitaet",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Condition"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Therapieempfehlungen.Wirkstoffe",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Medication"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Therapieempfehlungen.Prioritaet",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "positiveInt"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Therapieempfehlungen.EvidenzLevel",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Therapieempfehlungen.EvidenzLevel.Graduierung",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Therapieempfehlungen.EvidenzLevel.Zusatz",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Therapieempfehlungen.EvidenzLevel.Publikationen",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Therapieempfehlungen.EvidenzLevel.Publikationen.DigitalObjectIdentifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Therapieempfehlungen.EvidenzLevel.Publikationen.PubMedIdentifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Studieneinschlussempfehlung",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Studieneinschlussempfehlung.StuetzendeEntitaet",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Condition"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Studieneinschlussempfehlung.NctNummer",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Identifier"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Studieneinschlussempfehlung.EudraCtNummer",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Identifier"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Studieneinschlussempfehlung.DrksNummer",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Identifier"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Studieneinschlussempfehlung.Prioritaet",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "positiveInt"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Studieneinschlussempfehlung.Publikationen",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Studieneinschlussempfehlung.Publikationen.DigitalObjectIdentifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.Studieneinschlussempfehlung.Publikationen.PubMedIdentifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.HumangenetischeBeratungAuftrag",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.HumangenetischeBeratungAuftrag.Probe",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Specimen"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.HumangenetischeBeratungAuftrag.Begruendung",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.HistologieReevaluationAuftrag",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.HistologieReevaluationAuftrag.Probe",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Specimen"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.HistologieReevaluationAuftrag.Histologie",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/DiagnosticReport"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.HistologieReevaluationAuftrag.Tumorzellgehalt",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.HistologieReevaluationAuftrag.Tumorzellgehalt.Methode",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.HistologieReevaluationAuftrag.Tumorzellgehalt.Wert",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "decimal"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.RebiopsieAuftrag",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.RebiopsieAuftrag.Probe",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Specimen"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.RebiopsieAuftrag.Histologie",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/DiagnosticReport"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.RebiopsieAuftrag.Tumorzellgehalt",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.RebiopsieAuftrag.Tumorzellgehalt.Methode",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.Behandlungsepisode.BeschlussTherapieplan.RebiopsieAuftrag.Tumorzellgehalt.Wert",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "decimal"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.Erfassungsdatum",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.FollowUpStatus",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.GrundNichtUmsetzung",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.MTBTherapieStartdatum",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.MTBTherapieEnddatum",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.SystemischeTherapieEndeGrund",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.TherapieEmpfehlung",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.Bemerkungen",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.Status",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.Wirkstoffe",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.Dosisdichte",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.ResponseBefund",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.ResponseBefund.ResponseBeurteilung",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.ResponseBefund.Beurteilungsmethode",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.SystemischeTherapie.ResponseBefund.Zeitpunkt",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.AntragKostenuebernahme",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.AntragKostenuebernahme.Ausstellungsdatum",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.AntragKostenuebernahme.TherapieEmpfehlung",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.AntragKostenuebernahme.Antragsstadium",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.AntragKostenuebernahme.AntragsstellerZPMGeschaeftsstelle",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "boolean"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.AntwortKostenuebernahme",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.AntwortKostenuebernahme.Datum",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.AntwortKostenuebernahme.Antrag",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.AntwortKostenuebernahme.Status",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.FollowUp.AntwortKostenuebernahme.Grund",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.Erstellungsdatum",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.Probe",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.TumorMutationalBurden",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.TumorMutationalBurden.Interpretation",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.TumorMutationalBurden.Wert",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "decimal"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.TumorMutationalBurden.Metadaten",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.BRCAness",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.BRCAness.Interpretation",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.BRCAness.Wert",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "decimal"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.BRCAness.Metadaten",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.MicroSatelliteInstabilities",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.MicroSatelliteInstabilities.Interpretation",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.MicroSatelliteInstabilities.Wert",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "decimal"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.HRDScore",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.HRDScore.Interpretation",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.HRDScore.Wert",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "decimal"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.HRDScore.Metadaten",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.Chromosom",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.Gen",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.TranskriptID",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.Exon",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.Position",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.Ref",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.Alt",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.cDNAChange",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.AminoAcidChange",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.ReadDepth",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.AllelicFrequency",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "decimal"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.COSMICID",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.dbSNPID",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.EinfacheVariante.Interpretation",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant.Chromosom",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant.StartPositionsbereich",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant.EndePositionsbereich",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant.TotalCN",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant.RelativeCN",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant.CNA",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant.CNB",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant.ReportedAffectedGenes",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant.ReportedFocality",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant.Type",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.CopyNumberVariant.CopyNumberNeutralLoH",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.DNAFusion",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.DNAFusion.FivePrimeDomain",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.DNAFusion.ThreePrimeDomain",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.DNAFusion.NumberReportedReads",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNAFusion",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNAFusion.FivePrimeFusionPartner",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNAFusion.ThreePrimeFusionPartner",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNAFusion.Effect",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNAFusion.COSMICID",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNAFusion.NumberReportedReads",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNASeq",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNASeq.VariantenId",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNASeq.EntrezID",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNASeq.EnsembleID",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNASeq.Gen",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNASeq.TranscriptID",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNASeq.TranscriptsPerMillion",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "decimal"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNASeq.TissueCorrectedExpression",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "boolean"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNASeq.RawCounts",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNASeq.LibrarySize",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.NGSBericht.RNASeq.CohortRanking",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.MolelularpathologischerBefund",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.MolelularpathologischerBefund.IHCBefund",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.MolelularpathologischerBefund.IHCBefund.Code",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.MolelularpathologischerBefund.IHCBefund.Interpretation",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.MolelularpathologischerBefund.IHCBefund.Wert",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "decimal"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.MolelularpathologischerBefund.IHCBefund.UntersuchtesProtein",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.MolelularpathologischerBefund.ISHBefund",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.MolelularpathologischerBefund.ISHBefund.Code",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.MolelularpathologischerBefund.ISHBefund.Interpretation",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.MolelularpathologischerBefund.ISHBefund.Wert",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "decimal"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mtb.MolelularpathologischerBefund.ISHBefund.UntersuchtesGen",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      }
+    ]
+  }
+}

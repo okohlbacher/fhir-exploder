@@ -1,0 +1,1979 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "https://www.medizininformatik-initiative.de/fhir/ext/modul-onko/StructureDefinition/LogicalModel/mii-lm-mvgenomseq-onkologie",
+  "name": "MII_LM_MVGenomSeq_Onkologie",
+  "type": "https://www.medizininformatik-initiative.de/fhir/ext/modul-onko/StructureDefinition/LogicalModel/mii-lm-mvgenomseq-onkologie",
+  "snapshot": {
+    "element": [
+      {
+        "path": "mii-lm-mvgenomseq-onkologie",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.Haupttumordiagnose",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.WeitereOnkologischeDiagnosen",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.Hauptdiagnosedatum",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.ECOGStatus",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.KeimbahndiagnoseVorhanden",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.Keimbahndiagnose",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.HPOPhaenotypisierung",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.Histologie",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.Topographie",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.Grading",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.TNMSchluessel",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.TNMSystematik",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.WeitereKlassifikationen",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Diagnose.DiagnostischeVoruntersuchungen",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Vordiagnostik",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Vordiagnostik.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Vordiagnostik.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Vordiagnostik.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Vordiagnostik.ArtDiagnostik",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.Vordiagnostik.DatumDiagnostik",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.MolekulareVorbefunde",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.MolekulareVorbefunde.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.MolekulareVorbefunde.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.MolekulareVorbefunde.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.MolekulareVorbefunde.Gen",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.MolekulareVorbefunde.Transkript",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.MolekulareVorbefunde.DNAChange",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.MolekulareVorbefunde.ProteinChange",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.MolekulareVorbefunde.TypAlteration",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.MolekulareVorbefunde.KomplexeAlteration",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien.ArtTherapie",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien.IntentionTherapie",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien.Substanz",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien.Therapiestart",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien.Therapieende",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien.EndeGrund",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien.TherapieAnsprechen",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFall.SystemischeVortherapien.TherapieAnsprechenDatum",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante.Identifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante.Gen",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante.Transkript",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante.DNAChange",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante.ProteinChange",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante.TypAlteration",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante.Lokalization",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.EinfacheVariante.LossOfHeterozygosity",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.Identifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.CNVTyp",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.Quellprobe",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.Gen",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.Chromosom",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.CNVStartPosition",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.CNVEndPosition",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.CopyNumber",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.CopyNumberVariante.Lokalization",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante.Identifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante.Quellprobe",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante.Gen",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante.GenC",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante.StrukturTyp",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante.Beschreibung",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante.Nachweismethode",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.StrukturelleVariante.Lokalization",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.Identifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.Gen",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.Expression",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.Bewertungsgrundlage",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.TMB",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "decimal"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.HRD",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.LST",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.TAI",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.SBS",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.SBSSignature",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieMolekular.ExpressionsVariante.Lokalization",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.Datum",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.EmpfehlungStudie",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.EmpfehlungBeratung",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.EmpfehlungReevaluation",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.EmpfehlungOperation",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.EmpfehlungOperationArt",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.EmpfehlungOperationRisikoreduzierend",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.EmpfehlungOperationTherapeutisch",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.MolekularesTumorboard.DurchgefuehrteOperation",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.Identifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.Register",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.StudienID",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.Studienname",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.Substanzen",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.Evidenzgrad",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.ZusatzverweiseEvidenzgraduierung",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.Prioritaet",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.EmpfohleneStudie.Variante",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.Therapieempfehlung",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.Therapieempfehlung.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.Therapieempfehlung.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.Therapieempfehlung.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.Therapieempfehlung.Identifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.Therapieempfehlung.EmpfehlungTyp",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.Therapieempfehlung.Substanz",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.Therapieempfehlung.Evidenzgrad",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.Therapieempfehlung.Prioritaet",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.Therapieempfehlung.Variante",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.Therapieempfehlung.TherapeutischeStrategie",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.PraeventiveUntersuchungen",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.PraeventiveUntersuchungen.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.PraeventiveUntersuchungen.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.PraeventiveUntersuchungen.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.PraeventiveUntersuchungen.Identifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologiePlan.PraeventiveUntersuchungen.ArtUntersuchung",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Datum",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.MetachroneTumore",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.MetachroneDiagnose",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.ECOG",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Vitalstatus",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.LetzterKontakt",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Todesdatum",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien.reference",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien.TherapieStart",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien.TherapieEnde",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien.TherapieWirkstoff",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien.TherapieAnsprechen",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien.TherapieAnsprechenDatum",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien.TherapieEndeGrund",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.Therapien.DatenquelleTherapieansprechen",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.PraeventiveMassnahmen",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.PraeventiveMassnahmen.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.PraeventiveMassnahmen.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.PraeventiveMassnahmen.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.PraeventiveMassnahmen.reference",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.PraeventiveMassnahmen.preventiveMeasureResult",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mvgenomseq-onkologie.OnkologieFollowup.PraeventiveMassnahmen.preventiveMeasureDate",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      }
+    ]
+  }
+}

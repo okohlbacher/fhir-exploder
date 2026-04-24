@@ -1,0 +1,697 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "https://www.medizininformatik-initiative.de/fhir/modul-mikrobio/StructureDefinition/mii-lm-mikrobio-logical-model-de",
+  "name": "MII_LM_Mikrobio_Logical_Model",
+  "type": "https://www.medizininformatik-initiative.de/fhir/modul-mikrobio/StructureDefinition/mii-lm-mikrobio-logical-model",
+  "snapshot": {
+    "element": [
+      {
+        "path": "mii-lm-mikrobio-logical-model",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Element"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.KulturDiagnostik",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.KulturDiagnostik.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.KulturDiagnostik.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.KulturDiagnostik.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.KulturDiagnostik.Nachweis",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.KulturDiagnostik.Erregername",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.KulturDiagnostik.KulturMethode",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.KulturDiagnostik.MRGN",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.KulturDiagnostik.Keimzahl",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.KulturDiagnostik.Resistenz",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie.Nachweis",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie.Erregername",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie.SemiquantitativesErgebnis",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie.QuantitativesErgebnis",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie.Methode",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie.Morphologie",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie.BarlettScore",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Mikroskopie.NugentScore",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.MolekularDiagnostik",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.MolekularDiagnostik.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.MolekularDiagnostik.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.MolekularDiagnostik.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.MolekularDiagnostik.Nachweis",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.MolekularDiagnostik.Erregername",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.MolekularDiagnostik.PCRQuantitativesErgebnis",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.MolekularDiagnostik.CycleThreshold",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Serologie_Immunologie",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Serologie_Immunologie.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Serologie_Immunologie.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Serologie_Immunologie.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Serologie_Immunologie.QuantitativesErgebnisAntigenTest",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Quantity",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/Quantity"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Serologie_Immunologie.QualitativesErgebnisAntigenTest",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Serologie_Immunologie.QuantitativesErgebnisSerologie",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Quantity",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/Quantity"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Serologie_Immunologie.QualitativesErgebnisSerologie",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Serologie_Immunologie.Avidität",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.MREKlasse",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.MRGNKlasse",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.Virulenzfaktor",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.Resistanzmechanism",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.Resistanzmechanism.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.Resistanzmechanism.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.Resistanzmechanism.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.Resistanzmechanism.ResistenzGene",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.Resistanzmechanism.ResistenzMutation",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.Weitere_Eigenschaften_Organismus.VoraussichtlicheEmpfindlichkeit",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/CodeableConcept"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "mii-lm-mikrobio-logical-model.MikrobiologieBericht",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      }
+    ]
+  }
+}
