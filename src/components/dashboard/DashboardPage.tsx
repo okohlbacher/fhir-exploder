@@ -1,10 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
+  Button,
   Card,
   Collapse,
+  Drawer,
   Grid,
   Group,
   Progress,
@@ -27,7 +29,11 @@ import type { AppSettings } from '../../config/types';
 import { parseResourceTypes } from '../../fhir/capability';
 import { useResourceCounts } from '../../hooks/useResourceCounts';
 import { groupByCategory, CATEGORY_ORDER } from '../../utils/fhir-categories';
-import { MII_MODULES, fhirResourceTypesOf } from '../../utils/mii-modules';
+import {
+  MII_MODULES,
+  fhirResourceTypesOf,
+  type MiiModule,
+} from '../../utils/mii-modules';
 import { ServerInfoCard } from './ServerInfoCard';
 
 interface DashboardPageProps {
@@ -75,6 +81,20 @@ export function DashboardPage({
   // hidden drill-downs.
   const [categoryOpened, { toggle: toggleCategory }] = useDisclosure(true);
   const [miiOpened, { toggle: toggleMii }] = useDisclosure(true);
+  // D-12 (plan 33-06): session-only "Show extension modules" toggle gating
+  // the extension tile subgrid. Seeded closed; no localStorage — mirrors
+  // the D-09 idiom used in MiiModuleTabs (plan 33-05). Phase 33 renders
+  // zero extension modules so the toggle is length-guarded invisible;
+  // Phase 34's extension data drop activates it automatically.
+  const [extensionGridOpened, { toggle: toggleExtensionGrid }] =
+    useDisclosure(false);
+  // D-14 (plan 33-06): tile click target switched from navigate('/patients')
+  // to a right-edge Drawer showing module details + Open-in-Explorer button.
+  // State is session-only (useDisclosure); selectedModule is the currently-
+  // clicked MII module literal from MII_MODULES.
+  const [drawerOpened, { open: openDrawer, close: closeDrawer }] =
+    useDisclosure(false);
+  const [selectedModule, setSelectedModule] = useState<MiiModule | null>(null);
 
   const resourceTypes = useMemo(() => {
     if (connectionState.status === 'connected') {
@@ -140,6 +160,80 @@ export function DashboardPage({
   ).length;
 
   const isConnected = connectionState.status === 'connected';
+
+  // D-12 (plan 33-06): partition MII_MODULES into base vs extension via
+  // m.category. Base tiles keep the 4-col grid at top; extension tiles
+  // render inside a length-guarded "Show extension modules" Collapse.
+  // Phase 33 data has 7 base + 0 extension — the extension Collapse is
+  // structurally present but invisible until Phase 34's 14 extension
+  // entries activate the length guard.
+  const baseModules = MII_MODULES.filter((m) => m.category === 'base');
+  const extensionModules = MII_MODULES.filter(
+    (m) => m.category === 'extension',
+  );
+
+  // D-14 (plan 33-06): tile click opens a Drawer instead of navigating
+  // straight to /patients. Drawer surfaces only already-fetched counts —
+  // no new FHIR fetches per plan invariant.
+  const handleTileClick = (mod: MiiModule) => {
+    setSelectedModule(mod);
+    openDrawer();
+  };
+
+  // Shared tile renderer so base and extension grids render identically.
+  // Closure-captures counts, handleTileClick, MONO_NUMERIC from the
+  // enclosing scope.
+  const renderMiiTile = (module: MiiModule) => {
+    const types = fhirResourceTypesOf(module);
+    // Sum counts across types so plan-33-03 multi-type modules in
+    // Phase 34 show a combined tile count. For narrow-schema
+    // single-type modules (Phase 33), types.length === 1 and this
+    // is arithmetically identical to counts[module.fhirResourceType].
+    const c = types.reduce<number | 'loading' | undefined>((acc, t) => {
+      const v = counts[t];
+      if (v === 'loading' || acc === 'loading') return 'loading';
+      if (typeof v === 'number') {
+        return typeof acc === 'number' ? acc + v : v;
+      }
+      return acc;
+    }, undefined);
+    const n = typeof c === 'number' ? c : null;
+    const empty = n === null || n === 0;
+    return (
+      <Card
+        key={module.key}
+        withBorder
+        padding="md"
+        radius="md"
+        style={{
+          cursor: 'pointer',
+          opacity: empty ? 0.55 : 1,
+        }}
+        onClick={() => handleTileClick(module)}
+      >
+        <Group justify="space-between" wrap="nowrap" align="flex-start">
+          <Stack gap={2} style={{ minWidth: 0 }}>
+            <Text fw={600} size="sm">
+              {module.germanLabel}
+            </Text>
+            <Text
+              size="xs"
+              c="dimmed"
+              style={{
+                fontFamily:
+                  'var(--font-mono, var(--mantine-font-family-monospace))',
+              }}
+            >
+              {types.join(' / ')}
+            </Text>
+          </Stack>
+          <Text size="xl" fw={600} style={MONO_NUMERIC}>
+            {n === null ? '—' : n.toLocaleString()}
+          </Text>
+        </Group>
+      </Card>
+    );
+  };
 
   return (
     <Stack gap="lg">
@@ -334,71 +428,127 @@ export function DashboardPage({
             </Grid>
           </Collapse>
 
-          {/* MII module overview (open by default) — Phase 30 Step 2. */}
+          {/* MII module overview (open by default) — Phase 30 Step 2.
+              D-13 (plan 33-06): heading now unambiguously states the scope
+              ("Server-wide totals") so users can't mistake the counts for
+              per-cohort or per-patient figures. Closes UAT-FU-04. */}
           <SectionHeader
-            title="MII Kerndatensatz Modules"
+            title="MII Kerndatensatz · Server-wide totals"
             opened={miiOpened}
             onToggle={toggleMii}
           />
           <Collapse in={miiOpened}>
+            {/* D-12 base tiles: 7 modules in the 4-col grid, rendered
+                identically to the Phase 30 baseline. */}
             <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }}>
-              {MII_MODULES.map((module) => {
-                const types = fhirResourceTypesOf(module);
-                // Sum counts across types so plan-33-03 multi-type modules
-                // in Phase 34 show a combined tile count. For narrow-schema
-                // single-type modules (Phase 33), types.length === 1 and
-                // this is arithmetically identical to
-                // counts[module.fhirResourceType].
-                const c = types.reduce<number | 'loading' | undefined>(
-                  (acc, t) => {
-                    const v = counts[t];
-                    if (v === 'loading' || acc === 'loading') return 'loading';
-                    if (typeof v === 'number') {
-                      return typeof acc === 'number' ? acc + v : v;
-                    }
-                    return acc;
-                  },
-                  undefined,
-                );
-                const n = typeof c === 'number' ? c : null;
-                const empty = n === null || n === 0;
-                return (
-                  <Card
-                    key={module.key}
-                    withBorder
-                    padding="md"
-                    radius="md"
-                    style={{
-                      cursor: 'pointer',
-                      opacity: empty ? 0.55 : 1,
-                    }}
-                    onClick={() => navigate('/patients')}
-                  >
-                    <Group justify="space-between" wrap="nowrap" align="flex-start">
-                      <Stack gap={2} style={{ minWidth: 0 }}>
-                        <Text fw={600} size="sm">
-                          {module.germanLabel}
-                        </Text>
-                        <Text
-                          size="xs"
-                          c="dimmed"
-                          style={{
-                            fontFamily:
-                              'var(--font-mono, var(--mantine-font-family-monospace))',
-                          }}
-                        >
-                          {types.join(' / ')}
-                        </Text>
-                      </Stack>
-                      <Text size="xl" fw={600} style={MONO_NUMERIC}>
-                        {n === null ? '—' : n.toLocaleString()}
-                      </Text>
-                    </Group>
-                  </Card>
-                );
-              })}
+              {baseModules.map(renderMiiTile)}
             </SimpleGrid>
+            {/* D-12 extension toggle + subgrid: length-guarded so Phase 33
+                renders nothing (no extension modules yet). Phase 34's data
+                drop flips this on automatically. */}
+            {extensionModules.length > 0 && (
+              <>
+                <UnstyledButton
+                  onClick={toggleExtensionGrid}
+                  aria-expanded={extensionGridOpened}
+                  mt="md"
+                >
+                  <Group gap="xs">
+                    {extensionGridOpened ? (
+                      <IconChevronDown size={14} />
+                    ) : (
+                      <IconChevronRight size={14} />
+                    )}
+                    <Text size="sm" c="dimmed">
+                      Show extension modules ({extensionModules.length})
+                    </Text>
+                  </Group>
+                </UnstyledButton>
+                <Collapse in={extensionGridOpened}>
+                  <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} mt="xs">
+                    {extensionModules.map(renderMiiTile)}
+                  </SimpleGrid>
+                </Collapse>
+              </>
+            )}
           </Collapse>
+
+          {/* D-14 (plan 33-06): tile click target. Drawer shows already-
+              fetched count data (no new FHIR fetches in Phase 33) with an
+              Open-in-Explorer action that navigates to /explorer/<primary>
+              for the first FHIR type of the selected module. */}
+          <Drawer
+            opened={drawerOpened}
+            onClose={closeDrawer}
+            position="right"
+            title={selectedModule?.germanLabel ?? 'Module details'}
+            padding="md"
+            size="sm"
+          >
+            {selectedModule && (
+              <Stack gap="sm">
+                <Group gap="xs">
+                  <Box
+                    w={10}
+                    h={10}
+                    style={{
+                      borderRadius: 2,
+                      background: `var(--mantine-color-${selectedModule.badgeColor}-6)`,
+                    }}
+                  />
+                  <Text size="sm" fw={600}>
+                    {selectedModule.germanLabel}
+                  </Text>
+                </Group>
+                <Stack gap={2}>
+                  <Text
+                    size="xs"
+                    c="dimmed"
+                    tt="uppercase"
+                    fw={700}
+                    lts="0.5px"
+                  >
+                    FHIR resource type(s)
+                  </Text>
+                  <Text size="sm" ff="monospace">
+                    {fhirResourceTypesOf(selectedModule).join(', ')}
+                  </Text>
+                </Stack>
+                <Stack gap={2}>
+                  <Text
+                    size="xs"
+                    c="dimmed"
+                    tt="uppercase"
+                    fw={700}
+                    lts="0.5px"
+                  >
+                    Server-wide count
+                  </Text>
+                  <Text size="xl" fw={600} style={MONO_NUMERIC}>
+                    {(() => {
+                      const types = fhirResourceTypesOf(selectedModule);
+                      const sum = types.reduce((acc, t) => {
+                        const v = counts[t];
+                        return acc + (typeof v === 'number' ? v : 0);
+                      }, 0);
+                      return sum.toLocaleString();
+                    })()}
+                  </Text>
+                </Stack>
+                <Button
+                  fullWidth
+                  variant="light"
+                  onClick={() => {
+                    const primary = fhirResourceTypesOf(selectedModule)[0];
+                    closeDrawer();
+                    navigate(`/explorer/${primary}`);
+                  }}
+                >
+                  Open in Explorer
+                </Button>
+              </Stack>
+            )}
+          </Drawer>
         </>
       )}
     </Stack>
