@@ -148,8 +148,8 @@ Plans:
   7. Patient-detail `/patients/:id` Time-to-Interactive unchanged from v1.4 baseline (verified via Chrome DevTools Performance snapshot — no regression from concurrent-fetch storm; Phase 33's `keepMounted` drop on extensions is the enabling guard). Bundle-size delta <100 KB post-gzip (verified via `rollup-plugin-visualizer` treemap).
 **Plans**: 6 plans
 - [x] 34-01-PLAN.md — Per-module research + color/icon/palette audit + paper-only deuteranopia assessment
-- [ ] 34-02-PLAN.md — Theme palette (7 MantineColorsTuple) + MiiModule.icon schema field
-- [ ] 34-03-PLAN.md — scripts/fetch-mii-profiles.mjs + prepare hook + CC-BY-4.0 attribution
+- [x] 34-02-PLAN.md — Theme palette (7 MantineColorsTuple) + MiiModule.icon schema field
+- [x] 34-03-PLAN.md — scripts/fetch-mii-profiles.mjs + prepare hook + CC-BY-4.0 attribution
 - [ ] 34-04-PLAN.md — 14 MII_MODULES extension entries + ICON_MAP + 3 consumer render sites
 - [ ] 34-05-PLAN.md — Empty-state UX (opacity 0.55 + em-dash copy) + Hide/Show toggle + localStorage coordinator
 - [ ] 34-06-PLAN.md — UAT: empirical deuteranopia screenshots + TTI before/after + bundle-size treemaps + D-24 ≥902 reassessment
@@ -226,7 +226,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 31. UX-01 External Validator Cascade | v1.5 | 2/2 | Complete    | 2026-04-23 |
 | 32. EFF-R14 QualityMetricsContext Split | v1.5 | 4/4 | Complete    | 2026-04-24 |
 | 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 7/7 | Complete    | 2026-04-24 |
-| 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 1/6 | In Progress|  |
+| 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 3/6 | In Progress|  |
 | 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 0/? | 📋 Not started | — |
 
 ## Effort Totals (v1.5)
@@ -259,7 +259,7 @@ Phase 35 (UAT follow-ups + matrix)
 
 **Goal:** Run the 6 human-verification items captured in `33-HUMAN-UAT.md` against live Blaze + Synthea — covers Laborbefund extraQuery fix, timeline color/label rendering, Dashboard scope heading, tile Drawer UX, base tab render invariant, and UAT-FU-06 previously-empty-panel smoke.
 **Requirements:** TBD (tied to Phase 33 MII-EXT-01..08 automated verification)
-**Plans:** 1/6 plans executed
+**Plans:** 3/6 plans executed
 **Source:** `.planning/phases/33-mii-schema-foundation-extension-modules-collapse-ui/33-HUMAN-UAT.md`
 
 Plans:
