@@ -45,6 +45,17 @@ export interface MiiModule {
 // (Diagnose, Prozedur), then governance / downstream (Consent), then the
 // high-volume ancillary modules (Laborbefund, Medikation). Consumers that
 // need alphabetical or domain-specific ordering should sort a local copy.
+//
+// Per-module patientSearchParam values verified against live Blaze + Synthea
+// on 2026-04-24 (UAT-FU-06 investigation — see
+// .planning/phases/33-mii-schema-foundation-extension-modules-collapse-ui/33-01-INVESTIGATION.md).
+// All 7 base modules use `_id` (person) or `patient` (everything else);
+// `subject=` was probed as an alternative and produced identical results where
+// data exists (MedicationStatement on `pat-uka-001`) — no module-wide param
+// change required. Consent/Medikation empty-panel UAT observation was a
+// data-coverage reality on Synthea (0 Consent server-wide; 0 MedicationStatement
+// for Synthea patients), not a param mismatch. The D-17 per-module contract
+// test in src/__tests__/mii-modules.test.ts locks these values for Phase 34.
 export const MII_MODULES: MiiModule[] = [
   {
     key: 'person',

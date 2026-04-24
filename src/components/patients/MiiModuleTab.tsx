@@ -60,7 +60,10 @@ export function MiiModuleTab({ module, patientId }: MiiModuleTabProps) {
     let cancelled = false;
     setLoading(true);
 
-    const url = `${module.fhirResourceType}?${module.patientSearchParam}=Patient/${patientId}&_count=50&_sort=-date`;
+    let url = `${module.fhirResourceType}?${module.patientSearchParam}=Patient/${patientId}&_count=50&_sort=-date`;
+    if (module.extraQuery) {
+      url += `&${module.extraQuery}`;
+    }
     client
       .get(client.fhirUrl(url).toString())
       .then((raw) => {
@@ -78,7 +81,7 @@ export function MiiModuleTab({ module, patientId }: MiiModuleTabProps) {
       });
 
     return () => { cancelled = true; };
-  }, [client, module.fhirResourceType, module.patientSearchParam, patientId]);
+  }, [client, module.fhirResourceType, module.patientSearchParam, module.extraQuery, patientId]);
 
   if (loading) {
     return (
