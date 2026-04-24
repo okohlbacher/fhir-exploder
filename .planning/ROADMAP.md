@@ -146,7 +146,13 @@ Plans:
   5. `src/quality/profiles/extensions/ATTRIBUTION.md` + an appendix in the root `LICENSE` carry CC-BY-4.0 attribution per MII IG page requirements.
   6. Extension-module empty-state renders the module tab visible + 0.55 opacity + "— no {module} data for this patient" copy; a "Show N empty modules" toggle persists per-patient collapse state in `localStorage.patients.hideEmptyExtensions.v1`.
   7. Patient-detail `/patients/:id` Time-to-Interactive unchanged from v1.4 baseline (verified via Chrome DevTools Performance snapshot — no regression from concurrent-fetch storm; Phase 33's `keepMounted` drop on extensions is the enabling guard). Bundle-size delta <100 KB post-gzip (verified via `rollup-plugin-visualizer` treemap).
-**Plans**: TBD (Task 1: per-module spec research + color audit; Task 2: palette + icons added to theme + MII_MODULES; Task 3: fetch-mii-profiles script + prepare hook + attribution; Task 4: 14 module entries + empty-state UX)
+**Plans**: 6 plans
+- [ ] 34-01-PLAN.md — Per-module research + color/icon/palette audit + paper-only deuteranopia assessment
+- [ ] 34-02-PLAN.md — Theme palette (7 MantineColorsTuple) + MiiModule.icon schema field
+- [ ] 34-03-PLAN.md — scripts/fetch-mii-profiles.mjs + prepare hook + CC-BY-4.0 attribution
+- [ ] 34-04-PLAN.md — 14 MII_MODULES extension entries + ICON_MAP + 3 consumer render sites
+- [ ] 34-05-PLAN.md — Empty-state UX (opacity 0.55 + em-dash copy) + Hide/Show toggle + localStorage coordinator
+- [ ] 34-06-PLAN.md — UAT: empirical deuteranopia screenshots + TTI before/after + bundle-size treemaps + D-24 ≥902 reassessment
 **Effort**: ~3-3.5 days (larger than Phase 33 because of the per-module research payload + color/icon design sign-off + profile bundling pipeline)
 **UI hint**: yes (palette rollout across tabs, Dashboard tiles, ClinicalTimeline dots; empty-state UX)
 
@@ -219,7 +225,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 23-30 (v1.4) | v1.4 | 35/35 | ✅ Shipped | 2026-04-23 |
 | 31. UX-01 External Validator Cascade | v1.5 | 2/2 | Complete    | 2026-04-23 |
 | 32. EFF-R14 QualityMetricsContext Split | v1.5 | 4/4 | Complete    | 2026-04-24 |
-| 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 7/7 | Complete   | 2026-04-24 |
+| 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 7/7 | Complete    | 2026-04-24 |
 | 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 0/? | 📋 Not started | — |
 | 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 0/? | 📋 Not started | — |
 
@@ -253,7 +259,7 @@ Phase 35 (UAT follow-ups + matrix)
 
 **Goal:** Run the 6 human-verification items captured in `33-HUMAN-UAT.md` against live Blaze + Synthea — covers Laborbefund extraQuery fix, timeline color/label rendering, Dashboard scope heading, tile Drawer UX, base tab render invariant, and UAT-FU-06 previously-empty-panel smoke.
 **Requirements:** TBD (tied to Phase 33 MII-EXT-01..08 automated verification)
-**Plans:** 0 plans
+**Plans:** 7/7 plans complete
 **Source:** `.planning/phases/33-mii-schema-foundation-extension-modules-collapse-ui/33-HUMAN-UAT.md`
 
 Plans:
