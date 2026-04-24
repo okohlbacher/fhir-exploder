@@ -4,7 +4,7 @@ import { useMedplum } from '@medplum/react-hooks';
 import type { Resource } from '@medplum/fhirtypes';
 import { useNavigate } from 'react-router-dom';
 
-import { MII_MODULES } from '../../utils/mii-modules';
+import { MII_MODULES, findModuleForType } from '../../utils/mii-modules';
 import {
   extractDate,
   extractSummary,
@@ -82,8 +82,9 @@ export function ClinicalTimeline({ patientId }: ClinicalTimelineProps) {
             if (!date) {
               return null;
             }
-            const moduleConfig = MII_MODULES.find(
-              (m) => m.fhirResourceType === resource.resourceType
+            const moduleConfig = findModuleForType(
+              resource.resourceType,
+              MII_MODULES,
             );
             return {
               resourceType: resource.resourceType,

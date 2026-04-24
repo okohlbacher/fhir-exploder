@@ -27,7 +27,7 @@ import type { AppSettings } from '../../config/types';
 import { parseResourceTypes } from '../../fhir/capability';
 import { useResourceCounts } from '../../hooks/useResourceCounts';
 import { groupByCategory, CATEGORY_ORDER } from '../../utils/fhir-categories';
-import { MII_MODULES } from '../../utils/mii-modules';
+import { MII_MODULES, fhirResourceTypesOf } from '../../utils/mii-modules';
 import { ServerInfoCard } from './ServerInfoCard';
 
 interface DashboardPageProps {
@@ -343,7 +343,23 @@ export function DashboardPage({
           <Collapse in={miiOpened}>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }}>
               {MII_MODULES.map((module) => {
-                const c = counts[module.fhirResourceType];
+                const types = fhirResourceTypesOf(module);
+                // Sum counts across types so plan-33-03 multi-type modules
+                // in Phase 34 show a combined tile count. For narrow-schema
+                // single-type modules (Phase 33), types.length === 1 and
+                // this is arithmetically identical to
+                // counts[module.fhirResourceType].
+                const c = types.reduce<number | 'loading' | undefined>(
+                  (acc, t) => {
+                    const v = counts[t];
+                    if (v === 'loading' || acc === 'loading') return 'loading';
+                    if (typeof v === 'number') {
+                      return typeof acc === 'number' ? acc + v : v;
+                    }
+                    return acc;
+                  },
+                  undefined,
+                );
                 const n = typeof c === 'number' ? c : null;
                 const empty = n === null || n === 0;
                 return (
@@ -371,7 +387,7 @@ export function DashboardPage({
                               'var(--font-mono, var(--mantine-font-family-monospace))',
                           }}
                         >
-                          {module.fhirResourceType}
+                          {types.join(' / ')}
                         </Text>
                       </Stack>
                       <Text size="xl" fw={600} style={MONO_NUMERIC}>

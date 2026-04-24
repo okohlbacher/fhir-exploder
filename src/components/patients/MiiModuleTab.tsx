@@ -3,7 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Anchor, Center, Skeleton, Stack, Table, Text } from '@mantine/core';
 import { useMedplum } from '@medplum/react-hooks';
 import type { Bundle, Resource } from '@medplum/fhirtypes';
-import type { MiiModule } from '../../utils/mii-modules';
+import {
+  type MiiModule,
+  fhirResourceTypesOf,
+  getPatientSearchParamForType,
+  getExtraQueryForType,
+} from '../../utils/mii-modules';
 import { toRecord } from '../../utils/fhir-helpers';
 
 interface MiiModuleTabProps {
@@ -60,9 +65,18 @@ export function MiiModuleTab({ module, patientId }: MiiModuleTabProps) {
     let cancelled = false;
     setLoading(true);
 
-    let url = `${module.fhirResourceType}?${module.patientSearchParam}=Patient/${patientId}&_count=50&_sort=-date`;
-    if (module.extraQuery) {
-      url += `&${module.extraQuery}`;
+    // Plan 33-04 will wrap this in Promise.all(types.map(...)) to fan out
+    // across multi-type extension modules. For now (narrow schema) types
+    // is always a one-element array, so indexing [0] is safe and the
+    // single-type fetch shape is preserved.
+    const types = fhirResourceTypesOf(module);
+    const type = types[0];
+    const param = getPatientSearchParamForType(module, type);
+    const extra = getExtraQueryForType(module, type);
+
+    let url = `${type}?${param}=Patient/${patientId}&_count=50&_sort=-date`;
+    if (extra) {
+      url += `&${extra}`;
     }
     client
       .get(client.fhirUrl(url).toString())
@@ -81,7 +95,7 @@ export function MiiModuleTab({ module, patientId }: MiiModuleTabProps) {
       });
 
     return () => { cancelled = true; };
-  }, [client, module.fhirResourceType, module.patientSearchParam, module.extraQuery, patientId]);
+  }, [client, module, patientId]);
 
   if (loading) {
     return (

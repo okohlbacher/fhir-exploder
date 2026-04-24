@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Tabs, Text } from '@mantine/core';
-import { MII_MODULES } from '../../utils/mii-modules';
+import { MII_MODULES, fhirResourceTypesOf } from '../../utils/mii-modules';
 import { ClinicalTimeline } from './ClinicalTimeline';
 import { MiiModuleTab } from './MiiModuleTab';
 
@@ -68,7 +68,7 @@ export function MiiModuleTabs({ patientId }: MiiModuleTabsProps) {
           <Tabs.Tab key={mod.key} value={mod.key}>
             <TabPillLabel
               primary={mod.germanLabel}
-              secondary={mod.fhirResourceType}
+              secondary={fhirResourceTypesOf(mod).join(' / ')}
               active={activeTab === mod.key}
             />
           </Tabs.Tab>
