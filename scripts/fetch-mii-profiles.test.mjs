@@ -38,12 +38,18 @@ describe('scripts/fetch-mii-profiles.mjs — trim + filename + pre-GA + failure 
   let consoleWarnSpy;
   let consoleLogSpy;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     consoleInfoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
     consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     mockLoader.loadPackage.mockReset();
     mockLoader.findResourceJSONs.mockReset();
+    // Reset fs mocks so tests don't see writeFile calls from previous test.
+    const fsMod = await import('node:fs/promises');
+    fsMod.default.writeFile.mockClear();
+    fsMod.default.mkdir.mockClear();
+    fsMod.writeFile.mockClear();
+    fsMod.mkdir.mockClear();
   });
 
   afterEach(() => {
@@ -100,9 +106,11 @@ describe('scripts/fetch-mii-profiles.mjs — trim + filename + pre-GA + failure 
     // Wait a tick for async main() to resolve.
     await new Promise((r) => setTimeout(r, 50));
 
-    // Assert fs.writeFile was called with trimmed content.
+    // Assert fs.writeFile was called with trimmed content. The script uses
+    // `import fs from 'node:fs/promises'` (default import), so the call lands
+    // on fsMod.default.writeFile, not the named export.
     const fsMod = await import('node:fs/promises');
-    const writeCalls = fsMod.writeFile.mock.calls;
+    const writeCalls = fsMod.default.writeFile.mock.calls;
     expect(writeCalls.length).toBeGreaterThanOrEqual(1);
 
     // First StructureDefinition write should contain trimmed shape only.
@@ -144,7 +152,7 @@ describe('scripts/fetch-mii-profiles.mjs — trim + filename + pre-GA + failure 
     await new Promise((r) => setTimeout(r, 50));
 
     const fsMod = await import('node:fs/promises');
-    const firstWrite = fsMod.writeFile.mock.calls.find((c) =>
+    const firstWrite = fsMod.default.writeFile.mock.calls.find((c) =>
       String(c[0]).endsWith('.json'),
     );
     expect(firstWrite).toBeDefined();
