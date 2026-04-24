@@ -140,6 +140,30 @@ describe('MII_MODULES configuration', () => {
     };
     expect(multiTypeExtension.fhirResourceType).toHaveLength(2);
   });
+
+  it('MiiModule type shape accepts optional icon field (Phase 34-02 schema landing)', () => {
+    const moduleWithIcon: MiiModule = {
+      key: 'x-icon',
+      germanLabel: 'X-Icon',
+      fhirResourceType: 'Resource',
+      category: 'extension',
+      badgeColor: 'oncology',
+      patientSearchParam: 'patient',
+      icon: 'IconRadioactive',
+    };
+    expect(moduleWithIcon.icon).toBe('IconRadioactive');
+
+    // Icon is optional — module without icon still compiles
+    const moduleWithoutIcon: MiiModule = {
+      key: 'x-no-icon',
+      germanLabel: 'X-No-Icon',
+      fhirResourceType: 'Resource',
+      category: 'base',
+      badgeColor: 'gray',
+      patientSearchParam: 'patient',
+    };
+    expect(moduleWithoutIcon.icon).toBeUndefined();
+  });
 });
 
 describe('per-module patientSearchParam contract (D-17)', () => {

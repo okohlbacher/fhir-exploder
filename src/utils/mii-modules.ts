@@ -69,6 +69,27 @@ export interface MiiModule {
    * `extraQuery`.
    */
   extraQueryByType?: Record<string, string>;
+
+  /**
+   * Tabler icon component name (e.g. 'IconUser', 'IconRadioactive').
+   *
+   * Rendered at three sites per CONTEXT D-07:
+   *   - ClinicalTimeline dot marker (14px)
+   *   - MiiModuleTabs tab subtitle leading position (14px)
+   *   - DashboardPage MII tile swatch (32px), Drawer header (20px)
+   *
+   * Stored as a string — not a React component — to keep `MII_MODULES`
+   * JSON-serializable (useful for test fixtures and debugging) and to
+   * avoid cyclic import concerns. Consumers use a local `ICON_MAP` object
+   * keyed by this string to resolve to the Tabler component; missing key
+   * or missing map entry renders no icon (defensive). See Plan 34-04 for
+   * the 21-entry ICON_MAP definition.
+   *
+   * OPTIONAL in Phase 34-02 (schema-landing plan). Plan 34-04 populates
+   * `icon` on all 21 modules (base 7 + extension 14) in a single data
+   * commit; this split preserves D-26 no-broken-intermediate-states.
+   */
+  icon?: string;
 }
 
 // Order reflects the Phase 30 UAT feedback (test 8): surface administrative
