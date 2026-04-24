@@ -65,34 +65,41 @@ export function MiiModuleTab({ module, patientId }: MiiModuleTabProps) {
     let cancelled = false;
     setLoading(true);
 
-    // Plan 33-04 will wrap this in Promise.all(types.map(...)) to fan out
-    // across multi-type extension modules. For now (narrow schema) types
-    // is always a one-element array, so indexing [0] is safe and the
-    // single-type fetch shape is preserved.
+    // Plan 33-04 (MII-EXT-03 / D-06): fan out across every FHIR type covered
+    // by this module. Each per-type fetch owns its own per-type catch that
+    // returns an empty array so a single failing type blanks only that type —
+    // other types in the module still render. For Phase 33 every base module
+    // has a one-element type array, so this is a semantic no-op; Phase 34
+    // extension modules (e.g. Bildgebung = ['ImagingStudy', 'DiagnosticReport'])
+    // drop in unchanged.
     const types = fhirResourceTypesOf(module);
-    const type = types[0];
-    const param = getPatientSearchParamForType(module, type);
-    const extra = getExtraQueryForType(module, type);
 
-    let url = `${type}?${param}=Patient/${patientId}&_count=50&_sort=-date`;
-    if (extra) {
-      url += `&${extra}`;
-    }
-    client
-      .get(client.fhirUrl(url).toString())
-      .then((raw) => {
-        if (cancelled) return;
-        const bundle: Bundle = typeof raw === 'string' ? JSON.parse(raw) : raw;
-        setResources(
-          (bundle.entry ?? []).map((e) => e.resource).filter(Boolean) as Resource[]
-        );
-        setLoading(false);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setResources([]);
-        setLoading(false);
-      });
+    const fetchOne = (type: string): Promise<Resource[]> => {
+      const param = getPatientSearchParamForType(module, type);
+      const extra = getExtraQueryForType(module, type);
+      let url = `${type}?${param}=Patient/${patientId}&_count=50&_sort=-date`;
+      if (extra) url += `&${extra}`;
+
+      return client
+        .get(client.fhirUrl(url).toString())
+        .then((raw) => {
+          const bundle: Bundle = typeof raw === 'string' ? JSON.parse(raw) : raw;
+          return (bundle.entry ?? [])
+            .map((e) => e.resource)
+            .filter(Boolean) as Resource[];
+        })
+        .catch(() => [] as Resource[]); // D-06: per-type failure → empty
+    };
+
+    Promise.all(types.map(fetchOne)).then((perType) => {
+      if (cancelled) return;
+      const all = perType.flat();
+      // D-07: merge per-type results and sort newest-first. Matches the
+      // server-side `_sort=-date` hint now that we combine multiple types.
+      all.sort((a, b) => getDate(b).localeCompare(getDate(a)));
+      setResources(all);
+      setLoading(false);
+    });
 
     return () => { cancelled = true; };
   }, [client, module, patientId]);
