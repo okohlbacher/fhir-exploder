@@ -9,6 +9,7 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { MII_MODULES, fhirResourceTypesOf } from '../../utils/mii-modules';
+import { resolveMiiIcon } from '../../utils/mii-icons';
 import { ClinicalTimeline } from './ClinicalTimeline';
 import { MiiModuleTab } from './MiiModuleTab';
 
@@ -60,16 +61,26 @@ function TabPillLabel({
   primary,
   secondary,
   active,
+  iconKey,
 }: {
   primary: string;
   secondary: string;
   active: boolean;
+  iconKey?: string;
 }) {
+  // Plan 34-04 MII-EXT-11 render site: 14px leading icon beside the
+  // primary German label. Icon inherits the pill's text color via
+  // currentColor so active (white) vs inactive (muted) states come for
+  // free. Unknown / missing iconKey -> null (no icon rendered).
+  const Icon = resolveMiiIcon(iconKey);
   return (
     <>
-      <Text fw={600} size="sm">
-        {primary}
-      </Text>
+      <Group gap="xs" wrap="nowrap" align="center">
+        {Icon ? <Icon size={14} /> : null}
+        <Text fw={600} size="sm">
+          {primary}
+        </Text>
+      </Group>
       <Text
         size="xs"
         c={active ? 'inherit' : 'dimmed'}
@@ -128,6 +139,7 @@ export function MiiModuleTabs({ patientId }: MiiModuleTabsProps) {
               primary={mod.germanLabel}
               secondary={fhirResourceTypesOf(mod).join(' / ')}
               active={activeTab === mod.key}
+              iconKey={mod.icon}
             />
           </Tabs.Tab>
         ))}
@@ -172,6 +184,7 @@ export function MiiModuleTabs({ patientId }: MiiModuleTabsProps) {
                     primary={mod.germanLabel}
                     secondary={fhirResourceTypesOf(mod).join(' / ')}
                     active={activeTab === mod.key}
+                    iconKey={mod.icon}
                   />
                 </Tabs.Tab>
               ))}

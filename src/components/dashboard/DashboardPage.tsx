@@ -34,6 +34,7 @@ import {
   fhirResourceTypesOf,
   type MiiModule,
 } from '../../utils/mii-modules';
+import { resolveMiiIcon } from '../../utils/mii-icons';
 import { ServerInfoCard } from './ServerInfoCard';
 
 interface DashboardPageProps {
@@ -199,6 +200,10 @@ export function DashboardPage({
     }, undefined);
     const n = typeof c === 'number' ? c : null;
     const empty = n === null || n === 0;
+    // Plan 34-04 MII-EXT-11 render site: 32px icon colored by the
+    // module's badgeColor (via CSS var) replaces the Phase 33 plain-Box
+    // swatch. Missing icon -> 32px empty Box to preserve tile layout.
+    const TileIcon = resolveMiiIcon(module.icon);
     return (
       <Card
         key={module.key}
@@ -212,21 +217,32 @@ export function DashboardPage({
         onClick={() => handleTileClick(module)}
       >
         <Group justify="space-between" wrap="nowrap" align="flex-start">
-          <Stack gap={2} style={{ minWidth: 0 }}>
-            <Text fw={600} size="sm">
-              {module.germanLabel}
-            </Text>
-            <Text
-              size="xs"
-              c="dimmed"
-              style={{
-                fontFamily:
-                  'var(--font-mono, var(--mantine-font-family-monospace))',
-              }}
-            >
-              {types.join(' / ')}
-            </Text>
-          </Stack>
+          <Group gap="sm" wrap="nowrap" align="flex-start" style={{ minWidth: 0 }}>
+            {TileIcon ? (
+              <TileIcon
+                size={32}
+                color={`var(--mantine-color-${module.badgeColor}-6)`}
+                aria-hidden
+              />
+            ) : (
+              <Box w={32} h={32} />
+            )}
+            <Stack gap={2} style={{ minWidth: 0 }}>
+              <Text fw={600} size="sm">
+                {module.germanLabel}
+              </Text>
+              <Text
+                size="xs"
+                c="dimmed"
+                style={{
+                  fontFamily:
+                    'var(--font-mono, var(--mantine-font-family-monospace))',
+                }}
+              >
+                {types.join(' / ')}
+              </Text>
+            </Stack>
+          </Group>
           <Text size="xl" fw={600} style={MONO_NUMERIC}>
             {n === null ? '—' : n.toLocaleString()}
           </Text>
@@ -481,7 +497,27 @@ export function DashboardPage({
             opened={drawerOpened}
             onClose={closeDrawer}
             position="right"
-            title={selectedModule?.germanLabel ?? 'Module details'}
+            title={(() => {
+              // Plan 34-04 MII-EXT-11 render site: 20px icon in Drawer
+              // title slot beside the German label. Uses a Group so the
+              // icon + label stay inline regardless of Mantine's default
+              // title padding. Falls back to plain string when no module
+              // is selected (Drawer about to close anyway).
+              if (!selectedModule) return 'Module details';
+              const DrawerIcon = resolveMiiIcon(selectedModule.icon);
+              return (
+                <Group gap="xs" wrap="nowrap" align="center">
+                  {DrawerIcon ? (
+                    <DrawerIcon
+                      size={20}
+                      color={`var(--mantine-color-${selectedModule.badgeColor}-6)`}
+                      aria-hidden
+                    />
+                  ) : null}
+                  <Text fw={600}>{selectedModule.germanLabel}</Text>
+                </Group>
+              );
+            })()}
             padding="md"
             size="sm"
           >

@@ -29,6 +29,16 @@ export interface TimelineData {
   summary: string;
   /** Mantine color token from MII_MODULES, or 'gray' fallback. */
   color: string;
+  /**
+   * Tabler icon name (e.g. 'IconStethoscope') from the MII module that
+   * owns this resource type, or undefined for resources that don't map
+   * to any module (defensive fallback — the Timeline only aggregates
+   * base MII module types today, so every resource should have one).
+   *
+   * Consumed by TimelineEntry to render a 14px leading icon alongside
+   * the color-coded badge (Plan 34-04 MII-EXT-11 render site).
+   */
+  iconKey?: string;
   /** Original FHIR resource for downstream navigation. */
   resource: Resource;
 }

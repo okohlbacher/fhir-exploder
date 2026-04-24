@@ -5,6 +5,10 @@ import type { Resource } from '@medplum/fhirtypes';
 import { useNavigate } from 'react-router-dom';
 
 import { MII_MODULES, findModuleForType } from '../../utils/mii-modules';
+// resolveMiiIcon is re-used transitively via TimelineEntry; importing it
+// here lets an eventual per-row icon override stay local to the data
+// producer. Leaving as a named import (even unused) would trip lint; the
+// resolver is imported where it's actually invoked (TimelineEntry.tsx).
 import {
   extractDate,
   extractSummary,
@@ -93,6 +97,9 @@ export function ClinicalTimeline({ patientId }: ClinicalTimelineProps) {
               typeLabel: moduleConfig?.germanLabel ?? resource.resourceType,
               summary: extractSummary(resource),
               color: moduleConfig?.badgeColor ?? 'gray',
+              // Plan 34-04 MII-EXT-11: propagate module icon key so
+              // TimelineEntry can render a 14px leading icon per entry.
+              iconKey: moduleConfig?.icon,
               resource,
             };
           })
