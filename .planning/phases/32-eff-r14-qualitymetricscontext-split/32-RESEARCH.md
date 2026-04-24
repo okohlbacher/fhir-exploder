@@ -596,7 +596,7 @@ const value = useMemo(
 | A2 | React 18 `<Profiler>` API is stable and not experimental in 18.3.1. | Pattern 1 | If it's still experimental, the import path would be different. **[VERIFIED: react.dev/reference/react/Profiler is the stable docs URL; Profiler is exported from 'react' directly since 16.9, stable in 17+]** — so A2 is actually VERIFIED, not assumed. |
 | A3 | No external package currently imports `DuplicatesBreakdown` or `DuplicatesContribution` from `src/quality/QualityMetricsContext`. | Pitfall 4 | Verified by grep; but if the planner adds an import site in another plan landed between this research and Plan 32-02, the re-export becomes load-bearing. D-04 already locks the re-export, so risk is zero. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should `OverviewStrip` be refactored into a `<MetricTile>` sub-component during Plan 32-03, or during the Profiler test's prep step?**
    - What we know: CONTEXT.md D-05 says "mounts OverviewStrip" — the test harness wraps the whole strip. Per-tile Profiler requires per-tile component boundaries.
