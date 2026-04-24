@@ -32,12 +32,31 @@ describe('MII_MODULES configuration', () => {
       expect(mod.key.length).toBeGreaterThan(0);
       expect(mod.germanLabel).toBeTypeOf('string');
       expect(mod.germanLabel.length).toBeGreaterThan(0);
-      expect(mod.fhirResourceType).toBeTypeOf('string');
-      expect(mod.fhirResourceType.length).toBeGreaterThan(0);
+      // Phase 33-03 widen: fhirResourceType is string | string[].
+      // For the 7 base modules all values remain narrow strings; for Phase 34
+      // extension modules some are arrays. Assertion below accepts both.
+      if (Array.isArray(mod.fhirResourceType)) {
+        expect(mod.fhirResourceType.length).toBeGreaterThan(0);
+        for (const t of mod.fhirResourceType) {
+          expect(t).toBeTypeOf('string');
+          expect(t.length).toBeGreaterThan(0);
+        }
+      } else {
+        expect(mod.fhirResourceType).toBeTypeOf('string');
+        expect(mod.fhirResourceType.length).toBeGreaterThan(0);
+      }
+      expect(mod.category).toBeTypeOf('string');
+      expect(['base', 'extension']).toContain(mod.category);
       expect(mod.badgeColor).toBeTypeOf('string');
       expect(mod.badgeColor.length).toBeGreaterThan(0);
       expect(mod.patientSearchParam).toBeTypeOf('string');
       expect(mod.patientSearchParam.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('every Phase 33 module is tagged category: base (Phase 34 adds extensions)', () => {
+    for (const mod of MII_MODULES) {
+      expect(mod.category).toBe('base');
     }
   });
 
@@ -46,6 +65,7 @@ describe('MII_MODULES configuration', () => {
       key: 'person',
       germanLabel: 'Person',
       fhirResourceType: 'Patient',
+      category: 'base',
       badgeColor: 'blue',
       patientSearchParam: '_id',
     });
@@ -97,17 +117,40 @@ describe('MII_MODULES configuration', () => {
       key: 'x',
       germanLabel: 'X',
       fhirResourceType: 'Resource',
+      category: 'base',
       badgeColor: 'gray',
       patientSearchParam: 'patient',
     };
     expect(sample.key).toBe('x');
+  });
+
+  it('MiiModule type shape accepts array fhirResourceType + extension category', () => {
+    // Forward-compat test: Phase 34 multi-type extension module shape.
+    // Proves that the widened interface accepts array fhirResourceType,
+    // extension category, and both override maps without casts.
+    const multiTypeExtension: MiiModule = {
+      key: 'x-ext',
+      germanLabel: 'X-Ext',
+      fhirResourceType: ['ImagingStudy', 'DiagnosticReport'],
+      category: 'extension',
+      badgeColor: 'gray',
+      patientSearchParam: 'patient',
+      patientSearchParamOverrides: { DiagnosticReport: 'subject' },
+      extraQueryByType: { Observation: 'category=laboratory' },
+    };
+    expect(multiTypeExtension.fhirResourceType).toHaveLength(2);
   });
 });
 
 describe('per-module patientSearchParam contract (D-17)', () => {
   // Table-driven per-module assertion. Adding a Phase-34 extension
   // module = adding a row. If a module uses patientSearchParamOverrides
-  // (Phase 33-03 schema widen), add one row per overridden type.
+  // (now available on the widened MiiModule interface as of plan 33-03),
+  // add one row per overridden type (e.g. a multi-type extension module
+  // with fhirResourceType: ['Observation', 'DiagnosticReport'] and
+  // patientSearchParamOverrides: { DiagnosticReport: 'subject' } should
+  // produce TWO rows: one for Observation → 'patient' (module-wide) and
+  // one for DiagnosticReport → 'subject' (override).
   // Source of truth for current values: live-probe-verified MII_MODULES
   // entries (see .planning/phases/33-.../33-01-INVESTIGATION.md).
   const EXPECTED: Array<{ moduleKey: string; fhirResourceType: string; expectedParam: string }> = [
