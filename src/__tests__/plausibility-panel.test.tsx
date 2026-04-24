@@ -56,7 +56,8 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-import { QualityMetricsProvider, useQualityMetrics } from '../quality/QualityMetricsContext';
+import { QualityMetricsProviders } from '../quality/metrics';
+import { useQualityMetrics } from '../quality/QualityMetricsContext';
 import { PlausibilityPanel } from '../components/quality/PlausibilityPanel';
 
 function TestConsumer() {
@@ -72,7 +73,7 @@ function Wrapper({ children }: { children: ReactNode }) {
   return (
     <MantineProvider>
       <MemoryRouter>
-        <QualityMetricsProvider>{children}</QualityMetricsProvider>
+        <QualityMetricsProviders>{children}</QualityMetricsProviders>
       </MemoryRouter>
     </MantineProvider>
   );

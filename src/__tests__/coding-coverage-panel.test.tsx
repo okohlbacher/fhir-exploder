@@ -10,7 +10,7 @@
  *   - Renders the Panel with mocked client samples and asserts the legend,
  *     disclosure, stacked Progress bar, sortable columns, loading state,
  *     and em-dash placeholder for types with totalCodedFields===0.
- *   - Wraps the hook with QualityMetricsProvider and asserts setCoverage
+ *   - Wraps the hook with QualityMetricsProviders and asserts setCoverage
  *     receives the rounded arithmetic mean across settled types.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -52,10 +52,8 @@ Object.defineProperty(window, 'matchMedia', {
 
 import { CodingCoveragePanel } from '../components/quality/CodingCoveragePanel';
 import { useCodingCoverage } from '../hooks/useCodingCoverage';
-import {
-  QualityMetricsProvider,
-  useQualityMetrics,
-} from '../quality/QualityMetricsContext';
+import { QualityMetricsProviders } from '../quality/metrics';
+import { useQualityMetrics } from '../quality/QualityMetricsContext';
 
 let serverCounter = 0;
 function nextServerUrl(): string {
@@ -94,7 +92,7 @@ function Wrapper({ children }: { children: ReactNode }) {
   return (
     <MantineProvider>
       <MemoryRouter>
-        <QualityMetricsProvider>{children}</QualityMetricsProvider>
+        <QualityMetricsProviders>{children}</QualityMetricsProviders>
       </MemoryRouter>
     </MantineProvider>
   );

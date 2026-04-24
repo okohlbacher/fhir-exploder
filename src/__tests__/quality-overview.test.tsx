@@ -169,10 +169,8 @@ vi.mock('../components/quality/TrendsPanel', () => ({
 import { MemoryRouter } from 'react-router-dom';
 import { QualityOverviewPage } from '../components/quality/QualityOverviewPage';
 import { OverviewStrip } from '../components/quality/OverviewStrip';
-import {
-  QualityMetricsProvider,
-  useQualityMetrics as useQualityMetricsContext,
-} from '../quality/QualityMetricsContext';
+import { QualityMetricsProviders } from '../quality/metrics';
+import { useQualityMetrics as useQualityMetricsContext } from '../quality/QualityMetricsContext';
 import { useEffect } from 'react';
 // QDDEP-04 (Plan 25-04): namespace import so `vi.spyOn` can observe calls to
 // `sampleResources` without mocking the whole module. The regression test
@@ -185,9 +183,9 @@ function renderPage() {
   return render(
     <MantineProvider>
       <MemoryRouter>
-        <QualityMetricsProvider>
+        <QualityMetricsProviders>
           <QualityOverviewPage />
-        </QualityMetricsProvider>
+        </QualityMetricsProviders>
       </MemoryRouter>
     </MantineProvider>,
   );
@@ -295,9 +293,9 @@ describe('QualityOverviewPage (QUAL-01)', () => {
     render(
       <MantineProvider>
         <MemoryRouter initialEntries={['/quality?tab=counts']}>
-          <QualityMetricsProvider>
+          <QualityMetricsProviders>
             <QualityOverviewPage />
-          </QualityMetricsProvider>
+          </QualityMetricsProviders>
         </MemoryRouter>
       </MantineProvider>,
     );
@@ -381,7 +379,7 @@ function renderStrip(
   return render(
     <MantineProvider>
       <MemoryRouter>
-        <QualityMetricsProvider>
+        <QualityMetricsProviders>
           <ContextFillerHarness
             completeness={opts.completeness}
             coverage={opts.coverage}
@@ -395,7 +393,7 @@ function renderStrip(
             summary={{ total: 1000, typeCount: 10, loadingCount: 0, errorCount: 0 }}
             isLoading={false}
           />
-        </QualityMetricsProvider>
+        </QualityMetricsProviders>
       </MemoryRouter>
     </MantineProvider>,
   );
@@ -523,9 +521,9 @@ describe('OverviewStrip 9-tile expansion (DQ-12 / Plan 18-04)', () => {
     render(
       <MantineProvider>
         <MemoryRouter initialEntries={['/quality?tab=duplicates']}>
-          <QualityMetricsProvider>
+          <QualityMetricsProviders>
             <QualityOverviewPage />
-          </QualityMetricsProvider>
+          </QualityMetricsProviders>
         </MemoryRouter>
       </MantineProvider>,
     );
@@ -539,9 +537,9 @@ describe('OverviewStrip 9-tile expansion (DQ-12 / Plan 18-04)', () => {
     render(
       <MantineProvider>
         <MemoryRouter initialEntries={['/quality?tab=bogus']}>
-          <QualityMetricsProvider>
+          <QualityMetricsProviders>
             <QualityOverviewPage />
-          </QualityMetricsProvider>
+          </QualityMetricsProviders>
         </MemoryRouter>
       </MantineProvider>,
     );

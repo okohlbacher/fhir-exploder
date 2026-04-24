@@ -185,13 +185,14 @@ describe('DuplicatesPanel (gap-closure regression for CR-01 / SC-1 / SC-2)', () 
 //   - sampleSize === 0 → no contribution → overallDuplicates stays undefined.
 //   - mid-run → no contribution.
 import { waitFor as waitForRollup } from '@testing-library/react';
-import { QualityMetricsProvider, useQualityMetrics } from '../quality/QualityMetricsContext';
+import { QualityMetricsProviders } from '../quality/metrics';
+import { useQualityMetrics } from '../quality/QualityMetricsContext';
 
 function ProviderWrapper({ children }: { children: ReactNode }) {
   return (
     <MantineProvider>
       <MemoryRouter>
-        <QualityMetricsProvider>{children}</QualityMetricsProvider>
+        <QualityMetricsProviders>{children}</QualityMetricsProviders>
       </MemoryRouter>
     </MantineProvider>
   );

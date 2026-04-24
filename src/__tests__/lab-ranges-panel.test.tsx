@@ -9,7 +9,7 @@
  *   - mid-run (status === 'running') → no push (pitfall 2: avoid flicker)
  *
  * Strategy: mock useLabRangesReport for controlled inputs; render the panel
- * inside QualityMetricsProvider together with a TestConsumer that reads
+ * inside QualityMetricsProviders together with a TestConsumer that reads
  * overallLabRanges from context; assert the rendered observed value.
  */
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
@@ -63,7 +63,8 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-import { QualityMetricsProvider, useQualityMetrics } from '../quality/QualityMetricsContext';
+import { QualityMetricsProviders } from '../quality/metrics';
+import { useQualityMetrics } from '../quality/QualityMetricsContext';
 import { LabRangesPanel } from '../components/quality/LabRangesPanel';
 
 function TestConsumer() {
@@ -79,7 +80,7 @@ function Wrapper({ children }: { children: ReactNode }) {
   return (
     <MantineProvider>
       <MemoryRouter>
-        <QualityMetricsProvider>{children}</QualityMetricsProvider>
+        <QualityMetricsProviders>{children}</QualityMetricsProviders>
       </MemoryRouter>
     </MantineProvider>
   );

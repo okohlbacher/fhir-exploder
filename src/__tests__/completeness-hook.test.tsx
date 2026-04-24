@@ -20,10 +20,8 @@ import type { MedplumClient } from '@medplum/core';
 import type { Resource } from '@medplum/fhirtypes';
 
 import { useCompletenessReport } from '../hooks/useCompletenessReport';
-import {
-  QualityMetricsProvider,
-  useQualityMetrics,
-} from '../quality/QualityMetricsContext';
+import { QualityMetricsProviders } from '../quality/metrics';
+import { useQualityMetrics } from '../quality/QualityMetricsContext';
 
 // Each test gets a unique server URL so the module-scoped
 // QualityMetricsCache instance rebuilds from scratch (keyed by serverUrl)
@@ -73,7 +71,7 @@ function makeClient(options: {
 }
 
 function wrapper({ children }: { children: ReactNode }) {
-  return <QualityMetricsProvider>{children}</QualityMetricsProvider>;
+  return <QualityMetricsProviders>{children}</QualityMetricsProviders>;
 }
 
 function flush() {
@@ -357,9 +355,9 @@ describe('useCompletenessReport (QUAL-02)', () => {
     }
 
     render(
-      <QualityMetricsProvider>
+      <QualityMetricsProviders>
         <Harness />
-      </QualityMetricsProvider>,
+      </QualityMetricsProviders>,
     );
 
     await waitFor(() => {
@@ -396,9 +394,9 @@ describe('useCompletenessReport (QUAL-02)', () => {
       return <SetterSpy />;
     }
     render(
-      <QualityMetricsProvider>
+      <QualityMetricsProviders>
         <Harness />
-      </QualityMetricsProvider>,
+      </QualityMetricsProviders>,
     );
 
     await waitFor(() => {
@@ -424,9 +422,9 @@ describe('useCompletenessReport (QUAL-02)', () => {
       return <SetterSpy />;
     }
     render(
-      <QualityMetricsProvider>
+      <QualityMetricsProviders>
         <Harness />
-      </QualityMetricsProvider>,
+      </QualityMetricsProviders>,
     );
 
     // Still loading; rollup must have already been called with undefined.
