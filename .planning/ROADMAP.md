@@ -109,12 +109,12 @@ Plans:
   4. `useQualityMetrics()` facade continues to return the pre-split shape; bulk consumers (`QualityOverviewPage.tsx` capture-snapshot + PDF export, `PdfReportLayout.tsx`) work without modification.
   5. All 7 producer sites migrated from `useQualityMetrics()` destructure to the specific per-metric hook (`useCompletenessReport`, `useCodingCoverage`, `ValidationPanel`, `PlausibilityPanel`, `LabRangesPanel`, `ReferencesPanel`, `DuplicatesPanel`); `OverviewStrip` and `QualityOverviewPage` tab labels subscribe per-metric.
   6. All 8 existing test wrappers migrated from `QualityMetricsProvider` to the composite; `npm test` shows 836+ passing / 0 failing; no "Maximum update depth exceeded" from missing `useMemo` on provider values.
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 Plans:
-- [ ] 32-01-PLAN.md — Scaffold: create 7 per-metric context modules under src/quality/metrics/ + QualityMetricsProviders composer + providers-smoke test (Wave 0 file); legacy provider untouched
-- [ ] 32-02-PLAN.md — Facade rewrite: useQualityMetrics() composes 7 hooks; legacy QualityMetricsProvider deleted; QualityLayout.tsx swapped; 7 direct-wrap test files + 1 vi.mock retargeted
-- [ ] 32-03-PLAN.md — Producer + consumer migration: 7 producers push via per-metric hooks (ValidationPanel on :229 per RESEARCH correction); OverviewStrip decomposed into MetricTile children; QualityOverviewPage tab labels subscribe per-metric (facade preserved for capture/export)
-- [ ] 32-04-PLAN.md — Profiler per-tile isolation test (Wave 0 file) + full-phase regression gate (npm test >=870 passing / 0 failing; tsc clean; 6 EFF-R14 grep verifications)
+- [x] 32-01-PLAN.md — Scaffold: create 7 per-metric context modules under src/quality/metrics/ + QualityMetricsProviders composer + providers-smoke test (Wave 0 file); legacy provider untouched
+- [x] 32-02-PLAN.md — Facade rewrite: useQualityMetrics() composes 7 hooks; legacy QualityMetricsProvider deleted; QualityLayout.tsx swapped; 7 direct-wrap test files + 1 vi.mock retargeted
+- [x] 32-03-PLAN.md — Producer + consumer migration: 7 producers push via per-metric hooks (ValidationPanel on :229 per RESEARCH correction); OverviewStrip decomposed into MetricTile children; QualityOverviewPage tab labels subscribe per-metric (facade preserved for capture/export)
+- [x] 32-04-PLAN.md — Profiler per-tile isolation test (Wave 0 file) + full-phase regression gate (npm test >=870 passing / 0 failing; tsc clean; 6 EFF-R14 grep verifications)
 **Effort**: ~2-2.5 days (internal refactor, API-preserving; main cost is the producer + consumer migration sweep and the Profiler-based per-tile isolation test)
 
 ### Phase 33: MII Schema Foundation + Extension-Modules Collapse UI
@@ -218,7 +218,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 21-22 (v1.3) | v1.3 | 9/9 | ✅ Shipped | 2026-04-16 |
 | 23-30 (v1.4) | v1.4 | 35/35 | ✅ Shipped | 2026-04-23 |
 | 31. UX-01 External Validator Cascade | v1.5 | 2/2 | Complete    | 2026-04-23 |
-| 32. EFF-R14 QualityMetricsContext Split | v1.5 | 0/4 | 📋 Not started | — |
+| 32. EFF-R14 QualityMetricsContext Split | v1.5 | 4/4 | Complete    | 2026-04-24 |
 | 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 0/? | 📋 Not started | — |
 | 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 0/? | 📋 Not started | — |
 | 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 0/? | 📋 Not started | — |
