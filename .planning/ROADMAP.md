@@ -246,3 +246,15 @@ Phase 35 (UAT follow-ups + matrix)
 - `.planning/REQUIREMENTS.md` — 31 REQ-IDs across 4 scope groups with traceability table
 - `.planning/milestones/v1.4-phases/29-backlog-ux/29-02-PLAN.md` — UX-01 plan preserved verbatim with decisions D-07..D-16 locked (Phase 31 executes this verbatim)
 - `.planning/milestones/v1.4-phases/30-layout-redesign/30-UAT.md` — 6 off-phase follow-ups (Phase 33 + Phase 35 close these)
+
+## Backlog
+
+### Phase 999.1: phase 33 HUMAN-UAT smoke tests (deferred browser verification) (BACKLOG)
+
+**Goal:** Run the 6 human-verification items captured in `33-HUMAN-UAT.md` against live Blaze + Synthea — covers Laborbefund extraQuery fix, timeline color/label rendering, Dashboard scope heading, tile Drawer UX, base tab render invariant, and UAT-FU-06 previously-empty-panel smoke.
+**Requirements:** TBD (tied to Phase 33 MII-EXT-01..08 automated verification)
+**Plans:** 0 plans
+**Source:** `.planning/phases/33-mii-schema-foundation-extension-modules-collapse-ui/33-HUMAN-UAT.md`
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
