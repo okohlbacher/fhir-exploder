@@ -73,7 +73,7 @@ Full details: [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
 
 - [~] **Phase 31: UX-01 External Validator Cascade** — Execute the preserved `29-02-PLAN.md` verbatim: three-tier cascade (external → server `$validate` → local structural), PHI-gate extraction, `normalizeOperationOutcomeIssue`, probe cache, AbortController + 15 s timeout, active-strategy status line. Parallel-safe with Phase 32. (31-01 completed 2026-04-23; 31-02 gap-closure in progress — closes CR-01 PHI ack key mismatch)
 - [x] **Phase 32: EFF-R14 QualityMetricsContext Split** — Option A: 7 per-metric `React.createContext` providers + `<QualityMetricsProviders>` composer. Facade `useQualityMetrics()` preserved. Parallel-safe with Phase 31 (merge-conflict watch on `ValidationPanel.tsx`). (completed 2026-04-23)
-- [ ] **Phase 33: MII Schema Foundation + Extension-Modules Collapse UI** — Helpers-first refactor (`fhirResourceTypesOf`, `findModuleForType`, `getPatientSearchParamForType`), schema widening (`fhirResourceType: string | string[]` + `category` + `patientSearchParamOverrides?`), `MiiModuleTab` fan-out, collapsible Extension modules section. Absorbs UAT-FU-04 (Dashboard MII tile scoping) and UAT-FU-06 (empty per-patient MII/FHIR panel investigation).
+- [x] **Phase 33: MII Schema Foundation + Extension-Modules Collapse UI** — Helpers-first refactor (`fhirResourceTypesOf`, `findModuleForType`, `getPatientSearchParamForType`), schema widening (`fhirResourceType: string | string[]` + `category` + `patientSearchParamOverrides?`), `MiiModuleTab` fan-out, collapsible Extension modules section. Absorbs UAT-FU-04 (Dashboard MII tile scoping) and UAT-FU-06 (empty per-patient MII/FHIR panel investigation). (completed 2026-04-24)
 - [ ] **Phase 34: 14 MII Extension Modules + Palette + Bundled Profiles** — 14 extension module entries, 7 custom `MantineColorsTuple`s (WCAG AA audit), 21 Tabler icons, `scripts/fetch-mii-profiles.mjs` via `fhir-package-loader@^2.2.4` devDep + `prepare` lifecycle, CC-BY-4.0 attribution, dimmed empty-state + "Show N empty" toggle.
 - [ ] **Phase 35: Phase-30 UAT Follow-ups + Per-Type Quality Matrix** — UAT-FU-01 Explorer Date/Status extractor (TDD), UAT-FU-02 HumanReadableView extension cleanup, UAT-FU-03 ResourceDetailPage mode removal + Developer→JSON rename, UAT-FU-05 per-type quality matrix card under Counts tab (requires Phase 32).
 
@@ -219,7 +219,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 23-30 (v1.4) | v1.4 | 35/35 | ✅ Shipped | 2026-04-23 |
 | 31. UX-01 External Validator Cascade | v1.5 | 2/2 | Complete    | 2026-04-23 |
 | 32. EFF-R14 QualityMetricsContext Split | v1.5 | 4/4 | Complete    | 2026-04-24 |
-| 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 6/7 | In Progress|  |
+| 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 7/7 | Complete   | 2026-04-24 |
 | 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 0/? | 📋 Not started | — |
 | 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 0/? | 📋 Not started | — |
 
