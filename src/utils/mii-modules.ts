@@ -116,6 +116,7 @@ export const MII_MODULES: MiiModule[] = [
     category: 'base',
     badgeColor: 'blue',
     patientSearchParam: '_id',
+    icon: 'IconUser',
   },
   {
     key: 'fall',
@@ -124,6 +125,7 @@ export const MII_MODULES: MiiModule[] = [
     category: 'base',
     badgeColor: 'indigo',
     patientSearchParam: 'patient',
+    icon: 'IconBedFlat',
   },
   {
     key: 'diagnose',
@@ -132,6 +134,7 @@ export const MII_MODULES: MiiModule[] = [
     category: 'base',
     badgeColor: 'teal',
     patientSearchParam: 'patient',
+    icon: 'IconStethoscope',
   },
   {
     key: 'prozedur',
@@ -140,6 +143,7 @@ export const MII_MODULES: MiiModule[] = [
     category: 'base',
     badgeColor: 'violet',
     patientSearchParam: 'patient',
+    icon: 'IconMedicalCross',
   },
   {
     key: 'consent',
@@ -148,6 +152,10 @@ export const MII_MODULES: MiiModule[] = [
     category: 'base',
     badgeColor: 'pink',
     patientSearchParam: 'patient',
+    // audit §2a primary 'IconFileSignature' not published in
+    // @tabler/icons-react@3.41.x; UI-SPEC fallback IconFileCertificate used.
+    // Same "signed/sealed document" silhouette — see src/utils/mii-icons.ts.
+    icon: 'IconFileCertificate',
   },
   {
     key: 'laborbefund',
@@ -161,6 +169,7 @@ export const MII_MODULES: MiiModule[] = [
     // the `laboratory` category — otherwise social-history entries like
     // "Tobacco smoking status" leak in.
     extraQuery: 'category=laboratory',
+    icon: 'IconFlask',
   },
   {
     key: 'medikation',
@@ -169,6 +178,172 @@ export const MII_MODULES: MiiModule[] = [
     category: 'base',
     badgeColor: 'orange',
     patientSearchParam: 'patient',
+    icon: 'IconPill',
+  },
+  // ---------------------------------------------------------------------
+  // Phase 34 MII-EXT-09 extension modules (D-01 alphabetical by German label).
+  //
+  // Each extension module:
+  //   - category: 'extension' (Phase 33 partition key)
+  //   - fhirResourceType: string or string[] from color-design-audit.md §1
+  //     (multi-profile modules carry arrays per D-02 blocking-verify contract)
+  //   - badgeColor: palette family from audit §2b (Phase 34-02 theme.ts)
+  //   - icon: Tabler icon-name string from audit §2b (Plan 34-04 fallback
+  //     candidates applied inline where the audit primary is not published
+  //     in @tabler/icons-react@3.41.x; see src/utils/mii-icons.ts comments)
+  //   - patientSearchParamOverrides: per-type divergence from R4 default
+  //     (Specimen uses `subject`; ResearchStudy uses `enrollment`)
+  // ---------------------------------------------------------------------
+  {
+    key: 'bildgebung',
+    germanLabel: 'Bildgebung',
+    fhirResourceType: ['ImagingStudy', 'DiagnosticReport'],
+    category: 'extension',
+    badgeColor: 'imaging',
+    patientSearchParam: 'patient',
+    icon: 'IconPhoto',
+  },
+  {
+    key: 'biobank',
+    germanLabel: 'Biobank',
+    fhirResourceType: 'Specimen',
+    category: 'extension',
+    badgeColor: 'bioanalysis',
+    patientSearchParam: 'patient',
+    // Specimen has no `patient` search param in R4 — must use `subject`.
+    // Source: color-design-audit.md §1 biobank row + RESEARCH P-02.
+    patientSearchParamOverrides: { Specimen: 'subject' },
+    icon: 'IconTestPipe',
+  },
+  {
+    key: 'dokument',
+    germanLabel: 'Dokument',
+    fhirResourceType: 'DocumentReference',
+    category: 'extension',
+    badgeColor: 'administration',
+    patientSearchParam: 'patient',
+    icon: 'IconFileDescription',
+  },
+  {
+    key: 'intensivmedizin',
+    germanLabel: 'Intensivmedizin',
+    // Multi-profile module (audit §1 secondary_types = ["Encounter", "Procedure"]).
+    fhirResourceType: ['Observation', 'Encounter', 'Procedure'],
+    category: 'extension',
+    badgeColor: 'bioanalysis',
+    patientSearchParam: 'patient',
+    icon: 'IconBedFilled',
+  },
+  {
+    key: 'kardiologie',
+    germanLabel: 'Kardiologie',
+    // Multi-profile module (audit §1 secondary_types = ["Procedure", "Condition"]).
+    fhirResourceType: ['Observation', 'Procedure', 'Condition'],
+    category: 'extension',
+    badgeColor: 'administration',
+    patientSearchParam: 'patient',
+    icon: 'IconHeartbeat',
+  },
+  {
+    key: 'mikrobiologie',
+    germanLabel: 'Mikrobiologie',
+    fhirResourceType: 'Observation',
+    category: 'extension',
+    badgeColor: 'pathology',
+    patientSearchParam: 'patient',
+    // audit §2b primary 'IconBacteria' not published in
+    // @tabler/icons-react@3.41.x; UI-SPEC fallback IconVirus used.
+    // Also mitigates HIGH color-collapse deuteranopia risk vs
+    // molekulargenetik (audit §4d).
+    icon: 'IconVirus',
+  },
+  {
+    key: 'molekulargenetik',
+    germanLabel: 'Molekulargenetik',
+    fhirResourceType: 'Observation',
+    category: 'extension',
+    badgeColor: 'genetics',
+    patientSearchParam: 'patient',
+    icon: 'IconDna',
+  },
+  {
+    key: 'mtb',
+    germanLabel: 'MTB',
+    // Multi-profile module (audit §1 secondary_types = ["Condition", "MedicationStatement"]).
+    fhirResourceType: ['Observation', 'Condition', 'MedicationStatement'],
+    category: 'extension',
+    badgeColor: 'oncology',
+    patientSearchParam: 'patient',
+    icon: 'IconUsersGroup',
+  },
+  {
+    key: 'onkologie',
+    germanLabel: 'Onkologie',
+    // Multi-profile module (audit §1 secondary_types =
+    // ["Observation", "Procedure", "MedicationStatement"]).
+    fhirResourceType: ['Condition', 'Observation', 'Procedure', 'MedicationStatement'],
+    category: 'extension',
+    badgeColor: 'oncology',
+    patientSearchParam: 'patient',
+    icon: 'IconRadioactive',
+  },
+  {
+    key: 'pathologie',
+    germanLabel: 'Pathologie',
+    // Multi-profile module (audit §1 secondary_types =
+    // ["DiagnosticReport", "Specimen"]).
+    fhirResourceType: ['Observation', 'DiagnosticReport', 'Specimen'],
+    category: 'extension',
+    badgeColor: 'pathology',
+    patientSearchParam: 'patient',
+    // Specimen has no `patient` search param in R4 — must use `subject`.
+    // Source: color-design-audit.md §1 pathologie row + RESEARCH P-02.
+    patientSearchParamOverrides: { Specimen: 'subject' },
+    icon: 'IconMicroscope',
+  },
+  {
+    key: 'pro',
+    germanLabel: 'PRO',
+    fhirResourceType: 'Observation',
+    category: 'extension',
+    badgeColor: 'patient-reported',
+    patientSearchParam: 'patient',
+    // audit §2b primary 'IconQuestionnaire' not published in
+    // @tabler/icons-react@3.41.x; UI-SPEC fallback IconListCheck used.
+    // Also mitigates MEDIUM-HIGH color-collapse deuteranopia risk vs
+    // seltene/IconPuzzle (audit §4d).
+    icon: 'IconListCheck',
+  },
+  {
+    key: 'seltene',
+    germanLabel: 'Seltene Erkrankungen',
+    fhirResourceType: 'Condition',
+    category: 'extension',
+    badgeColor: 'genetics',
+    patientSearchParam: 'patient',
+    icon: 'IconPuzzle',
+  },
+  {
+    key: 'studie',
+    germanLabel: 'Studie',
+    fhirResourceType: 'ResearchStudy',
+    category: 'extension',
+    badgeColor: 'imaging',
+    patientSearchParam: 'patient',
+    // ResearchStudy has no direct `patient` param in R4 — scope via
+    // `enrollment=Patient/{id}` (chain to ResearchSubject). Source:
+    // color-design-audit.md §1 studie row + RESEARCH P-02.
+    patientSearchParamOverrides: { ResearchStudy: 'enrollment' },
+    icon: 'IconClipboardData',
+  },
+  {
+    key: 'symptom',
+    germanLabel: 'Symptom',
+    fhirResourceType: 'Observation',
+    category: 'extension',
+    badgeColor: 'patient-reported',
+    patientSearchParam: 'patient',
+    icon: 'IconMoodSmile',
   },
 ];
 
