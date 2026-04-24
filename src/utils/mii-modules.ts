@@ -112,3 +112,88 @@ export const MII_MODULES: MiiModule[] = [
     patientSearchParam: 'patient',
   },
 ];
+
+// ---------------------------------------------------------------------------
+// MII-EXT-01 helpers (plan 33-02, D-01 / D-04 / D-05)
+//
+// These helpers encapsulate every read pattern that today touches
+// `mod.fhirResourceType` or builds a per-module URL. They are intentionally
+// shipped BEFORE the schema widen in plan 33-03 so the call-site sweep is
+// a pure refactor — behavior is identical to before under the narrow
+// (single-string) schema. Once plan 33-03 widens `fhirResourceType` to
+// `string | string[]` and adds the optional `patientSearchParamOverrides` /
+// `extraQueryByType` maps, the helpers start exercising the array /
+// override branches without any additional call-site changes.
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the list of FHIR resource types this module covers.
+ *
+ * Normalises the narrow-schema single string to a one-element array so
+ * downstream code can always iterate. Once plan 33-03 widens
+ * `fhirResourceType` to `string | string[]`, the array branch activates
+ * transparently (no call-site changes needed).
+ */
+export function fhirResourceTypesOf(mod: MiiModule): string[] {
+  const t = mod.fhirResourceType;
+  return Array.isArray(t) ? t : [t];
+}
+
+/**
+ * Finds the module that owns a given FHIR resource type.
+ *
+ * Replaces the inline `MII_MODULES.find(m => m.fhirResourceType === type)`
+ * pattern at `ClinicalTimeline.tsx:85-86` (D-15) and matches multi-type
+ * modules via `Array.includes()` once plan 33-03 lands. The `modules`
+ * parameter defaults to `MII_MODULES`; tests and downstream call sites
+ * that want to scope the lookup (e.g. to only base modules or a custom
+ * fixture) can pass their own array.
+ */
+export function findModuleForType(
+  type: string,
+  modules: MiiModule[] = MII_MODULES,
+): MiiModule | undefined {
+  return modules.find((m) => fhirResourceTypesOf(m).includes(type));
+}
+
+/**
+ * Returns the patient search param for a specific (module, type) pair.
+ *
+ * Falls back to module-wide `patientSearchParam` when no override exists.
+ * Per D-04, the plan-33-03 widen adds
+ * `patientSearchParamOverrides?: Record<string, string>` to `MiiModule`;
+ * this helper is ready for that now (checks for the optional map via a
+ * type-cast) but works identically against the narrow schema.
+ *
+ * The `as unknown as { ... }` cast is deliberate: it lets plan 33-02 ship
+ * WITHOUT widening the `MiiModule` interface. Plan 33-03 will remove the
+ * cast by adding the optional fields to the interface directly.
+ */
+export function getPatientSearchParamForType(
+  mod: MiiModule,
+  type: string,
+): string {
+  const overrides = (mod as unknown as {
+    patientSearchParamOverrides?: Record<string, string>;
+  }).patientSearchParamOverrides;
+  return overrides?.[type] ?? mod.patientSearchParam;
+}
+
+/**
+ * Returns the extra query filter for a specific (module, type) pair.
+ *
+ * Per D-05: returns `string | undefined` (NOT `string` with empty
+ * fallback). Callers conditionally append: `if (q) url += '&' + q;`.
+ * Checks `extraQueryByType[type]` first (plan 33-03 widen), falls back
+ * to the module-wide `extraQuery`. The cast is the same deliberate
+ * forward-compat shim as `getPatientSearchParamForType`.
+ */
+export function getExtraQueryForType(
+  mod: MiiModule,
+  type: string,
+): string | undefined {
+  const byType = (mod as unknown as {
+    extraQueryByType?: Record<string, string>;
+  }).extraQueryByType;
+  return byType?.[type] ?? mod.extraQuery;
+}
