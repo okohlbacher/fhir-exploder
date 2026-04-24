@@ -9,13 +9,14 @@ import {
 } from '../utils/mii-modules';
 
 describe('MII_MODULES configuration', () => {
-  it('exports the 7 MII Kerndatensatz base modules', () => {
-    expect(MII_MODULES).toHaveLength(7);
+  it('exports 21 MII Kerndatensatz modules (7 base + 14 extension)', () => {
+    expect(MII_MODULES).toHaveLength(21);
   });
 
-  it('contains all expected module keys (Phase 30 UAT-8 order)', () => {
+  it('contains all expected module keys (base 7 + extension 14 alphabetical per D-01)', () => {
     const keys = MII_MODULES.map((m) => m.key);
     expect(keys).toEqual([
+      // Base 7 (Phase 30 UAT-8 order — UNCHANGED)
       'person',
       'fall',
       'diagnose',
@@ -23,6 +24,21 @@ describe('MII_MODULES configuration', () => {
       'consent',
       'laborbefund',
       'medikation',
+      // Extension 14 (D-01 alphabetical by German label: Bildgebung → Symptom)
+      'bildgebung',
+      'biobank',
+      'dokument',
+      'intensivmedizin',
+      'kardiologie',
+      'mikrobiologie',
+      'molekulargenetik',
+      'mtb',
+      'onkologie',
+      'pathologie',
+      'pro',
+      'seltene',
+      'studie',
+      'symptom',
     ]);
   });
 
@@ -51,24 +67,54 @@ describe('MII_MODULES configuration', () => {
       expect(mod.badgeColor.length).toBeGreaterThan(0);
       expect(mod.patientSearchParam).toBeTypeOf('string');
       expect(mod.patientSearchParam.length).toBeGreaterThan(0);
+      // Phase 34 MII-EXT-11: every module populates `icon` with a non-empty string.
+      expect(mod.icon).toBeTypeOf('string');
+      expect(mod.icon!.length).toBeGreaterThan(0);
     }
   });
 
-  it('every Phase 33 module is tagged category: base (Phase 34 adds extensions)', () => {
-    for (const mod of MII_MODULES) {
+  it('all 7 base modules are tagged category: base (Phase 34 partition invariant)', () => {
+    const baseModules = MII_MODULES.filter((m) => m.category === 'base');
+    expect(baseModules).toHaveLength(7);
+    for (const mod of baseModules) {
       expect(mod.category).toBe('base');
     }
   });
 
+  it('all 14 extension modules are tagged category: extension (Phase 34 partition invariant)', () => {
+    const extensionModules = MII_MODULES.filter((m) => m.category === 'extension');
+    expect(extensionModules).toHaveLength(14);
+    for (const mod of extensionModules) {
+      expect(mod.category).toBe('extension');
+    }
+  });
+
+  it('every extension module uses a badgeColor from the Phase 34 palette or a base Mantine color', () => {
+    const VALID_EXTENSION_PALETTES = [
+      'oncology', 'imaging', 'genetics', 'pathology',
+      'bioanalysis', 'administration', 'patient-reported',
+    ];
+    const VALID_BASE_COLORS = [
+      'blue', 'indigo', 'teal', 'violet', 'pink', 'cyan', 'orange',
+    ];
+    const VALID = [...VALID_EXTENSION_PALETTES, ...VALID_BASE_COLORS];
+    const extensionModules = MII_MODULES.filter((m) => m.category === 'extension');
+    for (const mod of extensionModules) {
+      expect(VALID).toContain(mod.badgeColor);
+    }
+  });
+
   it('first module is Person -> Patient with blue badge (MII base module)', () => {
-    expect(MII_MODULES[0]).toEqual({
-      key: 'person',
-      germanLabel: 'Person',
-      fhirResourceType: 'Patient',
-      category: 'base',
-      badgeColor: 'blue',
-      patientSearchParam: '_id',
-    });
+    // Phase 34-04 adds icon field; assert on individual fields instead of
+    // shape-equality so the test tolerates the append-only icon column.
+    const person = MII_MODULES[0];
+    expect(person.key).toBe('person');
+    expect(person.germanLabel).toBe('Person');
+    expect(person.fhirResourceType).toBe('Patient');
+    expect(person.category).toBe('base');
+    expect(person.badgeColor).toBe('blue');
+    expect(person.patientSearchParam).toBe('_id');
+    expect(person.icon).toBe('IconUser');
   });
 
   it('Diagnose module uses Condition with teal badge', () => {
@@ -178,6 +224,7 @@ describe('per-module patientSearchParam contract (D-17)', () => {
   // Source of truth for current values: live-probe-verified MII_MODULES
   // entries (see .planning/phases/33-.../33-01-INVESTIGATION.md).
   const EXPECTED: Array<{ moduleKey: string; fhirResourceType: string; expectedParam: string }> = [
+    // Base 7 (Phase 33 — UNCHANGED)
     { moduleKey: 'person',      fhirResourceType: 'Patient',             expectedParam: '_id' },
     { moduleKey: 'fall',        fhirResourceType: 'Encounter',           expectedParam: 'patient' },
     { moduleKey: 'diagnose',    fhirResourceType: 'Condition',           expectedParam: 'patient' },
@@ -185,9 +232,39 @@ describe('per-module patientSearchParam contract (D-17)', () => {
     { moduleKey: 'consent',     fhirResourceType: 'Consent',             expectedParam: 'patient' },
     { moduleKey: 'laborbefund', fhirResourceType: 'Observation',         expectedParam: 'patient' },
     { moduleKey: 'medikation',  fhirResourceType: 'MedicationStatement', expectedParam: 'patient' },
-    // NOTE: update these expectedParam values when 33-03 introduces
-    // patientSearchParamOverrides; until then, every row should match
-    // the module-wide patientSearchParam.
+    // Extension 14 (Phase 34 D-02/D-03 — one row per (module, type) pair from
+    // color-design-audit.md §1. Multi-profile modules emit one row per member
+    // type (6 known multi-profile modules: bildgebung, intensivmedizin,
+    // kardiologie, mtb, onkologie, pathologie). Override-driven rows below
+    // (biobank/Specimen → subject; pathologie/Specimen → subject;
+    // studie/ResearchStudy → enrollment) are the R4-spec-derived exceptions
+    // captured by patientSearchParamOverrides on their MII_MODULES entries.
+    { moduleKey: 'bildgebung',       fhirResourceType: 'ImagingStudy',        expectedParam: 'patient' },
+    { moduleKey: 'bildgebung',       fhirResourceType: 'DiagnosticReport',    expectedParam: 'patient' },
+    { moduleKey: 'biobank',          fhirResourceType: 'Specimen',            expectedParam: 'subject' },
+    { moduleKey: 'dokument',         fhirResourceType: 'DocumentReference',   expectedParam: 'patient' },
+    { moduleKey: 'intensivmedizin',  fhirResourceType: 'Observation',         expectedParam: 'patient' },
+    { moduleKey: 'intensivmedizin',  fhirResourceType: 'Encounter',           expectedParam: 'patient' },
+    { moduleKey: 'intensivmedizin',  fhirResourceType: 'Procedure',           expectedParam: 'patient' },
+    { moduleKey: 'kardiologie',      fhirResourceType: 'Observation',         expectedParam: 'patient' },
+    { moduleKey: 'kardiologie',      fhirResourceType: 'Procedure',           expectedParam: 'patient' },
+    { moduleKey: 'kardiologie',      fhirResourceType: 'Condition',           expectedParam: 'patient' },
+    { moduleKey: 'mikrobiologie',    fhirResourceType: 'Observation',         expectedParam: 'patient' },
+    { moduleKey: 'molekulargenetik', fhirResourceType: 'Observation',         expectedParam: 'patient' },
+    { moduleKey: 'mtb',              fhirResourceType: 'Observation',         expectedParam: 'patient' },
+    { moduleKey: 'mtb',              fhirResourceType: 'Condition',           expectedParam: 'patient' },
+    { moduleKey: 'mtb',              fhirResourceType: 'MedicationStatement', expectedParam: 'patient' },
+    { moduleKey: 'onkologie',        fhirResourceType: 'Condition',           expectedParam: 'patient' },
+    { moduleKey: 'onkologie',        fhirResourceType: 'Observation',         expectedParam: 'patient' },
+    { moduleKey: 'onkologie',        fhirResourceType: 'Procedure',           expectedParam: 'patient' },
+    { moduleKey: 'onkologie',        fhirResourceType: 'MedicationStatement', expectedParam: 'patient' },
+    { moduleKey: 'pathologie',       fhirResourceType: 'Observation',         expectedParam: 'patient' },
+    { moduleKey: 'pathologie',       fhirResourceType: 'DiagnosticReport',    expectedParam: 'patient' },
+    { moduleKey: 'pathologie',       fhirResourceType: 'Specimen',            expectedParam: 'subject' },
+    { moduleKey: 'pro',              fhirResourceType: 'Observation',         expectedParam: 'patient' },
+    { moduleKey: 'seltene',          fhirResourceType: 'Condition',           expectedParam: 'patient' },
+    { moduleKey: 'studie',           fhirResourceType: 'ResearchStudy',       expectedParam: 'enrollment' },
+    { moduleKey: 'symptom',          fhirResourceType: 'Observation',         expectedParam: 'patient' },
   ];
 
   // Contract probes the real helper from src/utils/mii-modules (landed in
@@ -202,7 +279,10 @@ describe('per-module patientSearchParam contract (D-17)', () => {
     ({ moduleKey, fhirResourceType, expectedParam }) => {
       const mod = MII_MODULES.find((m) => m.key === moduleKey);
       expect(mod).toBeDefined();
-      expect(mod!.fhirResourceType).toBe(fhirResourceType);
+      // Phase 34 multi-profile modules ship `fhirResourceType` as an array
+      // (D-02). Assert the type membership via fhirResourceTypesOf() so both
+      // narrow-schema (string) and wide-schema (array) modules pass.
+      expect(fhirResourceTypesOf(mod!)).toContain(fhirResourceType);
       expect(getPatientSearchParamForType(mod!, fhirResourceType)).toBe(expectedParam);
     },
   );
