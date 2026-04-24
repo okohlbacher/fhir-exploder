@@ -272,3 +272,45 @@ describe('helpers (MII-EXT-01)', () => {
     });
   });
 });
+
+describe('findModuleForType with multi-type module (MII-EXT-08 timeline regression)', () => {
+  // Prepends a Bildgebung-shaped multi-type module to the real MII_MODULES
+  // array. Plan 33-02's helper test already proved `findModuleForType` resolves
+  // both member types to the stub; this block locks the TIMELINE-specific
+  // invariant: both member types must return the SAME germanLabel + badgeColor
+  // so the ClinicalTimeline renders a consistent badge regardless of which
+  // multi-type member triggered the row. Also includes a shadow-guard so
+  // prepending an extension stub cannot mask a base module's lookup — Phase 34
+  // will drop ~14 extension modules into MII_MODULES, and module ordering must
+  // not break the base lookup chain.
+  const MULTI_TYPE_FIXTURE: MiiModule[] = [
+    {
+      key: 'bildgebung-stub',
+      germanLabel: 'Bildgebung',
+      fhirResourceType: ['ImagingStudy', 'DiagnosticReport'],
+      category: 'extension',
+      badgeColor: 'cyan',
+      patientSearchParam: 'patient',
+    },
+    ...MII_MODULES,
+  ];
+
+  it('multi-type module: both member types resolve to same germanLabel', () => {
+    const a = findModuleForType('ImagingStudy', MULTI_TYPE_FIXTURE);
+    const b = findModuleForType('DiagnosticReport', MULTI_TYPE_FIXTURE);
+    expect(a?.germanLabel).toBe('Bildgebung');
+    expect(b?.germanLabel).toBe('Bildgebung');
+  });
+
+  it('multi-type module: both member types resolve to same badgeColor (D-15)', () => {
+    const a = findModuleForType('ImagingStudy', MULTI_TYPE_FIXTURE);
+    const b = findModuleForType('DiagnosticReport', MULTI_TYPE_FIXTURE);
+    expect(a?.badgeColor).toBe('cyan');
+    expect(b?.badgeColor).toBe('cyan');
+  });
+
+  it('base module still resolves when multi-type fixture is prepended (shadow-guard)', () => {
+    expect(findModuleForType('Condition', MULTI_TYPE_FIXTURE)?.key).toBe('diagnose');
+    expect(findModuleForType('Patient', MULTI_TYPE_FIXTURE)?.key).toBe('person');
+  });
+});
