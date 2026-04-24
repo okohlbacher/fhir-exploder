@@ -10,6 +10,10 @@ import { useDisclosure } from '@mantine/hooks';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { MII_MODULES, fhirResourceTypesOf } from '../../utils/mii-modules';
 import { resolveMiiIcon } from '../../utils/mii-icons';
+import {
+  EmptyExtensionsProvider,
+  useEmptyExtensionsCoordinator,
+} from '../../hooks/useEmptyExtensionsCoordinator';
 import { ClinicalTimeline } from './ClinicalTimeline';
 import { MiiModuleTab } from './MiiModuleTab';
 
@@ -96,12 +100,29 @@ function TabPillLabel({
 }
 
 export function MiiModuleTabs({ patientId }: MiiModuleTabsProps) {
+  // Mount the EmptyExtensionsProvider keyed on patientId so the
+  // per-patient hide-empty toggle + per-(patientId, moduleKey) emptiness
+  // signals from MiiModuleTab children (Plan 34-05) hydrate at the right
+  // scope. Re-keying on patient change forces a fresh subtree (and a
+  // fresh emptyMap) when the user navigates to a different patient.
+  return (
+    <EmptyExtensionsProvider key={patientId} patientId={patientId}>
+      <MiiModuleTabsInner patientId={patientId} />
+    </EmptyExtensionsProvider>
+  );
+}
+
+function MiiModuleTabsInner({ patientId }: MiiModuleTabsProps) {
   // Partition once per render. `m.category` is REQUIRED on every module,
   // so the partition is exhaustive: every module falls into exactly one
   // bucket. Phase 33 data has 7 'base' + 0 'extension'; Phase 34 adds 14
   // 'extension' entries.
   const baseModules = MII_MODULES.filter((m) => m.category === 'base');
   const extensionModules = MII_MODULES.filter((m) => m.category === 'extension');
+
+  // Plan 34-05: per-patient hide-empties state from the coordinator.
+  const { hideEmpty, setHideEmpty, emptyCount, emptyModuleKeys } =
+    useEmptyExtensionsCoordinator();
 
   // Default to the first base module. The `?? null` guards against an
   // empty MII_MODULES array (defensive — never hit in practice since
@@ -129,8 +150,29 @@ export function MiiModuleTabs({ patientId }: MiiModuleTabsProps) {
     }
   }, [activeTab, extensionModules, extensionOpened, toggleExtension]);
 
+  // Plan 34-05: when hideEmpty is true, filter empty extension modules OUT
+  // of the pill list. Panels still render unconditionally below (Phase 33
+  // D-11 invariant: extension panels OMIT keepMounted, so only the active
+  // one is mounted at any time — filtering pills doesn't unmount anything
+  // that wasn't already dormant). We do NOT filter Tabs.Panel registrations
+  // because the parent Tabs control needs every value to resolve activeTab.
+  const visibleExtensionModules = hideEmpty
+    ? extensionModules.filter((m) => !emptyModuleKeys.includes(m.key))
+    : extensionModules;
+
   return (
-    <Tabs value={activeTab} onChange={setActiveTab} variant="pills">
+    // Plan 34-05 (Rule 3 fix to make D-11 actually work): Mantine's <Tabs>
+    // root component defaults `keepMounted: true`, which OR-overrides every
+    // child <Tabs.Panel keepMounted={false}>. Phase 33 D-11 intended to
+    // lazy-mount extension panels by omitting `keepMounted` on them, but
+    // because the root default is `true`, that omission is a no-op — all
+    // 14 extension panels mount eagerly. Forcing `keepMounted={false}` at
+    // the root restores per-panel opt-in semantics: base 7 + Timeline
+    // continue to opt in (their <Tabs.Panel keepMounted> declarations
+    // below), extension panels (no keepMounted prop) lazy-mount as
+    // intended. This is the prerequisite for the visited-and-empty count
+    // contract in Plan 34-05.
+    <Tabs value={activeTab} onChange={setActiveTab} variant="pills" keepMounted={false}>
       {/* Base: existing flat layout unchanged (7 pills + Zeitleiste). */}
       <Tabs.List>
         {baseModules.map((mod) => (
@@ -157,28 +199,50 @@ export function MiiModuleTabs({ patientId }: MiiModuleTabsProps) {
           visually empty). Phase 34's data drop flips this on. */}
       {extensionModules.length > 0 && (
         <>
-          <UnstyledButton
-            onClick={toggleExtension}
-            mt="sm"
-            aria-expanded={extensionOpened}
-          >
-            <Group gap="xs">
-              {extensionOpened ? (
-                <IconChevronDown size={14} />
-              ) : (
-                <IconChevronRight size={14} />
-              )}
-              <Text size="sm" c="dimmed">
-                Extension modules ({extensionModules.length})
-              </Text>
-            </Group>
-          </UnstyledButton>
+          <Group gap="md" mt="sm" align="center">
+            <UnstyledButton
+              onClick={toggleExtension}
+              aria-expanded={extensionOpened}
+            >
+              <Group gap="xs">
+                {extensionOpened ? (
+                  <IconChevronDown size={14} />
+                ) : (
+                  <IconChevronRight size={14} />
+                )}
+                <Text size="sm" c="dimmed">
+                  Extension modules ({extensionModules.length})
+                </Text>
+              </Group>
+            </UnstyledButton>
+
+            {/* Plan 34-05 (D-18): Hide/Show N empty modules toggle.
+                Label flips based on current state; N counts only
+                visited-and-empty extensions (Option B of RESEARCH §Plan
+                34-05 — the publisher pattern preserves Phase 33 D-11
+                lazy-mount). Hidden entirely when emptyCount === 0. */}
+            {emptyCount > 0 && (
+              <UnstyledButton
+                onClick={() => setHideEmpty(!hideEmpty)}
+                aria-pressed={hideEmpty}
+              >
+                <Text size="xs" c="dimmed" style={{ textDecoration: 'underline' }}>
+                  {hideEmpty
+                    ? `Show ${emptyCount} empty modules`
+                    : `Hide ${emptyCount} empty modules`}
+                </Text>
+              </UnstyledButton>
+            )}
+          </Group>
+
           <Collapse in={extensionOpened}>
             {/* Extension tabs live in their own secondary Tabs.List inside
                 the Collapse so they only render when the section is
-                expanded, sharing the parent Tabs' activeTab state. */}
+                expanded, sharing the parent Tabs' activeTab state.
+                Plan 34-05: render `visibleExtensionModules` (== extensionModules
+                when hideEmpty=false; filtered subset otherwise). */}
             <Tabs.List mt="xs">
-              {extensionModules.map((mod) => (
+              {visibleExtensionModules.map((mod) => (
                 <Tabs.Tab key={mod.key} value={mod.key}>
                   <TabPillLabel
                     primary={mod.germanLabel}
