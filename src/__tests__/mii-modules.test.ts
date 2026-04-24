@@ -104,7 +104,7 @@ describe('per-module patientSearchParam contract (D-17)', () => {
   // Source of truth for current values: live-probe-verified MII_MODULES
   // entries (see .planning/phases/33-.../33-01-INVESTIGATION.md).
   const EXPECTED: Array<{ moduleKey: string; fhirResourceType: string; expectedParam: string }> = [
-    { moduleKey: 'person',      fhirResourceType: 'Patient',             expectedParam: 'subject' }, // FIXME back to _id before commit
+    { moduleKey: 'person',      fhirResourceType: 'Patient',             expectedParam: '_id' },
     { moduleKey: 'fall',        fhirResourceType: 'Encounter',           expectedParam: 'patient' },
     { moduleKey: 'diagnose',    fhirResourceType: 'Condition',           expectedParam: 'patient' },
     { moduleKey: 'prozedur',    fhirResourceType: 'Procedure',           expectedParam: 'patient' },
