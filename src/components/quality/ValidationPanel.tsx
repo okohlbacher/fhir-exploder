@@ -51,7 +51,7 @@ import type { MedplumClient } from '@medplum/core';
 import type { OperationOutcomeIssue } from '@medplum/fhirtypes';
 import type { QualityOutletContext } from './QualityLayout';
 import { useSettings } from '../../hooks/useSettings';
-import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import { useValidationRollup } from '../../quality/metrics';
 import { percentClean } from '../../quality/percent';
 import { BUNDLED_PROFILE_TYPES } from '../../quality/profiles';
 import { parseResourceTypes } from '../../fhir/capability';
@@ -226,7 +226,7 @@ export function ValidationPanel(_props: ValidationPanelProps) {
   // on terminal status (complete|cancelled). Gate prevents mid-run flicker
   // (pitfall 2 in 18-RESEARCH.md). Numerator uses allNormalizedIssues (conformance
   // + legacy dedup) per pitfall 6.
-  const { setOverallValidation } = useQualityMetrics();
+  const { set: setOverallValidation } = useValidationRollup();
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
     const affected = new Set(allNormalizedIssues.map((i) => i.resourceId)).size;

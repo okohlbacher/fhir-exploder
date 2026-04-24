@@ -10,7 +10,7 @@ import type { MedplumClient } from '@medplum/core';
 import { sampleResources } from '../quality/sampling';
 import { computeCompleteness, requiredElementPaths } from '../quality/completenessWalker';
 import { getProfileForType } from '../quality/profiles';
-import { useQualityMetrics as useQualityMetricsContext } from '../quality/QualityMetricsContext';
+import { useCompletenessRollup } from '../quality/metrics';
 import type { PerTypeCompletenessReport, PerTypeReport } from '../quality/types';
 import { useSampleWalker } from './useSampleWalker';
 
@@ -39,7 +39,7 @@ export function useCompletenessReport(
     metricNamespace: 'completeness',
   });
   // Rollup (05-01-SUMMARY): mean of per-type populated/total, suppressed while loading.
-  const { setCompleteness } = useQualityMetricsContext();
+  const { set: setCompleteness } = useCompletenessRollup();
   useEffect(() => {
     const values = Object.values(reports);
     const stillWaiting = values.length > 0 && values.some((r) => r === 'loading');

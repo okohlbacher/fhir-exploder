@@ -23,7 +23,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
-import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import { useReferencesRollup } from '../../quality/metrics';
 import { percentClean } from '../../quality/percent';
 import { useReferenceReport } from '../../hooks/useReferenceReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
@@ -66,7 +66,7 @@ export function ReferencesPanel({ types, client, sampleSize, patientIds }: Refer
   // Phase 18 / Plan 18-02: push overallReferences rollup to QualityMetricsContext
   // on terminal status. Uses `sampleSize` prop (resource count) as denominator,
   // NOT `run.progress.total` (which is batch count — see useReferenceReport.ts:117).
-  const { setOverallReferences } = useQualityMetrics();
+  const { set: setOverallReferences } = useReferencesRollup();
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
     const affected = new Set(run.issues.map((i) => i.resourceId)).size;

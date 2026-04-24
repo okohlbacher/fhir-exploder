@@ -9,7 +9,7 @@ import type { MedplumClient } from '@medplum/core';
 
 import { sampleResources } from '../quality/sampling';
 import { aggregateCoverage } from '../quality/codingCoverageWalker';
-import { useQualityMetrics as useQualityMetricsContext } from '../quality/QualityMetricsContext';
+import { useCoverageRollup } from '../quality/metrics';
 import type { PerTypeCoverageReport, PerTypeReport } from '../quality/types';
 
 import { useSampleWalker } from './useSampleWalker';
@@ -38,7 +38,7 @@ export function useCodingCoverage(
 
   // Rollup (05-01-SUMMARY): arithmetic mean of per-type systemCode/totalCodedFields
   // percentages, suppressed while any type is still loading.
-  const { setCoverage } = useQualityMetricsContext();
+  const { set: setCoverage } = useCoverageRollup();
   useEffect(() => {
     const values = Object.values(reports);
     const stillWaiting = values.length > 0 && values.some((r) => r === 'loading');

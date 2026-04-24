@@ -23,7 +23,7 @@ import {
 } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
 import { useSettings } from '../../hooks/useSettings';
-import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import { useLabRangesRollup } from '../../quality/metrics';
 import { percentClean } from '../../quality/percent';
 import { useLabRangesReport } from '../../hooks/useLabRangesReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
@@ -48,7 +48,7 @@ export function LabRangesPanel({ client, sampleSize, patientIds }: LabRangesPane
   // Phase 18 / Plan 18-02: push overallLabRanges rollup to QualityMetricsContext
   // on terminal status. Special case: noRange === checked → push undefined
   // (no ranges configured → not-applicable tile, NOT "100% clean" — pitfall 7).
-  const { setOverallLabRanges } = useQualityMetrics();
+  const { set: setOverallLabRanges } = useLabRangesRollup();
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
     const summary = run.summary;

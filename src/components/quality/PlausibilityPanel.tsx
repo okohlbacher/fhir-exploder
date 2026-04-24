@@ -24,7 +24,7 @@ import {
 } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
 import { useSettings } from '../../hooks/useSettings';
-import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import { usePlausibilityRollup } from '../../quality/metrics';
 import { percentClean } from '../../quality/percent';
 import { usePlausibilityReport } from '../../hooks/usePlausibilityReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
@@ -106,7 +106,7 @@ export function PlausibilityPanel({ types, client, sampleSize, patientIds }: Pla
   // Phase 18 / Plan 18-02: push overallPlausibility rollup to QualityMetricsContext
   // on terminal status. Gate prevents mid-run flicker (pitfall 2). Numerator is
   // unique issue resourceIds; denominator is run.progress.total (sample length).
-  const { setOverallPlausibility } = useQualityMetrics();
+  const { set: setOverallPlausibility } = usePlausibilityRollup();
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
     const affected = new Set(run.issues.map((i) => i.resourceId)).size;

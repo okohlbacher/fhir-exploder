@@ -26,7 +26,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import type { MedplumClient } from '@medplum/core';
-import { useQualityMetrics } from '../../quality/QualityMetricsContext';
+import { useDuplicatesRollup } from '../../quality/metrics';
 import { percentClean } from '../../quality/percent';
 import { useDuplicateReport } from '../../hooks/useDuplicateReport';
 import { ResourceIssueTable } from './ResourceIssueTable';
@@ -99,7 +99,7 @@ export function DuplicatesPanel({ types, client, sampleSize, patientIds }: Dupli
   // Mid-run is gated out (pitfall 2 — no flicker). NO direct setter for
   // overallDuplicates exists; the value is DERIVED in QualityMetricsContext
   // via deriveOverallDuplicates(duplicatesBreakdown).
-  const { setDuplicatesContribution } = useQualityMetrics();
+  const { contribute: setDuplicatesContribution } = useDuplicatesRollup();
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
     if (!sampleSize || sampleSize <= 0) return;
