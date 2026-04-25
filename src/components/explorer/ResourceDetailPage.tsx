@@ -7,7 +7,6 @@ import type { Resource, ResourceType } from '@medplum/fhirtypes';
 import { useBreadcrumbTrail } from '../../hooks/useBreadcrumbTrail';
 import { NavigationBreadcrumbs } from './NavigationBreadcrumbs';
 import { HumanReadableView } from './HumanReadableView';
-import { ClinicalRawView } from './ClinicalRawView';
 import { DeveloperJsonView } from './DeveloperJsonView';
 import { PatientRelatedResources } from './PatientRelatedResources';
 
@@ -25,10 +24,9 @@ function isValidFhirReference(resourceType: string, id: string): boolean {
 }
 
 /**
- * Resource detail page with three display modes and reference navigation.
+ * Resource detail page with two display modes and reference navigation.
  *
- * Tabs: Human-readable (ResourceTable), Clinical + Raw (split view),
- * Developer (syntax-highlighted JSON).
+ * Tabs: Human-readable (ResourceTable) and JSON (syntax-highlighted JSON).
  *
  * Reference click interception: Captures clicks on anchor tags pointing
  * to FHIR server URLs and navigates within the Explorer instead.
@@ -74,7 +72,7 @@ export function ResourceDetailPage() {
       });
   }, [client, resourceType, id]);
 
-  // Keyboard shortcuts: 1/2/3 switch tabs when no input is focused
+  // Keyboard shortcuts: 1/2 switch tabs when no input is focused
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const tag = document.activeElement?.tagName;
@@ -85,9 +83,6 @@ export function ResourceDetailPage() {
           setActiveTab('human-readable');
           break;
         case '2':
-          setActiveTab('clinical-raw');
-          break;
-        case '3':
           setActiveTab('developer');
           break;
       }
@@ -182,18 +177,13 @@ export function ResourceDetailPage() {
         <Tabs value={activeTab} onChange={setActiveTab}>
           <Tabs.List>
             <Tabs.Tab value="human-readable">Human-readable</Tabs.Tab>
-            <Tabs.Tab value="clinical-raw">Clinical + Raw</Tabs.Tab>
-            <Tabs.Tab value="developer">Developer</Tabs.Tab>
+            <Tabs.Tab value="developer">JSON</Tabs.Tab>
           </Tabs.List>
 
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <div onClick={handleReferenceClick}>
             <Tabs.Panel value="human-readable" pt="md">
               <HumanReadableView resource={resource} />
-            </Tabs.Panel>
-
-            <Tabs.Panel value="clinical-raw" pt="md">
-              <ClinicalRawView resource={resource} />
             </Tabs.Panel>
 
             <Tabs.Panel value="developer" pt="md">

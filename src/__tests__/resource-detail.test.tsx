@@ -46,9 +46,6 @@ vi.mock('@medplum/react', () => ({
 vi.mock('../components/explorer/HumanReadableView', () => ({
   HumanReadableView: () => <div data-testid="human-readable-view" />,
 }));
-vi.mock('../components/explorer/ClinicalRawView', () => ({
-  ClinicalRawView: () => <div data-testid="clinical-raw-view" />,
-}));
 vi.mock('../components/explorer/DeveloperJsonView', () => ({
   DeveloperJsonView: () => <div data-testid="developer-json-view" />,
 }));
@@ -138,8 +135,8 @@ describe('ResourceDetailPage — Back to results (patient-aware)', () => {
 // --- Legacy scaffold tests (unchanged) ---------------------------------
 
 describe('ResourceDetailPage', () => {
-  it('renders three tab buttons: Human-readable, Clinical + Raw, Developer', () => {
-    // ResourceDetailPage renders Mantine Tabs with three tabs
+  it('renders two tab buttons: Human-readable, JSON', () => {
+    // ResourceDetailPage renders Mantine Tabs with two tabs (UAT-FU-03)
     expect(ResourceDetailPage).toBeDefined();
     expect(typeof ResourceDetailPage).toBe('function');
   });

@@ -58,10 +58,6 @@ vi.mock('../components/explorer/HumanReadableView', () => ({
   ),
 }));
 
-vi.mock('../components/explorer/ClinicalRawView', () => ({
-  ClinicalRawView: () => <div data-testid="clinical-raw-view" />,
-}));
-
 vi.mock('../components/explorer/DeveloperJsonView', () => ({
   DeveloperJsonView: () => <div data-testid="developer-json-view" />,
 }));
