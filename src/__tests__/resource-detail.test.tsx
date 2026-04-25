@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 
@@ -177,5 +177,87 @@ describe('ResourceDetailPage', () => {
   it('renders resource heading with resourceType/id', () => {
     // Title order={2} showing resourceType/id
     expect(ResourceDetailPage).toBeDefined();
+  });
+});
+
+// --- UAT-FU-03 Tabs cleanup ---------------------------------------------
+//
+// These tests codify the post-cleanup contract for Phase 35-01:
+//   * Tabs reduce from 3 → 2 (drop "Clinical + Raw").
+//   * "Developer" tab is renamed to "JSON" (value attribute UNCHANGED).
+//   * Keyboard shortcut "2" remaps from clinical-raw → developer (JSON).
+//   * Default active tab is still "Human-readable" (D-12).
+//
+// Initially these tests FAIL (RED). Task 2 deletes the middle tab + renames
+// the JSON label + remaps the keyboard handler, flipping the suite GREEN.
+
+describe('Tabs cleanup (UAT-FU-03)', () => {
+  it('renders exactly 2 Tabs.Tab elements', async () => {
+    await act(async () => {
+      renderAt('/explorer/Condition/cond-1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('tab').length).toBeGreaterThan(0);
+    });
+
+    expect(screen.getAllByRole('tab')).toHaveLength(2);
+  });
+
+  it('does NOT render a tab labelled "Clinical + Raw"', async () => {
+    await act(async () => {
+      renderAt('/explorer/Condition/cond-1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('tab').length).toBeGreaterThan(0);
+    });
+
+    expect(screen.queryByRole('tab', { name: /Clinical \+ Raw/ })).toBeNull();
+  });
+
+  it('renders a tab labelled "JSON" (renamed from "Developer")', async () => {
+    await act(async () => {
+      renderAt('/explorer/Condition/cond-1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('tab').length).toBeGreaterThan(0);
+    });
+
+    expect(screen.getByRole('tab', { name: /^JSON$/ })).toBeDefined();
+    expect(screen.queryByRole('tab', { name: /^Developer$/ })).toBeNull();
+  });
+
+  it('default active tab is Human-readable', async () => {
+    await act(async () => {
+      renderAt('/explorer/Condition/cond-1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('tab').length).toBeGreaterThan(0);
+    });
+
+    const humanReadableTab = screen.getByRole('tab', { name: /Human-readable/ });
+    expect(humanReadableTab.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('keyboard "2" activates the JSON tab (remapped from clinical-raw)', async () => {
+    await act(async () => {
+      renderAt('/explorer/Condition/cond-1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('tab').length).toBeGreaterThan(0);
+    });
+
+    await act(async () => {
+      fireEvent.keyDown(document.body, { key: '2' });
+    });
+
+    await waitFor(() => {
+      const jsonTab = screen.getByRole('tab', { name: /^JSON$/ });
+      expect(jsonTab.getAttribute('aria-selected')).toBe('true');
+    });
   });
 });
