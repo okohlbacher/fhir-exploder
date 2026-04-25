@@ -75,7 +75,7 @@ Full details: [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
 - [x] **Phase 32: EFF-R14 QualityMetricsContext Split** — Option A: 7 per-metric `React.createContext` providers + `<QualityMetricsProviders>` composer. Facade `useQualityMetrics()` preserved. Parallel-safe with Phase 31 (merge-conflict watch on `ValidationPanel.tsx`). (completed 2026-04-23)
 - [x] **Phase 33: MII Schema Foundation + Extension-Modules Collapse UI** — Helpers-first refactor (`fhirResourceTypesOf`, `findModuleForType`, `getPatientSearchParamForType`), schema widening (`fhirResourceType: string | string[]` + `category` + `patientSearchParamOverrides?`), `MiiModuleTab` fan-out, collapsible Extension modules section. Absorbs UAT-FU-04 (Dashboard MII tile scoping) and UAT-FU-06 (empty per-patient MII/FHIR panel investigation). (completed 2026-04-24)
 - [x] **Phase 34: 14 MII Extension Modules + Palette + Bundled Profiles** — 14 extension module entries, 7 custom `MantineColorsTuple`s (WCAG AA audit), 21 Tabler icons, `scripts/fetch-mii-profiles.mjs` via `fhir-package-loader@^2.2.4` devDep + `prepare` lifecycle, CC-BY-4.0 attribution, dimmed empty-state + "Show N empty" toggle. (completed 2026-04-25)
-- [ ] **Phase 35: Phase-30 UAT Follow-ups + Per-Type Quality Matrix** — UAT-FU-01 Explorer Date/Status extractor (TDD), UAT-FU-02 HumanReadableView extension cleanup, UAT-FU-03 ResourceDetailPage mode removal + Developer→JSON rename, UAT-FU-05 per-type quality matrix card under Counts tab (requires Phase 32).
+- [x] **Phase 35: Phase-30 UAT Follow-ups + Per-Type Quality Matrix** — UAT-FU-01 Explorer Date/Status extractor (TDD), UAT-FU-02 HumanReadableView extension cleanup, UAT-FU-03 ResourceDetailPage mode removal + Developer→JSON rename, UAT-FU-05 per-type quality matrix card under Counts tab (requires Phase 32). (completed 2026-04-25)
 
 ## Phase Details
 
@@ -167,13 +167,13 @@ Plans:
   4. Per-type quality matrix card renders under `/quality?tab=counts` below the existing counts table. Columns: `Resource type | Complete% | Coverage% | Validation% | References% | Dup | Issues | chevron`. Each % cell has an inline horizontal fill bar. Rows sortable via the shared `SortableTh`. Clicking a row navigates to the per-type drill-down panel filtered by resource type. Threshold breach coloring applied per cell via `isBreached(key, value)` — consistent with OverviewStrip. Consumes per-metric context slots from Phase 32 (no duplicate metric computation) (UAT-FU-05).
   5. All Phase-30 UAT gaps listed in `.planning/milestones/v1.4-phases/30-layout-redesign/30-UAT.md` Gaps section closed; live-Blaze UAT confirms Explorer Date/Status columns populated across the six verified resource types.
   6. `npm test` 836+ passing / 0 failing; `npm run build` clean; design-token grep (`grep -rn 'color: #' src/ --include='*.tsx'`) returns 0 new hits.
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 35-01-PLAN.md — UAT-FU-03 ResourceDetailPage mode cleanup (drop Clinical+Raw tab; rename Developer → JSON; delete ClinicalRawView.tsx; grep-clean tests)
 - [x] 35-02-PLAN.md — UAT-FU-01 SearchResultsPage per-type Date/Status extractors (TDD baseline-drift commit pair across 6 FHIR R4 types)
 - [x] 35-03-PLAN.md — UAT-FU-02 HumanReadableView extension cleanup (Tooltip identifier system + Modal address-extension + bottom Extensions section)
-- [ ] 35-04-PLAN.md — UAT-FU-05 per-type quality matrix card under Counts tab + 5 per-metric byType slot extension + ValidationContext validationIssuesByType (Q-01) + 4 producer migrations + URL-driven type pre-selection (Q-02)
+- [x] 35-04-PLAN.md — UAT-FU-05 per-type quality matrix card under Counts tab + 5 per-metric byType slot extension + ValidationContext validationIssuesByType (Q-01) + 4 producer migrations + URL-driven type pre-selection (Q-02)
 **Effort**: ~2-2.5 days (UAT-FU-01 ~0.5 day via TDD; UAT-FU-02 ~0.5 day; UAT-FU-03 ~0.25 day mechanical rename; UAT-FU-05 ~1-1.25 day — matrix is smaller than OverviewStrip because `SortableTh`, `ResourceIssueTable`, and breach colors are already primitives)
 **UI hint**: yes (per-type matrix table under Counts, HumanReadableView modal, SegmentedControl trim)
 
@@ -233,7 +233,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 32. EFF-R14 QualityMetricsContext Split | v1.5 | 4/4 | Complete    | 2026-04-24 |
 | 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 7/7 | Complete    | 2026-04-24 |
 | 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 6/6 | Complete    | 2026-04-25 |
-| 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 3/4 | In Progress|  |
+| 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 4/4 | Complete   | 2026-04-25 |
 
 ## Effort Totals (v1.5)
 

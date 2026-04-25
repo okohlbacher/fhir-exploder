@@ -782,31 +782,31 @@ function ExtensionsSection({ resource }: { resource: Resource }) {
 
 If A2 is wrong, downstream impact is the largest — Issues column needs a NEW context slot for per-type issue counts (not a derived count of byType keys). See Open Questions.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 ### Q-01: Issues column source — count of validated types, count of issues per type, or sum of all issues?
 
 - What we know: D-17 says "`Issues` (integer count from validation issues per type — sourced from existing `ValidationPanel` per-type aggregate)."
 - What's unclear: ValidationPanel currently exposes `allNormalizedIssues: NormalizedIssue[]` PER RUN — i.e., for the currently selected `resourceType`. There is NO existing "per-type issue count aggregate." The aggregate doesn't exist; it would have to be NEWLY built into `ValidationContext`.
-- Recommendation: Plan must add a NEW context slot — `validationIssuesByType: Record<string, number>` — populated by ValidationPanel alongside the existing setByType call. The `Issues` column reads from this map. If a type has not been validated yet, render em-dash (consistent with Pitfall P-05). Surface this in discuss-phase if planner wants to defer.
+- RESOLVED: Recommendation: Plan must add a NEW context slot — `validationIssuesByType: Record<string, number>` — populated by ValidationPanel alongside the existing setByType call. The `Issues` column reads from this map. If a type has not been validated yet, render em-dash (consistent with Pitfall P-05). Surface this in discuss-phase if planner wants to defer.
 
 ### Q-02: D-19 chevron navigation when ValidationPanel/ReferencesPanel auto-deselect on URL change
 
 - What we know: ValidationPanel reads `useState<string>` for resourceType (line 137), defaulted to `BUNDLED_PROFILE_TYPES[0]`. There is NO `useSearchParams` consumption that would react to `?type=Condition`.
 - What's unclear: To honor D-19, ValidationPanel + ReferencesPanel must read `?type=` from URL on mount and pre-select that resourceType. This is a NEW behavior not currently implemented.
-- Recommendation: Plan 35-04 includes a sub-task to add `useSearchParams` consumption to BOTH panels (ValidationPanel.tsx:137 and ReferencesPanel.tsx:47) — read `searchParams.get('type')` as the initial state, fall back to current default. ~10-line change per panel. Alternative: chevron click ONLY navigates URL change; the user must reselect from the panel's own Select. Less smooth UX but smaller diff. Surface in discuss-phase.
+- RESOLVED: Recommendation: Plan 35-04 includes a sub-task to add `useSearchParams` consumption to BOTH panels (ValidationPanel.tsx:137 and ReferencesPanel.tsx:47) — read `searchParams.get('type')` as the initial state, fall back to current default. ~10-line change per panel. Alternative: chevron click ONLY navigates URL change; the user must reselect from the panel's own Select. Less smooth UX but smaller diff. Surface in discuss-phase.
 
 ### Q-03: D-13 localStorage migration — confirm no-op?
 
 - What we know: `ResourceDetailPage.tsx:51` uses plain `useState`. `grep -rn localStorage src/components/explorer/` returns no hits for activeMode persistence.
 - What's unclear: D-13 may have been written assuming persistence existed. Researcher could not find any.
-- Recommendation: Plan 35-01 explicitly documents "D-13 is a no-op — no localStorage key for active mode exists." Proceed without migration code. Surface in discuss-phase if planner wants to ADD persistence (out-of-scope for this phase per Pitfall P-10).
+- RESOLVED: Recommendation: Plan 35-01 explicitly documents "D-13 is a no-op — no localStorage key for active mode exists." Proceed without migration code. Surface in discuss-phase if planner wants to ADD persistence (out-of-scope for this phase per Pitfall P-10).
 
 ### Q-04: Order of byType slot extension vs producer migration in Plan 35-04
 
 - What we know: Phase 32 used incremental landings (D-11): scaffold first, facade rewrite, producer/consumer migration last.
 - What's unclear: Phase 35 D-01 says Plan 35-04 contains BOTH extension and migration. CONTEXT.md `Claude's Discretion` allows splitting if needed.
-- Recommendation: Keep them in one plan but TWO sub-tasks, with the byType slot extension landing FIRST in Plan 35-04 (Task 1) and producer migrations following (Tasks 2-5). A test-only task (Task 6) closes. Mirrors Phase 32's incremental cadence within a single plan.
+- RESOLVED: Recommendation: Keep them in one plan but TWO sub-tasks, with the byType slot extension landing FIRST in Plan 35-04 (Task 1) and producer migrations following (Tasks 2-5). A test-only task (Task 6) closes. Mirrors Phase 32's incremental cadence within a single plan.
 
 ## Canonical References
 
