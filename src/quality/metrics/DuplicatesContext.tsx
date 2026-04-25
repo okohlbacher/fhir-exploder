@@ -30,6 +30,13 @@ export interface DuplicatesContribution {
 export interface DuplicatesRollup {
   overall: number | undefined;
   breakdown: DuplicatesBreakdown;
+  /**
+   * Plan 35-04 (UAT-FU-05): DERIVED getter exposing breakdown.hashByType
+   * directly so the per-type quality matrix can read Duplicates per-type %
+   * without a parallel useState. Identity stable (`byType === breakdown.hashByType`).
+   * NOT settable — DuplicatesPanel.contribute() remains the sole producer.
+   */
+  byType: Record<string, number>;
   contribute: (contribution: DuplicatesContribution | 'reset') => void;
 }
 
@@ -76,7 +83,10 @@ export function DuplicatesProvider({ children }: { children: ReactNode }) {
 
   const overall = useMemo(() => deriveOverallDuplicates(breakdown), [breakdown]);
   const value = useMemo<DuplicatesRollup>(
-    () => ({ overall, breakdown, contribute }),
+    // Plan 35-04: byType is a passthrough of breakdown.hashByType — same
+    // reference identity, so consumers comparing identity see the same
+    // object as breakdown.hashByType.
+    () => ({ overall, breakdown, byType: breakdown.hashByType, contribute }),
     [overall, breakdown, contribute],
   );
 
@@ -90,6 +100,7 @@ export function useDuplicatesRollup(): DuplicatesRollup {
     return {
       overall: undefined,
       breakdown: EMPTY_DUPLICATES_BREAKDOWN,
+      byType: EMPTY_DUPLICATES_BREAKDOWN.hashByType,
       contribute: () => {},
     };
   }
