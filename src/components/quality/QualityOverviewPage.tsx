@@ -45,6 +45,7 @@ import { useResourceCountsMetrics } from '../../hooks/useResourceCountsMetrics';
 import { useSampleSize, SampleSizeControl } from './SampleSizeControl';
 import { OverviewStrip } from './OverviewStrip';
 import { ResourceCountsPanel } from './ResourceCountsPanel';
+import { QualityByTypeMatrix } from './QualityByTypeMatrix';
 import { CompletenessPanel } from './CompletenessPanel';
 import { CodingCoveragePanel } from './CodingCoveragePanel';
 import { ValidationPanel } from './ValidationPanel';
@@ -483,7 +484,13 @@ export function QualityOverviewPage() {
         </Tabs.List>
 
         <Tabs.Panel value="counts" pt="md" keepMounted>
-          <ResourceCountsPanel counts={counts} />
+          {/* Plan 35-04 (UAT-FU-05): per-type quality matrix card renders BELOW
+              the existing counts table per D-16. Card hides itself when no
+              types have count > 0. */}
+          <Stack gap="md">
+            <ResourceCountsPanel counts={counts} />
+            <QualityByTypeMatrix counts={counts} />
+          </Stack>
         </Tabs.Panel>
         {/* QDDEP-04: prop dropped so panel unmounts on tab switch and Completeness sampling does not run in the background */}
         <Tabs.Panel value="completeness" pt="md">

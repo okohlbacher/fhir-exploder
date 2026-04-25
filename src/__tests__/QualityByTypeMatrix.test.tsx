@@ -19,10 +19,9 @@
  *      gate preserved).
  *  11. Subtitle copy matches UI-SPEC verbatim.
  */
-import { describe, it, expect, vi } from 'vitest';
-import { type ReactNode, useEffect } from 'react';
-import { render, screen, act, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { useEffect } from 'react';
+import { render, screen, act, within, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import {
@@ -245,7 +244,7 @@ describe('UAT-FU-05: QualityByTypeMatrix card', () => {
     await screen.findByText('80%');
     const chevron = screen.getByLabelText('Open per-type drill-down');
     await act(async () => {
-      await userEvent.click(chevron);
+      fireEvent.click(chevron);
     });
     expect(lastLoc?.pathname).toBe('/quality');
     expect(lastLoc?.search).toContain('tab=completeness');
@@ -263,7 +262,7 @@ describe('UAT-FU-05: QualityByTypeMatrix card', () => {
     await screen.findByText('Quality by resource type');
     const chevron = screen.getByLabelText('Open per-type drill-down');
     await act(async () => {
-      await userEvent.click(chevron);
+      fireEvent.click(chevron);
     });
     expect(lastLoc?.pathname).toBe('/explorer/Patient');
   });
@@ -277,7 +276,7 @@ describe('UAT-FU-05: QualityByTypeMatrix card', () => {
     await screen.findByText('80%');
     const chevron = screen.getByLabelText('Open per-type drill-down');
     await act(async () => {
-      await userEvent.click(chevron);
+      fireEvent.click(chevron);
     });
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
