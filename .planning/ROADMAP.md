@@ -189,7 +189,13 @@ Plans:
   2. At least one production caller of `getExtensionProfileForUrl` exists (likely in completeness walker / validation pipeline) and is exercised by a unit test.
   3. `rollup-plugin-visualizer` treemap shows initial-load bundle delta vs Phase 34 baseline ≤ 100 KB gz; before/after HTMLs committed under `.planning/phases/36-.../`.
   4. `npm test` 1054+ passing / 0 failing; `npx tsc -b --noEmit` clean; `npm run build` clean.
-**Plans**: TBD (3 tasks: refactor static→dynamic; define consumer + test; re-measure + commit treemaps)
+**Plans:** 4 plans
+
+Plans:
+- [ ] 36-01-PLAN.md — Wave 0: stub tests for async getExtensionProfileForUrl (4 cases) + skipped consumer-wiring stub + capture Phase 35 HEAD baseline visualizer treemap (`36-visualizer-before.html`) with on-disk gz total
+- [ ] 36-02-PLAN.md — Wave 1: rewrite scripts/fetch-mii-profiles.mjs emit logic to URL→thunk map; regenerate src/quality/profiles/extensions/index.ts (483 lazy thunks, 0 static SD imports); replace getExtensionProfileForUrl with async wrapper + module-scoped cache + in-flight dedup Map (Plan 01 tests pass meaningfully)
+- [ ] 36-03-PLAN.md — Wave 2: insert Step 2b in useConformanceRun.ts (reads meta.profile[*], lazy-loads matching extension SDs via Promise.all, calls validateConformance per extension SD); activate the integration test (it.skip → it) — closes orphaned-export finding
+- [ ] 36-04-PLAN.md — Wave 3: ANALYZE=1 build, capture `36-visualizer-after.html` + POST_REFACTOR_GZ_BYTES; author 36-04-BUNDLE-DELTA.md with delta + gate verdict + async-chunk evidence; final regression gate (npm test ≥ 1059 passing / 0 failing, tsc clean, build clean)
 **Effort**: ~0.5-1 day (focused refactor; risk: ensure dynamic import path resolves correctly under Vite's chunk splitting)
 
 ### Phase 37: Phase 34 empirical UAT capture (deuteranopia + TTI)
@@ -274,7 +280,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 7/7 | Complete    | 2026-04-24 |
 | 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 6/6 | Complete    | 2026-04-25 |
 | 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 4/4 | Complete    | 2026-04-25 |
-| 36. Phase 34 profile lazy-load (bundle-size waiver follow-up) | v1.5 | 0/0 | Pending     | — |
+| 36. Phase 34 profile lazy-load (bundle-size waiver follow-up) | v1.5 | 0/4 | Planned     | — |
 | 37. Phase 34 empirical UAT capture (deuteranopia + TTI) | v1.5 | 0/0 | Pending     | — |
 | 38. v1.5 HUMAN-UAT live-Blaze smoke tests (Phase 33 + Phase 35) | v1.5 | 0/0 | Pending     | — |
 
