@@ -7,7 +7,7 @@
 - ✅ **v1.2 -- Tech Debt & Quality Monitoring (shipped 2026-04-15)** -- [Archive](milestones/v1.2-ROADMAP.md) . [Requirements](milestones/v1.2-REQUIREMENTS.md)
 - ✅ **v1.3 -- Cohort Definition & Storage (shipped 2026-04-16)** -- [Archive](milestones/v1.3-ROADMAP.md) . [Requirements](milestones/v1.3-REQUIREMENTS.md) . [Audit](milestones/v1.3-MILESTONE-AUDIT.md)
 - ✅ **v1.4 -- Hardening & Tech-Debt Sweep (shipped 2026-04-23)** -- [Archive](milestones/v1.4-ROADMAP.md) . [Requirements](milestones/v1.4-REQUIREMENTS.md) . [Audit](milestones/v1.4-MILESTONE-AUDIT.md)
-- 🚧 **v1.5 -- Validation, Performance & MII Extensions (in progress, started 2026-04-23)** -- phases 31-35, 31 requirements
+- 🚧 **v1.5 -- Validation, Performance & MII Extensions (in progress, started 2026-04-23)** -- phases 31-38, 31 requirements (phases 36-38 promoted from backlog 2026-04-25 to close shelved deuteranopia/TTI capture, profile lazy-load, and live-Blaze HUMAN-UAT items before milestone completion)
 
 ## Deferred Items
 
@@ -69,13 +69,16 @@ Full details: [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
 
 </details>
 
-### 🚧 v1.5 Validation, Performance & MII Extensions (Phases 31-35)
+### 🚧 v1.5 Validation, Performance & MII Extensions (Phases 31-38)
 
 - [~] **Phase 31: UX-01 External Validator Cascade** — Execute the preserved `29-02-PLAN.md` verbatim: three-tier cascade (external → server `$validate` → local structural), PHI-gate extraction, `normalizeOperationOutcomeIssue`, probe cache, AbortController + 15 s timeout, active-strategy status line. Parallel-safe with Phase 32. (31-01 completed 2026-04-23; 31-02 gap-closure in progress — closes CR-01 PHI ack key mismatch)
 - [x] **Phase 32: EFF-R14 QualityMetricsContext Split** — Option A: 7 per-metric `React.createContext` providers + `<QualityMetricsProviders>` composer. Facade `useQualityMetrics()` preserved. Parallel-safe with Phase 31 (merge-conflict watch on `ValidationPanel.tsx`). (completed 2026-04-23)
 - [x] **Phase 33: MII Schema Foundation + Extension-Modules Collapse UI** — Helpers-first refactor (`fhirResourceTypesOf`, `findModuleForType`, `getPatientSearchParamForType`), schema widening (`fhirResourceType: string | string[]` + `category` + `patientSearchParamOverrides?`), `MiiModuleTab` fan-out, collapsible Extension modules section. Absorbs UAT-FU-04 (Dashboard MII tile scoping) and UAT-FU-06 (empty per-patient MII/FHIR panel investigation). (completed 2026-04-24)
 - [x] **Phase 34: 14 MII Extension Modules + Palette + Bundled Profiles** — 14 extension module entries, 7 custom `MantineColorsTuple`s (WCAG AA audit), 21 Tabler icons, `scripts/fetch-mii-profiles.mjs` via `fhir-package-loader@^2.2.4` devDep + `prepare` lifecycle, CC-BY-4.0 attribution, dimmed empty-state + "Show N empty" toggle. (completed 2026-04-25)
 - [x] **Phase 35: Phase-30 UAT Follow-ups + Per-Type Quality Matrix** — UAT-FU-01 Explorer Date/Status extractor (TDD), UAT-FU-02 HumanReadableView extension cleanup, UAT-FU-03 ResourceDetailPage mode removal + Developer→JSON rename, UAT-FU-05 per-type quality matrix card under Counts tab (requires Phase 32). (completed 2026-04-25)
+- [ ] **Phase 36: Phase 34 profile lazy-load (bundle-size waiver follow-up)** — Promoted from backlog 999.3 (2026-04-25 audit). Switch `src/quality/profiles/extensions/index.ts` from static imports to dynamic `import()` per-canonical-URL; define a real consumer for `getExtensionProfileForUrl` / `BUNDLED_EXTENSION_PROFILE_URLS` (closes the orphaned-export integration finding); re-measure with `rollup-plugin-visualizer`; aim for <100 KB gz delta. Closes deferred clause of MII-EXT-12. **Fully automatable.**
+- [ ] **Phase 37: Phase 34 empirical UAT capture (deuteranopia + TTI)** — Promoted from backlog 999.2 (2026-04-25 audit). Capture 3 deuteranopia screenshots via Chrome DevTools Rendering → Emulate vision deficiencies (`/dashboard`, `/patients/:id` tab row, `ClinicalTimeline`); commit as `deuteranopia-{dashboard,tab-row,timeline}.png`. Capture TTI before/after via Chrome DevTools Performance panel — baseline at commit `048e99c`, post-phase at Phase 34 HEAD; commit as `tti-snapshot.json`. Reconcile against paper predictions in `.planning/research/color-design-audit.md` §4b/§4c. Closes deferred clauses of MII-EXT-11 (deuteranopia) and the D-22 TTI override accepted in Phase 34. **Human-execution-bound** (Chrome DevTools required).
+- [ ] **Phase 38: v1.5 HUMAN-UAT live-Blaze smoke tests (Phase 33 + Phase 35)** — Merger of backlog 999.1 + 999.4 (2026-04-25 audit). Run the 12 live-Blaze observational items from `33-HUMAN-UAT.md` (6 items: Synthea Laborbefund extraQuery; timeline color/label; Dashboard heading; tile Drawer UX; deep-link auto-expand; UAT-FU-06 previously-empty-panel) and `35-HUMAN-UAT.md` (6 items: Date/Status real data; identifier-system Tooltip; Modal transition; bottom Extensions section; per-type quality matrix card with real metric data + chevron deep-link; PHI gate behavior on chevron click). Records pass/fail per test in updated HUMAN-UAT files; any fail surfaces as blocking gap. **Human-execution-bound** (live Blaze + Synthea browser session required).
 
 ## Phase Details
 
@@ -177,6 +180,43 @@ Plans:
 **Effort**: ~2-2.5 days (UAT-FU-01 ~0.5 day via TDD; UAT-FU-02 ~0.5 day; UAT-FU-03 ~0.25 day mechanical rename; UAT-FU-05 ~1-1.25 day — matrix is smaller than OverviewStrip because `SortableTh`, `ResourceIssueTable`, and breach colors are already primitives)
 **UI hint**: yes (per-type matrix table under Counts, HumanReadableView modal, SegmentedControl trim)
 
+### Phase 36: Phase 34 profile lazy-load (bundle-size waiver follow-up)
+**Goal**: Address D-23 bundle-size gate failure from Plan 34-06 (post-phase delta +227.81 KB gz vs <100 KB floor; 98.6% of delta from 482 trimmed extension profile JSONs in `profiles-*.js`). Switch `src/quality/profiles/extensions/index.ts` from static imports to dynamic `import()` per-canonical-URL so the ~277 KB gz extension-profile chunk loads on-demand only when a completeness walker actually consults an extension profile. Define a real production consumer for `getExtensionProfileForUrl` / `BUNDLED_EXTENSION_PROFILE_URLS` (closes the orphaned-export integration finding from the v1.5 audit). Re-measure with `rollup-plugin-visualizer`; commit before/after treemaps.
+**Depends on**: Phase 34 (profile registry + REGISTRY mounting must already exist).
+**Requirements**: closes deferred lazy-load clause of MII-EXT-12 (no new REQ-ID)
+**Success Criteria** (what must be TRUE):
+  1. `src/quality/profiles/extensions/index.ts` no longer uses static `import` for SD JSONs; per-canonical-URL `import()` resolved on first call to `getExtensionProfileForUrl`.
+  2. At least one production caller of `getExtensionProfileForUrl` exists (likely in completeness walker / validation pipeline) and is exercised by a unit test.
+  3. `rollup-plugin-visualizer` treemap shows initial-load bundle delta vs Phase 34 baseline ≤ 100 KB gz; before/after HTMLs committed under `.planning/phases/36-.../`.
+  4. `npm test` 1054+ passing / 0 failing; `npx tsc -b --noEmit` clean; `npm run build` clean.
+**Plans**: TBD (3 tasks: refactor static→dynamic; define consumer + test; re-measure + commit treemaps)
+**Effort**: ~0.5-1 day (focused refactor; risk: ensure dynamic import path resolves correctly under Vite's chunk splitting)
+
+### Phase 37: Phase 34 empirical UAT capture (deuteranopia + TTI)
+**Goal**: Close the human-gated UAT items left open by Plan 34-06. Two artifacts: (1) deuteranopia screenshots — `/dashboard`, `/patients/:id` tab row, `ClinicalTimeline` — captured via Chrome DevTools Rendering → Emulate vision deficiencies → deuteranopia, committed under `.planning/phases/37-.../deuteranopia-{dashboard,tab-row,timeline}.png`. (2) TTI before/after — baseline at commit `048e99c` (Phase 33 tail), post-phase at Phase 34 HEAD, both via Chrome DevTools Performance panel, written to `.planning/phases/37-.../tti-snapshot.json`. Reconcile paper predictions in `.planning/research/color-design-audit.md` §4b/§4c against empirical results.
+**Depends on**: Phase 34 (palette + icons must be live for empirical capture).
+**Requirements**: closes deferred clauses of MII-EXT-11 (deuteranopia discriminability) and the D-22 TTI override accepted in Phase 34 (no new REQ-ID)
+**Success Criteria** (what must be TRUE):
+  1. 3 deuteranopia PNGs committed; reconciliation table in a `37-EMPIRICAL.md` reports paper vs empirical agreement per pair (7 within-family + 14 cross-family).
+  2. `tti-snapshot.json` records `baseline_ms` (at `048e99c`) and `post_phase_ms` (at Phase 34 HEAD); delta documented; if regression > 10% a follow-up note explains.
+  3. Any disagreement between paper and empirical for HIGH/MEDIUM-HIGH pairs (mikrobiologie↔molekulargenetik; pro↔seltene) drives a contingency icon swap or color-tweak commit.
+**Plans**: TBD (2-3 tasks: deuteranopia capture; TTI capture; reconciliation doc)
+**Effort**: ~0.5-1 day (mostly browser-driven; reconciliation writeup is small)
+**Execution**: **Human-execution-bound** (Chrome DevTools Rendering + Performance panels)
+
+### Phase 38: v1.5 HUMAN-UAT live-Blaze smoke tests (Phase 33 + Phase 35)
+**Goal**: Run the 12 live-Blaze observational items from `33-HUMAN-UAT.md` (6 items) and `35-HUMAN-UAT.md` (6 items) in a single browser session against live Blaze + Synthea. Records pass/fail per test in updated HUMAN-UAT files; any fail surfaces as blocking gap that requires either a code fix or a documented user-acceptance override.
+**Depends on**: Phases 31-35 (all Phase 33 + Phase 35 code must be live).
+**Requirements**: closes Phase 33 SC5 (live-Blaze UAT clause) + Phase 35 SC5 (live-Blaze UAT clause) — no new REQ-ID; updates statuses on existing MII-EXT-04/06/07/08 + UAT-FU-01/02/05 from `human_needed` → `passed`
+**Success Criteria** (what must be TRUE):
+  1. All 12 tests in `33-HUMAN-UAT.md` + `35-HUMAN-UAT.md` updated with `result: pass` (or `result: fail` + linked fix commit / accepted override).
+  2. Phase 33's `33-VERIFICATION.md` status flipped from `human_needed` → `passed` (with re-verification stanza pointing to Phase 38).
+  3. Phase 35's `35-VERIFICATION.md` status flipped from `human_needed` → `passed` (with re-verification stanza pointing to Phase 38).
+  4. Phase 38 SUMMARY records the live Blaze server URL + Synthea bundle ID used so the smoke session is reproducible.
+**Plans**: TBD (2 tasks: walk 33-HUMAN-UAT 6 tests; walk 35-HUMAN-UAT 6 tests)
+**Effort**: ~0.5-1 day (single browser session + writeups; assumes Blaze + Synthea already running)
+**Execution**: **Human-execution-bound** (live Blaze + Synthea + browser required)
+
 ## Dependencies & Ordering
 
 ```
@@ -234,6 +274,9 @@ Phase 35 (UAT follow-ups + matrix)
 | 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 7/7 | Complete    | 2026-04-24 |
 | 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 6/6 | Complete    | 2026-04-25 |
 | 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 4/4 | Complete    | 2026-04-25 |
+| 36. Phase 34 profile lazy-load (bundle-size waiver follow-up) | v1.5 | 0/0 | Pending     | — |
+| 37. Phase 34 empirical UAT capture (deuteranopia + TTI) | v1.5 | 0/0 | Pending     | — |
+| 38. v1.5 HUMAN-UAT live-Blaze smoke tests (Phase 33 + Phase 35) | v1.5 | 0/0 | Pending     | — |
 
 ## Effort Totals (v1.5)
 
@@ -244,7 +287,10 @@ Phase 35 (UAT follow-ups + matrix)
 | 33 | MII Schema Foundation + Extension-Modules Collapse UI | ~2.5-3 days |
 | 34 | 14 MII Extension Modules + Palette + Bundled Profiles | ~3-3.5 days |
 | 35 | Phase-30 UAT Follow-ups + Per-Type Quality Matrix | ~2-2.5 days |
-| **Total** | — | **~11.5-13.5 focused engineering days** (≈3-4 calendar weeks with parallelism on 31/32 and on UAT-FU-01/02/03) |
+| 36 | Phase 34 profile lazy-load (bundle-size waiver follow-up) | ~0.5-1 day |
+| 37 | Phase 34 empirical UAT capture (deuteranopia + TTI) | ~0.5-1 day |
+| 38 | v1.5 HUMAN-UAT live-Blaze smoke tests (Phase 33 + Phase 35) | ~0.5-1 day |
+| **Total** | — | **~13-16.5 focused engineering days** (original 11.5-13.5 for phases 31-35 + ~1.5-3 days for promoted backlog phases 36-38; phases 37 + 38 are human-execution-bound and incremental on a single browser session) |
 
 **Calibration vs v1.4:** The v1.4 baseline landed 11-13 days across 8 phases (including Phase 30's ~3-day layout redesign). v1.5 compresses to 5 phases with similar day-count because Phase 34's 14-module payload + Phase 33's codemod are denser than a typical v1.4 dedup phase. Phase 24's ~1.5 days is the reference point for a foundational hook (comparable to Phase 32's internal refactor); Phase 25's ~2 days for ≥400-LOC dedup maps to Phase 33's codemod scale; Phase 30's ~3-4 days for 7-view layout redesign maps to Phase 34's 21-module palette + profile rollout.
 
@@ -261,42 +307,5 @@ Phase 35 (UAT follow-ups + matrix)
 
 ## Backlog
 
-### Phase 999.1: phase 33 HUMAN-UAT smoke tests (deferred browser verification) (BACKLOG)
+_All v1.5 backlog items (former 999.1, 999.2, 999.3, 999.4) were promoted into active phases 36, 37, 38 on 2026-04-25 per `/gsd-plan-milestone-gaps`. See §Phase Details for Phase 36, 37, 38._
 
-**Goal:** Run the 6 human-verification items captured in `33-HUMAN-UAT.md` against live Blaze + Synthea — covers Laborbefund extraQuery fix, timeline color/label rendering, Dashboard scope heading, tile Drawer UX, base tab render invariant, and UAT-FU-06 previously-empty-panel smoke.
-**Requirements:** TBD (tied to Phase 33 MII-EXT-01..08 automated verification)
-**Plans:** 6/6 plans complete
-**Source:** `.planning/phases/33-mii-schema-foundation-extension-modules-collapse-ui/33-HUMAN-UAT.md`
-
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
-
-### Phase 999.2: phase 34 UAT empirical capture (deuteranopia + TTI) (BACKLOG)
-
-**Goal:** Complete the human-gated UAT items left open by Plan 34-06. Two artifacts: (1) deuteranopia screenshots — `/dashboard`, `/patients/:id` tab row, `ClinicalTimeline` — captured via Chrome DevTools Rendering → Emulate vision deficiencies → deuteranopia, committed under `.planning/phases/34-.../deuteranopia-{dashboard,tab-row,timeline}.png`. (2) TTI before/after — baseline at commit `048e99c` (Phase 33 tail), post-phase at Phase 34 HEAD, both via Chrome DevTools Performance panel, written to `.planning/phases/34-.../tti-snapshot.json`. Reconciles paper predictions in `.planning/research/color-design-audit.md` §4b/§4c against empirical results.
-**Requirements:** TBD (closes D-09 + D-22 from Phase 34 CONTEXT.md)
-**Plans:** 0 plans
-**Source:** `.planning/phases/34-14-mii-extension-modules-palette-bundled-profiles/34-06-UAT.md` §6a + §6b
-
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
-
-### Phase 999.3: phase 34 profile lazy-load (bundle-size waiver follow-up) (BACKLOG)
-
-**Goal:** Address the D-23 bundle-size gate failure from Plan 34-06 (post-phase delta +227.81 KB gz vs <100 KB floor; 98.6% from 482 trimmed extension profile JSONs in `profiles-*.js`). Switch `src/quality/profiles/extensions/index.ts` from static imports to dynamic `import()` so the 277 KB gz extension-profile chunk loads on-demand only when a completeness walker actually consults an extension profile. Re-measure with `rollup-plugin-visualizer`; commit before/after treemaps to confirm baseline-chunk delta drops back under the 100 KB floor.
-**Requirements:** TBD (resolves D-23 WAIVE-AND-DEFER recommendation from `.planning/phases/34-.../34-06-UAT.md` §3)
-**Plans:** 0 plans
-**Source:** `.planning/phases/34-14-mii-extension-modules-palette-bundled-profiles/34-06-UAT.md` §3
-
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
-
-### Phase 999.4: phase 35 HUMAN-UAT live-Blaze smoke tests (BACKLOG)
-
-**Goal:** Run the 6 human-verification items from `35-VERIFICATION.md` against live Blaze + Synthea — covers Date/Status column population on real FHIR data (UAT-FU-01), Tooltip hover behavior on identifier-system URLs (UAT-FU-02), Modal transition + close behavior (UAT-FU-02), bottom Extensions section visual layout (UAT-FU-02), per-type quality matrix card behavior with real metric data + chevron deep-link routing (UAT-FU-05), and PHI gate behavior on chevron click (UAT-FU-05). All programmatic gates passed in Phase 35 (1054 / 0 failing); these items are the live-browser observational confirmations.
-**Requirements:** TBD (closes SC5 + 5 visual/behavioral observations from Phase 35 VERIFICATION human_verification section)
-**Plans:** 0 plans
-**Source:** `.planning/phases/35-phase-30-uat-follow-ups-per-type-quality-matrix/35-HUMAN-UAT.md`
-
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
