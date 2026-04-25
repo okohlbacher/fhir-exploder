@@ -39,17 +39,26 @@ export function useCompletenessReport(
     metricNamespace: 'completeness',
   });
   // Rollup (05-01-SUMMARY): mean of per-type populated/total, suppressed while loading.
-  const { set: setCompleteness } = useCompletenessRollup();
+  // Plan 35-04 (UAT-FU-05): also publishes a per-type byType map for the
+  // QualityByTypeMatrix card. byType keys are FHIR resource types; values are
+  // rounded populated/total*100. Already-mapped pattern (RESEARCH §Pattern 2).
+  const { set: setCompleteness, setByType: setCompletenessByType } = useCompletenessRollup();
   useEffect(() => {
     const values = Object.values(reports);
     const stillWaiting = values.length > 0 && values.some((r) => r === 'loading');
     const pcts: number[] = [];
-    for (const r of values) {
+    const byType: Record<string, number> = {};
+    for (const [type, r] of Object.entries(reports)) {
       if (r === 'loading' || r === 'error' || !r || typeof r !== 'object') continue;
-      if (r.total > 0) pcts.push((r.populated / r.total) * 100);
+      if (r.total > 0) {
+        const pct = (r.populated / r.total) * 100;
+        pcts.push(pct);
+        byType[type] = Math.round(pct);
+      }
     }
+    setCompletenessByType(byType);
     if (pcts.length === 0) { if (!stillWaiting) setCompleteness(undefined); return; }
     setCompleteness(Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length));
-  }, [reports, setCompleteness]);
+  }, [reports, setCompleteness, setCompletenessByType]);
   return reports;
 }

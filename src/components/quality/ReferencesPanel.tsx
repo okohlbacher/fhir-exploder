@@ -7,6 +7,7 @@
  * summary lines with badges and drilled down via ResourceIssueTable.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Alert,
   Badge,
@@ -44,9 +45,17 @@ const CATEGORY_OPTIONS = [
 ];
 
 export function ReferencesPanel({ types, client, sampleSize, patientIds }: ReferencesPanelProps) {
-  const [resourceType, setResourceType] = useState<string>(
-    () => types[0] ?? 'Patient',
-  );
+  // Plan 35-04 (UAT-FU-05 / RESEARCH Q-02): honor `?type=<resourceType>` URL
+  // param when the QualityByTypeMatrix chevron navigates here. Falls back to
+  // the pre-existing `types[0]` default when no `?type=` param is present.
+  const [searchParams] = useSearchParams();
+  const [resourceType, setResourceType] = useState<string>(() => {
+    const urlType = searchParams.get('type');
+    if (urlType && types.includes(urlType)) {
+      return urlType;
+    }
+    return types[0] ?? 'Patient';
+  });
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   const run = useReferenceReport({
@@ -66,12 +75,20 @@ export function ReferencesPanel({ types, client, sampleSize, patientIds }: Refer
   // Phase 18 / Plan 18-02: push overallReferences rollup to QualityMetricsContext
   // on terminal status. Uses `sampleSize` prop (resource count) as denominator,
   // NOT `run.progress.total` (which is batch count — see useReferenceReport.ts:117).
-  const { set: setOverallReferences } = useReferencesRollup();
+  //
+  // Plan 35-04 (UAT-FU-05): also push the per-type % clean into
+  // ReferencesContext.byType for the QualityByTypeMatrix card. Functional-setter
+  // form (Pitfall P-04) so each single-type run merges without clobbering.
+  const { set: setOverallReferences, setByType: setReferencesByType } = useReferencesRollup();
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
     const affected = new Set(run.issues.map((i) => i.resourceId)).size;
-    setOverallReferences(percentClean(affected, sampleSize));
-  }, [run.status, run.issues, sampleSize, setOverallReferences]);
+    const pct = percentClean(affected, sampleSize);
+    setOverallReferences(pct);
+    if (pct !== undefined) {
+      setReferencesByType((prev) => ({ ...prev, [resourceType]: pct }));
+    }
+  }, [run.status, run.issues, sampleSize, resourceType, setOverallReferences, setReferencesByType]);
 
   const typeOptions = useMemo(
     () => types.map((t) => ({ value: t, label: t })),

@@ -46,7 +46,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useSearchParams } from 'react-router-dom';
 import type { MedplumClient } from '@medplum/core';
 import type { OperationOutcomeIssue } from '@medplum/fhirtypes';
 import type { QualityOutletContext } from './QualityLayout';
@@ -134,7 +134,17 @@ export function ValidationPanel(_props: ValidationPanelProps) {
     return Array.from(union).sort();
   }, [serverTypes]);
 
+  // Plan 35-04 (UAT-FU-05 / RESEARCH Q-02): when the QualityByTypeMatrix
+  // chevron navigates here with a `?type=<resourceType>` URL param, honor
+  // it as the initial selection so the user lands directly on the matched
+  // type instead of the bundled-profile default. Falls back to the
+  // pre-existing default heuristic when no `?type=` is present.
+  const [searchParams] = useSearchParams();
   const [resourceType, setResourceType] = useState<string>(() => {
+    const urlType = searchParams.get('type');
+    if (urlType && selectOptions.includes(urlType)) {
+      return urlType;
+    }
     // Default: first bundled type that the server also declares, else
     // first bundled type overall.
     const firstMatch = BUNDLED_PROFILE_TYPES.find((t) => serverTypes.includes(t));
@@ -226,12 +236,37 @@ export function ValidationPanel(_props: ValidationPanelProps) {
   // on terminal status (complete|cancelled). Gate prevents mid-run flicker
   // (pitfall 2 in 18-RESEARCH.md). Numerator uses allNormalizedIssues (conformance
   // + legacy dedup) per pitfall 6.
-  const { set: setOverallValidation } = useValidationRollup();
+  //
+  // Plan 35-04 (UAT-FU-05): also push the per-type % clean and integer issue
+  // count into ValidationContext.byType / .validationIssuesByType for the
+  // QualityByTypeMatrix card. Functional-setter form (Pitfall P-04) so each
+  // single-type run merges into the prior map without clobbering other types.
+  const {
+    set: setOverallValidation,
+    setByType,
+    setValidationIssuesByType,
+  } = useValidationRollup();
   useEffect(() => {
     if (run.status !== 'complete' && run.status !== 'cancelled') return;
     const affected = new Set(allNormalizedIssues.map((i) => i.resourceId)).size;
-    setOverallValidation(percentClean(affected, run.progress.total));
-  }, [run.status, run.progress.total, allNormalizedIssues, setOverallValidation]);
+    const pct = percentClean(affected, run.progress.total);
+    setOverallValidation(pct);
+    if (pct !== undefined) {
+      setByType((prev) => ({ ...prev, [resourceType]: pct }));
+    }
+    setValidationIssuesByType((prev) => ({
+      ...prev,
+      [resourceType]: allNormalizedIssues.length,
+    }));
+  }, [
+    run.status,
+    run.progress.total,
+    allNormalizedIssues,
+    resourceType,
+    setOverallValidation,
+    setByType,
+    setValidationIssuesByType,
+  ]);
 
   const handleExport = () => {
     const payload = {
