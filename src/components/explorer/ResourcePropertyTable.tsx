@@ -1,4 +1,5 @@
-import { Anchor, Badge, Code, Group, Stack, Table, Text } from '@mantine/core';
+import { Anchor, Badge, Button, Code, Group, Modal, Stack, Table, Text, Tooltip } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import type { Resource } from '@medplum/fhirtypes';
 import { toRecord } from '../../utils/fhir-helpers';
 
@@ -6,8 +7,15 @@ interface ResourcePropertyTableProps {
   resource: Resource;
 }
 
-/** Keys to skip in the top-level display (metadata shown separately or irrelevant) */
-const SKIP_KEYS = new Set(['resourceType', 'meta', 'text']);
+/**
+ * Keys to skip in the top-level display (metadata shown separately or irrelevant).
+ *
+ * `extension` is included here so resource-level extensions are rendered
+ * exclusively by the bottom Extensions section in {@link HumanReadableView}
+ * (UAT-FU-02 / D-08). Property-level extensions (e.g. `_birthDate.extension`)
+ * are filtered separately via the `_`-prefix check in the consumer.
+ */
+const SKIP_KEYS = new Set(['resourceType', 'meta', 'text', 'extension']);
 
 /** Order preference for common FHIR fields */
 const FIELD_ORDER = [
@@ -134,12 +142,23 @@ function RenderValue({ value, depth = 0 }: { value: unknown; depth?: number }): 
       );
     }
 
-    // Identifier
+    // Identifier — system URL moves OFF the main row into a hover Tooltip.
+    // Cursor `help` cue signals the additional info on hover. (UAT-FU-02 D-06)
     if (obj.value && (obj.system !== undefined || obj.type !== undefined)) {
+      const valueCode = (
+        <Code style={{ cursor: obj.system ? 'help' : undefined }}>
+          {obj.value as string}
+        </Code>
+      );
       return (
         <Group gap="xs">
-          <Code>{obj.value as string}</Code>
-          {obj.system && <Text size="xs" c="dimmed">{(obj.system as string).replace('urn:','')}</Text>}
+          {obj.system ? (
+            <Tooltip label={obj.system as string} withArrow position="top">
+              {valueCode}
+            </Tooltip>
+          ) : (
+            valueCode
+          )}
         </Group>
       );
     }
@@ -180,11 +199,32 @@ function RenderValue({ value, depth = 0 }: { value: unknown; depth?: number }): 
       );
     }
 
-    // Too deeply nested — fall back to JSON
-    return <Code block>{JSON.stringify(obj, null, 2)}</Code>;
+    // Too deeply nested — fall back to a [View] Modal trigger so the
+    // inline JSON dump does not clutter the readable view. (UAT-FU-02 D-07)
+    return <DeepJsonModal value={obj} title="JSON" />;
   }
 
   return <Text size="sm">{String(value)}</Text>;
+}
+
+/**
+ * Renders a `[View]` Button that opens a Modal containing a pretty-printed
+ * JSON dump of the given value. Replaces inline `<Code block>` JSON dumps in
+ * the deeply-nested-object fallback path so the readable view stays clean
+ * when address-extension or other complex nested data appears. (UAT-FU-02 D-07)
+ */
+function DeepJsonModal({ value, title = 'JSON' }: { value: unknown; title?: string }) {
+  const [opened, { open, close }] = useDisclosure(false);
+  return (
+    <>
+      <Button size="xs" variant="light" onClick={open}>View</Button>
+      <Modal opened={opened} onClose={close} title={title} size="lg">
+        <Code block fz="xs" style={{ maxHeight: 500, overflowY: 'auto' }}>
+          {JSON.stringify(value, null, 2)}
+        </Code>
+      </Modal>
+    </>
+  );
 }
 
 /**
