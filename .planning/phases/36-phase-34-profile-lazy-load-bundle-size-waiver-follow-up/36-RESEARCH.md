@@ -412,22 +412,22 @@ build: {
 | A3 | No existing test silently relies on `getExtensionProfileForUrl` being sync | Pitfall 5 | grep-verified [VERIFIED via Bash search 2026-04-25]: only one match for `getExtensionProfileForUrl` outside the definition site, and it's the audit doc. Zero callers means zero existing breakage. |
 | A4 | The fetch script's emit can be modified without breaking other Phase 34 invariants (CC-BY-4.0 attribution, `linguist-generated`, defensive early-return) | Pattern 1 | Verified by reading `scripts/fetch-mii-profiles.mjs:152-200`: emit shape is concentrated in two `push(...)` calls (lines 165, 166); other invariants are independent. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the consumer also surface a UI signal that extension validation is in progress?**
    - What we know: `useConformanceRun` already publishes `progress: { current, total }` and `status: 'cancelled' | 'running' | …`.
    - What's unclear: Whether the per-batch lazy-load latency is user-visible enough to need a separate "Loading extension profiles…" hint in `ValidationPanel`.
-   - Recommendation: SKIP for Phase 36. The first-load latency is one Promise per unique URL in the sample; subsequent batches hit the cache. Re-evaluate in v1.6 if user feedback surfaces it.
+   - RESOLVED: SKIP for Phase 36. The first-load latency is one Promise per unique URL in the sample; subsequent batches hit the cache. Re-evaluate in v1.6 if user feedback surfaces it.
 
 2. **Is the Phase 34 `visualizer-after.html` the canonical "before" treemap for Phase 36?**
    - What we know: Phase 34 `34-06-UAT.md:104` measured 926.22 KB gz at Phase 34 HEAD.
    - What's unclear: Should Phase 36 re-measure on current `main` (which is past Phase 35) or use the Phase 34 artifact unchanged?
-   - Recommendation: Re-measure on current `main` (Phase 35 HEAD) so the delta is honest. Capture as `36-visualizer-before.html`. Phase 35 added small ~few-KB UI for the per-type matrix; cumulative gz total likely ~930 KB. Use that as baseline.
+   - RESOLVED: Re-measure on current `main` (Phase 35 HEAD) so the delta is honest. Capture as `36-visualizer-before.html`. Phase 35 added small ~few-KB UI for the per-type matrix; cumulative gz total likely ~930 KB. Use that as baseline.
 
 3. **Does `tsconfig.app.json` need `resolveJsonModule: true`?**
    - What we know: Static `import x from './foo.json'` works today (verified by reading `extensions/index.ts:4-505`).
    - What's unclear: Dynamic `import('./foo.json')` typing in TS 5.7 with `moduleResolution: bundler`.
-   - Recommendation: Test with `npx tsc -b --noEmit` after the script change. With `bundler` resolution, JSON imports are typically supported by default; if TS complains, the cast `as Promise<{ default: StructureDefinition }>` (already in Pattern 1) bypasses it.
+   - RESOLVED: Test with `npx tsc -b --noEmit` after the script change. With `bundler` resolution, JSON imports are typically supported by default; if TS complains, the cast `as Promise<{ default: StructureDefinition }>` (already in Pattern 1) bypasses it.
 
 ## Environment Availability
 
