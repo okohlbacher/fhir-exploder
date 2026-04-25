@@ -218,7 +218,13 @@ function DeepJsonModal({ value, title = 'JSON' }: { value: unknown; title?: stri
   return (
     <>
       <Button size="xs" variant="light" onClick={open}>View</Button>
-      <Modal opened={opened} onClose={close} title={title} size="lg">
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={title}
+        size="lg"
+        closeButtonProps={{ 'aria-label': 'Close' }}
+      >
         <Code block fz="xs" style={{ maxHeight: 500, overflowY: 'auto' }}>
           {JSON.stringify(value, null, 2)}
         </Code>

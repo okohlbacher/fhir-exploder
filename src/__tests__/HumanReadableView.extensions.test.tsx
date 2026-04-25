@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import type { Resource } from '@medplum/fhirtypes';
 import type { ReactNode } from 'react';
@@ -74,9 +74,12 @@ describe('UAT-FU-02: Bottom Extensions section', () => {
     render(<HumanReadableView resource={resource} />, { wrapper: wrap });
     // Section heading appears
     expect(screen.getByText('Extensions')).toBeTruthy();
-    // 1 header row + 2 data rows for the 2 unique URLs
-    const rows = screen.getAllByRole('row');
-    expect(rows).toHaveLength(3);
+    // Verify the deduped URL fragments (first-occurrence wins): both unique
+    // URLs render exactly once even though `ext1` appears twice in the input.
+    expect(screen.getAllByText('example.org/ext1')).toHaveLength(1);
+    expect(screen.getAllByText('example.org/ext2')).toHaveLength(1);
+    // The two unique extensions produce exactly two [View] buttons.
+    expect(screen.getAllByRole('button', { name: 'View' })).toHaveLength(2);
   });
 
   it('renders the URL fragment as last 2 path segments', () => {
@@ -94,7 +97,7 @@ describe('UAT-FU-02: Bottom Extensions section', () => {
     expect(screen.getByText('CodeSystem/foo')).toBeTruthy();
   });
 
-  it('opens a Modal when [View] button is clicked', () => {
+  it('opens a Modal when [View] button is clicked', async () => {
     const resource: Resource = {
       resourceType: 'Patient',
       id: 'p1',
@@ -105,14 +108,19 @@ describe('UAT-FU-02: Bottom Extensions section', () => {
     render(<HumanReadableView resource={resource} />, { wrapper: wrap });
     const viewBtn = screen.getByRole('button', { name: 'View' });
     fireEvent.click(viewBtn);
-    // Modal opens (portaled — query via screen.*, NOT within(...))
-    expect(screen.getByRole('dialog')).toBeTruthy();
-    // Modal body contains the JSON dump including the valueString token
-    expect(screen.getByText(/valueString/)).toBeTruthy();
-    expect(screen.getByText(/hello-world/)).toBeTruthy();
+    // Mantine 8 Modal renders via Transition + Portal — body materializes after
+    // the transition tick. Use waitFor + screen.* (NEVER within(cell), P-13).
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeTruthy();
+    });
+    // Modal body contains the JSON dump. The same `valueString` / `hello-world`
+    // tokens also appear in the row's Value-summary cell, so assert on the
+    // pretty-printed JSON shape (`"valueString": "hello-world"`) which only
+    // exists in the Modal's <Code block>.
+    expect(screen.getByText(/"valueString": "hello-world"/)).toBeTruthy();
   });
 
-  it('Modal closes via close button', () => {
+  it('Modal closes via close button', async () => {
     const resource: Resource = {
       resourceType: 'Patient',
       id: 'p1',
@@ -122,9 +130,13 @@ describe('UAT-FU-02: Bottom Extensions section', () => {
     };
     render(<HumanReadableView resource={resource} />, { wrapper: wrap });
     fireEvent.click(screen.getByRole('button', { name: 'View' }));
-    expect(screen.getByRole('dialog')).toBeTruthy();
-    // Mantine Modal close button has aria-label="Close"
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeTruthy();
+    });
+    // Modal close button has explicit aria-label="Close" (set via closeButtonProps)
     fireEvent.click(screen.getByLabelText('Close'));
-    expect(screen.queryByRole('dialog')).toBeNull();
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
   });
 });
