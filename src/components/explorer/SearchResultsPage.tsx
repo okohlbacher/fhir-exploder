@@ -59,7 +59,7 @@ function getResourceSummary(resource: Resource): string {
   return resource.id ?? '';
 }
 
-function getResourceDate(resource: Resource): string {
+export function getResourceDate(resource: Resource): string {
   const r = toRecord(resource);
   for (const field of [
     'effectiveDateTime', 'performedDateTime', 'dateTime', 'date',
