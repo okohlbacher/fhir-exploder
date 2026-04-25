@@ -74,7 +74,7 @@ Full details: [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
 - [~] **Phase 31: UX-01 External Validator Cascade** — Execute the preserved `29-02-PLAN.md` verbatim: three-tier cascade (external → server `$validate` → local structural), PHI-gate extraction, `normalizeOperationOutcomeIssue`, probe cache, AbortController + 15 s timeout, active-strategy status line. Parallel-safe with Phase 32. (31-01 completed 2026-04-23; 31-02 gap-closure in progress — closes CR-01 PHI ack key mismatch)
 - [x] **Phase 32: EFF-R14 QualityMetricsContext Split** — Option A: 7 per-metric `React.createContext` providers + `<QualityMetricsProviders>` composer. Facade `useQualityMetrics()` preserved. Parallel-safe with Phase 31 (merge-conflict watch on `ValidationPanel.tsx`). (completed 2026-04-23)
 - [x] **Phase 33: MII Schema Foundation + Extension-Modules Collapse UI** — Helpers-first refactor (`fhirResourceTypesOf`, `findModuleForType`, `getPatientSearchParamForType`), schema widening (`fhirResourceType: string | string[]` + `category` + `patientSearchParamOverrides?`), `MiiModuleTab` fan-out, collapsible Extension modules section. Absorbs UAT-FU-04 (Dashboard MII tile scoping) and UAT-FU-06 (empty per-patient MII/FHIR panel investigation). (completed 2026-04-24)
-- [ ] **Phase 34: 14 MII Extension Modules + Palette + Bundled Profiles** — 14 extension module entries, 7 custom `MantineColorsTuple`s (WCAG AA audit), 21 Tabler icons, `scripts/fetch-mii-profiles.mjs` via `fhir-package-loader@^2.2.4` devDep + `prepare` lifecycle, CC-BY-4.0 attribution, dimmed empty-state + "Show N empty" toggle.
+- [x] **Phase 34: 14 MII Extension Modules + Palette + Bundled Profiles** — 14 extension module entries, 7 custom `MantineColorsTuple`s (WCAG AA audit), 21 Tabler icons, `scripts/fetch-mii-profiles.mjs` via `fhir-package-loader@^2.2.4` devDep + `prepare` lifecycle, CC-BY-4.0 attribution, dimmed empty-state + "Show N empty" toggle. (completed 2026-04-25)
 - [ ] **Phase 35: Phase-30 UAT Follow-ups + Per-Type Quality Matrix** — UAT-FU-01 Explorer Date/Status extractor (TDD), UAT-FU-02 HumanReadableView extension cleanup, UAT-FU-03 ResourceDetailPage mode removal + Developer→JSON rename, UAT-FU-05 per-type quality matrix card under Counts tab (requires Phase 32).
 
 ## Phase Details
@@ -152,7 +152,7 @@ Plans:
 - [x] 34-03-PLAN.md — scripts/fetch-mii-profiles.mjs + prepare hook + CC-BY-4.0 attribution
 - [x] 34-04-PLAN.md — 14 MII_MODULES extension entries + ICON_MAP + 3 consumer render sites
 - [x] 34-05-PLAN.md — Empty-state UX (opacity 0.55 + em-dash copy) + Hide/Show toggle + localStorage coordinator
-- [ ] 34-06-PLAN.md — UAT: empirical deuteranopia screenshots + TTI before/after + bundle-size treemaps + D-24 ≥902 reassessment
+- [x] 34-06-PLAN.md — UAT: empirical deuteranopia screenshots + TTI before/after + bundle-size treemaps + D-24 ≥902 reassessment
 **Effort**: ~3-3.5 days (larger than Phase 33 because of the per-module research payload + color/icon design sign-off + profile bundling pipeline)
 **UI hint**: yes (palette rollout across tabs, Dashboard tiles, ClinicalTimeline dots; empty-state UX)
 
@@ -226,7 +226,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 31. UX-01 External Validator Cascade | v1.5 | 2/2 | Complete    | 2026-04-23 |
 | 32. EFF-R14 QualityMetricsContext Split | v1.5 | 4/4 | Complete    | 2026-04-24 |
 | 33. MII Schema + Extension-Modules Collapse UI | v1.5 | 7/7 | Complete    | 2026-04-24 |
-| 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 5/6 | In Progress|  |
+| 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 6/6 | Complete   | 2026-04-25 |
 | 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 0/? | 📋 Not started | — |
 
 ## Effort Totals (v1.5)
@@ -259,8 +259,28 @@ Phase 35 (UAT follow-ups + matrix)
 
 **Goal:** Run the 6 human-verification items captured in `33-HUMAN-UAT.md` against live Blaze + Synthea — covers Laborbefund extraQuery fix, timeline color/label rendering, Dashboard scope heading, tile Drawer UX, base tab render invariant, and UAT-FU-06 previously-empty-panel smoke.
 **Requirements:** TBD (tied to Phase 33 MII-EXT-01..08 automated verification)
-**Plans:** 5/6 plans executed
+**Plans:** 6/6 plans complete
 **Source:** `.planning/phases/33-mii-schema-foundation-extension-modules-collapse-ui/33-HUMAN-UAT.md`
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
+
+### Phase 999.2: phase 34 UAT empirical capture (deuteranopia + TTI) (BACKLOG)
+
+**Goal:** Complete the human-gated UAT items left open by Plan 34-06. Two artifacts: (1) deuteranopia screenshots — `/dashboard`, `/patients/:id` tab row, `ClinicalTimeline` — captured via Chrome DevTools Rendering → Emulate vision deficiencies → deuteranopia, committed under `.planning/phases/34-.../deuteranopia-{dashboard,tab-row,timeline}.png`. (2) TTI before/after — baseline at commit `048e99c` (Phase 33 tail), post-phase at Phase 34 HEAD, both via Chrome DevTools Performance panel, written to `.planning/phases/34-.../tti-snapshot.json`. Reconciles paper predictions in `.planning/research/color-design-audit.md` §4b/§4c against empirical results.
+**Requirements:** TBD (closes D-09 + D-22 from Phase 34 CONTEXT.md)
+**Plans:** 0 plans
+**Source:** `.planning/phases/34-14-mii-extension-modules-palette-bundled-profiles/34-06-UAT.md` §6a + §6b
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
+
+### Phase 999.3: phase 34 profile lazy-load (bundle-size waiver follow-up) (BACKLOG)
+
+**Goal:** Address the D-23 bundle-size gate failure from Plan 34-06 (post-phase delta +227.81 KB gz vs <100 KB floor; 98.6% from 482 trimmed extension profile JSONs in `profiles-*.js`). Switch `src/quality/profiles/extensions/index.ts` from static imports to dynamic `import()` so the 277 KB gz extension-profile chunk loads on-demand only when a completeness walker actually consults an extension profile. Re-measure with `rollup-plugin-visualizer`; commit before/after treemaps to confirm baseline-chunk delta drops back under the 100 KB floor.
+**Requirements:** TBD (resolves D-23 WAIVE-AND-DEFER recommendation from `.planning/phases/34-.../34-06-UAT.md` §3)
+**Plans:** 0 plans
+**Source:** `.planning/phases/34-14-mii-extension-modules-palette-bundled-profiles/34-06-UAT.md` §3
 
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
