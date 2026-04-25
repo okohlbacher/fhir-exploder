@@ -290,3 +290,13 @@ Plans:
 
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
+
+### Phase 999.4: phase 35 HUMAN-UAT live-Blaze smoke tests (BACKLOG)
+
+**Goal:** Run the 6 human-verification items from `35-VERIFICATION.md` against live Blaze + Synthea — covers Date/Status column population on real FHIR data (UAT-FU-01), Tooltip hover behavior on identifier-system URLs (UAT-FU-02), Modal transition + close behavior (UAT-FU-02), bottom Extensions section visual layout (UAT-FU-02), per-type quality matrix card behavior with real metric data + chevron deep-link routing (UAT-FU-05), and PHI gate behavior on chevron click (UAT-FU-05). All programmatic gates passed in Phase 35 (1054 / 0 failing); these items are the live-browser observational confirmations.
+**Requirements:** TBD (closes SC5 + 5 visual/behavioral observations from Phase 35 VERIFICATION human_verification section)
+**Plans:** 0 plans
+**Source:** `.planning/phases/35-phase-30-uat-follow-ups-per-type-quality-matrix/35-HUMAN-UAT.md`
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
