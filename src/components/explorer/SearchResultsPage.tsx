@@ -3,7 +3,17 @@ import { useOutletContext, useNavigate } from 'react-router-dom';
 import { Alert, Anchor, Breadcrumbs, Button, Group, Menu, Skeleton, Stack, Table, Text, Badge } from '@mantine/core';
 import { IconDownload, IconFileTypeCsv, IconFileCode } from '@tabler/icons-react';
 import { useMedplum } from '@medplum/react-hooks';
-import type { Bundle, Resource, ResourceType } from '@medplum/fhirtypes';
+import type {
+  Bundle,
+  Resource,
+  ResourceType,
+  Patient,
+  Condition,
+  Observation,
+  MedicationStatement,
+  Encounter,
+  Procedure,
+} from '@medplum/fhirtypes';
 import type { ExplorerOutletContext } from './ExplorerLayout';
 import { parseResourceTypes } from '../../fhir/capability';
 import { getResourceCategory } from '../../utils/fhir-categories';
@@ -59,7 +69,7 @@ function getResourceSummary(resource: Resource): string {
   return resource.id ?? '';
 }
 
-function getResourceDate(resource: Resource): string {
+export function getResourceDate(resource: Resource): string {
   const r = toRecord(resource);
   for (const field of [
     'effectiveDateTime', 'performedDateTime', 'dateTime', 'date',
@@ -73,6 +83,87 @@ function getResourceDate(resource: Resource): string {
     }
   }
   return '';
+}
+
+/**
+ * Per-resource-type Date extractor for the SearchResultsPage table (UAT-FU-01 /
+ * CONTEXT D-04). Uses typed @medplum/fhirtypes accessors for the 6 target FHIR
+ * resource types and falls back to the legacy `getResourceDate` for everything
+ * else (preserving current behavior for unknown / unmapped types per D-04).
+ *
+ * Field paths verified against `@medplum/fhirtypes` declarations + HL7 R4 spec
+ * (see RESEARCH §FHIR R4 Field Path Verification):
+ *   - Patient.birthDate (date)
+ *   - Condition.onsetDateTime (dateTime, choice)
+ *   - Observation.effectiveDateTime (dateTime, choice)
+ *   - MedicationStatement.effectiveDateTime (dateTime, choice — FLAT in Medplum
+ *     types, NOT nested under .effective.dateTime)
+ *   - Encounter.period.start (Period.start — NO .date field exists, Pitfall P-03)
+ *   - Procedure.performedDateTime (dateTime, choice)
+ *
+ * All extracted values are sliced to YYYY-MM-DD per UI-SPEC §Copywriting
+ * UAT-FU-01; missing fields render as empty string (NOT em-dash) to preserve
+ * the table's "empty = empty" visual baseline.
+ */
+export function getResourceDateByType(resource: Resource): string {
+  switch (resource.resourceType) {
+    case 'Patient':
+      return (resource as Patient).birthDate ?? '';
+    case 'Condition':
+      return (resource as Condition).onsetDateTime?.slice(0, 10) ?? '';
+    case 'Observation':
+      return (resource as Observation).effectiveDateTime?.slice(0, 10) ?? '';
+    case 'MedicationStatement':
+      return (resource as MedicationStatement).effectiveDateTime?.slice(0, 10) ?? '';
+    case 'Encounter':
+      return (resource as Encounter).period?.start?.slice(0, 10) ?? '';
+    case 'Procedure':
+      return (resource as Procedure).performedDateTime?.slice(0, 10) ?? '';
+    default:
+      return getResourceDate(resource);
+  }
+}
+
+/**
+ * Per-resource-type Status extractor for the SearchResultsPage table (UAT-FU-01 /
+ * CONTEXT D-05). Returns the raw status code string per type (no enum
+ * prettification — German localization is deferred to v1.6+).
+ *
+ * Pitfall mitigations:
+ *   - P-01: Condition.clinicalStatus is a CodeableConcept (NOT a string); walk
+ *     to `.coding[0].code` then fall back to `.text` then ''.
+ *   - P-02: Patient.active is a boolean (NOT a code); explicit boolean→label
+ *     mapping (`true → 'active'`, `false → 'inactive'`, `undefined → ''`).
+ *
+ * The 4 enum-status types (Observation, MedicationStatement, Encounter,
+ * Procedure) expose `.status` as a top-level FHIR `code` field — read directly.
+ *
+ * Default for non-target types is empty string (D-04 default fallback) so the
+ * Status column stays empty rather than rendering misleading inline JSON.
+ */
+export function getResourceStatusByType(resource: Resource): string {
+  switch (resource.resourceType) {
+    case 'Patient': {
+      const p = resource as Patient;
+      if (p.active === false) return 'inactive';
+      if (p.active === true) return 'active';
+      return '';
+    }
+    case 'Condition': {
+      const c = resource as Condition;
+      return c.clinicalStatus?.coding?.[0]?.code ?? c.clinicalStatus?.text ?? '';
+    }
+    case 'Observation':
+    case 'MedicationStatement':
+    case 'Encounter':
+    case 'Procedure':
+      return (
+        (resource as Observation | MedicationStatement | Encounter | Procedure)
+          .status ?? ''
+      );
+    default:
+      return '';
+  }
 }
 
 /**
@@ -400,23 +491,22 @@ export function SearchResultsPage() {
                   </Anchor>
                 </Table.Td>
                 <Table.Td>
-                  <Text size="sm">{getResourceDate(r)}</Text>
+                  <Text size="sm">{getResourceDateByType(r)}</Text>
                 </Table.Td>
                 <Table.Td>
-                  {toRecord(r).status && (
-                    <Badge
-                      size="sm"
-                      variant="light"
-                      color={
-                        toRecord(r).status === 'active' ||
-                        toRecord(r).status === 'completed'
-                          ? 'green'
-                          : 'gray'
-                      }
-                    >
-                      {String(toRecord(r).status)}
-                    </Badge>
-                  )}
+                  {(() => {
+                    const status = getResourceStatusByType(r);
+                    if (!status) return null;
+                    const color =
+                      status === 'active' || status === 'completed'
+                        ? 'green'
+                        : 'gray';
+                    return (
+                      <Badge size="sm" variant="light" color={color}>
+                        {status}
+                      </Badge>
+                    );
+                  })()}
                 </Table.Td>
               </Table.Tr>
             ))}
