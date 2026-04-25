@@ -1,29 +1,30 @@
 /**
- * UAT-FU-01 — Date/Status per-resource-type extractor RED baseline.
+ * UAT-FU-01 — Date/Status per-resource-type extractor (GREEN).
  *
- * This file is the FIRST half of the TDD baseline-drift commit pair (CONTEXT D-03 / D-26).
- * It captures the CURRENT behavior of the SearchResultsPage Date and Status columns across
- * the 6 target FHIR resource types — Patient, Condition, Observation, MedicationStatement,
- * Encounter, Procedure — so that the GREEN commit (Task 2 of plan 35-02) can deliberately
- * FLIP these assertions in a single reviewable diff. The reviewer compares the GREEN diff
- * against this baseline and sees exactly which assertions changed and why.
+ * This file is the SECOND half of the TDD baseline-drift commit pair
+ * (CONTEXT D-03 / D-26). The previous commit (RED) captured the CURRENT
+ * "empty = empty" behavior of `getResourceDate` + the inline status JSX in
+ * SearchResultsPage. This commit lands the per-type extractors AND flips the
+ * assertions in lockstep so the deliberate baseline drift is visible to a
+ * reviewer in a single diff.
  *
- * Today's situation:
- *   - Date column uses a single legacy `getResourceDate(resource)` helper that walks a
- *     fixed list of common date-like fields (`effectiveDateTime`, `performedDateTime`,
- *     `dateTime`, `date`, `issued`, `recordedDate`, `onsetDateTime`, `authoredOn`,
- *     `period`). It happens to extract a value for Condition / Observation /
- *     MedicationStatement / Encounter / Procedure via this fallback, but Patient's
- *     `birthDate` is NOT in the list — Patient renders empty.
- *   - Status column reads `toRecord(r).status` inline in the JSX. Patient has no
- *     `.status` field (it has `.active`); Condition has no `.status` field (it has
- *     `.clinicalStatus`, a CodeableConcept). So both render no Badge today. The four
- *     enum-status types (Observation, MedicationStatement, Encounter, Procedure) render
- *     their raw enum string.
+ * Coverage:
+ *   - 6 Date tests (Patient.birthDate, Condition.onsetDateTime,
+ *     Observation.effectiveDateTime, MedicationStatement.effectiveDateTime,
+ *     Encounter.period.start, Procedure.performedDateTime)
+ *   - 6 Status tests (Patient boolean→label, Condition CodeableConcept walk,
+ *     plus 4 enum-status types reading `.status` directly)
+ *   - 3 edge-case tests for missing fields per VALIDATION.md §1
+ *     (Patient.birthDate undefined, Encounter.period undefined,
+ *     Condition.clinicalStatus undefined)
  *
- * After Task 2 (GREEN), per-type extractors will be introduced and the assertions in this
- * file will be flipped to assert the NEW typed behavior (e.g. Patient → '1980-01-15' /
- * 'active', Condition → '2024-03-10' / 'active' from clinicalStatus.coding[0].code).
+ * Pitfall mitigations exercised:
+ *   - P-01: Condition status walks `clinicalStatus.coding[0].code`, NOT
+ *     `String(clinicalStatus)` which would render `[object Object]`.
+ *   - P-02: Patient.active boolean → 'active' / 'inactive' / '' explicit map.
+ *   - P-03: Encounter date uses `period.start`, NOT a non-existent `.date`.
+ *   - FLAT effectiveDateTime in Medplum types — verified against the runtime
+ *     extractor output.
  */
 import { describe, it, expect } from 'vitest';
 import type {
@@ -35,8 +36,10 @@ import type {
   Procedure,
 } from '@medplum/fhirtypes';
 
-import { getResourceDate } from '../components/explorer/SearchResultsPage';
-import { toRecord } from '../utils/fhir-helpers';
+import {
+  getResourceDateByType,
+  getResourceStatusByType,
+} from '../components/explorer/SearchResultsPage';
 
 // --- Typed fixtures (one per target resource type) -------------------------------------
 
@@ -88,87 +91,102 @@ const procedureFixture: Procedure = {
   subject: { reference: 'Patient/p1' },
 };
 
-/**
- * Mirrors the current SearchResultsPage Status-cell render expression at lines 405-419:
- *   {toRecord(r).status && (<Badge ...>{String(toRecord(r).status)}</Badge>)}
- * If toRecord(r).status is falsy → no Badge → effectively empty string in the cell.
- * Otherwise the badge renders String(status), which produces "[object Object]" for any
- * non-string status value (Pitfall P-01 if a CodeableConcept ever flowed in here).
- */
-function currentStatusRender(resource: Patient | Condition | Observation | MedicationStatement | Encounter | Procedure): string {
-  const status = toRecord(resource).status;
-  if (!status) return '';
-  return String(status);
-}
+// --- Date column — per-type extractor ----------------------------------------
 
-// --- Date column — current "empty = empty" baseline -------------------------------------
-
-describe('UAT-FU-01: Date extractor — current baseline (RED)', () => {
-  it('Patient → returns empty string today (birthDate is NOT in the legacy field list)', () => {
-    // CURRENT: getResourceDate falls through every field in its hard-coded list and never
-    // reaches `birthDate`, so Patient rows have an empty Date cell. The GREEN flip in
-    // Task 2 will introduce per-type dispatch and switch this to '1980-01-15'.
-    expect(getResourceDate(patientFixture)).toBe('');
+describe('UAT-FU-01: getResourceDateByType — per-type Date extractor', () => {
+  it('Patient → returns birthDate (formerly empty under legacy fallback)', () => {
+    // FLIP from RED: legacy getResourceDate had no `birthDate` in its field
+    // list; the typed Patient branch now returns the date verbatim.
+    expect(getResourceDateByType(patientFixture)).toBe('1980-01-15');
   });
 
-  it('Condition → returns sliced onsetDateTime (legacy fallback already covers this)', () => {
-    // CURRENT: `onsetDateTime` IS in the legacy field list (line 65), so Condition already
-    // works via the generic extractor. The GREEN flip will keep the same string but route
-    // through a typed Condition.onsetDateTime accessor for safety.
-    expect(getResourceDate(conditionFixture)).toBe('2024-03-10');
+  it('Condition → returns sliced onsetDateTime', () => {
+    expect(getResourceDateByType(conditionFixture)).toBe('2024-03-10');
   });
 
-  it('Observation → returns sliced effectiveDateTime (legacy fallback already covers this)', () => {
-    expect(getResourceDate(observationFixture)).toBe('2024-05-22');
+  it('Observation → returns sliced effectiveDateTime', () => {
+    expect(getResourceDateByType(observationFixture)).toBe('2024-05-22');
   });
 
-  it('MedicationStatement → returns sliced effectiveDateTime (legacy fallback already covers this)', () => {
-    // CURRENT: `effectiveDateTime` is the FIRST entry in the legacy field list, and Medplum
-    // exposes it FLAT (not under .effective.dateTime), so this works today.
-    expect(getResourceDate(medicationStatementFixture)).toBe('2024-06-01');
+  it('MedicationStatement → returns sliced effectiveDateTime (FLAT in Medplum types)', () => {
+    expect(getResourceDateByType(medicationStatementFixture)).toBe('2024-06-01');
   });
 
-  it('Encounter → returns sliced period.start via the legacy period branch', () => {
-    // CURRENT: Encounter has NO `.date` field (Pitfall P-03); the legacy extractor's
-    // object-branch at line 71 reads `period.start` — accidentally correct.
-    expect(getResourceDate(encounterFixture)).toBe('2024-04-15');
+  it('Encounter → returns sliced period.start (NOT a non-existent .date — Pitfall P-03)', () => {
+    expect(getResourceDateByType(encounterFixture)).toBe('2024-04-15');
   });
 
-  it('Procedure → returns sliced performedDateTime (legacy fallback already covers this)', () => {
-    expect(getResourceDate(procedureFixture)).toBe('2024-02-20');
+  it('Procedure → returns sliced performedDateTime', () => {
+    expect(getResourceDateByType(procedureFixture)).toBe('2024-02-20');
   });
 });
 
-// --- Status column — current "empty = empty" baseline ----------------------------------
+// --- Status column — per-type extractor --------------------------------------
 
-describe('UAT-FU-01: Status extractor — current baseline (RED)', () => {
-  it('Patient → renders no badge today (Patient.active is boolean, not status; no .status field)', () => {
-    // CURRENT: Patient has `.active: boolean` — no `.status` field at all. The inline JSX
-    // condition `{toRecord(r).status && ...}` is falsy → no Badge rendered. Effective
-    // string in cell is ''. The GREEN flip will map active=true → 'active'.
-    expect(currentStatusRender(patientFixture)).toBe('');
+describe('UAT-FU-01: getResourceStatusByType — per-type Status extractor', () => {
+  it('Patient (active: true) → "active" (Pitfall P-02 boolean→label mitigation)', () => {
+    // FLIP from RED: previously `String(toRecord(p).status)` was '' (no
+    // `.status` field). The typed Patient branch maps `.active === true` to
+    // the literal 'active' code per CONTEXT D-05.
+    expect(getResourceStatusByType(patientFixture)).toBe('active');
   });
 
-  it('Condition → renders no badge today (Condition.clinicalStatus exists; no .status field)', () => {
-    // CURRENT: Condition has `.clinicalStatus: CodeableConcept` — NOT `.status`. So
-    // `toRecord(r).status` is undefined → no Badge. The GREEN flip will read
-    // clinicalStatus.coding[0].code and render 'active' (Pitfall P-01 mitigated).
-    expect(currentStatusRender(conditionFixture)).toBe('');
+  it('Patient (active: false) → "inactive" (Pitfall P-02)', () => {
+    expect(
+      getResourceStatusByType({ ...patientFixture, active: false } as Patient)
+    ).toBe('inactive');
   });
 
-  it('Observation → renders raw status enum (status is a top-level code field)', () => {
-    expect(currentStatusRender(observationFixture)).toBe('final');
+  it('Patient (active: undefined) → "" (Pitfall P-02 — empty fallback)', () => {
+    expect(
+      getResourceStatusByType({ ...patientFixture, active: undefined } as Patient)
+    ).toBe('');
   });
 
-  it('MedicationStatement → renders raw status enum (status is a top-level code field)', () => {
-    expect(currentStatusRender(medicationStatementFixture)).toBe('active');
+  it('Condition → walks clinicalStatus.coding[0].code (Pitfall P-01 mitigation)', () => {
+    // FLIP from RED: previously '' (no `.status` field). The new extractor
+    // walks the CodeableConcept properly — NEVER renders "[object Object]".
+    expect(getResourceStatusByType(conditionFixture)).toBe('active');
   });
 
-  it('Encounter → renders raw status enum (status is a top-level code field, REQUIRED)', () => {
-    expect(currentStatusRender(encounterFixture)).toBe('finished');
+  it('Observation → returns raw status enum', () => {
+    expect(getResourceStatusByType(observationFixture)).toBe('final');
   });
 
-  it('Procedure → renders raw status enum (status is a top-level code field)', () => {
-    expect(currentStatusRender(procedureFixture)).toBe('completed');
+  it('MedicationStatement → returns raw status enum', () => {
+    expect(getResourceStatusByType(medicationStatementFixture)).toBe('active');
+  });
+
+  it('Encounter → returns raw status enum (REQUIRED 1..1 cardinality)', () => {
+    expect(getResourceStatusByType(encounterFixture)).toBe('finished');
+  });
+
+  it('Procedure → returns raw status enum', () => {
+    expect(getResourceStatusByType(procedureFixture)).toBe('completed');
+  });
+});
+
+// --- Edge cases — missing fields (VALIDATION.md §1) --------------------------
+
+describe('UAT-FU-01: extractors — missing field edge cases', () => {
+  it('Date: Patient with undefined birthDate → ""', () => {
+    expect(
+      getResourceDateByType({ ...patientFixture, birthDate: undefined } as Patient)
+    ).toBe('');
+  });
+
+  it('Date: Encounter with undefined period → "" (period.start optional-chain)', () => {
+    expect(
+      getResourceDateByType({ ...encounterFixture, period: undefined } as Encounter)
+    ).toBe('');
+  });
+
+  it('Status: Condition with undefined clinicalStatus → "" (CodeableConcept optional-chain)', () => {
+    expect(
+      getResourceStatusByType({
+        ...conditionFixture,
+        clinicalStatus: undefined,
+      } as Condition)
+    ).toBe('');
   });
 });
