@@ -485,22 +485,22 @@ Record the resulting `patient_id` in `tti-snapshot.json` under the `patient_id` 
 
 If this table is empty: All claims in this research were verified or cited — no user confirmation needed. **Three assumptions logged** — none are blocking; A3 only needs the planner to commit to one interpretation.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the planner re-derive whether `IconBiohazard` / `IconParasite` / similar exist in Tabler 3.41.1, in case the §4d swap path needs to fire?**
    - What we know: `IconBacteria` / `IconQuestionnaire` are unavailable; `IconVirus` / `IconListCheck` are already shipped.
    - What's unclear: whether ALTERNATE swaps (away from current shipped icons) toward something MORE shape-distinct exist in 3.41.1.
-   - Recommendation: Plan 37-03 includes a `node -e ...` probe step BEFORE attempting any swap. If `IconBiohazard` (etc.) exist, swap candidates are open; if not, the path is "document as failure, no swap fires." Either way, surface in `37-EMPIRICAL.md` §5.
+   - **RESOLVED:** Plan 37-03 Task 2 Step 1 runs a `node -e ...` probe step BEFORE attempting any swap. If `IconBiohazard` (etc.) exist, swap candidates are open; if not, the path is "document as failure, no swap fires." Either way, surfaced in `37-EMPIRICAL.md` §5.
 
 2. **Does the current Blaze fixture have any Synthea patient with all 14 extension modules populated, or are most extensions empty for every patient?**
    - What we know: `34-06-UAT.md` §6a says "should show at least 5-10 module entries if synthetic fixture has data; even 1 entry per module is acceptable." Phase 33-01 INVESTIGATION found "~zero MII-extension data on the Synthea fixtures."
    - What's unclear: the deuteranopia-timeline screenshot might show only base-module entries (which still demonstrates discriminability for the 7 base modules but not for extensions). This is acceptable — the audit's pair tests are about pairwise discriminability, not about every module being present in one screenshot.
-   - Recommendation: Plan 37-01 explicitly accepts "Timeline shows whatever the patient has" — no requirement that all 21 modules appear in one screenshot. The Dashboard tile grid + tab row screenshots already show all 21 (those are static UI structures). Document this in `37-EMPIRICAL.md` §1 narrative.
+   - **RESOLVED:** Plan 37-01 explicitly accepts "Timeline shows whatever the patient has" — no requirement that all 21 modules appear in one screenshot. The Dashboard tile grid + tab row screenshots already show all 21 (those are static UI structures). Documented in `37-EMPIRICAL.md` §1 narrative per Plan 37-01 Task 2.
 
 3. **Should `37-EMPIRICAL.md` § "Future hardening" (§7) include a concrete recommendation, or is "noted as deferred" sufficient?**
    - What we know: CONTEXT marks this as Claude's discretion, recommends "yes, brief, no commitment."
    - What's unclear: granularity of recommendation.
-   - Recommendation: A 4-line section noting two follow-up candidates: (a) headless deuteranopia simulation in Vitest using a Brettel/Machado JS implementation against rendered DOM colors; (b) ΔE2000 perceptual-distance lint over `MII_MODULES` palette adjacency. Mark both as v1.6+ candidates, no commitment.
+   - **RESOLVED:** A 4-line §7 section noting two follow-up candidates: (a) headless deuteranopia simulation in Vitest using a Brettel/Machado JS implementation against rendered DOM colors; (b) ΔE2000 perceptual-distance lint over `MII_MODULES` palette adjacency. Both flagged v1.6+ candidates, no commitment. Implemented in Plan 37-01 Task 2 action and Plan 37-03 Task 1 Step 4.
 
 ## Environment Availability
 
