@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.5
 milestone_name: -- Validation, Performance & MII Extensions (in progress, started 2026-04-23)
 status: executing
-stopped_at: Phase 35 context gathered
-last_updated: "2026-04-26T04:47:26.980Z"
+stopped_at: Phase 37 context gathered
+last_updated: "2026-04-26T16:09:04.687Z"
 last_activity: 2026-04-26
 progress:
   total_phases: 7
@@ -82,6 +82,6 @@ Last activity: 2026-04-26
 
 ## Session Continuity
 
-Last session: 2026-04-25T05:51:22.728Z
-Stopped at: Phase 35 context gathered
-Resume file: .planning/phases/35-phase-30-uat-follow-ups-per-type-quality-matrix/35-CONTEXT.md
+Last session: 2026-04-26T16:09:04.684Z
+Stopped at: Phase 37 context gathered
+Resume file: .planning/phases/37-phase-34-uat-empirical-capture-deuteranopia-tti/37-CONTEXT.md
