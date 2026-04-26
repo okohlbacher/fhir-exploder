@@ -83,9 +83,21 @@ describe('getExtensionProfileForUrl (Phase 36 lazy-load)', () => {
     // here, because both callers would still receive the same resolved value
     // from EITHER (a) the in-flight Promise OR (b) two independent Promises that
     // happen to resolve to the same module record.
+    //
+    // Fresh-module isolation: tests 2/3/4 above warmed the module-scoped
+    // extensionProfileCache for MOCK_EXT_URL (because it's also
+    // BUNDLED_EXTENSION_PROFILE_URLS[0] under the mocked REGISTRY). Without
+    // resetting the module, those cache hits would short-circuit the loader
+    // entirely and assert "called 0 times". vi.resetModules() drops the prior
+    // module record so the dedup-Map invariant is exercised against a clean
+    // cache; re-importing also re-evaluates the vi.mock factory, so loaderSpy
+    // continues to back the REGISTRY[MOCK_EXT_URL] entry in the fresh module.
+    vi.resetModules();
+    loaderSpy.mockClear();
+    const fresh = await import('../index');
     const [a, b] = await Promise.all([
-      getExtensionProfileForUrl(MOCK_EXT_URL),
-      getExtensionProfileForUrl(MOCK_EXT_URL),
+      fresh.getExtensionProfileForUrl(MOCK_EXT_URL),
+      fresh.getExtensionProfileForUrl(MOCK_EXT_URL),
     ]);
     expect(a).toBe(b);
     expect(a!.url).toBe(MOCK_EXT_URL);
