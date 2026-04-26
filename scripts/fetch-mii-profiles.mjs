@@ -161,9 +161,12 @@ async function main() {
       // Phase 36 / MII-EXT-12: emit URL to lazy thunk; key is sd.url
       // (canonical, known at script-emit time); value is a static-string
       // `() => import('./<file>.json')` thunk; .default unwrap happens at
-      // the caller per Pitfall 1.
+      // the caller per Pitfall 1. Trimmed JSONs miss status/kind/abstract
+      // fields the StructureDefinition type requires, so we cast through
+      // `unknown` (sanctioned escape hatch — see PROJECT.md Key Decisions
+      // "TS2352 double-cast pattern").
       registryLines.push(
-        '  ' + JSON.stringify(sd.url) + ": () => import('./" + filename + "') as Promise<{ default: StructureDefinition }>,",
+        '  ' + JSON.stringify(sd.url) + ": () => import('./" + filename + "') as unknown as Promise<{ default: StructureDefinition }>,",
       );
     }
     console.log(`[ok] ${name}@${version} — wrote ${sds.length} StructureDefinition(s)`);
