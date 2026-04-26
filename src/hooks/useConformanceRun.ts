@@ -24,7 +24,11 @@ import type { OperationOutcomeIssue, Resource, StructureDefinition } from '@medp
 import type { AppSettings } from '../config/types';
 import type { NormalizedIssue } from '../quality/types';
 import { sampleResources } from '../quality/sampling';
-import { getProfileForType } from '../quality/profiles';
+import {
+  getProfileForType,
+  getExtensionProfileForUrl,
+  BUNDLED_EXTENSION_PROFILE_URLS,
+} from '../quality/profiles';
 import { ValueSetCache } from '../quality/valueSetCache';
 import {
   validateConformance,
@@ -172,6 +176,40 @@ export function useConformanceRun({
         // Step 2: Get profile
         const profile = getProfileForType(resourceType);
 
+        // Step 2b (Phase 36 / MII-EXT-12 lazy-load consumer): collect canonical
+        // URLs from meta.profile[*] across the sampled resources and lazy-load
+        // the matching extension SDs in parallel. Failed loads silently skip
+        // (extension validation is best-effort). Pre-Step-3 placement keeps the
+        // value-set expansion + extension-load latency measurable as one async
+        // tick rather than serializing them.
+        const extensionUrls = new Set<string>();
+        for (const r of sample) {
+          const profiles = (r as { meta?: { profile?: string[] } }).meta?.profile;
+          if (Array.isArray(profiles)) {
+            for (const url of profiles) {
+              if (BUNDLED_EXTENSION_PROFILE_URLS.includes(url)) {
+                extensionUrls.add(url);
+              }
+            }
+          }
+        }
+        const extensionProfilesByUrl = new Map<string, StructureDefinition>();
+        if (extensionUrls.size > 0) {
+          const results = await Promise.all(
+            Array.from(extensionUrls).map(async (url) => {
+              const sd = await getExtensionProfileForUrl(url);
+              return [url, sd] as const;
+            }),
+          );
+          for (const [url, sd] of results) {
+            if (sd) extensionProfilesByUrl.set(url, sd);
+          }
+        }
+        if (cancelledRef.current) {
+          setStatus('cancelled');
+          return;
+        }
+
         // Step 3: Expand value sets from profile bindings
         const vsCache = valueSetCacheRef.current;
         const expandedValueSets = new Map<string, Set<string>>();
@@ -236,6 +274,21 @@ export function useConformanceRun({
 
               // Conformance checker (existing path — unchanged)
               const conformanceIssues = validateConformance(r, profile, expandedValueSets);
+              // Phase 36 / MII-EXT-12: also validate against any bundled
+              // extension SDs whose canonical URLs appear in this resource's
+              // meta.profile[]. Issues fold into the same conformanceIssues
+              // array; the dedup at lines ~285-296 collapses duplicates by
+              // (resourceId|field|description).
+              const rExtProfiles =
+                (r as { meta?: { profile?: string[] } }).meta?.profile ?? [];
+              for (const url of rExtProfiles) {
+                const extSd = extensionProfilesByUrl.get(url);
+                if (extSd) {
+                  conformanceIssues.push(
+                    ...validateConformance(r, extSd, expandedValueSets),
+                  );
+                }
+              }
               const normalized = normalizeConformanceIssues(conformanceIssues, r);
 
               // Cascade (external → server → local) replaces the legacy
