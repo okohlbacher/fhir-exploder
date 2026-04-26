@@ -43,7 +43,12 @@ export function getProfileForType(resourceType: string): StructureDefinition | n
 }
 
 // -----------------------------------------------------------------------
-// Phase 34 extension registry (MII-EXT-12 / D-11)
+// Phase 36 / MII-EXT-12: lazy-load extension profiles from URL-keyed thunks.
+// The REGISTRY value type is () => Promise<{ default: StructureDefinition }>
+// (per extensions/index.ts post-Phase-36 shape). First call for a URL
+// triggers the dynamic import; subsequent calls hit the module-scoped
+// cache. Concurrent calls for the same URL share the same in-flight
+// Promise (StrictMode-safe).
 //
 // Extension profiles are URL-keyed (NOT type-keyed) because each MII
 // extension package ships multiple profiles of the same FHIR type (e.g.
@@ -59,8 +64,42 @@ export const BUNDLED_EXTENSION_PROFILE_URLS = Object.keys(
   EXTENSION_REGISTRY,
 ) as readonly string[];
 
-export function getExtensionProfileForUrl(
+const extensionProfileCache = new Map<string, StructureDefinition>();
+const extensionProfileInFlight = new Map<
+  string,
+  Promise<StructureDefinition | null>
+>();
+
+export async function getExtensionProfileForUrl(
   canonicalUrl: string,
-): StructureDefinition | null {
-  return EXTENSION_REGISTRY[canonicalUrl] ?? null;
+): Promise<StructureDefinition | null> {
+  const cached = extensionProfileCache.get(canonicalUrl);
+  if (cached !== undefined) return cached;
+
+  const inFlight = extensionProfileInFlight.get(canonicalUrl);
+  if (inFlight !== undefined) return inFlight;
+
+  const loader = EXTENSION_REGISTRY[canonicalUrl];
+  if (!loader) return null;
+
+  const promise = loader()
+    .then((mod) => {
+      // Pitfall 1: dynamic JSON import returns { default: SD }, NOT SD.
+      // Static imports are auto-unwrapped by Vite; dynamic imports are NOT.
+      const sd = mod.default;
+      extensionProfileCache.set(canonicalUrl, sd);
+      extensionProfileInFlight.delete(canonicalUrl);
+      return sd;
+    })
+    .catch((err) => {
+      extensionProfileInFlight.delete(canonicalUrl);
+      // Surface failure as null per ROADMAP "load on-demand" semantics;
+      // logging at the boundary helps diagnose dev-time regressions.
+      console.warn(
+        `[extensions] failed to lazy-load ${canonicalUrl}: ${String(err)}`,
+      );
+      return null;
+    });
+  extensionProfileInFlight.set(canonicalUrl, promise);
+  return promise;
 }

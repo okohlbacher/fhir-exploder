@@ -110,7 +110,13 @@ async function main() {
   const loader = await defaultPackageLoader({ log });
 
   const fetchedOn = new Date().toISOString();
-  const registryLines = [];
+  // Phase 36: track URL → emitted line so duplicate canonical URLs (icu
+  // ships ~20 SDs that share the same `sd.url` across slug variants) don't
+  // produce TS1117 "duplicate property name" errors in the generated
+  // object literal. Last-wins matches the pre-Phase-36 sync registry
+  // semantics where the runtime `[sdN.url]:` evaluation collapsed
+  // duplicates silently.
+  const registryByUrl = new Map();
   const attributionSections = [];
 
   for (const [name, version] of EXTENSION_PACKAGES) {
@@ -164,8 +170,10 @@ async function main() {
       // the caller per Pitfall 1. Trimmed JSONs miss status/kind/abstract
       // fields the StructureDefinition type requires, so we cast through
       // `unknown` (sanctioned escape hatch — see PROJECT.md Key Decisions
-      // "TS2352 double-cast pattern").
-      registryLines.push(
+      // "TS2352 double-cast pattern"). Duplicate URLs are last-wins via
+      // the Map (matches pre-Phase-36 sync registry semantics).
+      registryByUrl.set(
+        sd.url,
         '  ' + JSON.stringify(sd.url) + ": () => import('./" + filename + "') as unknown as Promise<{ default: StructureDefinition }>,",
       );
     }
@@ -174,7 +182,7 @@ async function main() {
 
   // -----------------------------------------------------------------------
   // DEFENSIVE EARLY-RETURN (checker fix — cross_plan_data_contracts):
-  // When all fetches fail (offline prepare-hook runs), registryLines is
+  // When all fetches fail (offline prepare-hook runs), registryByUrl is
   // empty. Regenerating index.ts with zero entries would clobber the
   // committed REGISTRY and break `getExtensionProfileForUrl()` for every
   // downstream consumer. ATTRIBUTION.md would also regenerate with zero
@@ -183,6 +191,7 @@ async function main() {
   // on the committed JSON/index.ts/ATTRIBUTION.md as the authoritative
   // offline fallback (CONTEXT D-12).
   // -----------------------------------------------------------------------
+  const registryLines = [...registryByUrl.values()];
   if (registryLines.length === 0) {
     console.warn(
       '[warn] no StructureDefinitions fetched (offline or all failed); ' +
