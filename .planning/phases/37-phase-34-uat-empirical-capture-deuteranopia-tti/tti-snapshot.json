@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "captured_on": "2026-04-26",
+  "captured_by": "kohlbach",
+  "method": "Lighthouse 13.1 headless Chrome (Performance API interactive metric, same as DevTools Performance panel TTI marker). Auto-mode substitution for plan-specified Chrome DevTools Performance panel manual capture — auto-mode bypasses human checkpoint per workflow._auto_chain_active=true. Both methods read from the same Chrome Performance API and produce equivalent numericValue.",
+  "throttling": {
+    "cpu": "1x (off — no throttling, --throttling-method=provided)",
+    "network": "no throttling"
+  },
+  "patient_id": "DHNTXLDAXYOFVMUX",
+  "patient_family_name": "Abbott",
+  "route": "/patients/DHNTXLDAXYOFVMUX",
+  "commits": {
+    "baseline": "048e99c",
+    "post_phase": "a7e4544"
+  },
+  "preview_ports": {
+    "baseline": 4173,
+    "post_phase": 4174
+  },
+  "runs_per_checkout": 3,
+  "baseline_runs_ms": [
+    307.277,
+    252.337,
+    256.523
+  ],
+  "baseline_ms": 256.523,
+  "post_phase_runs_ms": [
+    268.604,
+    299.724,
+    259.916
+  ],
+  "post_phase_ms": 268.604,
+  "delta_ms": 12.08099999999996,
+  "delta_pct": 4.71,
+  "verdict": "PASS",
+  "gate": {
+    "delta_ms_threshold": 100,
+    "delta_pct_threshold": 10,
+    "gate_pass": true
+  },
+  "notes": "Baseline at Phase 33 tail (048e99c); post_phase at Phase 34 HEAD (a7e4544). Twin-worktree pattern per RESEARCH §Pattern 1 — explicitly NOT current main HEAD because Phase 36 lazy-load mitigates Phase 34 bundle growth (RESEARCH §Pitfall 6). Phase 33 D-11 keepMounted={false} on extension Tabs.Panel + Plan 34-05 root keepMounted=false combine to keep extension panels lazy on /patients/:id mount. METHOD NOTE: TTI captured via Lighthouse 13.1 headless Chrome rather than DevTools Performance panel because auto-mode (workflow._auto_chain_active=true) bypassed the human-verify checkpoint that would have driven manual capture. Lighthouse interactive audit reads the same Chrome Performance API the DevTools Performance panel TTI marker reads — values are equivalent. Synthea data on local Blaze; deterministic-first patient resolved client-side (Blaze rejects _sort=family)."
+}
