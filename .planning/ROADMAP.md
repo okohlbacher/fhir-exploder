@@ -206,7 +206,13 @@ Plans:
   1. 3 deuteranopia PNGs committed; reconciliation table in a `37-EMPIRICAL.md` reports paper vs empirical agreement per pair (7 within-family + 14 cross-family).
   2. `tti-snapshot.json` records `baseline_ms` (at `048e99c`) and `post_phase_ms` (at Phase 34 HEAD); delta documented; if regression > 10% a follow-up note explains.
   3. Any disagreement between paper and empirical for HIGH/MEDIUM-HIGH pairs (mikrobiologie↔molekulargenetik; pro↔seltene) drives a contingency icon swap or color-tweak commit.
-**Plans**: TBD (2-3 tasks: deuteranopia capture; TTI capture; reconciliation doc)
+**Plans:** 3 plans, 2 waves
+
+Plans:
+- [ ] 37-01-PLAN.md — Wave 1: Capture 3 deuteranopia screenshots (checkpoint:human-verify) + write 37-EMPIRICAL.md §1+§2 reconciliation tables (7 within-family + 14 cross-family pairs); §3-§7 stubbed for downstream plans
+- [ ] 37-02-PLAN.md — Wave 1 (parallel): Twin-worktree TTI capture at 048e99c (baseline) and a7e4544 (post-phase); 3 runs per checkout via Chrome DevTools Performance panel (checkpoint:human-verify); write tti-snapshot.json with D-08 dual-gate verdict
+- [ ] 37-03-PLAN.md — Wave 2: Populate 37-EMPIRICAL.md §3-§7 (TTI summary + contradictions + contingency decision + future hardening); contingency icon swap iff HIGH/MEDIUM-HIGH borderline pair fails empirically (RESEARCH §Pitfall 5 — probe Tabler 3.41.1 availability before swap); update 34-06-UAT.md §1d/§2/§5 closure
+
 **Effort**: ~0.5-1 day (mostly browser-driven; reconciliation writeup is small)
 **Execution**: **Human-execution-bound** (Chrome DevTools Rendering + Performance panels)
 
