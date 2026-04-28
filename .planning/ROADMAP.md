@@ -79,7 +79,7 @@ Full details: [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
 - [x] **Phase 35: Phase-30 UAT Follow-ups + Per-Type Quality Matrix** — UAT-FU-01 Explorer Date/Status extractor (TDD), UAT-FU-02 HumanReadableView extension cleanup, UAT-FU-03 ResourceDetailPage mode removal + Developer→JSON rename, UAT-FU-05 per-type quality matrix card under Counts tab (requires Phase 32). (completed 2026-04-25)
 - [x] **Phase 36: Phase 34 profile lazy-load (bundle-size waiver follow-up)** — Promoted from backlog 999.3 (2026-04-25 audit). Switch `src/quality/profiles/extensions/index.ts` from static imports to dynamic `import()` per-canonical-URL; define a real consumer for `getExtensionProfileForUrl` / `BUNDLED_EXTENSION_PROFILE_URLS` (closes the orphaned-export integration finding); re-measure with `rollup-plugin-visualizer`; aim for <100 KB gz delta. Closes deferred clause of MII-EXT-12. **Fully automatable.** (completed 2026-04-26)
 - [x] **Phase 37: Phase 34 empirical UAT capture (deuteranopia + TTI)** — Promoted from backlog 999.2 (2026-04-25 audit). Capture 3 deuteranopia screenshots via Chrome DevTools Rendering → Emulate vision deficiencies (`/dashboard`, `/patients/:id` tab row, `ClinicalTimeline`); commit as `deuteranopia-{dashboard,tab-row,timeline}.png`. Capture TTI before/after via Chrome DevTools Performance panel — baseline at commit `048e99c`, post-phase at Phase 34 HEAD; commit as `tti-snapshot.json`. Reconcile against paper predictions in `.planning/research/color-design-audit.md` §4b/§4c. Closes deferred clauses of MII-EXT-11 (deuteranopia) and the D-22 TTI override accepted in Phase 34. **Human-execution-bound** (Chrome DevTools required). (completed 2026-04-28)
-- [ ] **Phase 38: v1.5 HUMAN-UAT live-Blaze smoke tests (Phase 33 + Phase 35)** — Merger of backlog 999.1 + 999.4 (2026-04-25 audit). Run the 12 live-Blaze observational items from `33-HUMAN-UAT.md` (6 items: Synthea Laborbefund extraQuery; timeline color/label; Dashboard heading; tile Drawer UX; deep-link auto-expand; UAT-FU-06 previously-empty-panel) and `35-HUMAN-UAT.md` (6 items: Date/Status real data; identifier-system Tooltip; Modal transition; bottom Extensions section; per-type quality matrix card with real metric data + chevron deep-link; PHI gate behavior on chevron click). Records pass/fail per test in updated HUMAN-UAT files; any fail surfaces as blocking gap. **Human-execution-bound** (live Blaze + Synthea browser session required).
+- [x] **Phase 38: v1.5 HUMAN-UAT live-Blaze smoke tests (Phase 33 + Phase 35)** — Merger of backlog 999.1 + 999.4 (2026-04-25 audit). Run the 12 live-Blaze observational items from `33-HUMAN-UAT.md` (6 items: Synthea Laborbefund extraQuery; timeline color/label; Dashboard heading; tile Drawer UX; deep-link auto-expand; UAT-FU-06 previously-empty-panel) and `35-HUMAN-UAT.md` (6 items: Date/Status real data; identifier-system Tooltip; Modal transition; bottom Extensions section; per-type quality matrix card with real metric data + chevron deep-link; PHI gate behavior on chevron click). Records pass/fail per test in updated HUMAN-UAT files; any fail surfaces as blocking gap. **Human-execution-bound** (live Blaze + Synthea browser session required). (completed 2026-04-28)
 
 ## Phase Details
 
@@ -289,7 +289,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 4/4 | Complete    | 2026-04-25 |
 | 36. Phase 34 profile lazy-load (bundle-size waiver follow-up) | v1.5 | 4/4 | Complete    | 2026-04-26 |
 | 37. Phase 34 empirical UAT capture (deuteranopia + TTI) | v1.5 | 3/3 | Complete    | 2026-04-28 |
-| 38. v1.5 HUMAN-UAT live-Blaze smoke tests (Phase 33 + Phase 35) | v1.5 | 0/0 | Pending     | — |
+| 38. v1.5 HUMAN-UAT live-Blaze smoke tests (Phase 33 + Phase 35) | v1.5 | 4/3 | Complete    | 2026-04-28 |
 
 ## Effort Totals (v1.5)
 
@@ -335,7 +335,7 @@ _All v1.5 backlog items (former 999.1, 999.2, 999.3, 999.4) were promoted into a
 **Source:** Verifier observation surfaced during Phase 38 HUMAN-UAT walk (2026-04-28), Plan 38-02 Test 1 (Explorer Date/Status columns across 6 types). The MedicationStatement empty-state navigation made the noise pattern obvious.
 
 **Requirements:** TBD
-**Plans:** 0 plans
+**Plans:** 4/3 plans complete
 
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
