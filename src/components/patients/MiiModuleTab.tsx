@@ -78,7 +78,7 @@ export function MiiModuleTab({ module, patientId }: MiiModuleTabProps) {
     const fetchOne = (type: string): Promise<Resource[]> => {
       const param = getPatientSearchParamForType(module, type);
       const extra = getExtraQueryForType(module, type);
-      let url = `${type}?${param}=Patient/${patientId}&_count=50&_sort=-date`;
+      let url = `${type}?${param}=Patient/${patientId}&_count=50&_sort=-_lastUpdated`;
       if (extra) url += `&${extra}`;
 
       return client
@@ -96,7 +96,10 @@ export function MiiModuleTab({ module, patientId }: MiiModuleTabProps) {
       if (cancelled) return;
       const all = perType.flat();
       // D-07: merge per-type results and sort newest-first. Matches the
-      // server-side `_sort=-date` hint now that we combine multiple types.
+      // server-side `_sort=-_lastUpdated` hint now that we combine multiple
+      // types. (Phase 38.1: swapped from the previous `date` sort clause
+      // because Blaze 1.6.2 rejects `date` as a sort clause with HTTP 400
+      // — see 38-SUMMARY.md for the full root-cause analysis.)
       all.sort((a, b) => getDate(b).localeCompare(getDate(a)));
       setResources(all);
       setLoading(false);
