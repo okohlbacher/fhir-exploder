@@ -1,0 +1,143 @@
+---
+phase: 37
+plan: 01
+authored: 2026-04-28
+status: deferred-empirical
+sections_owned_by:
+  "§1 Within-family pairs": "Plan 37-01 (deferred — captures skipped)"
+  "§2 Cross-family pairs": "Plan 37-01 (deferred — captures skipped)"
+  "§3 TTI": "Plan 37-02 (Lighthouse-substituted, accepted)"
+  "§4 Contradictions": "Plan 37-03"
+  "§5 Contingency commits triggered": "Plan 37-03"
+  "§6 34-06-UAT.md update": "Plan 37-03"
+  "§7 Future hardening": "Plan 37-03 (recommended brief)"
+---
+
+# Phase 37 — Empirical Reconciliation
+
+**Authored:** 2026-04-28
+**Status:** **EMPIRICAL CAPTURE DEFERRED** — Plan 37-01's deuteranopia screenshots and Plan 37-02's manual DevTools Performance panel runs were both skipped during execution by user decision. Plan 37-02 produced a Lighthouse-substituted TTI snapshot (accepted as cross-validation rather than authoritative DevTools capture). Plan 37-01's deuteranopia capture has no equivalent automated substitute and was deferred outright.
+
+**Scope:** This document mirrors `color-design-audit.md` §4b/§4c row order so that future re-runs (against this same Phase 34 HEAD or any later HEAD) can fill the Empirical column without restructuring. The deferral is noted explicitly per row to prevent silent confusion with PASS results.
+
+**Source artifacts (state on 2026-04-28):**
+- `deuteranopia-dashboard.png` — **NOT CAPTURED** (deferred)
+- `deuteranopia-tab-row.png` — **NOT CAPTURED** (deferred)
+- `deuteranopia-timeline.png` — **NOT CAPTURED** (deferred)
+- `tti-snapshot.json` — captured via Lighthouse 13.1 headless Chrome, NOT manual DevTools Performance panel as the plan required (see §3 method note)
+
+**Methodology (intended vs. actual):**
+- Intended: Chrome DevTools Rendering panel "Emulate vision deficiencies → deuteranopia" (Machado 2009 simulation matrix), 3 PNG full-size captures, human visual judgement of each adjacent pair.
+- Actual: deferred. No simulation was applied; no judgement was recorded.
+
+---
+
+## §1 Within-family adjacent pairs (mirrors color-design-audit.md §4b)
+
+7 pairs — same palette family, two different icons. Paper predicted 7/7 PASS via icon-shape distinctness alone (no color help by design).
+
+| # | Pair | Palette family | Icon A | Icon B | Paper | Empirical | Agree? | Notes |
+|---|------|----------------|--------|--------|-------|-----------|--------|-------|
+| 1 | onkologie + mtb | oncology (red) | IconRadioactive | IconUsersGroup | PASS | [deferred] | n/a | Radial trefoil vs clustered circles |
+| 2 | bildgebung + studie | imaging (cyan) | IconPhoto | IconClipboardData | PASS | [deferred] | n/a | Frame+lens vs clipboard-with-lines |
+| 3 | molekulargenetik + seltene | genetics (grape) | IconDna | IconPuzzle | PASS | [deferred] | n/a | DNA helix vs interlocking tiles |
+| 4 | pathologie + mikrobiologie | pathology (violet) | IconMicroscope | IconVirus | PASS | [deferred] | n/a | Tall apparatus vs polyhedral cluster (audit named IconBacteria; Plan 34-04 swapped to IconVirus per package availability — see RESEARCH §Pitfall 5) |
+| 5 | biobank + intensivmedizin | bioanalysis (teal) | IconTestPipe | IconBedFilled | PASS | [deferred] | n/a | Vertical cylinder vs horizontal rectangle |
+| 6 | kardiologie + dokument | administration (indigo) | IconHeartbeat | IconFileDescription | PASS | [deferred] | n/a | Waveform vs rectangle-with-lines |
+| 7 | symptom + pro | patient-reported (pink) | IconMoodSmile | IconListCheck | PASS | [deferred] | n/a | Circle-face vs linear checklist (audit named IconQuestionnaire; Plan 34-04 swapped to IconListCheck — see RESEARCH §Pitfall 5) |
+
+**Within-family summary:** 0/7 pairs empirically verified (all deferred). Paper prediction stands as the only available evidence.
+
+---
+
+## §2 Cross-family adjacent tabs (mirrors color-design-audit.md §4c)
+
+14 pairs across the final tab order. Paper predicted 14/14 PASS. Two borderline pairs flagged for empirical attention:
+- **mikrobiologie ↔ molekulargenetik** — HIGH color-collapse risk (violet vs grape both shift bluish-purple under deuteranopia)
+- **pro ↔ seltene** — MEDIUM-HIGH color-collapse risk (dark pink vs grape both reddish-purple family)
+
+| # | Left module | Right module | Palette pair | Risk | Paper | Empirical | Agree? |
+|---|-------------|--------------|--------------|------|-------|-----------|--------|
+| 1 | medikation | bildgebung | orange vs imaging-cyan | LOW | PASS | [deferred] | n/a |
+| 2 | bildgebung | biobank | imaging-cyan vs bioanalysis-teal | MEDIUM | PASS | [deferred] | n/a |
+| 3 | biobank | dokument | bioanalysis-teal vs administration-indigo | MEDIUM | PASS | [deferred] | n/a |
+| 4 | dokument | intensivmedizin | administration-indigo vs bioanalysis-teal | MEDIUM | PASS | [deferred] | n/a |
+| 5 | intensivmedizin | kardiologie | bioanalysis-teal vs administration-indigo | MEDIUM | PASS | [deferred] | n/a |
+| 6 | kardiologie | mikrobiologie | administration-indigo vs pathology-violet | MEDIUM | PASS | [deferred] | n/a |
+| 7 | mikrobiologie | molekulargenetik | pathology-violet vs genetics-grape | **HIGH** | PASS | [deferred] | n/a |
+| 8 | molekulargenetik | mtb | genetics-grape vs oncology-dark-red | LOW | PASS | [deferred] | n/a |
+| 9 | mtb | onkologie | within oncology family | N/A | PASS | [deferred] | n/a |
+| 10 | onkologie | pathologie | oncology-red vs pathology-violet | MEDIUM | PASS | [deferred] | n/a |
+| 11 | pathologie | pro | pathology-violet vs patient-reported-pink | MEDIUM | PASS | [deferred] | n/a |
+| 12 | pro | seltene | patient-reported-pink vs genetics-grape | **MEDIUM-HIGH** | PASS | [deferred] | n/a |
+| 13 | seltene | studie | genetics-grape vs imaging-cyan | LOW | PASS | [deferred] | n/a |
+| 14 | studie | symptom | imaging-cyan vs patient-reported-pink | LOW | PASS | [deferred] | n/a |
+
+**Cross-family summary:** 0/14 pairs empirically verified (all deferred).
+
+**HIGH/MEDIUM-HIGH attention pairs (would have driven Plan 37-03 contingency decision):**
+- Pair #7 (mikrobiologie ↔ molekulargenetik): empirical [deferred] — borderline pair NOT empirically verified.
+- Pair #12 (pro ↔ seltene): empirical [deferred] — borderline pair NOT empirically verified.
+
+Phase 37 closes without resolving the empirical question for these two borderline pairs. Section §7 names the future-hardening candidates that would close this gap.
+
+---
+
+## §3 TTI before/after
+
+**Owner:** Plan 37-02 (Wave 1).
+**Status:** captured via **Lighthouse 13.1 headless Chrome** — substituted for the plan-required Chrome DevTools Performance panel manual capture. Substitution accepted by user 2026-04-28; flagged as a deviation for the audit trail.
+
+| Metric | Value | Source |
+|--------|-------|--------|
+| baseline_ms (median of 3 Lighthouse runs at 048e99c) | 256.523 ms | tti-snapshot.json.baseline_ms |
+| post_phase_ms (median of 3 Lighthouse runs at a7e4544) | 268.604 ms | tti-snapshot.json.post_phase_ms |
+| delta_ms | +12.081 ms | post_phase_ms - baseline_ms |
+| delta_pct | +4.71% | (delta_ms / baseline_ms) * 100 |
+| dual-gate verdict (D-08) | **PASS** (delta_ms ≤ 100 ms AND delta_pct ≤ 10%) | tti-snapshot.json + CONTEXT D-08 |
+
+Phase 33 D-11 keepMounted={false} on extension Tabs.Panel + Plan 34-05 root keepMounted=false combined to keep extension panels lazy on /patients/:id mount; the empirical delta_ms (Lighthouse measurement) is consistent with this invariant holding across the Phase-34 14-module rollout. The Lighthouse method reads from the same Chrome Performance API as the DevTools Performance panel marker — the absolute numbers may differ slightly from a hand-read flame chart, but the dual-gate verdict (PASS by a wide margin: ~88 ms below the delta_ms threshold and ~5 percentage points below the delta_pct threshold) is robust against that uncertainty.
+
+---
+
+## §4 Contradictions
+
+**Owner:** Plan 37-03 (Wave 2).
+**Status:** [populated by Plan 37-03 — note the deferred state of §1+§2 in the contradiction analysis]
+
+Because §1 and §2 carry no empirical results, no Paper-vs-Empirical disagreement can be enumerated. Plan 37-03 should write "0 contradictions enumerable — empirical capture deferred" rather than "0 contradictions" (the latter implies confirmation, the former is honest).
+
+---
+
+## §5 Contingency commits triggered
+
+**Owner:** Plan 37-03 (Wave 2).
+**Status:** [populated by Plan 37-03]
+
+No contingency triggered (no empirically-detected failure to respond to). Per CONTEXT D-09, contingency fires only on a HIGH or MEDIUM-HIGH borderline pair empirical failure, and §2 records both borderline pairs as [deferred]. Plan 37-03 should write "None — no contingency triggered (empirical capture deferred so no failure was detectable)" rather than the affirmative "None — no contingency triggered" wording, to preserve the audit trail.
+
+---
+
+## §6 34-06-UAT.md update
+
+**Owner:** Plan 37-03 (Wave 2).
+**Status:** [populated by Plan 37-03]
+
+Plan 37-03 updates `.planning/phases/34-14-mii-extension-modules-palette-bundled-profiles/34-06-UAT.md` per CONTEXT D-11, but with the deferral honestly recorded:
+- §1d: "Empirical capture deferred 2026-04-28; paper analysis stands as the only available evidence. See `37-EMPIRICAL.md` §1+§2 deferred markers."
+- §2 TTI table: populated from `tti-snapshot.json` with method note flagging Lighthouse substitution.
+- §6 closure checklist: deuteranopia item marked **DEFERRED** (not "done"); TTI item marked **PASS (Lighthouse-substituted)**.
+
+---
+
+## §7 Future hardening
+
+**Owner:** Plan 37-03 (Wave 2). Per RESEARCH Open Question #3.
+
+Two candidates noted for v1.6+ backlog (with explicit recommendation to land at least one given Phase 37's deferred state):
+
+- **(a) Headless deuteranopia simulation in Vitest.** Apply a Brettel/Machado JS simulation matrix to rendered RGBA from the Dashboard tile grid + tab row, then assert pairwise icon+color discriminability via OCR or pixel-difference metrics. Would catch icon-or-palette regressions on every PR — and would close Phase 37's deferred §1+§2 retroactively if added. **Recommended before v1.6 ships** because the Phase 37 deferral leaves the borderline pairs (#7 mikrobiologie ↔ molekulargenetik, #12 pro ↔ seltene) unverified.
+
+- **(b) ΔE2000 perceptual-distance lint over `MII_MODULES` palette adjacency.** A static lint that fails CI if any two adjacent module palettes (per the final tab order) fall below a perceptual-distance threshold under deuteranopia simulation. Cheap to run, catches palette-tweaking regressions instantly. Would not catch icon-shape regressions; complements (a).
+
+The deferred capture is explicitly NOT a "good enough — paper analysis confirmed" close. The HIGH-risk borderline pair (mikrobiologie ↔ molekulargenetik, paper-PASS via icon distinctness only) and the MEDIUM-HIGH pair (pro ↔ seltene) remain qualitative predictions until (a) or a manual re-capture lands.
