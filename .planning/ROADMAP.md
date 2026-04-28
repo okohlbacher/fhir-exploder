@@ -322,3 +322,21 @@ Phase 35 (UAT follow-ups + matrix)
 
 _All v1.5 backlog items (former 999.1, 999.2, 999.3, 999.4) were promoted into active phases 36, 37, 38 on 2026-04-25 per `/gsd-plan-milestone-gaps`. See §Phase Details for Phase 36, 37, 38._
 
+### Phase 999.1: Explorer — toggle to hide zero-count resource types (BACKLOG)
+
+**Goal:** Add a Mantine `Switch` near the top of the Explorer resource-type landing (`/explorer`) labeled "Hide empty resource types" (default off, persisted to localStorage). When on, types with `counts[type] === 0` collapse out of the list. When off, the existing full list is shown.
+
+**Why:** Today `/explorer` lists every supported FHIR resource type. Many show 0 against typical Synthea bundles (e.g. on the Phase 38 walk: `MedicationStatement`, `AllergyIntolerance`, `Consent`, `Immunization`, `ServiceRequest` were all zero). The list is noisy when most types are empty.
+
+**Likely files:**
+- `src/components/explorer/ResourceTypeLanding.tsx` — landing component
+- Counts source: same map the Dashboard uses (`src/components/dashboard/DashboardPage.tsx`)
+
+**Source:** Verifier observation surfaced during Phase 38 HUMAN-UAT walk (2026-04-28), Plan 38-02 Test 1 (Explorer Date/Status columns across 6 types). The MedicationStatement empty-state navigation made the noise pattern obvious.
+
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
+
