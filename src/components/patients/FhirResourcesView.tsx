@@ -129,7 +129,7 @@ export function FhirResourcesView({ patientId, capability }: FhirResourcesViewPr
     setExpandedResources([]);
 
     const param = paramByType.get(type) ?? 'patient';
-    const url = `${type}?${param}=Patient/${patientId}&_count=20&_sort=-date`;
+    const url = `${type}?${param}=Patient/${patientId}&_count=20&_sort=-_lastUpdated`;
     client.get(client.fhirUrl(url).toString())
       .then((raw) => {
         const bundle: Bundle = typeof raw === 'string' ? JSON.parse(raw) : raw;
