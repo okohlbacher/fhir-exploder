@@ -1,7 +1,9 @@
 ---
 phase: 35-phase-30-uat-follow-ups-per-type-quality-matrix
 verified: 2026-04-25T09:18:00Z
-status: human_needed
+status: passed
+re_verified: 2026-04-28T14:04:57Z
+re_verified_by: phase-38
 score: 6/6 must-haves verified (programmatically); 1 success criterion requires live-Blaze human verification
 overrides_applied: 0
 human_verification:
@@ -162,3 +164,21 @@ The only remaining items are observational live-Blaze verifications listed in th
 
 _Verified: 2026-04-25T09:18:00Z_
 _Verifier: Claude (gsd-verifier)_
+
+## Re-verification (Phase 38, a2ef59f)
+
+Phase 38 walked the 6 live-Blaze HUMAN-UAT items in a single browser session against
+`http://localhost:8080/fhir` (Synthea fingerprint pinned in `38-SESSION.md`).
+
+| # | Test | Outcome | Rationale |
+|---|------|---------|-----------|
+| 1 | Date/Status real-data population (6 types) | pass | All 5 non-empty types render real Date+Status; empty cells render as empty strings; MedicationStatement empty-state clean (count=0, accepted data-coverage gap) |
+| 2 | Identifier-system Tooltip hover behavior | pass | Mantine Tooltip portal shows system URL; cursor=help; URL not duplicated in main row text |
+| 3 | Modal transition + 3 close paths | pass | X button (`aria-label="Close"`), backdrop click, and Escape key — all 3 close paths verified |
+| 4 | Bottom Extensions section dedup | fail-overridden | Dedup/hiding/[View]-open all correct; value summary blank for nested-extension shapes (us-core-race/ethnicity) — accepted as cosmetic, no fix in v1.5; full JSON reachable via [View] |
+| 5 | Per-type quality matrix populated | pass | em-dash invariant held (no literal `0%`); 4 cells populated after panel runs; threshold colors + sortable headers verified |
+| 6 | PHI gate behavior on chevron click | pass | URL pre-select via `useSearchParams`; zero outbound fetches to validator before PHI ack click; Phase 7 P-08 invariant intact |
+
+**Walk plan:** `.planning/phases/38-v1.5-human-uat-live-blaze-smoke-tests/38-02-PLAN.md`
+**Recorded results:** `.planning/phases/35-phase-30-uat-follow-ups-per-type-quality-matrix/35-HUMAN-UAT.md`
+**Closure summary:** `.planning/phases/38-v1.5-human-uat-live-blaze-smoke-tests/38-SUMMARY.md`
