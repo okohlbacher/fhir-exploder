@@ -53,6 +53,13 @@ evidence: |
   sub-phase 38.1; suggested fix: replace `_sort=-date` with
   `_sort=-_lastUpdated` (or remove sort) in all 4 sites.
 
+  → fixed in Phase 38.1, commit 7abe68f.
+    Re-walked 2026-04-28 against same Blaze + Synthea fingerprint
+    (38-SESSION.md): Laborbefund tab populated with lab Observations
+    against patient DHOT622BDE5AAY4S; the previously-400 URL (now
+    `_sort=-_lastUpdated&category=laboratory` variant) returns HTTP 200.
+    `result: fail` preserved per Phase 38 D-03 (historical record).
+
 ### 2. Timeline color + German label for all 4 TIMELINE_RESOURCE_TYPES
 expected: Patient detail → Zeitleiste tab renders Conditions labelled 'Diagnose' (teal border-left + teal badge), Encounters labelled 'Fall' (indigo), Procedures labelled 'Prozedur' (violet), Observations labelled 'Laborbefund' (cyan). Visual color tokens must match.
 result: fail
@@ -77,6 +84,15 @@ evidence: |
   to sub-phase 38.1. After 38.1 ships the `_sort=-_lastUpdated` swap,
   re-walk this test to confirm color + label render correctly per
   TIMELINE_RESOURCE_TYPES.
+
+  → fixed in Phase 38.1, commit e3488dc.
+    Re-walked 2026-04-28 against same Blaze + Synthea fingerprint
+    (38-SESSION.md): Zeitleiste renders entries with the expected 4-color
+    palette (Encounter→indigo Fall, Condition→teal Diagnose,
+    Procedure→violet Prozedur, Observation→cyan Laborbefund); each of the
+    4 per-type `searchResources` requests returns HTTP 200 with the
+    `_sort=-_lastUpdated` variant. `result: fail` preserved per Phase 38
+    D-03 (historical record).
 
 ### 3. Dashboard MII heading reads unambiguous scope
 expected: Dashboard MII section shows the heading 'MII Kerndatensatz · Server-wide totals' so users cannot misinterpret the counts as per-patient. Visual typography + middle-dot separator should render correctly.
@@ -148,6 +164,15 @@ evidence: |
   Synthea bundle has 0 Consents and 0 MedicationStatements server-wide
   per 38-SESSION.md. Those are accepted data-coverage realities per
   D-01, not regressions.
+
+  → fixed in Phase 38.1, commit 7abe68f.
+    Re-walked 2026-04-28 against same Blaze + Synthea fingerprint
+    (38-SESSION.md): Laborbefund tab now populates with lab Observations
+    end-to-end (UAT-FU-06 closure verified live); `&category=laboratory`
+    filter applies cleanly with no social-history / vital-signs leakage;
+    Consent + Medikation empty-state remains the accepted data-coverage
+    reality per D-01 (separate from this fix). `result: fail` preserved
+    per Phase 38 D-03 (historical record).
 
 ## Summary
 
