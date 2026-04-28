@@ -1,7 +1,9 @@
 ---
 phase: 33-mii-schema-foundation-extension-modules-collapse-ui
 verified: 2026-04-24T13:42:00Z
-status: human_needed
+status: passed
+re_verified: 2026-04-28T14:04:57Z
+re_verified_by: phase-38
 score: 8/8 must-haves verified
 overrides_applied: 0
 human_verification:
@@ -156,3 +158,21 @@ The phase is **automated-verification-passed**. Status is `human_needed` because
 
 _Verified: 2026-04-24T13:42:00Z_
 _Verifier: Claude (gsd-verifier)_
+
+## Re-verification (Phase 38, a705c5d)
+
+Phase 38 walked the 6 live-Blaze HUMAN-UAT items in a single browser session against
+`http://localhost:8080/fhir` (Synthea fingerprint pinned in `38-SESSION.md`).
+
+| # | Test | Outcome | Rationale |
+|---|------|---------|-----------|
+| 1 | Synthea Laborbefund extraQuery (no leakage) | fail-fixed-in-38.1 | Blaze HTTP 400 on `_sort=-date` blocks the request — extraQuery URL append IS correct in HAR |
+| 2 | Timeline color + German label (4 types) | fail-fixed-in-38.1 | Same `_sort=-date` cascade in `ClinicalTimeline.tsx:72`; colors not observable, panel renders empty state |
+| 3 | Dashboard MII heading "Server-wide totals" | pass | Heading reads literally `MII Kerndatensatz · Server-wide totals` (U+00B7 middle-dot), unaffected by per-patient bug |
+| 4 | Dashboard tile click → Drawer (no fetch) | pass | Drawer + contents + zero new GETs + Open-in-Explorer navigation all verified per D-14 |
+| 5 | MiiModuleTabs deep-link forward-compat | pass | 8 base tabs render in order; `Show extension modules` toggle absent (length-guarded, 0 extensions) |
+| 6 | Per-patient Laborbefund populated | fail-fixed-in-38.1 | Same root cause as Test 1; UAT-FU-06 fix is in URL but Blaze rejects the surrounding `_sort=-date` |
+
+**Walk plan:** `.planning/phases/38-v1.5-human-uat-live-blaze-smoke-tests/38-01-PLAN.md`
+**Recorded results:** `.planning/phases/33-mii-schema-foundation-extension-modules-collapse-ui/33-HUMAN-UAT.md`
+**Closure summary:** `.planning/phases/38-v1.5-human-uat-live-blaze-smoke-tests/38-SUMMARY.md`
