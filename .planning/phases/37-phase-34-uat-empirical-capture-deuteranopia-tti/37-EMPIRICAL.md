@@ -140,7 +140,7 @@ This is a deferral, not a Branch A close. The qualitative paper analysis is the 
 **Owner:** Plan 37-03 (Wave 2).
 **Status:** Populated by Plan 37-03 (2026-04-28).
 
-The closure update to `.planning/phases/34-14-mii-extension-modules-palette-bundled-profiles/34-06-UAT.md` landed in commit `<SHA-PENDING>` (this commit is about to be created — see commit subject `docs(37-03): close Phase 34 UAT — 34-06-UAT.md §1d/§2/§5 + 37-EMPIRICAL.md §6 cross-ref`):
+The closure update to `.planning/phases/34-14-mii-extension-modules-palette-bundled-profiles/34-06-UAT.md` landed in commit `b38f613` (commit subject: `docs(37-03): close Phase 34 UAT — 34-06-UAT.md §1d/§2/§5 + status flip`):
 
 - **§1d:** Replaced "(This subsection is populated by the human verifier...)" placeholder with deferral-aware paragraph referencing `37-EMPIRICAL.md` §1+§2 deferred markers and `37-01-SUMMARY.md` for deferral context.
 - **§2 TTI table:** Replaced 5 `⏳ pending` cells with values from `tti-snapshot.json` (`baseline_ms=256.523`, `post_phase_ms=268.604`, `delta_ms=+12.081`, `delta_pct=+4.71%`, `verdict=PASS`). Appended method note flagging Lighthouse 13.1 substitution for the plan-required DevTools Performance panel manual capture.
