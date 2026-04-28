@@ -69,7 +69,7 @@ export function ClinicalTimeline({ patientId }: ClinicalTimelineProps) {
             client
               .searchResources(
                 type,
-                `patient=Patient/${patientId}&_count=100&_sort=-date`
+                `patient=Patient/${patientId}&_count=100&_sort=-_lastUpdated`
               )
               .catch(() => [] as Resource[])
           )
