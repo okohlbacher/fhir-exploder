@@ -119,7 +119,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
       await Promise.all(
         TIMELINE_RESOURCE_TYPES.map(async (rt) => {
           try {
-            const url = `${rt.type}?${rt.param}=Patient/${patientId}&_count=200&_sort=-date`;
+            const url = `${rt.type}?${rt.param}=Patient/${patientId}&_count=200&_sort=-_lastUpdated`;
             const raw = await client.get(client.fhirUrl(url).toString());
             const bundle: Bundle = typeof raw === 'string' ? JSON.parse(raw) : raw;
             for (const entry of bundle.entry ?? []) {
