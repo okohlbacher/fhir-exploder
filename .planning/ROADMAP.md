@@ -340,3 +340,23 @@ _All v1.5 backlog items (former 999.1, 999.2, 999.3, 999.4) were promoted into a
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
 
+### Phase 999.2: Quality completeness — sort non-empty resource types to the top (BACKLOG)
+
+**Goal:** Change the default sort behavior in `/quality?tab=completeness` so resource types with actual data (non-empty `total`) appear at the top of the per-type table; types with no records (`total === 0`, pct=null) sink to the bottom.
+
+**Why:** Today the panel's default sort is `completeness ASC / worst-first` (`CompletenessPanel.tsx`). Zero-count types map their pct to `null → -1` in `compareRows`, which under ascending sort puts them BEFORE every populated type. Result: against a Synthea bundle the user opens the page and sees five empty types stacked at the top (`AllergyIntolerance`, `Consent`, `Immunization`, `ServiceRequest`, `MedicationStatement` — all 0 records) before any meaningful row. Verifier observation: "non-empty Resources in `/quality?tab=completeness` are at the end rather than at the top of the list."
+
+**Suggested fix:** Treat `pct === null` as "not-applicable" rather than "worst possible" in `compareRows`. Push N/A rows to the end regardless of sort direction (mirror the existing `aSettled !== bSettled` pattern that already pushes loading/error rows to the end). Possibly add a small "—" badge or muted styling for the empty rows so it's obvious why they're sorted to the bottom.
+
+**Likely files:**
+- `src/components/quality/CompletenessPanel.tsx` — `compareRows` (line ~59) and `toRow` (line ~50ish)
+- Same pattern likely applies to `CoveragePanel`, `ValidationPanel`, `ReferencesPanel` if they sort similarly — audit before fixing.
+
+**Source:** Verifier observation during Phase 38 HUMAN-UAT walk (2026-04-28).
+
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
+
