@@ -58,7 +58,8 @@ Last activity: 2026-04-28
 
 ### Roadmap Evolution
 
-- Phase 38.1 inserted after Phase 38: fix `_sort=-date` Blaze incompatibility — swap to `_sort=-_lastUpdated` (or remove) in `MiiModuleTab.tsx`, `ClinicalTimeline.tsx`, `PatientTimeline.tsx`, `FhirResourcesView.tsx` (URGENT — surfaced by Phase 38 walk as 3 critical-severity hits per D-01)
+- Phase 38.1 inserted after Phase 38: fix `_sort=-date` Blaze incompatibility — swap to `_sort=-_lastUpdated` (or remove) in `MiiModuleTab.tsx`, `ClinicalTimeline.tsx`, `PatientTimeline.tsx`, `FhirResourcesView.tsx` (URGENT — surfaced by Phase 38 walk as 3 critical-severity hits per D-01); completed 2026-04-28
+- Phase 38.2 inserted after Phase 38.1: fix ValueQuantity render — show `value` followed by `unit` on Observation rows. Surfaced 2026-04-28 during the Phase 38.1 re-walk; the bug was masked by 38.1's _sort=-date regression and became visible once the Laborbefund tab populated. Likely 1 plan, ~3-4 tasks. Blocks v1.5 milestone audit.
 
 ### Pending Todos
 
