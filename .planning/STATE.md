@@ -4,8 +4,8 @@ milestone: v1.5
 milestone_name: -- Validation, Performance & MII Extensions (in progress, started 2026-04-23)
 status: executing
 stopped_at: Phase 38 context gathered
-last_updated: "2026-04-28T06:56:34.872Z"
-last_activity: 2026-04-28 -- Phase 38 planning complete
+last_updated: "2026-04-28T07:35:50.989Z"
+last_activity: 2026-04-28 -- Phase 38 execution started
 progress:
   total_phases: 7
   completed_phases: 7
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-23)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 32 — eff-r14-qualitymetricscontext-split
+**Current focus:** Phase 38 — v1.5-human-uat-live-blaze-smoke-tests
 
 ## Current Position
 
-Phase: 37
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-28 -- Phase 38 planning complete
+Phase: 38 (v1.5-human-uat-live-blaze-smoke-tests) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 38
+Last activity: 2026-04-28 -- Phase 38 execution started
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Last activity: 2026-04-28 -- Phase 38 planning complete
 - Phase 29 intra-phase: T2 (UX-02 OverviewStrip) BEFORE T1 (UX-01 External validator) — warm-up then L-task
 - R14 (QualityMetricsContext re-render split) deferred to v1.5 on risk/reward grounds — tracked as EFF-R14 in v1.4 REQUIREMENTS.md Future Requirements section
 - Safety invariants locked: closure-scoped `let cancelled` in `useAsyncRun` (NOT `cancelledRef`); 2-entry LRU eviction on `Map<serverUrl, QualityMetricsCache>`; external validator T1 routes through existing Phase 7 PHI acknowledgment gate
+- 2026-04-28: v1.5 HUMAN-UAT closure landed Phase 38 (12/12 tests walked; 33 + 35 verifications re-flipped to passed; sub-phase 38.1 trigger: yes — see 38-SUMMARY.md).
 
 ### Pending Todos
 
