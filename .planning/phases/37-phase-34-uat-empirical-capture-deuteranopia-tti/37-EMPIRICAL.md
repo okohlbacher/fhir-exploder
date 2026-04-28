@@ -103,30 +103,55 @@ Phase 33 D-11 keepMounted={false} on extension Tabs.Panel + Plan 34-05 root keep
 ## §4 Contradictions
 
 **Owner:** Plan 37-03 (Wave 2).
-**Status:** [populated by Plan 37-03 — note the deferred state of §1+§2 in the contradiction analysis]
+**Status:** Populated by Plan 37-03 (2026-04-28).
 
-Because §1 and §2 carry no empirical results, no Paper-vs-Empirical disagreement can be enumerated. Plan 37-03 should write "0 contradictions enumerable — empirical capture deferred" rather than "0 contradictions" (the latter implies confirmation, the former is honest).
+**0 contradictions enumerable — empirical capture deferred 2026-04-28** (see `37-01-SUMMARY.md`). Paper analysis qualitative-only for §1+§2; no empirical evidence available to detect or confirm a contradiction.
+
+| § | Pair | Risk | Paper | Empirical | Disposition |
+|---|------|------|-------|-----------|-------------|
+| §1 | all 7 within-family pairs | LOW (icon distinctness only) | PASS | [deferred] | No empirical result captured; cannot enumerate disagreement |
+| §2 | all 14 cross-family pairs | mixed (LOW / MEDIUM / HIGH / MEDIUM-HIGH) | PASS | [deferred] | No empirical result captured; cannot enumerate disagreement |
+| §2 #7 | mikrobiologie ↔ molekulargenetik | **HIGH** | PASS | [deferred] | Borderline pair NOT empirically verified — paper prediction stands as only evidence; future-hardening item §7(a) recommended before v1.6 to retroactively close |
+| §2 #12 | pro ↔ seltene | **MEDIUM-HIGH** | PASS | [deferred] | Borderline pair NOT empirically verified — paper prediction stands as only evidence; future-hardening item §7(a) recommended before v1.6 to retroactively close |
+
+Note: writing "0 contradictions — paper analysis confirmed empirically" would be dishonest because nothing was confirmed. The HIGH-risk pair #7 (mikrobiologie ↔ molekulargenetik, which relies on icon distinctness alone since pathology-violet vs genetics-grape both shift bluish-purple under deuteranopia) and the MEDIUM-HIGH pair #12 (pro ↔ seltene) remain qualitative predictions. RESEARCH §Pitfall 8 noted that the audit reasoned across both Brettel and Machado simulation models qualitatively; Phase 37's deferral leaves both unverified empirically.
 
 ---
 
 ## §5 Contingency commits triggered
 
 **Owner:** Plan 37-03 (Wave 2).
-**Status:** [populated by Plan 37-03]
+**Status:** Populated by Plan 37-03 (2026-04-28).
 
-No contingency triggered (no empirically-detected failure to respond to). Per CONTEXT D-09, contingency fires only on a HIGH or MEDIUM-HIGH borderline pair empirical failure, and §2 records both borderline pairs as [deferred]. Plan 37-03 should write "None — no contingency triggered (empirical capture deferred so no failure was detectable)" rather than the affirmative "None — no contingency triggered" wording, to preserve the audit trail.
+**None — no contingency triggered (empirical capture deferred so no failure was detectable).**
+
+Per CONTEXT D-09, contingency fires only on a HIGH or MEDIUM-HIGH borderline pair empirical failure. §2 records both borderline pairs (#7 mikrobiologie ↔ molekulargenetik HIGH; #12 pro ↔ seltene MEDIUM-HIGH) as `[deferred]` with `Agree? = n/a`. With no empirical capture, no FAIL is detectable, so no contingency processing was performed:
+- No Tabler 3.41.1 alternative-icon probe was run.
+- No icon swap was applied to `src/utils/mii-icons.ts` or `src/utils/mii-modules.ts`.
+- No revision note was appended to `.planning/research/color-design-audit.md` §4d.
+- No screenshots were re-captured (none existed to re-capture in the first place).
+
+This is a deferral, not a Branch A close. The qualitative paper analysis is the only available evidence. Section §7 names the future-hardening candidates that would retroactively close this gap.
 
 ---
 
 ## §6 34-06-UAT.md update
 
 **Owner:** Plan 37-03 (Wave 2).
-**Status:** [populated by Plan 37-03]
+**Status:** Populated by Plan 37-03 (2026-04-28).
 
-Plan 37-03 updates `.planning/phases/34-14-mii-extension-modules-palette-bundled-profiles/34-06-UAT.md` per CONTEXT D-11, but with the deferral honestly recorded:
-- §1d: "Empirical capture deferred 2026-04-28; paper analysis stands as the only available evidence. See `37-EMPIRICAL.md` §1+§2 deferred markers."
-- §2 TTI table: populated from `tti-snapshot.json` with method note flagging Lighthouse substitution.
-- §6 closure checklist: deuteranopia item marked **DEFERRED** (not "done"); TTI item marked **PASS (Lighthouse-substituted)**.
+The closure update to `.planning/phases/34-14-mii-extension-modules-palette-bundled-profiles/34-06-UAT.md` landed in commit `<SHA-PENDING>` (this commit is about to be created — see commit subject `docs(37-03): close Phase 34 UAT — 34-06-UAT.md §1d/§2/§5 + 37-EMPIRICAL.md §6 cross-ref`):
+
+- **§1d:** Replaced "(This subsection is populated by the human verifier...)" placeholder with deferral-aware paragraph referencing `37-EMPIRICAL.md` §1+§2 deferred markers and `37-01-SUMMARY.md` for deferral context.
+- **§2 TTI table:** Replaced 5 `⏳ pending` cells with values from `tti-snapshot.json` (`baseline_ms=256.523`, `post_phase_ms=268.604`, `delta_ms=+12.081`, `delta_pct=+4.71%`, `verdict=PASS`). Appended method note flagging Lighthouse 13.1 substitution for the plan-required DevTools Performance panel manual capture.
+- **§5 sign-off:**
+  - Deuteranopia checkbox: **DEFERRED** (NOT marked `[x]` done) — explicitly labelled "DEFERRED 2026-04-28" with recommendation to land headless deuteranopia simulation in Vitest before v1.6 ships. Cross-references `37-EMPIRICAL.md` §1+§2 deferred markers.
+  - TTI checkbox: `[x]` closed by Phase 37 Plan 37-02 (Lighthouse-substituted; D-22 verdict: PASS via dual gate).
+- **Status line:** Flipped from PARTIAL to **"PARTIALLY COMPLETE (TTI closed via Lighthouse; deuteranopia deferred to v1.6+)"** — NOT "COMPLETE" because the deuteranopia leg remains unverified.
+
+Phase 34 VERIFICATION status remains `passed` per CONTEXT D-11 — these `checkpoint:human-verify` gates were explicitly carried forward, not gaps; Phase 37's outcome (TTI closed, deuteranopia deferred) does not re-open Phase 34's verification.
+
+**Asymmetry on the record:** D-22 TTI gate = closed (Lighthouse-substituted); MII-EXT-11 deuteranopia empirical leg = deferred to v1.6+ hardening backlog.
 
 ---
 
