@@ -134,6 +134,12 @@ describe('MiiModuleTab fan-out (MII-EXT-03)', () => {
     const url = client.get.mock.calls[0][0] as string;
     expect(url).toContain('Observation?patient=Patient/p1');
     expect(url).toContain('category=laboratory');
+    // Phase 38.1 regression lock: Blaze 1.6.2 rejects `_sort=-date`
+    // (HTTP 400 "Unknown search-param `date` in sort clause."). If a
+    // future edit re-introduces it, this assertion catches it before
+    // the live-Blaze walk does. See 38-SUMMARY.md and 38-01-SUMMARY.md.
+    expect(url).toContain('_sort=-_lastUpdated');
+    expect(url).not.toContain('_sort=-date');
   });
 
   it('multi-type module triggers N concurrent FHIR GETs (D-06)', async () => {

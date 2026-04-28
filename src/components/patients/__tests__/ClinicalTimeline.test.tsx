@@ -126,6 +126,18 @@ describe('ClinicalTimeline MII module resolution (MII-EXT-08)', () => {
     // Summary from extractSummary → code.text.
     const summary = await screen.findByText('Test Condition');
     expect(summary).toBeTruthy();
+
+    // Phase 38.1 regression lock: ClinicalTimeline.tsx:72 must use
+    // a Blaze-1.6.2-accepted sort param. searchResources is called
+    // as (type, queryString); we inspect every call's queryString.
+    const queryStrings = (
+      client.searchResources.mock.calls as unknown[][]
+    ).map((c) => c[1] as string);
+    expect(queryStrings.length).toBeGreaterThan(0);
+    for (const q of queryStrings) {
+      expect(q).toContain('_sort=-_lastUpdated');
+      expect(q).not.toContain('_sort=-date');
+    }
   });
 
   it('Procedure renders with Prozedur German label', async () => {
