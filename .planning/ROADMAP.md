@@ -22,6 +22,7 @@ v1.6+ candidates (from `.planning/REQUIREMENTS.md` §v1.6+):
 - Mantine 9 upgrade (coupled to React 19; wait for Medplum 5.x peer-dep refresh)
 - Heat-column gradient on per-type quality matrix
 - Pre-probe extension-module counts on Patient detail
+- **Headless deuteranopia simulation in Vitest (closes Phase 37 deferral).** Apply Brettel/Machado JS simulation matrix to rendered RGBA from the Dashboard tile grid + tab row, then assert pairwise icon+color discriminability for the 21 MII module adjacent pairs. Would close `37-EMPIRICAL.md` §1+§2 retroactively for any future HEAD and catch palette/icon regressions on every PR. Phase 37 left the borderline pairs (#7 mikrobiologie↔molekulargenetik HIGH; #12 pro↔seltene MEDIUM-HIGH) as qualitative paper predictions only — empirical capture deferred 2026-04-28 by user decision. See `.planning/phases/37-phase-34-uat-empirical-capture-deuteranopia-tti/37-VERIFICATION.md` and `37-EMPIRICAL.md` §7(a) for the rationale and recommended approach.
 
 ---
 
@@ -77,7 +78,7 @@ Full details: [milestones/v1.4-ROADMAP.md](milestones/v1.4-ROADMAP.md)
 - [x] **Phase 34: 14 MII Extension Modules + Palette + Bundled Profiles** — 14 extension module entries, 7 custom `MantineColorsTuple`s (WCAG AA audit), 21 Tabler icons, `scripts/fetch-mii-profiles.mjs` via `fhir-package-loader@^2.2.4` devDep + `prepare` lifecycle, CC-BY-4.0 attribution, dimmed empty-state + "Show N empty" toggle. (completed 2026-04-25)
 - [x] **Phase 35: Phase-30 UAT Follow-ups + Per-Type Quality Matrix** — UAT-FU-01 Explorer Date/Status extractor (TDD), UAT-FU-02 HumanReadableView extension cleanup, UAT-FU-03 ResourceDetailPage mode removal + Developer→JSON rename, UAT-FU-05 per-type quality matrix card under Counts tab (requires Phase 32). (completed 2026-04-25)
 - [x] **Phase 36: Phase 34 profile lazy-load (bundle-size waiver follow-up)** — Promoted from backlog 999.3 (2026-04-25 audit). Switch `src/quality/profiles/extensions/index.ts` from static imports to dynamic `import()` per-canonical-URL; define a real consumer for `getExtensionProfileForUrl` / `BUNDLED_EXTENSION_PROFILE_URLS` (closes the orphaned-export integration finding); re-measure with `rollup-plugin-visualizer`; aim for <100 KB gz delta. Closes deferred clause of MII-EXT-12. **Fully automatable.** (completed 2026-04-26)
-- [ ] **Phase 37: Phase 34 empirical UAT capture (deuteranopia + TTI)** — Promoted from backlog 999.2 (2026-04-25 audit). Capture 3 deuteranopia screenshots via Chrome DevTools Rendering → Emulate vision deficiencies (`/dashboard`, `/patients/:id` tab row, `ClinicalTimeline`); commit as `deuteranopia-{dashboard,tab-row,timeline}.png`. Capture TTI before/after via Chrome DevTools Performance panel — baseline at commit `048e99c`, post-phase at Phase 34 HEAD; commit as `tti-snapshot.json`. Reconcile against paper predictions in `.planning/research/color-design-audit.md` §4b/§4c. Closes deferred clauses of MII-EXT-11 (deuteranopia) and the D-22 TTI override accepted in Phase 34. **Human-execution-bound** (Chrome DevTools required).
+- [x] **Phase 37: Phase 34 empirical UAT capture (deuteranopia + TTI)** — Promoted from backlog 999.2 (2026-04-25 audit). Capture 3 deuteranopia screenshots via Chrome DevTools Rendering → Emulate vision deficiencies (`/dashboard`, `/patients/:id` tab row, `ClinicalTimeline`); commit as `deuteranopia-{dashboard,tab-row,timeline}.png`. Capture TTI before/after via Chrome DevTools Performance panel — baseline at commit `048e99c`, post-phase at Phase 34 HEAD; commit as `tti-snapshot.json`. Reconcile against paper predictions in `.planning/research/color-design-audit.md` §4b/§4c. Closes deferred clauses of MII-EXT-11 (deuteranopia) and the D-22 TTI override accepted in Phase 34. **Human-execution-bound** (Chrome DevTools required). (completed 2026-04-28)
 - [ ] **Phase 38: v1.5 HUMAN-UAT live-Blaze smoke tests (Phase 33 + Phase 35)** — Merger of backlog 999.1 + 999.4 (2026-04-25 audit). Run the 12 live-Blaze observational items from `33-HUMAN-UAT.md` (6 items: Synthea Laborbefund extraQuery; timeline color/label; Dashboard heading; tile Drawer UX; deep-link auto-expand; UAT-FU-06 previously-empty-panel) and `35-HUMAN-UAT.md` (6 items: Date/Status real data; identifier-system Tooltip; Modal transition; bottom Extensions section; per-type quality matrix card with real metric data + chevron deep-link; PHI gate behavior on chevron click). Records pass/fail per test in updated HUMAN-UAT files; any fail surfaces as blocking gap. **Human-execution-bound** (live Blaze + Synthea browser session required).
 
 ## Phase Details
@@ -206,12 +207,12 @@ Plans:
   1. 3 deuteranopia PNGs committed; reconciliation table in a `37-EMPIRICAL.md` reports paper vs empirical agreement per pair (7 within-family + 14 cross-family).
   2. `tti-snapshot.json` records `baseline_ms` (at `048e99c`) and `post_phase_ms` (at Phase 34 HEAD); delta documented; if regression > 10% a follow-up note explains.
   3. Any disagreement between paper and empirical for HIGH/MEDIUM-HIGH pairs (mikrobiologie↔molekulargenetik; pro↔seltene) drives a contingency icon swap or color-tweak commit.
-**Plans:** 3 plans, 2 waves
+**Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 37-01-PLAN.md — Wave 1: Capture 3 deuteranopia screenshots (checkpoint:human-verify) + write 37-EMPIRICAL.md §1+§2 reconciliation tables (7 within-family + 14 cross-family pairs); §3-§7 stubbed for downstream plans
-- [ ] 37-02-PLAN.md — Wave 1 (parallel): Twin-worktree TTI capture at 048e99c (baseline) and a7e4544 (post-phase); 3 runs per checkout via Chrome DevTools Performance panel (checkpoint:human-verify); write tti-snapshot.json with D-08 dual-gate verdict
-- [ ] 37-03-PLAN.md — Wave 2: Populate 37-EMPIRICAL.md §3-§7 (TTI summary + contradictions + contingency decision + future hardening); contingency icon swap iff HIGH/MEDIUM-HIGH borderline pair fails empirically (RESEARCH §Pitfall 5 — probe Tabler 3.41.1 availability before swap); update 34-06-UAT.md §1d/§2/§5 closure
+- [x] 37-01-PLAN.md — Wave 1: Capture 3 deuteranopia screenshots (checkpoint:human-verify) + write 37-EMPIRICAL.md §1+§2 reconciliation tables (7 within-family + 14 cross-family pairs); §3-§7 stubbed for downstream plans
+- [x] 37-02-PLAN.md — Wave 1 (parallel): Twin-worktree TTI capture at 048e99c (baseline) and a7e4544 (post-phase); 3 runs per checkout via Chrome DevTools Performance panel (checkpoint:human-verify); write tti-snapshot.json with D-08 dual-gate verdict
+- [x] 37-03-PLAN.md — Wave 2: Populate 37-EMPIRICAL.md §3-§7 (TTI summary + contradictions + contingency decision + future hardening); contingency icon swap iff HIGH/MEDIUM-HIGH borderline pair fails empirically (RESEARCH §Pitfall 5 — probe Tabler 3.41.1 availability before swap); update 34-06-UAT.md §1d/§2/§5 closure
 
 **Effort**: ~0.5-1 day (mostly browser-driven; reconciliation writeup is small)
 **Execution**: **Human-execution-bound** (Chrome DevTools Rendering + Performance panels)
@@ -287,7 +288,7 @@ Phase 35 (UAT follow-ups + matrix)
 | 34. 14 MII Extension Modules + Palette + Profiles | v1.5 | 6/6 | Complete    | 2026-04-25 |
 | 35. Phase-30 UAT Follow-ups + Per-Type Quality Matrix | v1.5 | 4/4 | Complete    | 2026-04-25 |
 | 36. Phase 34 profile lazy-load (bundle-size waiver follow-up) | v1.5 | 4/4 | Complete    | 2026-04-26 |
-| 37. Phase 34 empirical UAT capture (deuteranopia + TTI) | v1.5 | 0/0 | Pending     | — |
+| 37. Phase 34 empirical UAT capture (deuteranopia + TTI) | v1.5 | 3/3 | Complete    | 2026-04-28 |
 | 38. v1.5 HUMAN-UAT live-Blaze smoke tests (Phase 33 + Phase 35) | v1.5 | 0/0 | Pending     | — |
 
 ## Effort Totals (v1.5)
