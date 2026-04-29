@@ -117,6 +117,30 @@ function RenderValue({ value, depth = 0 }: { value: unknown; depth?: number }): 
       );
     }
 
+    // Quantity (FHIR R4) — must fire BEFORE the Coding branch because UCUM-coded
+    // Quantities carry { value, unit, system, code } and { system && code } would
+    // otherwise win and render only the unit code, dropping the measured value.
+    // (Phase 38.2: closes the rendering gap surfaced during the Phase 38.1 re-walk.)
+    //
+    // Detect Quantity by the presence of `obj.unit` (Coding does not have unit) OR
+    // a numeric `obj.value` (Identifier.value is a string; Quantity.value is a number).
+    const isQuantityShape =
+      (typeof obj.unit === 'string') ||
+      (typeof obj.value === 'number' && !obj.coding);
+    if (isQuantityShape) {
+      const hasValue = obj.value !== undefined && obj.value !== null;
+      const hasUnit = typeof obj.unit === 'string' && obj.unit.length > 0;
+      if (hasValue && hasUnit) {
+        return <Text size="sm">{obj.value as number} {obj.unit as string}</Text>;
+      }
+      if (hasValue) {
+        return <Text size="sm">{obj.value as number}</Text>;
+      }
+      // Unit-only or empty — render em-dash to match the null/undefined branch
+      // (never a bare unit, which is meaningless on its own).
+      return <Text size="sm" c="dimmed">—</Text>;
+    }
+
     // Coding (standalone, not in CodeableConcept)
     if (obj.system && obj.code) {
       return (
@@ -170,11 +194,6 @@ function RenderValue({ value, depth = 0 }: { value: unknown; depth?: number }): 
           {(obj.start as string)?.slice(0, 10) ?? '?'} — {(obj.end as string)?.slice(0, 10) ?? 'ongoing'}
         </Text>
       );
-    }
-
-    // Quantity
-    if (obj.value !== undefined && obj.unit) {
-      return <Text size="sm">{obj.value as number} {obj.unit as string}</Text>;
     }
 
     // Generic nested object — render as sub-table if shallow enough
