@@ -1,22 +1,34 @@
-import { Badge, Button, Group, Loader, Select, Stack, Title, Text } from '@mantine/core';
-import { IconEye, IconEyeOff } from '@tabler/icons-react';
+import { Badge, Group, Loader, Select, Stack, Switch, Title, Text, Tooltip } from '@mantine/core';
+import { useLocalStorage } from '@mantine/hooks';
 import { useMedplum } from '@medplum/react-hooks';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import type { ExplorerOutletContext } from './ExplorerLayout';
 import { parseResourceTypes } from '../../fhir/capability';
 import { groupByCategory, CATEGORY_ORDER } from '../../utils/fhir-categories';
 import { useResourceCounts } from '../../hooks/useResourceCounts';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 /**
  * Landing page for /explorer index.
  * Shows resource type selector and grouped resource type list.
- * Empty resource types are hidden by default; a toggle reveals them.
+ *
+ * EXPL-01 (Phase 41): Empty resource types are SHOWN by default. A
+ * `<Switch>` labeled "Hide empty resource types" allows the user to filter
+ * out zero-count types; state persists across reloads via localStorage key
+ * `explorer.hideEmptyResourceTypes.v1`. NOTE: this flips v1.5's prior
+ * default (which hid empty types by default).
  */
 export function ResourceTypeLanding() {
   const { capability } = useOutletContext<ExplorerOutletContext>();
   const navigate = useNavigate();
-  const [showEmpty, setShowEmpty] = useState(false);
+
+  // EXPL-01 / D-04: localStorage-persisted toggle for hiding zero-count types.
+  // Inverted polarity vs the Switch UI: `hideEmpty=true` means hide, `false` means show.
+  const [hideEmpty, setHideEmpty] = useLocalStorage<boolean>({
+    key: 'explorer.hideEmptyResourceTypes.v1',
+    defaultValue: false,
+    getInitialValueInEffect: false,
+  });
 
   const client = useMedplum();
   const parsedTypes = useMemo(() => parseResourceTypes(capability), [capability]);
@@ -36,6 +48,15 @@ export function ResourceTypeLanding() {
     [typeNames, counts]
   );
   const countsReady = loadingCount === 0;
+
+  // EXPL-01 / D-05: count zero-count types using the same `counts` map
+  // already computed above. Used to power the helper subtitle
+  // ("Hide empty (N)") and to disable the Switch when no zero-count types
+  // exist (D-06).
+  const zeroCount = useMemo(
+    () => typeNames.filter((t) => counts[t] === 0).length,
+    [typeNames, counts],
+  );
 
   const orderedCategories = useMemo(() => {
     const ordered = CATEGORY_ORDER.filter((cat) => grouped.has(cat));
@@ -69,24 +90,30 @@ export function ResourceTypeLanding() {
 
       <Group justify="space-between" align="center" mt="md">
         <Title order={4}>Available Resource Types</Title>
-        {countsReady && (
-          <Button
-            variant="subtle"
-            size="xs"
-            leftSection={showEmpty ? <IconEyeOff size={14} /> : <IconEye size={14} />}
-            onClick={() => setShowEmpty((v) => !v)}
-          >
-            {showEmpty ? 'Hide empty' : 'Show empty'}
-          </Button>
-        )}
+        <Tooltip
+          label="No empty types"
+          disabled={zeroCount > 0 || !countsReady}
+          withArrow
+        >
+          <Switch
+            label={zeroCount > 0 ? `Hide empty (${zeroCount})` : 'Hide empty resource types'}
+            checked={hideEmpty}
+            onChange={(e) => setHideEmpty(e.currentTarget.checked)}
+            disabled={countsReady && zeroCount === 0}
+            size="sm"
+            aria-label="Hide empty resource types"
+          />
+        </Tooltip>
       </Group>
       <Stack gap="sm">
         {orderedCategories.map((category) => {
           const types = grouped.get(category)!;
 
-          // Filter types: when hiding empty, only show types with count > 0 or still loading
-          const visibleTypes = countsReady && !showEmpty
-            ? types.filter((t) => typeof counts[t.type] === 'number' && (counts[t.type] as number) > 0)
+          // EXPL-01 / D-05: when hiding empty AND counts are ready, drop
+          // types with count===0. Loading rows always render
+          // (typeof !== 'number' → keep).
+          const visibleTypes = countsReady && hideEmpty
+            ? types.filter((t) => !(typeof counts[t.type] === 'number' && (counts[t.type] as number) === 0))
             : types;
 
           // Skip entire category if no visible types
