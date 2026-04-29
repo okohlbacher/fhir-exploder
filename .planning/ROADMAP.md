@@ -95,7 +95,7 @@ Full details: [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md) . [Audit]
 
 - [x] **Phase 39: v1.5 audit-trail backfill (NYQ + AUDIT)** — Retroactive VALIDATION.md + 38.1-VERIFICATION.md so v1.5 audit closes cleanly (completed 2026-04-29)
 - [x] **Phase 40: Headless deuteranopia simulation in Vitest (DEUT)** — Brettel/Machado JS matrix CI gate for the 21 MII module adjacent pairs; closes Phase 37 deferral (completed 2026-04-29)
-- [ ] **Phase 41: Explorer + Quality UX polish (EXPL + QUAL-01 + QUAL-02 + QUAL-03)** — Hide-empty-types toggle, N/A-rows-to-bottom sort fix, per-type matrix heat gradient, CSV export
+- [x] **Phase 41: Explorer + Quality UX polish (EXPL + QUAL-01 + QUAL-02 + QUAL-03)** — Hide-empty-types toggle, N/A-rows-to-bottom sort fix, per-type matrix heat gradient, CSV export (completed 2026-04-29)
 - [ ] **Phase 42: Pre-probe extension-module counts (MII-EXT-15)** — Tab labels show `Onkologie (12)` before click via parallel `_summary=count` probes; zero-count tabs dimmed
 - [ ] **Phase 43: Validator hardening — auth + semantic near-miss (VAL-06 + VAL-07)** — HTTP Basic/Bearer on external validator + opt-in SNOMED CT / ICD-10 graph-walked "Did you mean?" suggestions
 - [ ] **Phase 44: IPS Compositions support (IPS-01)** — Bundle validation against IPS profile with Empty-Sections-and-Missing-Data drill-down
@@ -153,9 +153,9 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 41-01-PLAN.md — wave 1: EXPL-01 hide-empty-types Mantine `<Switch>` with localStorage `explorer.hideEmptyResourceTypes.v1` persistence + 6-test regression suite (ResourceTypeLanding.tsx)
-- [ ] 41-02-PLAN.md — wave 1: QUAL-01 compareRows N/A-to-bottom (ASC + DESC) on CompletenessPanel + CodingCoveragePanel + em-dash render for total=0 + 5-test regression suite; ValidationPanel + ReferencesPanel exempted (no per-type sort)
-- [ ] 41-03-PLAN.md — wave 1: QUAL-02 3-stop heat gradient (Mantine theme tokens) + QUAL-03 Download CSV (BOM, sanitized filename) on QualityByTypeMatrix.tsx + 14-test regression suite + phase-level bundle-size + test-baseline gate
+- [x] 41-01-PLAN.md — wave 1: EXPL-01 hide-empty-types Mantine `<Switch>` with localStorage `explorer.hideEmptyResourceTypes.v1` persistence + 6-test regression suite (ResourceTypeLanding.tsx)
+- [x] 41-02-PLAN.md — wave 1: QUAL-01 compareRows N/A-to-bottom (ASC + DESC) on CompletenessPanel + CodingCoveragePanel + em-dash render for total=0 + 5-test regression suite; ValidationPanel + ReferencesPanel exempted (no per-type sort)
+- [x] 41-03-PLAN.md — wave 1: QUAL-02 3-stop heat gradient (Mantine theme tokens) + QUAL-03 Download CSV (BOM, sanitized filename) on QualityByTypeMatrix.tsx + 14-test regression suite + phase-level bundle-size + test-baseline gate
 
 ### Phase 42: Pre-probe extension-module counts (MII-EXT-15)
 **Goal**: Patient-detail extension-module tabs show counts on labels (e.g. `Onkologie (12)`) so users know which tabs have data before clicking — closes the empty-tab UX gap from Phase 34's data-drop.
@@ -243,7 +243,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 | 31-38.2 (v1.5) | v1.5 | 32/32 | ✅ Shipped | 2026-04-29 |
 | 39. v1.5 audit-trail backfill (NYQ + AUDIT) | v1.6 | 3/3 | Complete    | 2026-04-29 |
 | 40. Headless deuteranopia simulation (DEUT) | v1.6 | 1/1 | Complete    | 2026-04-29 |
-| 41. Explorer + Quality UX polish (EXPL + QUAL-01/02/03) | v1.6 | 0/3 | Planned     | - |
+| 41. Explorer + Quality UX polish (EXPL + QUAL-01/02/03) | v1.6 | 3/3 | Complete    | 2026-04-29 |
 | 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 0/TBD | Not started | - |
 | 43. Validator hardening — auth + semantic (VAL-06 + VAL-07) | v1.6 | 0/TBD | Not started | - |
 | 44. IPS Compositions support (IPS-01) | v1.6 | 0/TBD | Not started | - |
@@ -266,7 +266,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 **Source:** Verifier observation surfaced during Phase 38 HUMAN-UAT walk (2026-04-28), Plan 38-02 Test 1 (Explorer Date/Status columns across 6 types). The MedicationStatement empty-state navigation made the noise pattern obvious.
 
 **Requirements:** EXPL-01 (Phase 41)
-**Plans:** 1/1 plans complete
+**Plans:** 3/3 plans complete
 
 ### Phase 999.2: Quality completeness — sort non-empty resource types to the top (BACKLOG)
 

@@ -4,13 +4,13 @@ milestone: v1.6
 milestone_name: -- Hardening, UX Polish & Carry-Overs (in progress, started 2026-04-29)
 status: planning
 stopped_at: v1.6 ROADMAP.md created — 7 phases (39-45), 12 REQ-IDs at 100% coverage
-last_updated: "2026-04-29T13:52:19.387Z"
+last_updated: "2026-04-29T15:21:30.332Z"
 last_activity: 2026-04-29
 progress:
-  total_phases: 15
-  completed_phases: 12
-  total_plans: 39
-  completed_plans: 37
+  total_phases: 16
+  completed_phases: 13
+  total_plans: 42
+  completed_plans: 40
   percent: 95
 ---
 
