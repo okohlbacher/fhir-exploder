@@ -47,7 +47,8 @@ interface Row {
   pct: number | null;
 }
 
-function toRow(type: string, state: PerTypeReport<PerTypeCompletenessReport>): Row {
+// Exported for unit tests (compareRows.test.tsx — QUAL-01 regression suite).
+export function toRow(type: string, state: PerTypeReport<PerTypeCompletenessReport>): Row {
   if (state === 'loading' || state === 'error') {
     return { type, state, pct: null };
   }
@@ -55,21 +56,28 @@ function toRow(type: string, state: PerTypeReport<PerTypeCompletenessReport>): R
   return { type, state, pct };
 }
 
-function compareRows(a: Row, b: Row, by: SortKey, dir: SortDir): number {
+// Exported for unit tests (compareRows.test.tsx — QUAL-01 regression suite).
+export function compareRows(a: Row, b: Row, by: SortKey, dir: SortDir): number {
   // Non-settled rows (loading/error) always sort to the end regardless of dir.
   const aSettled = a.state !== 'loading' && a.state !== 'error';
   const bSettled = b.state !== 'loading' && b.state !== 'error';
   if (aSettled !== bSettled) return aSettled ? -1 : 1;
 
+  // QUAL-01 (D-07/D-08): N/A rows (pct === null — types with total === 0)
+  // ALWAYS sort to the end, regardless of sort direction. Mirrors the
+  // aSettled pattern above. Treats null as "not applicable", not
+  // "worst possible".
+  const aIsNA = a.pct === null;
+  const bIsNA = b.pct === null;
+  if (aIsNA !== bIsNA) return aIsNA ? 1 : -1;
+  if (aIsNA && bIsNA) return a.type.localeCompare(b.type); // stable tiebreak
+
   const sign = dir === 'asc' ? 1 : -1;
   if (by === 'type') {
     return sign * a.type.localeCompare(b.type);
   }
-  // completeness — treat pct=null as infinitely-low for asc (will still be
-  // pushed to end by settled check above; this is the tiebreaker).
-  const ap = a.pct ?? -1;
-  const bp = b.pct ?? -1;
-  return sign * (ap - bp);
+  // Both pcts are non-null at this point.
+  return sign * ((a.pct as number) - (b.pct as number));
 }
 
 export function CompletenessPanel({ types, client, sampleSize, patientIds }: CompletenessPanelProps) {
@@ -187,7 +195,50 @@ function CompletenessRow({ row }: { row: Row }) {
     );
   }
 
-  const pct = state.total > 0 ? Math.round((state.populated / state.total) * 100) : 0;
+  // QUAL-01 (D-10): N/A rows (total === 0) render an em-dash in the
+  // Completeness column instead of a misleading "0%" RingProgress. The
+  // compareRows pair above guarantees these rows have already sunk to the
+  // bottom of the table regardless of sort direction.
+  if (state.total === 0) {
+    return (
+      <Table.Tr>
+        <Table.Td>
+          <Anchor
+            component={Link}
+            to={`/quality/completeness/${type}`}
+            c="blue.6"
+          >
+            {type}
+          </Anchor>
+        </Table.Td>
+        <Table.Td>
+          <Text c="dimmed" size="sm">—</Text>
+        </Table.Td>
+        <Table.Td>
+          <Text c="dimmed" size="sm">
+            {state.populated} / {state.total}
+          </Text>
+        </Table.Td>
+        <Table.Td>
+          <Text c="dimmed" size="sm">
+            {state.sampleSize}
+            {state.totalForType != null ? ` of ${state.totalForType}` : ''}
+          </Text>
+        </Table.Td>
+        <Table.Td>
+          {profileLabel ? (
+            <Text size="sm" c="dimmed">{profileLabel}</Text>
+          ) : (
+            <Text c="dimmed" size="sm">
+              Structural (min&gt;=1)
+            </Text>
+          )}
+        </Table.Td>
+      </Table.Tr>
+    );
+  }
+
+  const pct = Math.round((state.populated / state.total) * 100);
   return (
     <Table.Tr>
       <Table.Td>
