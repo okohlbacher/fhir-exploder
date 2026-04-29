@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: -- Hardening, UX Polish & Carry-Overs (in progress, started 2026-04-29)
 status: planning
-stopped_at: v1.6 ROADMAP.md created — 7 phases (39-45), 12 REQ-IDs at 100% coverage
-last_updated: "2026-04-29T15:21:30.332Z"
+stopped_at: Phase 41 complete (EXPL-01 + QUAL-01 + QUAL-02 + QUAL-03 shipped, verified, security + Nyquist closed) — Phase 42 next
+last_updated: "2026-04-29T18:42:31.013Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 16
@@ -21,21 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-29)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 39 (next) — v1.5 audit-trail backfill (NYQ + AUDIT)
+**Current focus:** Phase 42 (next) — Pre-probe extension-module counts (MII-EXT-15)
 
 ## Current Position
 
-Phase: 999.1 of 7 (explorer hide zero count resource types toggle)
-Plan: Not started
-Status: Ready to plan Phase 39
+Phase: 42 of 7 v1.6 phases (pre-probe extension-module counts — MII-EXT-15)
+Plan: Not started — CONTEXT.md missing, run `/gsd-discuss-phase 42` first
+Status: Ready to discuss Phase 42
 Last activity: 2026-04-29
 
-Progress: [░░░░░░░░░░] 0%
+v1.6 progress: 3/7 phases complete (39 ✓ audit-trail backfill, 40 ✓ DEUT-01 deuteranopia simulation, 41 ✓ EXPL-01 + QUAL-01/02/03 polish)
+Progress: [████░░░░░░] 43%
 
 ## Performance Metrics
 
 **Velocity:**
 
+- Total plans completed (v1.6 so far): 7 (Phase 39: 3 plans / Phase 40: 1 plan / Phase 41: 3 plans)
 - Total plans completed (v1.5): 32 (79 tasks across 10 phases including inserted 38.1 + 38.2)
 - Total plans completed (v1.4): 35 (51 tasks across 9 phases)
 - Total plans completed (v1.3): 9 (16 tasks across 2 phases)
@@ -61,14 +63,15 @@ Progress: [░░░░░░░░░░] 0%
 
 ### Pending Todos
 
-- Run `/gsd-plan-phase 39` to decompose Phase 39 (v1.5 audit-trail backfill) into executable plans
+- Run `/gsd-discuss-phase 42` to capture design decisions, then `/gsd-plan-phase 42` to decompose into executable plans
+- Phase 37 retains `nyquist_compliant: false` with `pending: DEUT-01 in Phase 40` annotation — Phase 40 (DEUT-01) shipped; flip 37 to `true` when re-auditing v1.5 next
 
 ### Blockers/Concerns
 
 - Phase 45 (Mantine 9 / React 19) gated on `@medplum/react` peer-dep refresh — pre-flight check required at phase start; if not ready, phase defers to v1.7
-- 5 v1.5 phases carry `nyquist_compliant: false` (32, 34, 35, 36, 37) — Phase 39 must flip these via test-coverage backfill review
-- 3 v1.5 phases missing VALIDATION.md (31, 33, 38) — Phase 39 writes retroactively
-- Phase 38.1 has no standalone VERIFICATION.md (evidence currently in 38.1-01-SUMMARY.md + 33-HUMAN-UAT.md appends) — Phase 39 closes via AUDIT-01
+- ~~5 v1.5 phases carry `nyquist_compliant: false` (32, 34, 35, 36, 37)~~ — RESOLVED in Phase 39 (4 flipped to true; Phase 37 retained false pending Phase 40)
+- ~~3 v1.5 phases missing VALIDATION.md (31, 33, 38)~~ — RESOLVED in Phase 39 (retroactive VALIDATION.md written for all three)
+- ~~Phase 38.1 has no standalone VERIFICATION.md~~ — RESOLVED in Phase 39 (AUDIT-01: 38.1-VERIFICATION.md backfilled, status: passed, 6/6)
 
 ### Quick Tasks Completed
 
@@ -79,6 +82,6 @@ Progress: [░░░░░░░░░░] 0%
 
 ## Session Continuity
 
-Last session: 2026-04-29T10:00:00.000Z
-Stopped at: v1.6 ROADMAP.md created — 7 phases (39-45), 12 REQ-IDs at 100% coverage
-Resume file: None (Phase 39 has not been planned yet — run `/gsd-plan-phase 39`)
+Last session: 2026-04-29T20:27:00.000Z
+Stopped at: Phase 41 complete (EXPL-01 + QUAL-01 + QUAL-02 + QUAL-03 shipped, verified, security + Nyquist closed) — Phase 42 next
+Resume file: None (Phase 42 has not been discussed yet — run `/gsd-discuss-phase 42`)
