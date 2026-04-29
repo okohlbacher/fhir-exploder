@@ -67,18 +67,20 @@ _Captured for visibility; not in v1.6 scope._
 
 | REQ-ID | Phase | Depends on |
 |--------|-------|------------|
-| DEUT-01 | TBD (filled by roadmapper) | — |
-| NYQ-01 | TBD | — |
-| AUDIT-01 | TBD | — |
-| EXPL-01 | TBD | — |
-| QUAL-01 | TBD | — |
-| QUAL-02 | TBD | (consumes Phase 35 matrix card) |
-| QUAL-03 | TBD | (consumes Phase 35 matrix card) |
-| MII-EXT-15 | TBD | (consumes Phase 33 helpers + Phase 34 modules) |
-| VAL-06 | TBD | VAL-01..05 (Phase 31) |
-| VAL-07 | TBD | VAL-01..05 (Phase 31) |
-| IPS-01 | TBD | — (uses Phase 34's fhir-package-loader scaffolding) |
-| STACK-01 | TBD | — (peer-dep gate; may defer) |
+| NYQ-01 | Phase 39 | — |
+| AUDIT-01 | Phase 39 | — |
+| DEUT-01 | Phase 40 | — |
+| EXPL-01 | Phase 41 | — |
+| QUAL-01 | Phase 41 | — |
+| QUAL-02 | Phase 41 | (consumes Phase 35 matrix card) |
+| QUAL-03 | Phase 41 | (consumes Phase 35 matrix card) |
+| MII-EXT-15 | Phase 42 | (consumes Phase 33 helpers + Phase 34 modules) |
+| VAL-06 | Phase 43 | VAL-01..05 (Phase 31) |
+| VAL-07 | Phase 43 | VAL-01..05 (Phase 31) |
+| IPS-01 | Phase 44 | (uses Phase 34's fhir-package-loader scaffolding + Phase 15 ResourceIssueTable) |
+| STACK-01 | Phase 45 | — (peer-dep gate; may defer to v1.7) |
+
+**Coverage:** 12/12 v1.6 requirements mapped to exactly one phase ✓
 
 ## Sources
 

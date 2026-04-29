@@ -1,93 +1,77 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.5
-milestone_name: -- Validation, Performance & MII Extensions (in progress, started 2026-04-23)
-status: executing
-stopped_at: Phase 38 context gathered
-last_updated: "2026-04-29T09:22:56.249Z"
+milestone: v1.6
+milestone_name: -- Hardening, UX Polish & Carry-Overs (in progress, started 2026-04-29)
+status: Ready to plan Phase 39
+stopped_at: v1.6 ROADMAP.md created — 7 phases (39-45), 12 REQ-IDs, 100% coverage
+last_updated: "2026-04-29T10:00:00.000Z"
 last_activity: 2026-04-29
 progress:
   total_phases: 7
-  completed_phases: 7
-  total_plans: 30
-  completed_plans: 30
-  percent: 100
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-23)
+See: .planning/PROJECT.md (updated 2026-04-29)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 38.2 — fix-valuequantity-render-show-value-followed-by-unit-on-obse
+**Current focus:** Phase 39 (next) — v1.5 audit-trail backfill (NYQ + AUDIT)
 
 ## Current Position
 
-Phase: 38.2
+Phase: Phase 39 (next) of 7 v1.6 phases (39-45)
 Plan: Not started
-Status: Executing Phase 38.2
-Last activity: 2026-04-29
+Status: Ready to plan Phase 39
+Last activity: 2026-04-29 — v1.6 ROADMAP.md drafted; 12 REQ-IDs mapped to 7 phases at 100% coverage
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed (v1.3): 9 (16 tasks)
-- Total phases shipped (v1.3): 2 (21-22)
-- Total plans completed (v1.2): 22
-- Total phases shipped (v1.2): 7 (14-20)
-- v1.4 rough estimate: ~9-10 focused engineering days across 7 phases (23-29)
+- Total plans completed (v1.5): 32 (79 tasks across 10 phases including inserted 38.1 + 38.2)
+- Total plans completed (v1.4): 35 (51 tasks across 9 phases)
+- Total plans completed (v1.3): 9 (16 tasks across 2 phases)
+- Total plans completed (v1.2): 22 (across 7 phases)
+- v1.6 rough estimate: ~2–3 focused engineering weeks across 7 phases (39-45) per PROJECT.md
 
 ## Accumulated Context
 
 ### Decisions
 
-- v1.4 scope locked: 7 phases (23-29), 34 requirements, 100% coverage
-- Phase 23 must ship first — W1-W3 are correctness bugs; U1-U8 UAT requires live Blaze
-- Phase 24 unblocks Phase 25 — `useAsyncRun` + `Map<serverUrl>` registry are prerequisites for `useSampleWalker`
-- Phase 26 is INDEPENDENT of Phase 24 (parallel-safe after Phase 23) per ARCHITECTURE research correction
-- Phase 25 intra-phase ordering: R5 (QDDEP-01 `perPathExamples`) BEFORE R3 (QDDEP-02 `<DrillDownShell>`) — shell design depends on drill-downs being truly symmetric
-- Phase 28 runs AFTER Phase 25 (drill-down file churn) AND AFTER Phase 24 (for `useAsyncRun`-absorbed disables)
-- Phase 27 + 29 parallel-safe with 25/26
-- Phase 29 intra-phase: T2 (UX-02 OverviewStrip) BEFORE T1 (UX-01 External validator) — warm-up then L-task
-- R14 (QualityMetricsContext re-render split) deferred to v1.5 on risk/reward grounds — tracked as EFF-R14 in v1.4 REQUIREMENTS.md Future Requirements section
-- Safety invariants locked: closure-scoped `let cancelled` in `useAsyncRun` (NOT `cancelledRef`); 2-entry LRU eviction on `Map<serverUrl, QualityMetricsCache>`; external validator T1 routes through existing Phase 7 PHI acknowledgment gate
-- 2026-04-28: v1.5 HUMAN-UAT closure landed Phase 38 (12/12 tests walked; 33 + 35 verifications re-flipped to passed; sub-phase 38.1 trigger: yes — see 38-SUMMARY.md).
+- v1.6 scope locked: 7 phases (39-45), 12 REQ-IDs across 4 themes, 100% coverage
+- Phase 39 first — pure-doc audit-trail backfill (NYQ + AUDIT) clears v1.5 audit hygiene before any new feature work
+- Phase 45 (Mantine 9) last — largest blast radius + peer-dep gate; defers to v1.7 with `WAIVE-AND-DEFER` if `@medplum/react` peer-dep doesn't allow Mantine 9 / React 19
+- Phase 41 bundles 4 small UX-polish items (EXPL-01 + QUAL-01 + QUAL-02 + QUAL-03) into a single phase to share test-suite + bundle-size gate
+- Phases 41-44 are largely independent of each other (consume already-shipped v1.5 surfaces) — execution order can flex if priorities shift
+- Phase 40 (DEUT-01) ports Brettel/Machado JS simulation matrix into Vitest — closes Phase 37 deferred clause without manual Chrome DevTools capture
+- Bearer tokens for VAL-06 stored in `localStorage` under `validator.bearerToken.v1` — explicit policy, NEVER persisted to settings.yaml on disk
 
 ### Roadmap Evolution
 
-- Phase 38.1 inserted after Phase 38: fix `_sort=-date` Blaze incompatibility — swap to `_sort=-_lastUpdated` (or remove) in `MiiModuleTab.tsx`, `ClinicalTimeline.tsx`, `PatientTimeline.tsx`, `FhirResourcesView.tsx` (URGENT — surfaced by Phase 38 walk as 3 critical-severity hits per D-01); completed 2026-04-28
-- Phase 38.2 inserted after Phase 38.1: fix ValueQuantity render — show `value` followed by `unit` on Observation rows. Surfaced 2026-04-28 during the Phase 38.1 re-walk; the bug was masked by 38.1's _sort=-date regression and became visible once the Laborbefund tab populated. Likely 1 plan, ~3-4 tasks. Blocks v1.5 milestone audit.
+- v1.6 milestone defined 2026-04-29 — `genomDE → MII CDS mapping pipeline` removed from candidate scope (moved to a separate project)
+- Backlog Phases 999.1 + 999.2 promoted into Phase 41 (EXPL-01 + QUAL-01)
 
 ### Pending Todos
 
-- Run `/gsd-plan-phase 23` to decompose Phase 23 (v1.3 Close-Out) into executable plans
-
-### Completed Todos (milestone-setup)
-
-- ~~Seed REQUIREMENTS.md from v1.4-PLAN-DRAFT.md inventory~~ — done
-- ~~Research STACK / FEATURES / ARCHITECTURE / PITFALLS~~ — done (research/ populated)
-- ~~Create ROADMAP.md with 7 phases and 100% requirement coverage~~ — done 2026-04-16
+- Run `/gsd-plan-phase 39` to decompose Phase 39 (v1.5 audit-trail backfill) into executable plans
 
 ### Blockers/Concerns
 
-- v1.3 `nyquist_compliant: false` on both Phase 21 and Phase 22 VALIDATION.md — must flip in Phase 23 once UAT is green (CLOSE-07)
-- 8 v1.3 UAT items (U1-U8) require a live Blaze server; not all Claude-automatable (CLOSE-06)
-- Phase 27 lazy-route work may break existing `render(<App />)` tests — test audit sub-task must convert `getBy*` → `findBy*` (Pitfall 6 from research/PITFALLS.md)
-- Phase 29 external validator T1 must NOT bypass Phase 7 PHI gate — regression test required (Pitfall 8)
-
-### Quick Tasks Completed
-
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260423-ezd | Auto-connect to FHIR server on startup if URL is already configured in settings | 2026-04-23 | 3e2784a | [260423-ezd-auto-connect-to-fhir-server-on-startup-i](./quick/260423-ezd-auto-connect-to-fhir-server-on-startup-i/) |
-| 260423-gz9 | Improve date range picker UX — type ranges and fast year navigation | 2026-04-23 | d98a3c5 | [260423-gz9-improve-date-range-picker-ux-type-ranges](./quick/260423-gz9-improve-date-range-picker-ux-type-ranges/) |
-| 260423-h29 | Pin selected resource types to top of dropdown | 2026-04-23 | e63a460 | [260423-h29-pin-selected-resource-types-to-top-of-dr](./quick/260423-h29-pin-selected-resource-types-to-top-of-dr/) |
+- Phase 45 (Mantine 9 / React 19) gated on `@medplum/react` peer-dep refresh — pre-flight check required at phase start; if not ready, phase defers to v1.7
+- 5 v1.5 phases carry `nyquist_compliant: false` (32, 34, 35, 36, 37) — Phase 39 must flip these via test-coverage backfill review
+- 3 v1.5 phases missing VALIDATION.md (31, 33, 38) — Phase 39 writes retroactively
+- Phase 38.1 has no standalone VERIFICATION.md (evidence currently in 38.1-01-SUMMARY.md + 33-HUMAN-UAT.md appends) — Phase 39 closes via AUDIT-01
 
 ## Session Continuity
 
-Last session: 2026-04-28T05:49:09.451Z
-Stopped at: Phase 38 context gathered
-Resume file: .planning/phases/38-v1.5-human-uat-live-blaze-smoke-tests/38-CONTEXT.md
+Last session: 2026-04-29T10:00:00.000Z
+Stopped at: v1.6 ROADMAP.md created — 7 phases (39-45), 12 REQ-IDs at 100% coverage
+Resume file: None (Phase 39 has not been planned yet — run `/gsd-plan-phase 39`)
