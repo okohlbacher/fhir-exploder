@@ -4,8 +4,8 @@ milestone: v1.5
 milestone_name: -- Validation, Performance & MII Extensions (in progress, started 2026-04-23)
 status: executing
 stopped_at: Phase 38 context gathered
-last_updated: "2026-04-28T15:25:01.913Z"
-last_activity: 2026-04-28
+last_updated: "2026-04-29T09:06:00.093Z"
+last_activity: 2026-04-29
 progress:
   total_phases: 7
   completed_phases: 7
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-23)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 38 — v1.5-human-uat-live-blaze-smoke-tests
+**Current focus:** Phase 38.2 — fix-valuequantity-render-show-value-followed-by-unit-on-obse
 
 ## Current Position
 
-Phase: 38.1
+Phase: 38.2
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-28
+Status: Executing Phase 38.2
+Last activity: 2026-04-29
 
 ## Performance Metrics
 
