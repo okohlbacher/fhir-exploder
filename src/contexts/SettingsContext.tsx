@@ -4,6 +4,8 @@ import { loadSettings } from '../config/settings';
 import { clearQualityCountCache } from '../hooks/useResourceCounts';
 import { clearQualityMetricsCache } from '../quality/metricsCache';
 
+export const SETTINGS_STORAGE_KEY = 'fhirExplorer.settings.v1';
+
 type SettingsContextValue = {
   settings: AppSettings | null;
   usingDefaults: boolean;
@@ -43,6 +45,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         clearQualityMetricsCache(nextUrl);
       }
       setSettingsState(next);
+      try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(next));
+        }
+      } catch {
+        // localStorage can throw on quota exceeded or in private-browsing
+        // contexts. A persistence hiccup must never crash a settings save —
+        // the in-memory React state is already updated above.
+      }
       setUsingDefaults(options?.usingDefaults ?? false);
     },
     [settings],
