@@ -121,3 +121,202 @@ export function simulateDeuteranopia(
     Math.max(0, Math.min(255, b_out)),
   ];
 }
+
+// ---------------------------------------------------------------------------
+// CIELAB conversion + ΔE2000 (Sharma 2005)
+// ---------------------------------------------------------------------------
+
+/**
+ * Pass threshold per Phase 40 CONTEXT D-04. Below 5.0 = ΔE2000 perceptual
+ * distance is too small under deuteranopia simulation; pair fails the
+ * discriminability gate. Source: Sharma 2005 / ISO/CIE 11664-6 JND guidance
+ * (5.0 ≈ "clearly distinguishable" boundary; 1.0 ≈ "just-noticeable
+ * difference").
+ */
+export const MIN_DELTA_E_DEUTERANOPIA = 5.0;
+
+// sRGB D65 → CIE XYZ matrix (Bruce Lindbloom / IEC 61966-2-1).
+const SRGB_TO_XYZ: readonly [
+  readonly [number, number, number],
+  readonly [number, number, number],
+  readonly [number, number, number],
+] = Object.freeze([
+  Object.freeze([0.4124564, 0.3575761, 0.1804375]),
+  Object.freeze([0.2126729, 0.7151522, 0.0721750]),
+  Object.freeze([0.0193339, 0.1191920, 0.9503041]),
+]) as never;
+
+// CIE D65 reference white (2° observer).
+const D65_XN = 0.95047;
+const D65_YN = 1.0;
+const D65_ZN = 1.08883;
+
+// 25^7 = 6103515625 — module-level constant for ΔE2000 inner loop.
+const POW_25_7 = Math.pow(25, 7);
+
+// Lab-conversion thresholds (Bruce Lindbloom / CIE 15:2004).
+const LAB_DELTA = 6 / 29; // (6/29)
+const LAB_DELTA_CUBED = LAB_DELTA * LAB_DELTA * LAB_DELTA; // (6/29)^3
+const LAB_F_LINEAR_FACTOR = (1 / 3) * (29 / 6) * (29 / 6); // 1/3 · (29/6)^2
+
+function labF(t: number): number {
+  return t > LAB_DELTA_CUBED ? Math.cbrt(t) : LAB_F_LINEAR_FACTOR * t + 4 / 29;
+}
+
+/**
+ * Convert sRGB (0..255 integer) → CIELAB (D65 reference white).
+ *
+ * Pipeline:
+ *   1. sRGB integer → linear RGB (0..1) via the IEC 61966-2-1 EOTF.
+ *   2. linear RGB → CIE XYZ via the sRGB D65 matrix (Bruce Lindbloom).
+ *   3. XYZ → CIELAB with f(t) piecewise-linear approximation near 0.
+ *
+ * @returns `[L, a, b]` triple. Black is `[0, 0, 0]`; pure red is
+ * approximately `[53.24, 80.09, 67.20]` per published Lab values.
+ */
+export function srgbToLab(
+  rgb: readonly [number, number, number],
+): [number, number, number] {
+  // 1. sRGB integer → linear-RGB float
+  const r_lin = srgbToLinear(rgb[0] / 255);
+  const g_lin = srgbToLinear(rgb[1] / 255);
+  const b_lin = srgbToLinear(rgb[2] / 255);
+
+  // 2. linear-RGB → XYZ
+  const M = SRGB_TO_XYZ;
+  const X = M[0][0] * r_lin + M[0][1] * g_lin + M[0][2] * b_lin;
+  const Y = M[1][0] * r_lin + M[1][1] * g_lin + M[1][2] * b_lin;
+  const Z = M[2][0] * r_lin + M[2][1] * g_lin + M[2][2] * b_lin;
+
+  // 3. XYZ → CIELAB (D65)
+  const fx = labF(X / D65_XN);
+  const fy = labF(Y / D65_YN);
+  const fz = labF(Z / D65_ZN);
+  const L = 116 * fy - 16;
+  const a = 500 * (fx - fy);
+  const b = 200 * (fy - fz);
+  return [L, a, b];
+}
+
+/**
+ * Compute the CIEDE2000 (ΔE2000) perceptual color distance between two
+ * CIELAB triples.
+ *
+ * Source: Sharma et al. 2005, "The CIEDE2000 color-difference formula:
+ * Implementation notes, supplementary test data, and mathematical
+ * observations", Color Research and Application 30(1), 21-30. Reference
+ * implementation at https://www2.ece.rochester.edu/~gsharma/ciede2000/.
+ * Port follows the chroma-js shape (well-tested) and reproduces Sharma's
+ * Table 1 reference fixtures within ±0.01 — see colorVision.test.ts.
+ *
+ * Uses `kL = kC = kH = 1` (the standard parametric weighting). For
+ * deuteranopia gating in Phase 40 these defaults are correct; alternate
+ * parametric weightings (textile, graphic arts) are not needed.
+ *
+ * @returns Non-negative ΔE2000 perceptual distance. Identity inputs return
+ * exactly 0.
+ */
+export function deltaE2000(
+  lab1: readonly [number, number, number],
+  lab2: readonly [number, number, number],
+): number {
+  const [L1, a1, b1] = lab1;
+  const [L2, a2, b2] = lab2;
+
+  // Identity short-circuit (avoids floating-point dust on identical inputs).
+  if (L1 === L2 && a1 === a2 && b1 === b2) return 0;
+
+  const kL = 1;
+  const kC = 1;
+  const kH = 1;
+
+  const deg2rad = Math.PI / 180;
+  const rad2deg = 180 / Math.PI;
+
+  // Step 1: C1*, C2*, C̄, G, a1', a2', C1', C2', h1', h2'
+  const C1_star = Math.sqrt(a1 * a1 + b1 * b1);
+  const C2_star = Math.sqrt(a2 * a2 + b2 * b2);
+  const Cbar_star = (C1_star + C2_star) / 2;
+  const Cbar_star_7 = Math.pow(Cbar_star, 7);
+  // 25^7 = 6103515625 (computed once at module load below).
+  const G = 0.5 * (1 - Math.sqrt(Cbar_star_7 / (Cbar_star_7 + POW_25_7)));
+  const a1_prime = (1 + G) * a1;
+  const a2_prime = (1 + G) * a2;
+  const C1_prime = Math.sqrt(a1_prime * a1_prime + b1 * b1);
+  const C2_prime = Math.sqrt(a2_prime * a2_prime + b2 * b2);
+
+  function hueAngle(b: number, a: number): number {
+    if (b === 0 && a === 0) return 0;
+    const h = Math.atan2(b, a) * rad2deg;
+    return h < 0 ? h + 360 : h;
+  }
+  const h1_prime = hueAngle(b1, a1_prime);
+  const h2_prime = hueAngle(b2, a2_prime);
+
+  // Step 2: ΔL', ΔC', Δh', ΔH'
+  const dL_prime = L2 - L1;
+  const dC_prime = C2_prime - C1_prime;
+  let dh_prime: number;
+  if (C1_prime * C2_prime === 0) {
+    dh_prime = 0;
+  } else {
+    const diff = h2_prime - h1_prime;
+    if (Math.abs(diff) <= 180) {
+      dh_prime = diff;
+    } else if (diff > 180) {
+      dh_prime = diff - 360;
+    } else {
+      dh_prime = diff + 360;
+    }
+  }
+  const dH_prime =
+    2 * Math.sqrt(C1_prime * C2_prime) * Math.sin((dh_prime / 2) * deg2rad);
+
+  // Step 3: L̄', C̄', h̄'
+  const Lbar_prime = (L1 + L2) / 2;
+  const Cbar_prime = (C1_prime + C2_prime) / 2;
+  let hbar_prime: number;
+  if (C1_prime * C2_prime === 0) {
+    hbar_prime = h1_prime + h2_prime;
+  } else {
+    const sum = h1_prime + h2_prime;
+    const absDiff = Math.abs(h1_prime - h2_prime);
+    if (absDiff <= 180) {
+      hbar_prime = sum / 2;
+    } else if (sum < 360) {
+      hbar_prime = (sum + 360) / 2;
+    } else {
+      hbar_prime = (sum - 360) / 2;
+    }
+  }
+
+  // Step 4: T, SL, SC, SH, RT
+  const T =
+    1 -
+    0.17 * Math.cos((hbar_prime - 30) * deg2rad) +
+    0.24 * Math.cos((2 * hbar_prime) * deg2rad) +
+    0.32 * Math.cos((3 * hbar_prime + 6) * deg2rad) -
+    0.20 * Math.cos((4 * hbar_prime - 63) * deg2rad);
+  const dTheta =
+    30 * Math.exp(-Math.pow((hbar_prime - 275) / 25, 2));
+  const Cbar_prime_7 = Math.pow(Cbar_prime, 7);
+  const RC =
+    2 * Math.sqrt(Cbar_prime_7 / (Cbar_prime_7 + POW_25_7));
+  const Lbar_prime_minus_50_sq =
+    (Lbar_prime - 50) * (Lbar_prime - 50);
+  const SL =
+    1 +
+    (0.015 * Lbar_prime_minus_50_sq) /
+      Math.sqrt(20 + Lbar_prime_minus_50_sq);
+  const SC = 1 + 0.045 * Cbar_prime;
+  const SH = 1 + 0.015 * Cbar_prime * T;
+  const RT = -Math.sin(2 * dTheta * deg2rad) * RC;
+
+  // Step 5: combine
+  const term_L = dL_prime / (kL * SL);
+  const term_C = dC_prime / (kC * SC);
+  const term_H = dH_prime / (kH * SH);
+  return Math.sqrt(
+    term_L * term_L + term_C * term_C + term_H * term_H + RT * term_C * term_H,
+  );
+}
