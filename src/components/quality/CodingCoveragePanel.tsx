@@ -53,7 +53,8 @@ function pct(numerator: number, denominator: number): number {
   return Math.round((numerator / denominator) * 100);
 }
 
-function toRow(type: string, state: PerTypeReport<PerTypeCoverageReport>): Row {
+// Exported for unit tests (compareRows.test.tsx — QUAL-01 regression suite).
+export function toRow(type: string, state: PerTypeReport<PerTypeCoverageReport>): Row {
   if (state === 'loading' || state === 'error') {
     return { type, state, systemPct: null, textPct: null, emptyPct: null };
   }
@@ -69,10 +70,21 @@ function toRow(type: string, state: PerTypeReport<PerTypeCoverageReport>): Row {
   };
 }
 
-function compareRows(a: Row, b: Row, by: SortKey, dir: SortDir): number {
+// Exported for unit tests (compareRows.test.tsx — QUAL-01 regression suite).
+export function compareRows(a: Row, b: Row, by: SortKey, dir: SortDir): number {
   const aSettled = a.state !== 'loading' && a.state !== 'error';
   const bSettled = b.state !== 'loading' && b.state !== 'error';
   if (aSettled !== bSettled) return aSettled ? -1 : 1;
+
+  // QUAL-01 (D-08/D-09): N/A rows (totalCodedFields === 0 → all pcts null)
+  // ALWAYS sort to the end regardless of dir. Mirrors CompletenessPanel —
+  // single shared idiom across panels. Replaces the prior dir-independent
+  // ±1 trick (which was correct-by-accident under DESC); now the regression
+  // test in Task 4 locks both ASC and DESC behavior.
+  const aIsNA = a.systemPct === null && a.textPct === null && a.emptyPct === null;
+  const bIsNA = b.systemPct === null && b.textPct === null && b.emptyPct === null;
+  if (aIsNA !== bIsNA) return aIsNA ? 1 : -1;
+  if (aIsNA && bIsNA) return a.type.localeCompare(b.type);
 
   const sign = dir === 'asc' ? 1 : -1;
   if (by === 'type') {
@@ -80,11 +92,8 @@ function compareRows(a: Row, b: Row, by: SortKey, dir: SortDir): number {
   }
   const valA = by === 'systemCode' ? a.systemPct : by === 'textOnly' ? a.textPct : a.emptyPct;
   const valB = by === 'systemCode' ? b.systemPct : by === 'textOnly' ? b.textPct : b.emptyPct;
-  // Null percentages (totalCodedFields===0) sort to end.
-  if (valA === null && valB === null) return 0;
-  if (valA === null) return 1;
-  if (valB === null) return -1;
-  return sign * (valA - valB);
+  // Both non-null after the isNA guard above.
+  return sign * ((valA as number) - (valB as number));
 }
 
 export function CodingCoveragePanel({ types, client, sampleSize, patientIds }: CodingCoveragePanelProps) {
