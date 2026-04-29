@@ -40,8 +40,9 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import { IconChevronRight, IconDownload } from '@tabler/icons-react';
+import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMedplum } from '@medplum/react-hooks';
+import { SettingsContext } from '../../contexts/SettingsContext';
 import {
   useCompletenessRollup,
   useCoverageRollup,
@@ -182,7 +183,12 @@ export function QualityByTypeMatrix({ counts }: QualityByTypeMatrixProps): JSX.E
   const references = useReferencesRollup();
   const duplicates = useDuplicatesRollup();
   const navigate = useNavigate();
-  const medplum = useMedplum();
+  // Read settings directly from context (NOT the throwing useSettings hook)
+  // so the matrix renders gracefully even when a parent test harness
+  // doesn't wrap in SettingsProvider. Used for the CSV filename's
+  // server-host segment; falls back to 'unknown-server' on any miss.
+  const settingsCtx = useContext(SettingsContext);
+  const settings = settingsCtx?.settings ?? null;
 
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({
     key: 'issues',
@@ -262,9 +268,9 @@ export function QualityByTypeMatrix({ counts }: QualityByTypeMatrixProps): JSX.E
   // regression test.
   const handleDownloadCsv = useCallback(() => {
     const csv = buildMatrixCsv(sortedRows);
-    const filename = buildMatrixCsvFilename(medplum.getBaseUrl());
+    const filename = buildMatrixCsvFilename(settings?.fhir?.serverUrl ?? 'unknown-server');
     downloadString(csv, filename, 'text/csv;charset=utf-8');
-  }, [sortedRows, medplum]);
+  }, [sortedRows, settings]);
 
   // Empty matrix → render nothing (consistent with ResourceCountsPanel empty state).
   if (includedTypes.length === 0) {

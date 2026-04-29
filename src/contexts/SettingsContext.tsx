@@ -13,7 +13,11 @@ type SettingsContextValue = {
   setSettings: (next: AppSettings, options?: { usingDefaults?: boolean }) => void;
 };
 
-const SettingsContext = createContext<SettingsContextValue | null>(null);
+// Exported so consumers that want a graceful no-throw path under a missing
+// SettingsProvider (e.g. unit tests that mount a component without wiring
+// the full context tree) can read the raw useContext value and fall back
+// to undefined. Normal app code keeps using `useSettings()` which throws.
+export const SettingsContext = createContext<SettingsContextValue | null>(null);
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettingsState] = useState<AppSettings | null>(null);
