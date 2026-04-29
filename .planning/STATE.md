@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: -- Hardening, UX Polish & Carry-Overs (in progress, started 2026-04-29)
 status: executing
-stopped_at: Phase 42 context gathered (6 decisions locked, cleanup primitive + cache lifecycle = Claude's discretion)
-last_updated: "2026-04-29T20:13:56.078Z"
+stopped_at: Phase 43 context gathered (--auto mode; 18 D-XX decisions auto-picked, 3 deferred to Claude's discretion)
+last_updated: "2026-04-29T20:22:00.246Z"
 last_activity: 2026-04-29
 progress:
-  total_phases: 17
+  total_phases: 18
   completed_phases: 14
   total_plans: 44
   completed_plans: 42
@@ -82,6 +82,6 @@ Progress: [████░░░░░░] 43%
 
 ## Session Continuity
 
-Last session: 2026-04-29T18:54:18.920Z
-Stopped at: Phase 42 context gathered (6 decisions locked, cleanup primitive + cache lifecycle = Claude's discretion)
-Resume file: .planning/phases/42-pre-probe-extension-module-counts-mii-ext-15/42-CONTEXT.md
+Last session: 2026-04-29T20:22:00.242Z
+Stopped at: Phase 43 context gathered (--auto mode; 18 D-XX decisions auto-picked, 3 deferred to Claude's discretion)
+Resume file: .planning/phases/43-validator-hardening-auth-semantic-near-miss-val-06-val-07/43-CONTEXT.md
