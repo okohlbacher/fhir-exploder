@@ -12,8 +12,9 @@
  * their own worker pools. The control just exposes a stateless
  * value/onChange pair.
  */
-import { NumberInput } from '@mantine/core';
+import { Group, NumberInput, Text, Tooltip } from '@mantine/core';
 import { useLocalStorage } from '@mantine/hooks';
+import { IconInfoCircle } from '@tabler/icons-react';
 
 const KEY = 'quality.sampleSize.v1';
 const DEFAULT = 100;
@@ -43,8 +44,23 @@ export interface SampleSizeControlProps {
 export function SampleSizeControl({ value, onChange }: SampleSizeControlProps) {
   return (
     <NumberInput
-      label="Sample size"
-      description="First N resources of each type are inspected. Increase for accuracy; decrease for speed."
+      label={
+        <Group gap={4} wrap="nowrap">
+          <Text size="sm" fw={500} component="span">Sample size</Text>
+          <Tooltip
+            label="First N resources of each type are inspected. Increase for accuracy; decrease for speed."
+            multiline
+            w={260}
+            withArrow
+          >
+            <IconInfoCircle
+              size={14}
+              style={{ cursor: 'help', color: 'var(--mantine-color-dimmed)' }}
+              aria-label="Sample size help"
+            />
+          </Tooltip>
+        </Group>
+      }
       min={MIN}
       max={MAX}
       step={10}
