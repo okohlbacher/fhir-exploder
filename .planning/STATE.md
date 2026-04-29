@@ -4,13 +4,13 @@ milestone: v1.6
 milestone_name: -- Hardening, UX Polish & Carry-Overs (in progress, started 2026-04-29)
 status: planning
 stopped_at: v1.6 ROADMAP.md created — 7 phases (39-45), 12 REQ-IDs at 100% coverage
-last_updated: "2026-04-29T10:31:07.731Z"
-last_activity: 2026-04-29 - Completed quick task 260429-kqa: Align /quality Tier-1 filter inputs (Tooltip)
+last_updated: "2026-04-29T13:52:19.387Z"
+last_activity: 2026-04-29
 progress:
-  total_phases: 14
-  completed_phases: 11
-  total_plans: 38
-  completed_plans: 36
+  total_phases: 15
+  completed_phases: 12
+  total_plans: 39
+  completed_plans: 37
   percent: 95
 ---
 
