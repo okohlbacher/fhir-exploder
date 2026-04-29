@@ -1,5 +1,44 @@
 # Milestones
 
+## v1.5 Validation, Performance & MII Extensions (Shipped: 2026-04-29)
+
+**Phases completed:** 7 phases, 30 plans, 79 tasks
+
+**Key accomplishments:**
+
+- Three-tier FHIR validator cascade (external HTTP → server `$validate` → local structural) wired into `ValidationPanel` with PHI-gated external tier, 15s AbortController timeout, distinct blue toasts for timeout vs CORS, 3-part probe cache, D-20 unmount-safe AbortSignal threading, and an `Active strategy: external (HAPI) | server | local` status line.
+- Closes the CR-01 critical bug from 31-REVIEW.md: `ValidationPanel`'s PHI ack key now derives from `externalValidator.url` when the external tier is enabled, matching the key `cascadingValidator.tryExternal` reads via `isPhiAcknowledged(serverUrl, ext.url)`. Banner visibility extends to external-only deployments. Integration test locks the UI<->cascade key agreement at end-to-end level.
+- Seven per-metric React contexts (`Completeness`, `Coverage`, `Validation`, `Plausibility`, `LabRanges`, `References`, `Duplicates`) plus a `QualityMetricsProviders` composer and a Wave-0 smoke test — shipped alongside the legacy monolith with zero changes to existing consumers.
+- QualityMetricsContext.tsx now a 125-LOC facade composing 7 per-metric hooks; 8 test wrappers migrated end-to-end; bulk consumers untouched; full regression 870/0.
+- Migrated 7 producer sites to per-metric rollup hooks, decomposed OverviewStrip into 7 MetricTile leaf components, and split QualityOverviewPage tab labels to per-metric subscriptions while preserving the facade for capture/export bulk reads.
+- React.Profiler test asserting setCompleteness(42) re-renders ONLY the Completeness tile (1 update vs 0 for the other 6) — formally closes EFF-R14-04 and pushes the suite from 870 to 871 passing / 0 failing.
+- Live Blaze probe confirms all 7 MII-base-module patientSearchParam values are correct; separately fixes the latent MiiModuleTab.tsx:63 bug where module.extraQuery was declared in the type but never appended to the URL (Laborbefund tab shed 1121 non-lab Observations per probe patient once fixed); locks the contract with a 7-row table-driven test (D-17).
+- Four new pure helpers (`fhirResourceTypesOf`, `findModuleForType`, `getPatientSearchParamForType`, `getExtraQueryForType`) land in `src/utils/mii-modules.ts` with the exact signatures locked by D-01 / D-04 / D-05; every existing call site that read `.fhirResourceType` directly or built a per-module URL now routes through the helpers; grep-verified zero survivors in source code. Pure refactor — behavior is identical under the narrow schema, and plan 33-03's widen becomes a type-level change only.
+- One-liner:
+- `MiiModuleTab` now fans out N concurrent FHIR GETs via `Promise.all(types.map(fetchOne))` with per-type `.catch(() => [] as Resource[])`, results concatenated with `.flat()` and sorted by `getDate()` descending (D-06/D-07); 5 unit tests lock single-type, multi-type, per-type-failure, and per-type override behavior.
+- `MiiModuleTabs` now partitions `MII_MODULES` into base vs extension via `m.category`, wraps the extension `Tabs.List` in a session-only `Collapse` (`useDisclosure(false)` — D-09) with deep-link auto-expand (D-10), and drops `keepMounted` from extension `Tabs.Panel`s while keeping it on the base 7 + timeline (D-11). Phase 33 data has 0 extension modules, so the Collapse + trigger are length-guarded out; Phase 34's data drop flips the UI on without any further component change.
+- `DashboardPage.tsx` MII section partitions `MII_MODULES` into `baseModules` + `extensionModules` via `m.category`, wraps the extension tile subgrid in a session-only `Collapse` (`useDisclosure(false)` — D-12), switches the tile click target from `navigate('/patients')` to a right-edge `Drawer` showing module details + an "Open in Explorer" button (D-14), and rewords the section heading to `MII Kerndatensatz · Server-wide totals` — closing UAT-FU-04's scoping-ambiguity complaint (D-13). Phase 33 data has 0 extension modules so the toggle + subgrid are length-guarded invisible; Phase 34's data drop flips them on without any further component change. No new FHIR fetches — the Drawer reads only the `counts[type]` values already fetched by `useResourceCounts`.
+- Grep 1 — zero `===` survivors on the timeline `.find` path:
+- Pre-implementation audit produced per-module spec table (14 rows × 10 cols), 7-palette WCAG AA contrast audit (all PASS after 3 seed-darkening tweaks), 21 Tabler icon assignments, and a paper-deuteranopia discriminability hypothesis that unblocks Plans 34-02 through 34-06.
+- Landed 7 MII extension MantineColorsTuple palettes in theme.colors and added optional MiiModule.icon?: string field in three atomic TDD commits — zero visible UI change, full 925-test suite green, schema now ready for Plan 34-04's 21-module data-append.
+- Stood up `scripts/fetch-mii-profiles.mjs` + `prepare` hook + CC-BY-4.0 attribution scaffold — fetched 482 trimmed StructureDefinitions from 14 MII extension IG packages, mounted URL-keyed EXTENSION_REGISTRY alongside base 7 type-keyed REGISTRY, extended LICENSE with CC-BY-4.0 NOTICE appendix.
+- Data-drop plan: populated MII_MODULES with 14 extension entries + icons on all 21 modules, stood up ICON_MAP / resolveMiiIcon helper, rendered 21 icons at 3 consumer sites (Timeline 14px, Tabs 14px, Dashboard tiles 32px + Drawer 20px). 6 known multi-profile modules ship fhirResourceType as ARRAY per D-02 blocking-verify; 986 tests passing (+56 over Phase 33 baseline 930).
+- Empty-state UX plan: extension tab panels with no data render at opacity 0.55 + em-dash copy ("— no {germanLabel} data for this patient"); MiiModuleTabs renders a per-patient "Hide/Show N empty modules" toggle (localStorage-persisted) that filters empty extension pills out of the Collapse; base 7 modules preserve Phase 33 empty copy (D-21 exemption); test count 986 → 998 (+12 net), all green.
+- Commit:
+- Reduced ResourceDetailPage tabs from 3 → 2 by deleting `Clinical + Raw` mode + `ClinicalRawView.tsx`, renamed `Developer` → `JSON`, remapped keyboard shortcut, and cleaned 7 grep hits across 4 files — 998 → 999 tests passing.
+- Per-resource-type Date and Status field extractors for SearchResultsPage covering Patient (birthDate / active), Condition (onsetDateTime / clinicalStatus.coding[0].code), Observation / MedicationStatement / Procedure (effective[Date|Performed]Time / status), and Encounter (period.start / status), shipped via the TDD baseline-drift commit pair with all 4 RESEARCH-identified pitfalls mitigated and the existing badge color + empty-state behavior preserved.
+- Identifier-system URL moves to hover Tooltip; address-extension JSON dump becomes a [View] Modal; bottom Extensions section in HumanReadableView aggregates all Resource.extension[] entries with deduped per-row [View] Modal triggers — closes UAT-FU-02.
+- Per-type quality matrix card under Counts tab with 8-column sortable table fed by byType extensions to 5 Phase-32 per-metric contexts; sparse-cell em-dash invariant locked, chevron navigation honors PHI gate, ValidationPanel + ReferencesPanel honor `?type=` URL param.
+- Captured Phase 35 HEAD bundle-size baseline (949,591 gz bytes) and committed two RED-state stub tests targeting the post-refactor async getExtensionProfileForUrl contract and the useConformanceRun extension-profile consumer wiring.
+- 1. [Rule 3 — Blocking] TS2352 cast through `unknown`
+- 1. [Rule 3 — Blocking] vi.mock factory hoisting bug in plan-authored test code
+- Initial-load bundle SHRANK by 320.57 KB gz (from 927.33 → 606.76 KB) by lazy-loading 472 MII extension StructureDefinition JSONs into async-only chunks; full regression gate (1060 passing / 0 failing tests, tsc clean, build clean) green; ROADMAP success criteria 3 + 4 closed.
+- Plan 37-01 was DEFERRED.
+- Empirical Phase 34 TTI dual-gate captured PASS via twin git worktrees (048e99c → a7e4544) with Lighthouse 13.1 headless Chrome — baseline 256.5 ms, post-phase 268.6 ms, delta +12.08 ms (+4.71%), well under the D-08 100 ms / 10 % thresholds.
+- Branch A taken — 0 contradictions enumerable because Plan 37-01 deferred the deuteranopia capture; Phase 34 UAT closes asymmetrically with TTI [x] (Lighthouse-substituted, PASS) and deuteranopia [ ] DEFERRED to v1.6+ hardening.
+
+---
+
 ## v1.4 Hardening & Tech-Debt Sweep (Shipped: 2026-04-23)
 
 **Phases completed:** 8 active phases (23-28, 29.5, 30) + Phase 29 superseded by Phase 30. 35 plans, 51 tasks.

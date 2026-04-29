@@ -83,6 +83,8 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 ## Current State
 
+**v1.5 shipped 2026-04-29** — 10 phases (31-38 plus inserted 38.1, 38.2), 32 plans, 79 tasks. v1.4 baseline: 836 tests passing; v1.5 final: 1064 passing / 22 todo / 0 failing. `npm run build` clean. Notable shipped: three-tier FHIR validator cascade (Phase 31), per-metric `QualityMetricsContext` split (Phase 32), 21-module MII palette + lazy-loaded bundled profiles (Phases 33–34, 36), per-type quality matrix (Phase 35), live-Blaze HUMAN-UAT smoke tests (Phase 38), `_sort=-date` Blaze 400 fix (Phase 38.1), Quantity-render dispatch reorder (Phase 38.2). See [MILESTONES.md](MILESTONES.md) and [milestones/v1.5-MILESTONE-AUDIT.md](milestones/v1.5-MILESTONE-AUDIT.md).
+
 **v1.4 shipped 2026-04-23** — 11 phases (23-30 plus 29.5; 29 superseded), 35 plans, 51 tasks, 175 commits on main. Production-code diff: src/ +7,611 / −2,360 across 108 files. Test suite: 836 passed / 22 todo / 3 skipped / 0 failed. `npm run build` clean. See [MILESTONES.md](MILESTONES.md) for the full accomplishments list.
 
 **App shape after v1.4:**
@@ -99,27 +101,18 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 **localStorage keys** unchanged from v1.3: `quality.thresholds.v1`, `quality.trends.v1`, `quality.cohorts.v1`, `quality.activeCohortId.v1`, `quality.resourceTypes.v1`.
 
-## Current Milestone: v1.5 Validation, Performance & MII Extensions
+## Current Milestone: v1.6 (Planning)
 
-**Goal:** Close the v1.4 carry-over (external FHIR validator cascade, `QualityMetricsContext` re-render split, six Phase-30 UAT follow-ups) and ship the 14 MII Kerndatensatz extension modules with a collapsible **Extension modules** section below the base MII tabs on `/patients/:id`.
+**v1.5 shipped 2026-04-29.** See [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md), [milestones/v1.5-REQUIREMENTS.md](milestones/v1.5-REQUIREMENTS.md), [milestones/v1.5-MILESTONE-AUDIT.md](milestones/v1.5-MILESTONE-AUDIT.md). 10 phases (8 main + 2 inserted decimals 38.1, 38.2), 32 plans, 79 tasks. 31/31 v1.5 requirements satisfied; audit status `tech_debt` with 3 acknowledged carry-overs.
 
-**Target features (four scope groups):**
+**Carry-overs to v1.6:**
+1. **Headless deuteranopia simulation in Vitest** — closes Phase 37 deferral (3 PNG screenshots not captured; 21 paper-vs-empirical pair reconciliations remain qualitative-only). Apply Brettel/Machado JS simulation matrix to rendered RGBA from the Dashboard tile grid + tab row, then assert pairwise icon+color discriminability for the 21 MII module adjacent pairs.
+2. **Nyquist validation backfill** — 5 v1.5 phases marked `nyquist_compliant: false`; 3 missing VALIDATION.md.
+3. **Phase 38.1 standalone VERIFICATION.md** — audit-trail gap (evidence captured in SUMMARY.md + cascading 33-HUMAN-UAT.md appends).
 
-1. **UX-01 external FHIR validator cascade** — Execute `29-02-PLAN.md` verbatim. Three-tier validator (external → server `$validate` → local structural) gated by the existing PHI acknowledgment, wrapped in `AbortController` with 15 s timeout, per-`(serverUrl, resourceType)` probe cache, `normalizeOperationOutcomeIssue` mapper, and "Active strategy: external / server / local" status line in `ValidationPanel`.
-2. **EFF-R14 QualityMetricsContext split** — Per-metric context providers (Option A). Single metric update must re-render only its own tile instead of all ≤8 panels. Risk-weighted refactor across ~20 files; no public API changes to consumers.
-3. **Phase-30 UAT follow-ups (6)** — Explorer Date/Status per-resource-type extractor; HumanReadableView extension cleanup (identifier-system → tooltip, address-extension JSON → modal, extensions section at bottom); ResourceDetailPage remove *Clinical + raw* view + rename *Developer* tab → *JSON*; investigate empty per-patient MII/FHIR Resources panels on Synthea test patient; Dashboard MII tile count scoping or explicit server-wide label; per-type quality matrix card under Counts tab (blocked on EFF-R14).
-4. **MII extension modules (Phase 999.1 promoted)** — Schema change: `MiiModule.fhirResourceType: string | string[]` + `category: 'base' | 'extension'` field. Collapsible **Extension modules** heading below the 7 base-module tabs on `/patients/:id`. Per-module patient search param (some use `subject=` not `patient=`). Empty-state UX for zero-resource extension modules. Color strategy: per-category palette or shape/icon differentiation (Mantine's 14 colors don't cover 21 modules). Optional relevance filtering (hide extension modules with no matching resources).
-
-**Ordering:**
-- UX-01 validator and EFF-R14 are independent; can parallelize.
-- MII extensions depend on the schema change (multi-type + category fields) landing first.
-- Per-type quality matrix (Phase-30 follow-up #3) depends on EFF-R14 per-metric context providers.
-
-**Key context:**
-- Phase numbering continues from 30 (v1.4's last phase). No `--reset-phase-numbers`.
-- Design system unchanged — Phase 30 tokens (IBM Plex, indigo, warm neutrals) remain baseline.
-- Estimate: ~3-4 focused engineering weeks — larger than v1.4 (7 days). Single milestone, not split.
-- 4-researcher parallel research step is enabled to explore MII extension module profiles and color strategy before requirements definition.
+**v1.6 candidate scope (TBD via /gsd-new-milestone):**
+- genomDE → MII CDS mapping pipeline
+- Backlog phases 999.1 (Explorer hide-empty toggle) and 999.2 (quality completeness sort order) — see ROADMAP.md §Backlog.
 
 ### Out of Scope
 
@@ -201,7 +194,7 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-29 — Phase 38.2 (Fix ValueQuantity render — show value followed by unit on Observation rows) closed with **passed** (test-suite proof accepted; live-Blaze visual re-walk persisted to `38.2-HUMAN-UAT.md` at status=partial for future audit). Quantity branch in `RenderValue` reordered ahead of Coding branch in `src/components/explorer/ResourcePropertyTable.tsx` (lines 120-142); old single-condition branch removed. 4 new regression tests in `src/__tests__/ResourcePropertyTable.test.tsx` cover all four valueQuantity input shapes (full / value-only / unit-only / empty). Phase 33 HUMAN-UAT Tests 1+6 annotated with `→ fixed in Phase 38.2, commit 9dd7fde`. Test gate: 1064 passing / 0 failing / 22 todo (+5 over Phase 36 baseline of 1059); `tsc -b --noEmit` exit 0. Code review: 0 critical / 0 warnings / 3 info (advisory: UCUM `code` fallback, `obj.value as number` cast tightening, `coding: []` edge case). v1.5 milestone Phases 31-38.2 all shipped. Ready for `/gsd-audit-milestone v1.5` → `/gsd-complete-milestone v1.5` → new milestone for genomDE → MII CDS mapping pipeline.*
+*Last updated: 2026-04-29 — v1.5 milestone closed. 10 phases (31-38, 38.1, 38.2), 32 plans, 79 tasks shipped. Audit `tech_debt` with 3 carry-overs to v1.6 (headless deuteranopia sim, Nyquist backfill, 38.1 standalone VERIFICATION.md). REQUIREMENTS.md archived; ready for `/gsd-new-milestone` to define v1.6.*
 
 *Last updated: 2026-04-28 — Phase 37 (Phase 34 empirical UAT capture — deuteranopia + TTI) closed with **gaps_found** (deuteranopia leg deferred). D-22 TTI gate closed: `tti-snapshot.json` PASS (baseline 256.523 ms at commit `048e99c` Phase 33 tail / post-phase 268.604 ms at `a7e4544` Phase 34 HEAD / delta_ms +12.08 ms ≤ 100 / delta_pct +4.71% ≤ 10), method substituted to **Lighthouse 13.1 headless Chrome** rather than the plan-required Chrome DevTools Performance panel manual capture (substitution accepted by user; documented in `tti-snapshot.json.method` and `37-EMPIRICAL.md` §3). MII-EXT-11 deuteranopia leg **NOT closed** — user opted to skip the Chrome DevTools Rendering panel manual capture step at the `checkpoint:human-verify` gate; `37-EMPIRICAL.md` §1 (7 within-family pairs) and §2 (14 cross-family pairs) carry `[deferred]` markers in the Empirical column for all 21 adjacent pairs; the borderline pairs #7 (mikrobiologie ↔ molekulargenetik HIGH color-collapse risk) and #12 (pro ↔ seltene MEDIUM-HIGH risk) remain qualitative paper predictions only. `34-06-UAT.md` flipped to **PARTIALLY COMPLETE (TTI closed via Lighthouse; deuteranopia deferred to v1.6+)** with deuteranopia checkbox `[ ] DEFERRED 2026-04-28` and TTI checkbox `[x] PASS (Lighthouse-substituted)`. Branch A (no contingency) — source code untouched (`src/utils/mii-icons.ts`, `src/utils/mii-modules.ts`, `.planning/research/color-design-audit.md` last commits all from Phase 34). Test gate: 1060 passing / 0 failing; `tsc -b --noEmit` exit 0; `npm run build` clean. Code review skipped (zero source files changed in Phase 37 — doc-only phase). New v1.6+ candidate added to `.planning/ROADMAP.md` §Deferred Items: headless deuteranopia simulation in Vitest using a Brettel/Machado JS matrix to retroactively close `37-EMPIRICAL.md` §1+§2 for any future HEAD. v1.5 milestone now at last phase Phase 38 (HUMAN-UAT live-Blaze smoke tests, 12 items merged from former backlog 999.1+999.4). Phase 36 (lazy-load) summary preserved: 4/4 plans, MII-EXT-12 deferred lazy-load clause closed.*
 
