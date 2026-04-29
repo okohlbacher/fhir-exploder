@@ -335,7 +335,7 @@ interface PercentTdProps {
 }
 
 function PercentTd({ metricKey, value, loading, hideBar }: PercentTdProps) {
-  const { isBreached } = useThresholds();
+  const { getActiveThreshold } = useThresholds();
   if (loading) {
     return (
       <Table.Td>
@@ -353,21 +353,47 @@ function PercentTd({ metricKey, value, loading, hideBar }: PercentTdProps) {
       </Table.Td>
     );
   }
-  const breached = isBreached(metricKey, value);
+
+  // QUAL-02 (D-12/D-13): 3-stop heat gradient via Mantine theme tokens.
+  //   green ≥100%, yellow at threshold..<100%, red below threshold.
+  // When threshold is null (metric disabled per Phase 18), fall back to
+  // green-when-100, no color otherwise — matches pre-Phase-41 behavior.
+  // D-14: numeric Text remains the primary semantic carrier; color is supplementary.
+  const threshold = getActiveThreshold(metricKey);
+  let bg: string | undefined;
+  let fg: string | undefined;
+  if (value >= 100) {
+    bg = 'var(--mantine-color-green-1)';
+    fg = 'var(--mantine-color-green-9)';
+  } else if (threshold !== null && value >= threshold) {
+    bg = 'var(--mantine-color-yellow-1)';
+    fg = 'var(--mantine-color-yellow-9)';
+  } else if (threshold !== null && value < threshold) {
+    bg = 'var(--mantine-color-red-1)';
+    fg = 'var(--mantine-color-red-9)';
+  }
+
+  // Progress bar color tracks the same 3-stop gradient.
+  const barColor =
+    value >= 100
+      ? 'green'
+      : threshold !== null && value < threshold
+        ? 'red'
+        : threshold !== null && value >= threshold
+          ? 'yellow'
+          : 'indigo';
+
   return (
-    <Table.Td>
+    <Table.Td style={bg ? { backgroundColor: bg } : undefined}>
       <Stack gap={2}>
         <Text
           size="sm"
           fw={600}
-          c={breached ? 'red.6' : undefined}
-          style={{ fontVariantNumeric: 'tabular-nums' }}
+          style={{ fontVariantNumeric: 'tabular-nums', color: fg }}
         >
           {value}%
         </Text>
-        {!hideBar && (
-          <Progress size="xs" value={value} color={breached ? 'red' : 'indigo'} />
-        )}
+        {!hideBar && <Progress size="xs" value={value} color={barColor} />}
       </Stack>
     </Table.Td>
   );
@@ -379,7 +405,7 @@ interface IssuesCellProps {
 }
 
 function IssuesCell({ count, validationPct }: IssuesCellProps) {
-  const { isBreached } = useThresholds();
+  const { getActiveThreshold } = useThresholds();
   if (count === undefined) {
     // Pitfall P-05: em-dash for sparse Issues cell.
     return (
@@ -388,13 +414,26 @@ function IssuesCell({ count, validationPct }: IssuesCellProps) {
       </Text>
     );
   }
-  const breached = validationPct !== undefined && isBreached('validation', validationPct);
+
+  // QUAL-02 (D-12): mirror the PercentTd 3-stop gradient on Issues text color
+  // using the validationPct as the driver (same metric, same threshold).
+  const threshold = getActiveThreshold('validation');
+  let fg: string | undefined;
+  if (validationPct !== undefined) {
+    if (validationPct >= 100) {
+      fg = 'var(--mantine-color-green-9)';
+    } else if (threshold !== null && validationPct >= threshold) {
+      fg = 'var(--mantine-color-yellow-9)';
+    } else if (threshold !== null && validationPct < threshold) {
+      fg = 'var(--mantine-color-red-9)';
+    }
+  }
+
   return (
     <Text
       size="sm"
       fw={600}
-      c={breached ? 'red.6' : undefined}
-      style={{ fontVariantNumeric: 'tabular-nums' }}
+      style={{ fontVariantNumeric: 'tabular-nums', color: fg }}
     >
       {count}
     </Text>
