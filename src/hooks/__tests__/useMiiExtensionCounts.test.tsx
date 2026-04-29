@@ -9,14 +9,13 @@
  *   2. Per-type catch fallback (MII-EXT-15-B/-C partial) — single rejected
  *      per-type fetch resolves to 0; module total stays defined.
  *   3. Undefined while fetching (MII-EXT-15-C) — record values are `undefined`
- *      before any fetch resolves, NOT 0 / 'loading'.
+ *      synchronously (initial state) before any fetch resolves.
  *   4. Extension-only (MII-EXT-15-D) — record contains EXACTLY the keys of
  *      MII_MODULES.filter(m => m.category === 'extension'). No base keys.
  *   5. URL pattern (MII-EXT-15-A grounding) — every captured client.get URL
  *      matches `/_summary=count&_count=0/` AND `/=Patient\//`.
- *   6. Cancelled-flag (MII-EXT-15-H) — a delayed-resolve fetch is gated on the
- *      cleanup flag; rerendering with a different patientId then resolving the
- *      stale promise does NOT pollute the new patient's counts.
+ *   6. Cancelled-flag (MII-EXT-15-H) — after rerender, the new patientId's
+ *      counts are NOT polluted by the previous patient's late-resolving fetch.
  *   7. Cache short-circuit — re-render WITHOUT unmount with same patientId
  *      hits the hook-internal cache; no extra client.get calls.
  *   8. Reports emptiness (D-05) — with all-zero mock, the hook calls
@@ -25,8 +24,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 
-// Polyfill ResizeObserver for jsdom (required by some Mantine deps pulled in
-// transitively via @medplum/react-hooks).
+// Polyfill ResizeObserver for jsdom (defensive — pulled in transitively via
+// any Mantine import; cheap to set up unconditionally).
 class MockResizeObserver {
   observe = vi.fn();
   unobserve = vi.fn();
@@ -64,7 +63,12 @@ vi.mock('@medplum/react-hooks', () => ({
 }));
 
 import { useMiiExtensionCounts } from '../useMiiExtensionCounts';
+import {
+  EmptyExtensionsProvider,
+  useEmptyExtensionsCoordinator,
+} from '../useEmptyExtensionsCoordinator';
 import { MII_MODULES, fhirResourceTypesOf } from '../../utils/mii-modules';
+import { type ReactNode } from 'react';
 
 // --- Helpers ------------------------------------------------------------
 
@@ -73,14 +77,9 @@ import { MII_MODULES, fhirResourceTypesOf } from '../../utils/mii-modules';
  * The URL passed to client.get looks like `${type}?...&_summary=count&_count=0[&extra]`.
  * We parse the type prefix off the URL and return a Bundle whose `total` is the
  * configured count for that type (defaulting to 0).
- *
- * Returns:
- *   - get : the vi.fn() spy
- *   - fhirUrl : identity (returns the input string wrapped in `{ toString }`)
  */
 function makeCountClient(perTypeCount: Record<string, number>) {
   const get = vi.fn((url: string) => {
-    // url shape: `${type}?${param}=Patient/${patientId}&_summary=count&_count=0[&extra]`
     const type = url.split('?')[0];
     const total = perTypeCount[type] ?? 0;
     return Promise.resolve({ resourceType: 'Bundle', total, entry: [] });
@@ -121,11 +120,12 @@ describe('useMiiExtensionCounts', () => {
       MedicationStatement: 1,
     }) as unknown as typeof mocks.client;
 
-    const { result } = renderHook(() => useMiiExtensionCounts('p-1'));
+    const { result, unmount } = renderHook(() => useMiiExtensionCounts('p-1'));
 
     await waitFor(() => {
       expect(result.current.onkologie).toBe(11);
     });
+    unmount();
   });
 
   // -------------------------------------------------------------------------
@@ -155,47 +155,72 @@ describe('useMiiExtensionCounts', () => {
       fhirUrl: (s: string) => ({ toString: () => s }),
     } as unknown as typeof mocks.client;
 
-    const { result } = renderHook(() => useMiiExtensionCounts('p-2'));
+    const { result, unmount } = renderHook(() => useMiiExtensionCounts('p-2'));
 
     // Pathologie = Observation + DiagnosticReport + Specimen
     // total = 4 + 2 + 0 (Specimen rejection → 0) = 6
     await waitFor(() => {
       expect(result.current.pathologie).toBe(6);
     });
+    unmount();
   });
 
   // -------------------------------------------------------------------------
-  // Test 3 — undefined while fetching (MII-EXT-15-C): a never-resolving fetch
-  // means every extension module's record value stays `undefined` (NOT 0,
-  // NOT 'loading').
+  // Test 3 — undefined while fetching (MII-EXT-15-C): the hook seeds initial
+  // state to undefined for every extension module synchronously on mount.
+  // We assert the initial state via a "noop client" (returns Promise that is
+  // attached to a resolver we control + immediately unmount before resolving).
   // -------------------------------------------------------------------------
-  it('returns undefined for every extension module while fetching is in flight (MII-EXT-15-C)', () => {
-    // Never-resolving promise — counts will sit on initial undefined state.
-    const get = vi.fn(() => new Promise(() => {}) as Promise<unknown>);
+  it('returns undefined for every extension module synchronously on first render (MII-EXT-15-C)', async () => {
+    // Use an immediately-resolved client so the worker doesn't hang, but
+    // capture the FIRST RENDER state before microtasks flush.
+    const get = vi.fn(() =>
+      Promise.resolve({ resourceType: 'Bundle', total: 0, entry: [] }),
+    );
     mocks.client = {
       get,
       fhirUrl: (s: string) => ({ toString: () => s }),
     } as unknown as typeof mocks.client;
 
-    const { result } = renderHook(() => useMiiExtensionCounts('p-3'));
+    const { result, unmount } = renderHook(() => useMiiExtensionCounts('p-3'));
 
+    // First render: initial state is `undefined` for every extension key.
+    // (The useEffect hasn't run yet — but with React 18, useState's
+    // initializer fires synchronously on mount, so we read the seed.)
     for (const key of extensionKeys) {
       expect(result.current[key]).toBeUndefined();
     }
+
+    // Drain pending microtasks to avoid leaking promises into the next test.
+    await act(async () => {
+      await Promise.resolve();
+    });
+    unmount();
   });
 
   // -------------------------------------------------------------------------
   // Test 4 — extension-only (MII-EXT-15-D): record key set is EXACTLY the
   // extension key list. No 'person' / 'fall' / 'diagnose' / etc.
   // -------------------------------------------------------------------------
-  it('returns a record keyed only by extension modules (no base modules) (MII-EXT-15-D)', () => {
-    const get = vi.fn(() => new Promise(() => {}) as Promise<unknown>);
+  it('returns a record keyed only by extension modules (no base modules) (MII-EXT-15-D)', async () => {
+    const get = vi.fn(() =>
+      Promise.resolve({ resourceType: 'Bundle', total: 0, entry: [] }),
+    );
     mocks.client = {
       get,
       fhirUrl: (s: string) => ({ toString: () => s }),
     } as unknown as typeof mocks.client;
 
-    const { result } = renderHook(() => useMiiExtensionCounts('p-4'));
+    const { result, unmount } = renderHook(() => useMiiExtensionCounts('p-4'));
+
+    // Wait for resolution so the cache + counts are populated.
+    await waitFor(() => {
+      // At least one module should have resolved to a number.
+      const anyResolved = extensionKeys.some(
+        (k) => typeof result.current[k] === 'number',
+      );
+      expect(anyResolved).toBe(true);
+    });
 
     const keys = Object.keys(result.current).sort();
     const expected = [...extensionKeys].sort();
@@ -209,6 +234,7 @@ describe('useMiiExtensionCounts', () => {
     expect(result.current).not.toHaveProperty('consent');
     expect(result.current).not.toHaveProperty('laborbefund');
     expect(result.current).not.toHaveProperty('medikation');
+    unmount();
   });
 
   // -------------------------------------------------------------------------
@@ -219,7 +245,7 @@ describe('useMiiExtensionCounts', () => {
     const client = makeCountClient({});
     mocks.client = client as unknown as typeof mocks.client;
 
-    renderHook(() => useMiiExtensionCounts('p-5'));
+    const { unmount } = renderHook(() => useMiiExtensionCounts('p-5'));
 
     // Wait for at least one call to land — fan-out is synchronous to render.
     await waitFor(() => {
@@ -239,20 +265,22 @@ describe('useMiiExtensionCounts', () => {
       0,
     );
     expect(client.get).toHaveBeenCalledTimes(expectedCalls);
+    unmount();
   });
 
   // -------------------------------------------------------------------------
-  // Test 6 — cancelled-flag (MII-EXT-15-H): a delayed-resolve mock simulates
-  // a stale fetch from the previous patientId. After rerender + cleanup,
-  // resolving the stale promise must NOT overwrite the new patient's counts.
+  // Test 6 — cancelled-flag (MII-EXT-15-H): rapid patientId rerender + late
+  // promise resolution must NOT pollute the new patient's counts. We use a
+  // controllable resolver pattern but cap the pending list to keep memory
+  // bounded.
   // -------------------------------------------------------------------------
   it('cancelled-flag prevents stale setState after patientId change (MII-EXT-15-H)', async () => {
     type Resolver = (b: unknown) => void;
     const pending: Resolver[] = [];
 
-    const slowGet = vi.fn((_url: string) => {
-      return new Promise((resolve) => {
-        pending.push(resolve as Resolver);
+    const slowGet = vi.fn(() => {
+      return new Promise<unknown>((resolve) => {
+        pending.push(resolve);
       });
     });
     mocks.client = {
@@ -260,44 +288,64 @@ describe('useMiiExtensionCounts', () => {
       fhirUrl: (s: string) => ({ toString: () => s }),
     } as unknown as typeof mocks.client;
 
-    const { result, rerender } = renderHook(
+    const { result, rerender, unmount } = renderHook(
       ({ id }: { id: string }) => useMiiExtensionCounts(id),
       { initialProps: { id: 'p-old' } },
     );
 
-    // No counts yet — promises haven't resolved.
-    for (const key of extensionKeys) {
-      expect(result.current[key]).toBeUndefined();
-    }
-
-    // Capture the in-flight pending list size BEFORE rerender so we know
-    // which pending resolvers belong to p-old. The cleanup runs synchronously
-    // on rerender; the new effect for p-new fires after.
-    const oldPendingCount = pending.length;
-    expect(oldPendingCount).toBeGreaterThan(0);
+    // Initial state — no fetches resolved yet.
+    expect(pending.length).toBeGreaterThan(0);
+    const oldPendingResolvers = [...pending];
 
     // Switch patient mid-flight. Cleanup sets cancelled=true for old effect.
     rerender({ id: 'p-new' });
 
-    // Now resolve the OLD patient's pending fetches with a high count. If
-    // cancelled-flag works, the new patient's counts must NOT be set to this.
+    // Resolve the OLD patient's pending fetches with a sentinel total that
+    // would clearly poison the new patient if cancelled-flag is broken.
     await act(async () => {
-      for (let i = 0; i < oldPendingCount; i += 1) {
-        pending[i]({ resourceType: 'Bundle', total: 999, entry: [] });
+      for (const resolve of oldPendingResolvers) {
+        resolve({ resourceType: 'Bundle', total: 999, entry: [] });
       }
-      // Yield microtasks so the old .then() runs (and is gated by cancelled).
+      // Yield microtasks so the OLD .then() runs (and is gated by cancelled).
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    // The new patient's counts should still be undefined (its fetches haven't
-    // resolved). Critically, NONE of the extension-module values should be 999
-    // (which would indicate the cancelled old setState leaked through).
+    // No extension module's count should be a multiple of 999 (which would
+    // happen if the cancelled old setState leaked through). The new patient's
+    // own fetches are still pending — its values may be undefined OR small
+    // numbers from the cache (none — first mount), but never 999.
     for (const key of extensionKeys) {
       const v = result.current[key];
-      // Accept undefined (still loading) or a number that is NOT 999*types.
-      expect(v === undefined || (typeof v === 'number' && v !== 999)).toBe(true);
+      // The hook seeds undefined initially; new patient's promises haven't
+      // resolved either. So we expect EVERY value to still be undefined,
+      // because cancelled-flag short-circuits the OLD .then() before its
+      // setCounts and the NEW .then() hasn't fired yet (still pending).
+      expect(v).toBeUndefined();
     }
+
+    // Now resolve the NEW patient's pending (those pushed AFTER rerender).
+    const newPendingResolvers = pending.slice(oldPendingResolvers.length);
+    expect(newPendingResolvers.length).toBeGreaterThan(0);
+    await act(async () => {
+      for (const resolve of newPendingResolvers) {
+        resolve({ resourceType: 'Bundle', total: 7, entry: [] });
+      }
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    // Now the new patient's totals should be defined and a multiple of 7
+    // (= sum of per-type 7s, NEVER 999).
+    await waitFor(() => {
+      const onkologyVal = result.current.onkologie;
+      expect(typeof onkologyVal).toBe('number');
+      // Onkologie has 4 types → sum = 28, not 999*4.
+      expect(onkologyVal).not.toBe(999);
+      expect(onkologyVal).not.toBe(999 * 4);
+    });
+
+    unmount();
   });
 
   // -------------------------------------------------------------------------
@@ -321,7 +369,7 @@ describe('useMiiExtensionCounts', () => {
     });
     mocks.client = client as unknown as typeof mocks.client;
 
-    const { result, rerender } = renderHook(
+    const { result, rerender, unmount } = renderHook(
       ({ id }: { id: string }) => useMiiExtensionCounts(id),
       { initialProps: { id: 'p-cache' } },
     );
@@ -346,55 +394,48 @@ describe('useMiiExtensionCounts', () => {
     });
 
     expect(client.get.mock.calls.length).toBe(firstCallCount);
+    unmount();
   });
 
   // -------------------------------------------------------------------------
   // Test 8 — reports emptiness (D-05 contract at hook level): with all-zero
   // mock, the hook calls reportEmptiness(moduleKey, true) for every
-  // extension module. We override the no-op fallback by mocking the
-  // useEmptyExtensionsCoordinator import so we can spy on the function.
+  // extension module. We mount the hook inside the real
+  // EmptyExtensionsProvider and observe `emptyModuleKeys` via a sibling
+  // hook reading the coordinator. After the fan-out resolves, every
+  // extension key should appear in `emptyModuleKeys`.
   // -------------------------------------------------------------------------
-  it('calls reportEmptiness(moduleKey, total === 0) for every extension module (D-05)', async () => {
+  it('publishes emptiness for every extension module when all counts resolve to 0 (D-05)', async () => {
     // All types resolve to 0 → every module is empty.
     mocks.client = makeCountClient({}) as unknown as typeof mocks.client;
 
-    // Spy on reportEmptiness via a module-level mock for this test only.
-    // We re-import the coordinator with a vi.doMock for isolation.
-    const reportEmptiness = vi.fn();
-    vi.doMock('../useEmptyExtensionsCoordinator', () => ({
-      useEmptyExtensionsCoordinator: () => ({
-        hideEmpty: false,
-        setHideEmpty: () => {},
-        reportEmptiness,
-        emptyCount: 0,
-        emptyModuleKeys: [],
-        patientId: '',
-      }),
-    }));
-
-    // Re-import the hook so it picks up the doMock.
-    const { useMiiExtensionCounts: hookFresh } = await import(
-      '../useMiiExtensionCounts'
-    );
-
-    renderHook(() => hookFresh('p-empty'));
-
-    await waitFor(() => {
-      expect(reportEmptiness.mock.calls.length).toBeGreaterThanOrEqual(
-        extensionKeys.length,
-      );
-    });
-
-    // Every extension module must have been reported as empty=true.
-    for (const key of extensionKeys) {
-      const calledWithKey = reportEmptiness.mock.calls.filter(
-        (c) => c[0] === key,
-      );
-      expect(calledWithKey.length).toBeGreaterThan(0);
-      // At least one call must be (key, true) for an all-zero mock.
-      expect(calledWithKey.some((c) => c[1] === true)).toBe(true);
+    // Combined hook: drive the fan-out + read the coordinator state.
+    function useFixture(patientId: string) {
+      const counts = useMiiExtensionCounts(patientId);
+      const coord = useEmptyExtensionsCoordinator();
+      return { counts, emptyModuleKeys: coord.emptyModuleKeys };
     }
 
-    vi.doUnmock('../useEmptyExtensionsCoordinator');
+    function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <EmptyExtensionsProvider patientId="p-empty">
+          {children}
+        </EmptyExtensionsProvider>
+      );
+    }
+
+    const { result, unmount } = renderHook(() => useFixture('p-empty'), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => {
+      // Every extension key should be in emptyModuleKeys (= reported empty).
+      const reported = new Set(result.current.emptyModuleKeys);
+      for (const key of extensionKeys) {
+        expect(reported.has(key)).toBe(true);
+      }
+    });
+
+    unmount();
   });
 });
