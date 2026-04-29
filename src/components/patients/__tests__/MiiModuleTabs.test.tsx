@@ -118,34 +118,61 @@ afterEach(() => {
 });
 
 describe('MiiModuleTabs hide-empty toggle (MII-EXT-14, Plan 34-05)', () => {
-  it('when no extension modules have been visited/emptied, toggle button is NOT rendered', async () => {
+  // Phase 42 (MII-EXT-15) note: pre-probe-extension-module-counts now
+  // populates emptyMap on patient mount via useMiiExtensionCounts → the
+  // toggle is accurate WITHOUT requiring a tab click. The Phase-34 tests
+  // below were originally written against the click-required model; they
+  // have been updated to reflect the Phase-42 D-05 contract while
+  // preserving the original assertions about toggle text, click-flip,
+  // localStorage roundtrip, and hide-filtering.
+
+  it('when extension modules have non-zero counts, toggle button is NOT rendered', async () => {
+    // To exercise the "toggle hidden" branch under Phase 42, every extension
+    // module must resolve to a NON-ZERO count (so emptyCount === 0).
+    mocks.client = makeCountClient({
+      // Cover every FHIR type referenced by any extension module so each
+      // extension's per-module sum is > 0. Values are arbitrary > 0.
+      Condition: 1,
+      Observation: 1,
+      Procedure: 1,
+      MedicationStatement: 1,
+      ImagingStudy: 1,
+      DiagnosticReport: 1,
+      Specimen: 1,
+      DocumentReference: 1,
+      MolecularSequence: 1,
+      ResearchStudy: 1,
+      QuestionnaireResponse: 1,
+      Substance: 1,
+    });
+
     await act(async () => {
       renderTabs('p-fresh');
     });
-    // Nothing empty until at least one extension tab has been clicked + fetched.
-    // Before any visit, emptyCount = 0; toggle hidden.
+
+    // Wait for the pre-probe to resolve before asserting toggle absence.
+    await waitFor(() => {
+      // Onkologie has 4 types × 1 each = 4 → label includes "(4)".
+      expect(screen.getByText(/Onkologie \(4\)/)).toBeTruthy();
+    });
+
     expect(screen.queryByText(/Hide \d+ empty modules/)).toBeNull();
     expect(screen.queryByText(/Show \d+ empty modules/)).toBeNull();
   });
 
-  it('when ≥1 extension module has been visited + empty + default state, toggle reads "Hide N empty modules"', async () => {
+  it('when extension modules are empty, toggle reads "Hide N empty modules" without any tab click', async () => {
     await act(async () => {
       renderTabs('p-with-empties');
     });
 
-    // Expand the Collapse to expose extension tab pills:
+    // Expand the Collapse to expose the toggle:
     const collapseToggle = screen.getByText(/Extension modules \(\d+\)/);
     await act(async () => {
       fireEvent.click(collapseToggle);
     });
 
-    // Click an extension tab to trigger its fan-out (Onkologie):
-    const onkologie = await screen.findByText('Onkologie');
-    await act(async () => {
-      fireEvent.click(onkologie);
-    });
-
-    // Wait for the panel to mount + fetch (0 results) + publish:
+    // Phase 42 D-05: pre-probe resolves all 14 modules to 0; toggle MUST
+    // be present without any tab click.
     const toggle = await screen.findByText(/Hide \d+ empty modules/);
     expect(toggle).toBeTruthy();
   });
@@ -158,10 +185,8 @@ describe('MiiModuleTabs hide-empty toggle (MII-EXT-14, Plan 34-05)', () => {
     await act(async () => {
       fireEvent.click(collapseToggle);
     });
-    const onkologie = await screen.findByText('Onkologie');
-    await act(async () => {
-      fireEvent.click(onkologie);
-    });
+    // Phase 42: pre-probe populates emptyMap automatically; no Onkologie
+    // click needed.
     const hideBtn = await screen.findByText(/Hide \d+ empty modules/);
     await act(async () => {
       fireEvent.click(hideBtn);
@@ -183,18 +208,13 @@ describe('MiiModuleTabs hide-empty toggle (MII-EXT-14, Plan 34-05)', () => {
     await act(async () => {
       fireEvent.click(collapseToggle);
     });
-    // Visit Onkologie to register its emptiness.
-    const onkologie = await screen.findByText('Onkologie');
-    await act(async () => {
-      fireEvent.click(onkologie);
-    });
+    // Phase 42: pre-probe registers all 14 modules as empty automatically.
     const showBtn = await screen.findByText(/Show \d+ empty modules/);
     expect(showBtn).toBeTruthy();
-    // Onkologie pill itself should have been filtered out of the Collapse
-    // once its emptiness was published + hide flag is on.
+    // Onkologie pill (and its `(0)` count variant) should be filtered out
+    // of the Collapse once its emptiness is published + hide flag is on.
     await waitFor(() => {
-      const pills = screen.queryByText('Onkologie');
-      expect(pills).toBeNull();
+      expect(screen.queryByText(/Onkologie/)).toBeNull();
     });
   });
 });

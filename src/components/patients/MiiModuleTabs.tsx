@@ -14,6 +14,7 @@ import {
   EmptyExtensionsProvider,
   useEmptyExtensionsCoordinator,
 } from '../../hooks/useEmptyExtensionsCoordinator';
+import { useMiiExtensionCounts } from '../../hooks/useMiiExtensionCounts';
 import { ClinicalTimeline } from './ClinicalTimeline';
 import { MiiModuleTab } from './MiiModuleTab';
 
@@ -66,23 +67,52 @@ function TabPillLabel({
   secondary,
   active,
   iconKey,
+  count,
+  isEmpty,
 }: {
   primary: string;
   secondary: string;
   active: boolean;
   iconKey?: string;
+  // Phase 42 (MII-EXT-15): both optional so base 7 callers don't change
+  // (D-04 base exemption). `count===undefined` → no `(N)` suffix and no
+  // testid (matches D-03 no-placeholder contract). `isEmpty` is the
+  // resolved `count===0` flag; only true once the per-module fan-out
+  // resolves to zero.
+  count?: number;
+  isEmpty?: boolean;
 }) {
   // Plan 34-04 MII-EXT-11 render site: 14px leading icon beside the
   // primary German label. Icon inherits the pill's text color via
   // currentColor so active (white) vs inactive (muted) states come for
   // free. Unknown / missing iconKey -> null (no icon rendered).
   const Icon = resolveMiiIcon(iconKey);
+  // Phase 42 D-01: append `(${count})` once the count resolves; while it
+  // is undefined (still fetching) render the bare label per D-03.
+  const primaryWithCount =
+    count !== undefined ? `${primary} (${count})` : primary;
+  // Phase 42 D-06 + Pitfall #5: dim the OUTER content `<div>`, NOT the
+  // surrounding `<Tabs.Tab>`. Mantine 8's active-pill background indicator
+  // stacks under <Tabs.Tab>'s style; opacity on the tab dims the active
+  // indicator on a clicked-into 0-count tab. Mirroring MiiModuleTab.tsx
+  // line 143 `style={{ opacity: 0.55 }}` on inner content keeps the
+  // active indicator fully visible while still dimming the label text.
+  // The fragment <></> is replaced by a single host <div> so we have a
+  // stable element for `data-testid`, `data-empty`, and the conditional
+  // opacity style.
   return (
-    <>
+    <div
+      // Phase 42 D-04: only the EXTENSION render site passes `count`,
+      // so the testid is present only there. Base 7 + Zeitleiste pass
+      // no count → no testid (silent default of `undefined`).
+      data-testid={count !== undefined ? 'extension-tab-pill' : undefined}
+      data-empty={isEmpty ? 'true' : 'false'}
+      style={isEmpty ? { opacity: 0.55 } : undefined}
+    >
       <Group gap="xs" wrap="nowrap" align="center">
         {Icon ? <Icon size={14} /> : null}
         <Text fw={600} size="sm">
-          {primary}
+          {primaryWithCount}
         </Text>
       </Group>
       <Text
@@ -95,7 +125,7 @@ function TabPillLabel({
       >
         {secondary}
       </Text>
-    </>
+    </div>
   );
 }
 
@@ -123,6 +153,15 @@ function MiiModuleTabsInner({ patientId }: MiiModuleTabsProps) {
   // Plan 34-05: per-patient hide-empties state from the coordinator.
   const { hideEmpty, setHideEmpty, emptyCount, emptyModuleKeys } =
     useEmptyExtensionsCoordinator();
+
+  // Phase 42 (MII-EXT-15): pre-probe extension-module counts. Hook is
+  // called HERE — INSIDE EmptyExtensionsProvider (line 109) — so its
+  // internal useEmptyExtensionsCoordinator() call resolves to the real
+  // (non-no-op) reportEmptiness callback. Calling from the outer
+  // MiiModuleTabs would silently use the no-op fallback (lines 143-153
+  // of useEmptyExtensionsCoordinator.tsx) and reportEmptiness would do
+  // nothing — Pitfall #1.
+  const extensionCounts = useMiiExtensionCounts(patientId);
 
   // Default to the first base module. The `?? null` guards against an
   // empty MII_MODULES array (defensive — never hit in practice since
@@ -242,16 +281,25 @@ function MiiModuleTabsInner({ patientId }: MiiModuleTabsProps) {
                 Plan 34-05: render `visibleExtensionModules` (== extensionModules
                 when hideEmpty=false; filtered subset otherwise). */}
             <Tabs.List mt="xs">
-              {visibleExtensionModules.map((mod) => (
-                <Tabs.Tab key={mod.key} value={mod.key}>
-                  <TabPillLabel
-                    primary={mod.germanLabel}
-                    secondary={fhirResourceTypesOf(mod).join(' / ')}
-                    active={activeTab === mod.key}
-                    iconKey={mod.icon}
-                  />
-                </Tabs.Tab>
-              ))}
+              {visibleExtensionModules.map((mod) => {
+                // Phase 42 D-01 + D-06: per-module count from the pre-probe.
+                // `count` is `undefined` while fetching; once resolved, a
+                // count of 0 flips `isEmpty` true so the pill content dims.
+                const count = extensionCounts[mod.key];
+                const isEmpty = count === 0;
+                return (
+                  <Tabs.Tab key={mod.key} value={mod.key}>
+                    <TabPillLabel
+                      primary={mod.germanLabel}
+                      secondary={fhirResourceTypesOf(mod).join(' / ')}
+                      active={activeTab === mod.key}
+                      iconKey={mod.icon}
+                      count={count}
+                      isEmpty={isEmpty}
+                    />
+                  </Tabs.Tab>
+                );
+              })}
             </Tabs.List>
           </Collapse>
         </>
