@@ -5,7 +5,7 @@ milestone_name: -- Hardening, UX Polish & Carry-Overs (in progress, started 2026
 status: planning
 stopped_at: v1.6 ROADMAP.md created — 7 phases (39-45), 12 REQ-IDs at 100% coverage
 last_updated: "2026-04-29T10:31:07.731Z"
-last_activity: 2026-04-29
+last_activity: 2026-04-29 - Completed quick task 260429-kqa: Align /quality Tier-1 filter inputs (Tooltip)
 progress:
   total_phases: 14
   completed_phases: 11
@@ -69,6 +69,12 @@ Progress: [░░░░░░░░░░] 0%
 - 5 v1.5 phases carry `nyquist_compliant: false` (32, 34, 35, 36, 37) — Phase 39 must flip these via test-coverage backfill review
 - 3 v1.5 phases missing VALIDATION.md (31, 33, 38) — Phase 39 writes retroactively
 - Phase 38.1 has no standalone VERIFICATION.md (evidence currently in 38.1-01-SUMMARY.md + 33-HUMAN-UAT.md appends) — Phase 39 closes via AUDIT-01
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260429-kqa | Align /quality Tier-1 filter inputs by moving Sample size description into a Tooltip | 2026-04-29 | aa80da4 | [260429-kqa-align-quality-tier-1-filter-inputs-by-mo](./quick/260429-kqa-align-quality-tier-1-filter-inputs-by-mo/) |
 
 ## Session Continuity
 
