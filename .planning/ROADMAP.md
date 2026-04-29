@@ -244,7 +244,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 | 39. v1.5 audit-trail backfill (NYQ + AUDIT) | v1.6 | 3/3 | Complete    | 2026-04-29 |
 | 40. Headless deuteranopia simulation (DEUT) | v1.6 | 1/1 | Complete    | 2026-04-29 |
 | 41. Explorer + Quality UX polish (EXPL + QUAL-01/02/03) | v1.6 | 3/3 | Complete    | 2026-04-29 |
-| 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 2/2 | Complete   | 2026-04-29 |
+| 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 2/2 | Complete    | 2026-04-29 |
 | 43. Validator hardening — auth + semantic (VAL-06 + VAL-07) | v1.6 | 0/TBD | Not started | - |
 | 44. IPS Compositions support (IPS-01) | v1.6 | 0/TBD | Not started | - |
 | 45. Mantine 9 upgrade (STACK-01) | v1.6 | 0/TBD | Not started | - |

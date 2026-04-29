@@ -4,14 +4,14 @@ milestone: v1.6
 milestone_name: -- Hardening, UX Polish & Carry-Overs (in progress, started 2026-04-29)
 status: executing
 stopped_at: Phase 42 context gathered (6 decisions locked, cleanup primitive + cache lifecycle = Claude's discretion)
-last_updated: "2026-04-29T19:48:02.010Z"
-last_activity: 2026-04-29 -- Phase 42 execution started
+last_updated: "2026-04-29T20:13:56.078Z"
+last_activity: 2026-04-29
 progress:
   total_phases: 17
-  completed_phases: 13
+  completed_phases: 14
   total_plans: 44
-  completed_plans: 41
-  percent: 93
+  completed_plans: 42
+  percent: 95
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 
 ## Current Position
 
-Phase: 42 (pre-probe-extension-module-counts-mii-ext-15) — EXECUTING
-Plan: 1 of 2
+Phase: 999.1
+Plan: Not started
 Status: Executing Phase 42
-Last activity: 2026-04-29 -- Phase 42 execution started
+Last activity: 2026-04-29
 
 v1.6 progress: 3/7 phases complete (39 ✓ audit-trail backfill, 40 ✓ DEUT-01 deuteranopia simulation, 41 ✓ EXPL-01 + QUAL-01/02/03 polish)
 Progress: [████░░░░░░] 43%
