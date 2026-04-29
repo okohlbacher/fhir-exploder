@@ -101,18 +101,36 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 **localStorage keys** unchanged from v1.3: `quality.thresholds.v1`, `quality.trends.v1`, `quality.cohorts.v1`, `quality.activeCohortId.v1`, `quality.resourceTypes.v1`.
 
-## Current Milestone: v1.6 (Planning)
+## Current Milestone: v1.6 Hardening, UX Polish & Carry-Overs
 
-**v1.5 shipped 2026-04-29.** See [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md), [milestones/v1.5-REQUIREMENTS.md](milestones/v1.5-REQUIREMENTS.md), [milestones/v1.5-MILESTONE-AUDIT.md](milestones/v1.5-MILESTONE-AUDIT.md). 10 phases (8 main + 2 inserted decimals 38.1, 38.2), 32 plans, 79 tasks. 31/31 v1.5 requirements satisfied; audit status `tech_debt` with 3 acknowledged carry-overs.
+**Goal:** Close v1.5 tech-debt carry-overs, ship Explorer/Quality UX polish, and add two standards-track features (IPS Compositions, validator auth) without major redirection.
 
-**Carry-overs to v1.6:**
-1. **Headless deuteranopia simulation in Vitest** — closes Phase 37 deferral (3 PNG screenshots not captured; 21 paper-vs-empirical pair reconciliations remain qualitative-only). Apply Brettel/Machado JS simulation matrix to rendered RGBA from the Dashboard tile grid + tab row, then assert pairwise icon+color discriminability for the 21 MII module adjacent pairs.
-2. **Nyquist validation backfill** — 5 v1.5 phases marked `nyquist_compliant: false`; 3 missing VALIDATION.md.
-3. **Phase 38.1 standalone VERIFICATION.md** — audit-trail gap (evidence captured in SUMMARY.md + cascading 33-HUMAN-UAT.md appends).
+**Target features (12 items across 4 themes):**
 
-**v1.6 candidate scope (TBD via /gsd-new-milestone):**
-- genomDE → MII CDS mapping pipeline
-- Backlog phases 999.1 (Explorer hide-empty toggle) and 999.2 (quality completeness sort order) — see ROADMAP.md §Backlog.
+**Theme 1 — v1.5 closeout:**
+- Headless deuteranopia simulation in Vitest (closes Phase 37 deferral; Brettel/Machado JS matrix on rendered RGBA → 21 adjacent-pair discriminability)
+- Nyquist validation backfill (5 v1.5 phases `nyquist_compliant: false` + 3 missing VALIDATION.md)
+- Phase 38.1 standalone VERIFICATION.md (audit-trail gap; evidence currently in SUMMARY.md + 33-HUMAN-UAT.md appends)
+
+**Theme 2 — Explorer/Quality UX polish:**
+- Explorer "Hide empty resource types" toggle (backlog 999.1)
+- Quality completeness — sort N/A rows to bottom (backlog 999.2)
+- Heat-column gradient on per-type quality matrix
+- CSV export of per-type quality matrix
+- Pre-probe extension-module counts on Patient detail (avoid empty-tab UX)
+
+**Theme 3 — Validator hardening:**
+- Validator authentication (Basic/Bearer; extends Phase 31 cascade)
+- Semantic near-miss detection (SNOMED CT + ICD-10 graph walking)
+
+**Theme 4 — Standards & Stack:**
+- IPS Compositions (Empty-Sections-and-Missing-Data) support
+- Mantine 9 upgrade — *conditional on Medplum 5.x peer-dep refresh; phase will gate on upstream readiness and defer to v1.7 if not ready*
+
+**Key context:**
+- Phase numbering continues from 38.2 (v1.5's last phase) → starts at Phase 39.
+- Estimate: ~2–3 focused engineering weeks (smaller than v1.5; mostly polish + hygiene, with IPS + Mantine 9 as the larger items).
+- v1.5 reference baselines: 1064 tests passing, `npm run build` clean, initial-load bundle 606.76 KB gz.
 
 ### Out of Scope
 
@@ -194,7 +212,7 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-29 — v1.5 milestone closed. 10 phases (31-38, 38.1, 38.2), 32 plans, 79 tasks shipped. Audit `tech_debt` with 3 carry-overs to v1.6 (headless deuteranopia sim, Nyquist backfill, 38.1 standalone VERIFICATION.md). REQUIREMENTS.md archived; ready for `/gsd-new-milestone` to define v1.6.*
+*Last updated: 2026-04-29 — v1.6 milestone defined: Hardening, UX Polish & Carry-Overs. 12 items across 4 themes (v1.5 closeout / UX polish / validator hardening / standards & stack). Phase numbering continues from 38.2 → starts at Phase 39. genomDE → MII CDS mapping pipeline removed from candidate scope (moved to a separate project).*
 
 *Last updated: 2026-04-28 — Phase 37 (Phase 34 empirical UAT capture — deuteranopia + TTI) closed with **gaps_found** (deuteranopia leg deferred). D-22 TTI gate closed: `tti-snapshot.json` PASS (baseline 256.523 ms at commit `048e99c` Phase 33 tail / post-phase 268.604 ms at `a7e4544` Phase 34 HEAD / delta_ms +12.08 ms ≤ 100 / delta_pct +4.71% ≤ 10), method substituted to **Lighthouse 13.1 headless Chrome** rather than the plan-required Chrome DevTools Performance panel manual capture (substitution accepted by user; documented in `tti-snapshot.json.method` and `37-EMPIRICAL.md` §3). MII-EXT-11 deuteranopia leg **NOT closed** — user opted to skip the Chrome DevTools Rendering panel manual capture step at the `checkpoint:human-verify` gate; `37-EMPIRICAL.md` §1 (7 within-family pairs) and §2 (14 cross-family pairs) carry `[deferred]` markers in the Empirical column for all 21 adjacent pairs; the borderline pairs #7 (mikrobiologie ↔ molekulargenetik HIGH color-collapse risk) and #12 (pro ↔ seltene MEDIUM-HIGH risk) remain qualitative paper predictions only. `34-06-UAT.md` flipped to **PARTIALLY COMPLETE (TTI closed via Lighthouse; deuteranopia deferred to v1.6+)** with deuteranopia checkbox `[ ] DEFERRED 2026-04-28` and TTI checkbox `[x] PASS (Lighthouse-substituted)`. Branch A (no contingency) — source code untouched (`src/utils/mii-icons.ts`, `src/utils/mii-modules.ts`, `.planning/research/color-design-audit.md` last commits all from Phase 34). Test gate: 1060 passing / 0 failing; `tsc -b --noEmit` exit 0; `npm run build` clean. Code review skipped (zero source files changed in Phase 37 — doc-only phase). New v1.6+ candidate added to `.planning/ROADMAP.md` §Deferred Items: headless deuteranopia simulation in Vitest using a Brettel/Machado JS matrix to retroactively close `37-EMPIRICAL.md` §1+§2 for any future HEAD. v1.5 milestone now at last phase Phase 38 (HUMAN-UAT live-Blaze smoke tests, 12 items merged from former backlog 999.1+999.4). Phase 36 (lazy-load) summary preserved: 4/4 plans, MII-EXT-12 deferred lazy-load clause closed.*
 
