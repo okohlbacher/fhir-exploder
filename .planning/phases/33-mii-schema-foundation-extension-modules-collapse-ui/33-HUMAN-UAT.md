@@ -60,6 +60,21 @@ evidence: |
     `_sort=-_lastUpdated&category=laboratory` variant) returns HTTP 200.
     `result: fail` preserved per Phase 38 D-03 (historical record).
 
+  → valueQuantity render fixed in Phase 38.2, commit 9dd7fde.
+    Phase 38.1's Laborbefund-populates fix surfaced a downstream
+    rendering defect: clicking a lab Observation row → Human-readable
+    tab showed only the unit (e.g. `mg/dL`) without the measured value
+    (`98`). Root cause: `RenderValue` Coding-branch dispatch (line 121
+    of ResourcePropertyTable.tsx) fired before the Quantity branch
+    because UCUM-coded Quantities carry `{ value, unit, system, code }`
+    and `{ system && code }` matches Coding shape first. Fix: insert
+    new Quantity branch BEFORE the Coding branch covering all 4
+    valueQuantity input shapes (both / value-only / unit-only /
+    neither). Locked by 4 colocated regression tests in
+    src/__tests__/ResourcePropertyTable.test.tsx (Phase 38.2 describe
+    block). Full test suite green (1064 passing, 0 failing). Original
+    `result: fail` preserved per Phase 38 D-03.
+
 ### 2. Timeline color + German label for all 4 TIMELINE_RESOURCE_TYPES
 expected: Patient detail → Zeitleiste tab renders Conditions labelled 'Diagnose' (teal border-left + teal badge), Encounters labelled 'Fall' (indigo), Procedures labelled 'Prozedur' (violet), Observations labelled 'Laborbefund' (cyan). Visual color tokens must match.
 result: fail
@@ -173,6 +188,19 @@ evidence: |
     Consent + Medikation empty-state remains the accepted data-coverage
     reality per D-01 (separate from this fix). `result: fail` preserved
     per Phase 38 D-03 (historical record).
+
+  → valueQuantity render fixed in Phase 38.2, commit 9dd7fde.
+    Once UAT-FU-06 populated end-to-end (Phase 38.1), navigating into a
+    lab Observation row exposed a rendering defect: the Human-readable
+    tab's `valueQuantity` cell rendered only the unit code (`mg/dL`)
+    without the measured value (`98`), because `RenderValue`'s Coding
+    dispatch matched UCUM-coded Quantities before the Quantity branch.
+    Fix: reorder + broaden the Quantity branch in
+    src/components/explorer/ResourcePropertyTable.tsx to handle all 4
+    valueQuantity input shapes (both fields / value-only / unit-only
+    em-dash / neither em-dash). Locked by 4 regression tests; full
+    suite at 1064 passing, 0 failing. Original `result: fail` preserved
+    per Phase 38 D-03.
 
 ## Summary
 
