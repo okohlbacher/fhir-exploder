@@ -122,3 +122,68 @@ describe('UAT-FU-02: Address-extension Modal trigger (deep JSON fallback)', () =
     expect(viewButtons.length).toBeGreaterThan(0);
   });
 });
+
+describe('Phase 38.2: valueQuantity rendering on Observation', () => {
+  it('renders BOTH value and unit when valueQuantity has { value: 98, unit: "mg/dL" }', () => {
+    const resource: Resource = {
+      resourceType: 'Observation',
+      id: 'o1',
+      status: 'final',
+      code: { coding: [{ system: 'http://loinc.org', code: '2345-7', display: 'Glucose' }] },
+      valueQuantity: { value: 98, unit: 'mg/dL', system: 'http://unitsofmeasure.org', code: 'mg/dL' },
+    } as Resource;
+    render(<ResourcePropertyTable resource={resource} />, { wrapper: wrap });
+    // Headline assertion: BOTH fragments appear together (e.g. "98 mg/dL")
+    expect(screen.getByText(/98\s*mg\/dL/)).toBeTruthy();
+  });
+
+  it('renders value alone when only valueQuantity.value is present', () => {
+    const resource: Resource = {
+      resourceType: 'Observation',
+      id: 'o2',
+      status: 'final',
+      code: { coding: [{ code: 'x' }] },
+      valueQuantity: { value: 42 },
+    } as Resource;
+    render(<ResourcePropertyTable resource={resource} />, { wrapper: wrap });
+    expect(screen.getByText('42')).toBeTruthy();
+  });
+
+  it('does NOT render a bare unit when valueQuantity.value is missing (anti-regression)', () => {
+    const resource: Resource = {
+      resourceType: 'Observation',
+      id: 'o3',
+      status: 'final',
+      code: { coding: [{ code: 'x' }] },
+      valueQuantity: { unit: 'mg/dL' },
+    } as Resource;
+    render(<ResourcePropertyTable resource={resource} />, { wrapper: wrap });
+    // The unit alone is not a measurement. Assert the valueQuantity row
+    // value cell renders an em-dash (—) or is empty — NEVER a bare 'mg/dL'.
+    // Locate the Field cell labeled 'valueQuantity' and inspect its sibling.
+    const fieldCell = screen.getByText('valueQuantity');
+    const row = fieldCell.closest('tr');
+    expect(row).not.toBeNull();
+    // The bare-unit string MUST NOT appear inside this row.
+    expect(row?.textContent ?? '').not.toMatch(/^valueQuantity\s*mg\/dL\s*$/);
+    // Acceptable renderings: '—' (em-dash) or empty.
+    // Stronger: query for 'mg/dL' inside the row scope.
+    expect(row?.querySelector('code')?.textContent ?? '').not.toBe('mg/dL');
+  });
+
+  it('renders nothing meaningful when valueQuantity is empty (defensive)', () => {
+    const resource: Resource = {
+      resourceType: 'Observation',
+      id: 'o4',
+      status: 'final',
+      code: { coding: [{ code: 'x' }] },
+      valueQuantity: {},
+    } as Resource;
+    render(<ResourcePropertyTable resource={resource} />, { wrapper: wrap });
+    const fieldCell = screen.getByText('valueQuantity');
+    const row = fieldCell.closest('tr');
+    expect(row).not.toBeNull();
+    // No phantom value or unit should appear.
+    expect(row?.textContent ?? '').not.toMatch(/\bmg\/dL\b/);
+  });
+});
