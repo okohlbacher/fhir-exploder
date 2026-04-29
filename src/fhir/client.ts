@@ -3,10 +3,12 @@ import type { AppSettings } from '../config/types';
 
 export function createFhirClient(settings: AppSettings): MedplumClient {
   const url = new URL(settings.fhir.serverUrl);
-  // Use the page's own origin as baseUrl so requests go through the Vite
-  // dev proxy (which forwards /fhir → the real FHIR server), avoiding CORS.
-  const baseUrl =
-    typeof window !== 'undefined' ? window.location.origin : `${url.protocol}//${url.host}`;
+  // Use the configured server's origin (protocol+host+port) directly so the
+  // MedplumClient connects to the URL the user actually configured. This
+  // requires the FHIR server to send permissive CORS headers for the dev
+  // origin (Blaze enables CORS by default; other servers may need
+  // Access-Control-Allow-Origin configured — documented as a known limitation).
+  const baseUrl = url.origin;
   const fhirUrlPath = url.pathname.replace(/^\//, '').replace(/\/?$/, '/');
 
   const options: Record<string, unknown> = {
