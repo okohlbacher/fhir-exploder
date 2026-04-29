@@ -20,15 +20,42 @@ if (process.env.ANALYZE === '1') {
   );
 }
 
+// http-proxy `router` callback — accepts a per-request function that returns
+// a target URL, overriding the static `target` set in proxy options. Vite's
+// `ProxyOptions` typedef doesn't declare it, but http-proxy supports it at
+// runtime. We build the proxy config object first with the looser
+// `Record<string, unknown>` type and then assert into ProxyOptions when
+// passing to defineConfig, which keeps the type relaxation localised.
+//
+// See https://github.com/http-party/node-http-proxy#options (`router`).
+const fhirProxy: Record<string, unknown> = {
+  target: 'http://localhost:8080',
+  changeOrigin: true,
+  router: (req: { headers: Record<string, string | string[] | undefined> }) => {
+    const raw = req.headers['x-fhir-target'];
+    const target = Array.isArray(raw) ? raw[0] : raw;
+    if (typeof target === 'string' && target.length > 0) {
+      try {
+        return new URL(target).origin;
+      } catch {
+        return undefined;
+      }
+    }
+    return undefined;
+  },
+};
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins,
   server: {
     proxy: {
-      '/fhir': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-      },
+      // Default target is `http://localhost:8080` (used as fallback when no
+      // `X-Fhir-Target` header is present). The `router` callback above
+      // overrides this per-request based on the header set by
+      // `createFhirClient`, which is how we switch FHIR servers at runtime
+      // without restarting Vite.
+      '/fhir': fhirProxy as { target: string; changeOrigin: boolean },
       '/ontoserver': {
         target: 'https://r4.ontoserver.csiro.au',
         changeOrigin: true,

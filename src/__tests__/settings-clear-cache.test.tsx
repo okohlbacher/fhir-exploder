@@ -4,6 +4,8 @@ import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import type { AppSettings } from '../config/types';
 import { TerminologyContext } from '../contexts/TerminologyContext';
+import { SettingsProvider } from '../contexts/SettingsContext';
+import { ConnectionProvider } from '../contexts/ConnectionContext';
 import { TerminologyResolver } from '../terminology/TerminologyResolver';
 import { LOCAL_STORAGE_PREFIX, makeTerminologyKey } from '../terminology/terminologyKey';
 import { mockMedplumClientForTerminology } from './fixtures/terminology';
@@ -65,9 +67,13 @@ function renderPage(resolver: TerminologyResolver) {
   return render(
     <MantineProvider>
       <Notifications />
-      <TerminologyContext.Provider value={resolver}>
-        <SettingsPage settings={SETTINGS} usingDefaults={false} />
-      </TerminologyContext.Provider>
+      <SettingsProvider>
+        <ConnectionProvider>
+          <TerminologyContext.Provider value={resolver}>
+            <SettingsPage settings={SETTINGS} usingDefaults={false} />
+          </TerminologyContext.Provider>
+        </ConnectionProvider>
+      </SettingsProvider>
     </MantineProvider>,
   );
 }
