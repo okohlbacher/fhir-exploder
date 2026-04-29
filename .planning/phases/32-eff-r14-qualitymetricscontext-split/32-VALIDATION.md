@@ -1,10 +1,27 @@
 ---
 phase: 32
 slug: eff-r14-qualitymetricscontext-split
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-24
+re_audited: 2026-04-29
+re_audited_by: phase-39
+notes: |
+  Retroactively flipped from `nyquist_compliant: false` on 2026-04-29 under
+  Phase 39 NYQ-01. Phase 32 shipped 871 passing / 0 failing (baseline 836
+  → 871, +29 over baseline; per 32-04-SUMMARY.md). Per-REQ coverage:
+  - EFF-R14-01..02 + EFF-R14-06 → src/quality/metrics/__tests__/providers-smoke.test.tsx
+    (7-provider smoke + shared-symbol-regression rejection)
+  - EFF-R14-04 → src/__tests__/metrics-isolation.test.tsx (Profiler
+    per-tile isolation: setCompleteness(42) re-renders only the
+    Completeness tile, 1 update vs 0 for the other 6 tiles)
+  - EFF-R14-03 + EFF-R14-05 → existing src/__tests__/quality-overview.test.tsx
+    + per-panel test files (completeness-hook, plausibility-panel,
+    lab-ranges-panel, references-panel, duplicates-panel)
+  Wave-0 + per-task table in this file are unchanged from the at-execution
+  contract; nyquist sampling threshold met retroactively. status flipped
+  draft → complete (Phase 32 shipped 2026-04-24).
 ---
 
 # Phase 32 — Validation Strategy

@@ -1,10 +1,25 @@
 ---
 phase: 35
 slug: phase-30-uat-follow-ups-per-type-quality-matrix
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-25
+re_audited: 2026-04-29
+re_audited_by: phase-39
+notes: |
+  Retroactively flipped from `nyquist_compliant: false` on 2026-04-29 under
+  Phase 39 NYQ-01. Phase 35 shipped 1008 passing / 0 failing (baseline 998
+  → 1008, +10 over Phase 34 baseline; per 35-03-SUMMARY.md). Per-REQ
+  coverage: UAT-FU-01 + UAT-FU-02 + UAT-FU-03 + UAT-FU-05 satisfied by
+  ResourceDetailPage tabs cleanup (5 Tabs cleanup tests in 35-01),
+  QualityByTypeMatrix per-type matrix surface (17 tests in
+  QualityByTypeMatrix.test.tsx in 35-02), and the 10-test Plan-35-03
+  delta covering the remaining UAT-FU surfaces. Live-Blaze UAT for
+  these REQ-IDs subsequently closed under Phase 38's HUMAN-UAT walk
+  (35-VERIFICATION.md re_verified by phase-38 on 2026-04-28). Wave-0 +
+  per-task table unchanged. status flipped draft → complete (Phase 35
+  shipped 2026-04-25).
 ---
 
 # Phase 35 — Validation Strategy

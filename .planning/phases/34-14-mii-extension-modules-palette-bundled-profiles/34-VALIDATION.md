@@ -1,10 +1,25 @@
 ---
 phase: 34
 slug: 14-mii-extension-modules-palette-bundled-profiles
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-24
+re_audited: 2026-04-29
+re_audited_by: phase-39
+notes: |
+  Retroactively flipped from `nyquist_compliant: false` on 2026-04-29 under
+  Phase 39 NYQ-01. Phase 34 shipped 998 passing / 0 failing (baseline 902
+  → 998, +56 over Phase 33 baseline; per 34-06-SUMMARY.md "D-24 test count"
+  gate). Per-REQ coverage: MII-EXT-09..14 covered via the 21-module
+  data drop in MII_MODULES + ICON_MAP / resolveMiiIcon helper, exercised
+  across src/__tests__/mii-modules.test.ts (extension-category schema +
+  multi-profile fhirResourceType array variants), src/components/patients/__tests__/MiiModuleTab.test.tsx
+  (extension-category empty-state + opacity 0.55 dimming), src/components/dashboard/__tests__/
+  (21-tile palette rendering with new MantineColorsTuple custom colors),
+  and the lazy-load follow-up (Phase 36) that closed MII-EXT-12. Wave-0 +
+  per-task table unchanged. status flipped draft → complete (Phase 34
+  shipped 2026-04-25).
 ---
 
 # Phase 34 — Validation Strategy
