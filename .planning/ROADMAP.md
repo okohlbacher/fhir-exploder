@@ -172,7 +172,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 42-01: TBD (`useMiiExtensionCounts` hook + session cache + AbortController threading)
+- [x] 42-01: TBD (`useMiiExtensionCounts` hook + session cache + AbortController threading)
 - [ ] 42-02: TBD (tab label render + dimmed-zero styling + regression tests + live-Blaze UAT)
 
 ### Phase 43: Validator hardening — auth + semantic near-miss (VAL-06 + VAL-07)
@@ -244,7 +244,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 | 39. v1.5 audit-trail backfill (NYQ + AUDIT) | v1.6 | 3/3 | Complete    | 2026-04-29 |
 | 40. Headless deuteranopia simulation (DEUT) | v1.6 | 1/1 | Complete    | 2026-04-29 |
 | 41. Explorer + Quality UX polish (EXPL + QUAL-01/02/03) | v1.6 | 3/3 | Complete    | 2026-04-29 |
-| 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 0/TBD | Not started | - |
+| 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 1/2 | In Progress|  |
 | 43. Validator hardening — auth + semantic (VAL-06 + VAL-07) | v1.6 | 0/TBD | Not started | - |
 | 44. IPS Compositions support (IPS-01) | v1.6 | 0/TBD | Not started | - |
 | 45. Mantine 9 upgrade (STACK-01) | v1.6 | 0/TBD | Not started | - |
@@ -266,7 +266,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 **Source:** Verifier observation surfaced during Phase 38 HUMAN-UAT walk (2026-04-28), Plan 38-02 Test 1 (Explorer Date/Status columns across 6 types). The MedicationStatement empty-state navigation made the noise pattern obvious.
 
 **Requirements:** EXPL-01 (Phase 41)
-**Plans:** 3/3 plans complete
+**Plans:** 1/2 plans executed
 
 ### Phase 999.2: Quality completeness — sort non-empty resource types to the top (BACKLOG)
 
