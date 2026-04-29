@@ -1,6 +1,11 @@
 import yaml from 'js-yaml';
 import type { AppSettings } from './types';
 
+// Mirror of SETTINGS_STORAGE_KEY in src/contexts/SettingsContext.tsx.
+// Duplicated here to avoid a circular module dependency
+// (SettingsContext imports loadSettings from this file).
+const SETTINGS_STORAGE_KEY = 'fhirExplorer.settings.v1';
+
 export const DEFAULTS: AppSettings = {
   fhir: {
     serverUrl: 'http://localhost:8080/fhir',
@@ -131,6 +136,27 @@ function deepMerge(defaults: AppSettings, partial: Record<string, unknown>): App
 }
 
 export async function loadSettings(): Promise<LoadSettingsResult> {
+  // 1) Prefer user-edited settings persisted in localStorage. Survives
+  //    page reload and overrides the YAML default. Wrapped in try/catch
+  //    because localStorage can throw on quota / private-browsing and
+  //    JSON.parse can throw on malformed data — a corrupt entry must
+  //    fall through to the YAML default rather than crash the app.
+  try {
+    if (typeof window !== 'undefined') {
+      const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          const settings = deepMerge(DEFAULTS, parsed as Record<string, unknown>);
+          return { settings, usingDefaults: false };
+        }
+      }
+    }
+  } catch {
+    // Corrupt or unreadable localStorage entry — fall through to YAML.
+  }
+
+  // 2) Fall back to public/settings.yaml shipped with the app.
   try {
     const response = await fetch('/settings.yaml');
 
@@ -148,6 +174,7 @@ export async function loadSettings(): Promise<LoadSettingsResult> {
     const settings = deepMerge(DEFAULTS, parsed as Record<string, unknown>);
     return { settings, usingDefaults: false };
   } catch {
+    // 3) Final fallback: built-in DEFAULTS.
     return { settings: DEFAULTS, usingDefaults: true };
   }
 }
