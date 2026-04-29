@@ -29,6 +29,7 @@
  */
 import { useCallback, useMemo, useState } from 'react';
 import {
+  Button,
   Card,
   Group,
   Progress,
@@ -38,8 +39,9 @@ import {
   Text,
   UnstyledButton,
 } from '@mantine/core';
-import { IconChevronRight } from '@tabler/icons-react';
+import { IconChevronRight, IconDownload } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
+import { useMedplum } from '@medplum/react-hooks';
 import {
   useCompletenessRollup,
   useCoverageRollup,
@@ -51,12 +53,14 @@ import { useThresholds } from '../../hooks/useThresholds';
 import type { MetricKey } from '../../quality/thresholds';
 import { SortableTh } from './SortableTh';
 import type { CountValue } from '../../quality/types';
+import { downloadString } from '../../utils/export';
 
 export interface QualityByTypeMatrixProps {
   counts: Record<string, CountValue>;
 }
 
-interface MatrixRow {
+/** QUAL-03: exported so colocated CSV export tests can type-check fixtures. */
+export interface MatrixRow {
   type: string;
   countLoading: boolean;
   completeness: number | undefined;
@@ -93,6 +97,84 @@ const FIRST_NON_EMPTY_ORDER: Array<{
   { field: 'dup', route: 'duplicates' },
 ];
 
+/** QUAL-03: CSV-escape one cell — wrap in quotes if it contains comma, quote,
+ * or newline. Mirrors src/utils/export.ts escapeCSV but kept inline so the
+ * helper is self-contained for the colocated regression test. */
+function csvEscape(value: string): string {
+  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+/**
+ * QUAL-03: Build CSV body from matrix rows (post-sort, post-filter — D-20).
+ *
+ * Format invariants (locked by colocated regression test):
+ * - Output is prefixed with the UTF-8 BOM character (U+FEFF) so Excel
+ *   auto-detects UTF-8 encoding.
+ * - Header row matches visible columns verbatim:
+ *   `Resource type, Complete %, Coverage %, Validation %, References %, Dup, Issues`.
+ * - Sparse cells (`undefined`) render as empty string `""` — never `0` or `0%`
+ *   (Pitfall P-05 mirror).
+ * - Populated numeric cells render as bare numeric strings (no `%` suffix —
+ *   keeps spreadsheet apps happy with numeric coercion).
+ * - Loading rows (`countLoading=true`) are SKIPPED — no skeleton placeholders
+ *   in the export.
+ * - Resource-type cell is CSV-escaped (commas / quotes / newlines).
+ *
+ * Exported for unit tests in QualityByTypeMatrix.csvExport.test.tsx.
+ */
+export function buildMatrixCsv(rows: ReadonlyArray<MatrixRow>): string {
+  const header = [
+    'Resource type',
+    'Complete %',
+    'Coverage %',
+    'Validation %',
+    'References %',
+    'Dup',
+    'Issues',
+  ];
+  const lines: string[] = [header.join(',')];
+  for (const row of rows) {
+    if (row.countLoading) continue;
+    const cells = [
+      csvEscape(row.type),
+      row.completeness !== undefined ? String(row.completeness) : '',
+      row.coverage !== undefined ? String(row.coverage) : '',
+      row.validation !== undefined ? String(row.validation) : '',
+      row.references !== undefined ? String(row.references) : '',
+      row.dup !== undefined ? String(row.dup) : '',
+      row.issues !== undefined ? String(row.issues) : '',
+    ];
+    lines.push(cells.join(','));
+  }
+  return '﻿' + lines.join('\n');
+}
+
+/**
+ * QUAL-03: Build CSV filename — `quality-matrix-{host}-{YYYY-MM-DD}.csv`.
+ *
+ * - `host` derived from `client.getBaseUrl()` via `new URL(...).host` and
+ *   sanitized to filesystem-safe chars: `[^a-z0-9.-]` → `-`, lowercased.
+ *   Threat T-41-03-02: filename injection via getBaseUrl is mitigated by this
+ *   sanitization. Invalid URLs fall back to `unknown`.
+ * - Date is UTC `YYYY-MM-DD` (`toISOString().slice(0, 10)`).
+ *
+ * Exported for unit tests.
+ */
+export function buildMatrixCsvFilename(serverUrl: string, now: Date = new Date()): string {
+  let host = 'unknown';
+  try {
+    host = new URL(serverUrl).host;
+  } catch {
+    host = 'unknown';
+  }
+  const safeHost = host.toLowerCase().replace(/[^a-z0-9.-]/g, '-');
+  const date = now.toISOString().slice(0, 10);
+  return `quality-matrix-${safeHost}-${date}.csv`;
+}
+
 export function QualityByTypeMatrix({ counts }: QualityByTypeMatrixProps): JSX.Element | null {
   const completeness = useCompletenessRollup();
   const coverage = useCoverageRollup();
@@ -100,6 +182,7 @@ export function QualityByTypeMatrix({ counts }: QualityByTypeMatrixProps): JSX.E
   const references = useReferencesRollup();
   const duplicates = useDuplicatesRollup();
   const navigate = useNavigate();
+  const medplum = useMedplum();
 
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({
     key: 'issues',
@@ -174,6 +257,15 @@ export function QualityByTypeMatrix({ counts }: QualityByTypeMatrixProps): JSX.E
     [navigate],
   );
 
+  // QUAL-03: build CSV from CURRENT visible/sorted rows (D-20) and trigger
+  // browser download. Filename pattern locked by buildMatrixCsvFilename
+  // regression test.
+  const handleDownloadCsv = useCallback(() => {
+    const csv = buildMatrixCsv(sortedRows);
+    const filename = buildMatrixCsvFilename(medplum.getBaseUrl());
+    downloadString(csv, filename, 'text/csv;charset=utf-8');
+  }, [sortedRows, medplum]);
+
   // Empty matrix → render nothing (consistent with ResourceCountsPanel empty state).
   if (includedTypes.length === 0) {
     return null;
@@ -200,6 +292,14 @@ export function QualityByTypeMatrix({ counts }: QualityByTypeMatrixProps): JSX.E
               {SUBTITLE_COPY}
             </Text>
           </Stack>
+          <Button
+            variant="subtle"
+            size="xs"
+            leftSection={<IconDownload size={16} />}
+            onClick={handleDownloadCsv}
+          >
+            Download CSV
+          </Button>
         </Group>
 
         <Table striped highlightOnHover verticalSpacing="xs" horizontalSpacing="md">

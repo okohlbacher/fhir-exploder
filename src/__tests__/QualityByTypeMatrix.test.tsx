@@ -24,6 +24,14 @@ import { useEffect } from 'react';
 import { render, screen, act, within, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
+
+// Mock useMedplum — Phase 41-03 added a Download CSV button that reads
+// `client.getBaseUrl()` to compose the filename. Tests don't need a real
+// Medplum context; a stub satisfies the hook contract.
+vi.mock('@medplum/react-hooks', () => ({
+  useMedplum: () => ({ getBaseUrl: () => 'http://localhost:8080/fhir/' }),
+}));
+
 import {
   QualityMetricsProviders,
   useCompletenessRollup,
