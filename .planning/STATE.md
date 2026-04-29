@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: -- Hardening, UX Polish & Carry-Overs (in progress, started 2026-04-29)
-status: planning
-stopped_at: Phase 41 complete (EXPL-01 + QUAL-01 + QUAL-02 + QUAL-03 shipped, verified, security + Nyquist closed) — Phase 42 next
-last_updated: "2026-04-29T18:42:31.013Z"
+status: Ready to discuss Phase 42
+stopped_at: Phase 42 context gathered (6 decisions locked, cleanup primitive + cache lifecycle = Claude's discretion)
+last_updated: "2026-04-29T18:54:18.927Z"
 last_activity: 2026-04-29
 progress:
-  total_phases: 16
+  total_phases: 17
   completed_phases: 13
   total_plans: 42
   completed_plans: 40
@@ -82,6 +82,6 @@ Progress: [████░░░░░░] 43%
 
 ## Session Continuity
 
-Last session: 2026-04-29T20:27:00.000Z
-Stopped at: Phase 41 complete (EXPL-01 + QUAL-01 + QUAL-02 + QUAL-03 shipped, verified, security + Nyquist closed) — Phase 42 next
-Resume file: None (Phase 42 has not been discussed yet — run `/gsd-discuss-phase 42`)
+Last session: 2026-04-29T18:54:18.920Z
+Stopped at: Phase 42 context gathered (6 decisions locked, cleanup primitive + cache lifecycle = Claude's discretion)
+Resume file: .planning/phases/42-pre-probe-extension-module-counts-mii-ext-15/42-CONTEXT.md
