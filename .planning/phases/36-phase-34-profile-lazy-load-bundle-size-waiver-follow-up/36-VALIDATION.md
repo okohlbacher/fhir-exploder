@@ -1,10 +1,24 @@
 ---
 phase: 36
 slug: phase-34-profile-lazy-load-bundle-size-waiver-follow-up
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: complete
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-04-25
+re_audited: 2026-04-29
+re_audited_by: phase-39
+notes: |
+  Retroactively flipped from `nyquist_compliant: false` on 2026-04-29 under
+  Phase 39 NYQ-01. Phase 36 shipped 1060 passing / 0 failing (per
+  36-04-SUMMARY.md regression gate) AND its primary deliverable (lazy-load
+  472 MII extension StructureDefinition JSONs into async-only chunks)
+  shrank initial-load bundle by 320.57 KB gz (927.33 → 606.76 KB), which
+  closed the orphan-export integration finding from the 2026-04-25 audit
+  (`getExtensionProfileForUrl + BUNDLED_EXTENSION_PROFILE_URLS` consumer
+  now lives in src/hooks/useConformanceRun.ts:29-30, 190, 200). Per-REQ
+  coverage: src/quality/profiles/__tests__/extensionProfile.test.ts
+  (5 tests covering the lazy-loader contract) + the full regression
+  suite (1060 passing). Wave-0 + per-task table unchanged.
 ---
 
 # Phase 36 — Validation Strategy

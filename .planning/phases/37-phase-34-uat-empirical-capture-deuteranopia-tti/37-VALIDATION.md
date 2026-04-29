@@ -1,10 +1,31 @@
 ---
 phase: 37
 slug: phase-34-uat-empirical-capture-deuteranopia-tti
-status: draft
+status: complete
 nyquist_compliant: false
-wave_0_complete: false
+wave_0_complete: partial
 created: 2026-04-26
+re_audited: 2026-04-29
+re_audited_by: phase-39
+pending: DEUT-01 in Phase 40
+notes: |
+  Phase 37 retroactively reviewed 2026-04-29 under Phase 39 NYQ-01.
+  `nyquist_compliant` REMAINS `false` per CONTEXT D-05: the deuteranopia
+  leg of UAT-FU-CC was deferred at the human-verify gate by user
+  2026-04-28 (3 PNG screenshots not captured; 21 paper-vs-empirical pair
+  reconciliations remain qualitative-only — see 37-EMPIRICAL.md §1+§2
+  [deferred] cells, including HIGH-risk pair #7 mikrobiologie ↔
+  molekulargenetik and MEDIUM-HIGH pair #12 pro ↔ seltene). The TTI leg
+  shipped fully (single regression test against React.Profiler);
+  structural EMPIRICAL.md and per-pair tables exist. Closure path:
+  DEUT-01 in v1.6 Phase 40 (headless Brettel/Machado JS matrix in
+  Vitest, asserting per-pair discriminability for all 21 adjacent
+  module pairs without manual Chrome DevTools capture). Phase 40's
+  plan-close MUST flip this frontmatter to `nyquist_compliant: true`
+  and remove the `pending:` key. status flipped draft → complete
+  (Phase 37 shipped 2026-04-28 with the deuteranopia carry-over
+  acknowledged); wave_0_complete: partial reflects TTI-only Wave-0
+  closure.
 ---
 
 # Phase 37 — Validation Strategy
