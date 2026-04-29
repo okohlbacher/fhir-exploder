@@ -94,7 +94,7 @@ Full details: [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md) . [Audit]
 **Reference baselines (v1.5 close):** 1064 tests passing, `npm run build` clean, initial-load bundle 606.76 KB gz.
 
 - [x] **Phase 39: v1.5 audit-trail backfill (NYQ + AUDIT)** — Retroactive VALIDATION.md + 38.1-VERIFICATION.md so v1.5 audit closes cleanly (completed 2026-04-29)
-- [ ] **Phase 40: Headless deuteranopia simulation in Vitest (DEUT)** — Brettel/Machado JS matrix CI gate for the 21 MII module adjacent pairs; closes Phase 37 deferral
+- [x] **Phase 40: Headless deuteranopia simulation in Vitest (DEUT)** — Brettel/Machado JS matrix CI gate for the 21 MII module adjacent pairs; closes Phase 37 deferral (completed 2026-04-29)
 - [ ] **Phase 41: Explorer + Quality UX polish (EXPL + QUAL-01 + QUAL-02 + QUAL-03)** — Hide-empty-types toggle, N/A-rows-to-bottom sort fix, per-type matrix heat gradient, CSV export
 - [ ] **Phase 42: Pre-probe extension-module counts (MII-EXT-15)** — Tab labels show `Onkologie (12)` before click via parallel `_summary=count` probes; zero-count tabs dimmed
 - [ ] **Phase 43: Validator hardening — auth + semantic near-miss (VAL-06 + VAL-07)** — HTTP Basic/Bearer on external validator + opt-in SNOMED CT / ICD-10 graph-walked "Did you mean?" suggestions
@@ -135,7 +135,7 @@ Plans:
 **Execution**: Fully automatable
 
 Plans:
-- [ ] 40-01-PLAN.md — wave 1: pure-JS Machado 2009 + ΔE2000 utility (`src/utils/colorVision.ts`), 21-pair `src/__tests__/visual/deuteranopia.test.tsx` with named borderline #7+#12 + it.each() for the other 19, JSON snapshot, full-suite verify + commit, Phase 37 audit-chain refresh (37-EMPIRICAL/VALIDATION + v1.5-MILESTONE-AUDIT)
+- [x] 40-01-PLAN.md — wave 1: pure-JS Machado 2009 + ΔE2000 utility (`src/utils/colorVision.ts`), 21-pair `src/__tests__/visual/deuteranopia.test.tsx` with named borderline #7+#12 + it.each() for the other 19, JSON snapshot, full-suite verify + commit, Phase 37 audit-chain refresh (37-EMPIRICAL/VALIDATION + v1.5-MILESTONE-AUDIT)
 
 ### Phase 41: Explorer + Quality UX polish (EXPL + QUAL-01 + QUAL-02 + QUAL-03)
 **Goal**: Ship four bundled UX-polish improvements across the Explorer landing and Quality dashboard surfaces — each small in isolation, grouped here so they share a single test-suite run + commit cadence.
@@ -243,7 +243,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 | 23-30 (v1.4) | v1.4 | 35/35 | ✅ Shipped | 2026-04-23 |
 | 31-38.2 (v1.5) | v1.5 | 32/32 | ✅ Shipped | 2026-04-29 |
 | 39. v1.5 audit-trail backfill (NYQ + AUDIT) | v1.6 | 3/3 | Complete    | 2026-04-29 |
-| 40. Headless deuteranopia simulation (DEUT) | v1.6 | 0/1 | Planning complete | - |
+| 40. Headless deuteranopia simulation (DEUT) | v1.6 | 1/1 | Complete   | 2026-04-29 |
 | 41. Explorer + Quality UX polish (EXPL + QUAL-01/02/03) | v1.6 | 0/TBD | Not started | - |
 | 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 0/TBD | Not started | - |
 | 43. Validator hardening — auth + semantic (VAL-06 + VAL-07) | v1.6 | 0/TBD | Not started | - |
@@ -267,7 +267,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 **Source:** Verifier observation surfaced during Phase 38 HUMAN-UAT walk (2026-04-28), Plan 38-02 Test 1 (Explorer Date/Status columns across 6 types). The MedicationStatement empty-state navigation made the noise pattern obvious.
 
 **Requirements:** EXPL-01 (Phase 41)
-**Plans:** 3/3 plans complete
+**Plans:** 1/1 plans complete
 
 ### Phase 999.2: Quality completeness — sort non-empty resource types to the top (BACKLOG)
 

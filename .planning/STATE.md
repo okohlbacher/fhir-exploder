@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: -- Hardening, UX Polish & Carry-Overs (in progress, started 2026-04-29)
 status: planning
-stopped_at: v1.6 ROADMAP.md created — 7 phases (39-45), 12 REQ-IDs at 100% coverage
-last_updated: "2026-04-29T10:31:07.731Z"
+stopped_at: Completed 40-01-PLAN.md (1 intentional failing assertion landed; Phase 40.1 will fix palette)
+last_updated: "2026-04-29T12:29:48.385Z"
 last_activity: 2026-04-29
 progress:
-  total_phases: 14
-  completed_phases: 11
-  total_plans: 38
-  completed_plans: 36
+  total_phases: 15
+  completed_phases: 12
+  total_plans: 39
+  completed_plans: 37
   percent: 95
 ---
 
@@ -53,6 +53,7 @@ Progress: [░░░░░░░░░░] 0%
 - Phases 41-44 are largely independent of each other (consume already-shipped v1.5 surfaces) — execution order can flex if priorities shift
 - Phase 40 (DEUT-01) ports Brettel/Machado JS simulation matrix into Vitest — closes Phase 37 deferred clause without manual Chrome DevTools capture
 - Bearer tokens for VAL-06 stored in `localStorage` under `validator.bearerToken.v1` — explicit policy, NEVER persisted to settings.yaml on disk
+- [Phase 40]: Phase 40 / DEUT-01 — Headless Brettel/Machado deuteranopia simulation in Vitest closes Phase 37 deferred deuteranopia leg; ΔE2000 ≥ 5.0 gate covers all 21 MII module pairs; pure-JS implementation (zero new npm deps); intentional failing assertion on pair #6 kardiologie ↔ mikrobiologie (ΔE2000 = 1.406 < 5.0) lands in CI by design — Phase 40.1 will fix palette.
 
 ### Roadmap Evolution
 
@@ -69,9 +70,10 @@ Progress: [░░░░░░░░░░] 0%
 - 5 v1.5 phases carry `nyquist_compliant: false` (32, 34, 35, 36, 37) — Phase 39 must flip these via test-coverage backfill review
 - 3 v1.5 phases missing VALIDATION.md (31, 33, 38) — Phase 39 writes retroactively
 - Phase 38.1 has no standalone VERIFICATION.md (evidence currently in 38.1-01-SUMMARY.md + 33-HUMAN-UAT.md appends) — Phase 39 closes via AUDIT-01
+- Phase 40.1 carry-over: pair #6 kardiologie ↔ mikrobiologie ΔE2000 = 1.406 < 5.0 under deuteranopia simulation; palette fix needed (change kardiologie or mikrobiologie shade-6) to clear failing CI assertion in src/__tests__/visual/deuteranopia.test.tsx
 
 ## Session Continuity
 
-Last session: 2026-04-29T10:00:00.000Z
-Stopped at: v1.6 ROADMAP.md created — 7 phases (39-45), 12 REQ-IDs at 100% coverage
-Resume file: None (Phase 39 has not been planned yet — run `/gsd-plan-phase 39`)
+Last session: 2026-04-29T12:29:34.205Z
+Stopped at: Completed 40-01-PLAN.md (1 intentional failing assertion landed; Phase 40.1 will fix palette)
+Resume file: None
