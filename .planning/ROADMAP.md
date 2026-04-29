@@ -93,7 +93,7 @@ Full details: [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md) . [Audit]
 
 **Reference baselines (v1.5 close):** 1064 tests passing, `npm run build` clean, initial-load bundle 606.76 KB gz.
 
-- [ ] **Phase 39: v1.5 audit-trail backfill (NYQ + AUDIT)** — Retroactive VALIDATION.md + 38.1-VERIFICATION.md so v1.5 audit closes cleanly
+- [x] **Phase 39: v1.5 audit-trail backfill (NYQ + AUDIT)** — Retroactive VALIDATION.md + 38.1-VERIFICATION.md so v1.5 audit closes cleanly (completed 2026-04-29)
 - [ ] **Phase 40: Headless deuteranopia simulation in Vitest (DEUT)** — Brettel/Machado JS matrix CI gate for the 21 MII module adjacent pairs; closes Phase 37 deferral
 - [ ] **Phase 41: Explorer + Quality UX polish (EXPL + QUAL-01 + QUAL-02 + QUAL-03)** — Hide-empty-types toggle, N/A-rows-to-bottom sort fix, per-type matrix heat gradient, CSV export
 - [ ] **Phase 42: Pre-probe extension-module counts (MII-EXT-15)** — Tab labels show `Onkologie (12)` before click via parallel `_summary=count` probes; zero-count tabs dimmed
@@ -117,9 +117,9 @@ Full details: [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md) . [Audit]
 **Execution**: Fully automatable (doc-only; no source diff; verifier confirms grep counts)
 
 Plans:
-- [ ] 39-01-PLAN.md — wave 1: write 3 retroactive VALIDATION.md (phases 31, 33, 38)
-- [ ] 39-02-PLAN.md — wave 1: write 38.1-VERIFICATION.md (AUDIT-01) + flip nyquist on 32/34/35/36, annotate Phase 37 with pending: DEUT-01 in Phase 40 (NYQ-01)
-- [ ] 39-03-PLAN.md — wave 2: refresh v1.5-MILESTONE-AUDIT.md + archive 10 v1.5 phase dirs to .planning/milestones/v1.5-phases/
+- [x] 39-01-PLAN.md — wave 1: write 3 retroactive VALIDATION.md (phases 31, 33, 38)
+- [x] 39-02-PLAN.md — wave 1: write 38.1-VERIFICATION.md (AUDIT-01) + flip nyquist on 32/34/35/36, annotate Phase 37 with pending: DEUT-01 in Phase 40 (NYQ-01)
+- [x] 39-03-PLAN.md — wave 2: refresh v1.5-MILESTONE-AUDIT.md + archive 10 v1.5 phase dirs to .planning/milestones/v1.5-phases/
 
 ### Phase 40: Headless deuteranopia simulation in Vitest (DEUT)
 **Goal**: A CI-runnable color-vision discriminability gate so v1.6+ icon/palette changes are blocked at PR time if any of the 21 MII module adjacent pairs collapses under deuteranopia.
@@ -242,7 +242,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 | 21-22 (v1.3) | v1.3 | 9/9 | ✅ Shipped | 2026-04-16 |
 | 23-30 (v1.4) | v1.4 | 35/35 | ✅ Shipped | 2026-04-23 |
 | 31-38.2 (v1.5) | v1.5 | 32/32 | ✅ Shipped | 2026-04-29 |
-| 39. v1.5 audit-trail backfill (NYQ + AUDIT) | v1.6 | 0/3 | Not started | - |
+| 39. v1.5 audit-trail backfill (NYQ + AUDIT) | v1.6 | 3/3 | Complete    | 2026-04-29 |
 | 40. Headless deuteranopia simulation (DEUT) | v1.6 | 0/TBD | Not started | - |
 | 41. Explorer + Quality UX polish (EXPL + QUAL-01/02/03) | v1.6 | 0/TBD | Not started | - |
 | 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 0/TBD | Not started | - |
@@ -267,7 +267,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 **Source:** Verifier observation surfaced during Phase 38 HUMAN-UAT walk (2026-04-28), Plan 38-02 Test 1 (Explorer Date/Status columns across 6 types). The MedicationStatement empty-state navigation made the noise pattern obvious.
 
 **Requirements:** EXPL-01 (Phase 41)
-**Plans:** Carried into Phase 41
+**Plans:** 3/3 plans complete
 
 ### Phase 999.2: Quality completeness — sort non-empty resource types to the top (BACKLOG)
 

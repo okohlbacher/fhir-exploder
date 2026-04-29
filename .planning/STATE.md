@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: -- Hardening, UX Polish & Carry-Overs (in progress, started 2026-04-29)
-status: Ready to plan Phase 39
-stopped_at: v1.6 ROADMAP.md created — 7 phases (39-45), 12 REQ-IDs, 100% coverage
-last_updated: "2026-04-29T10:00:00.000Z"
+status: planning
+stopped_at: v1.6 ROADMAP.md created — 7 phases (39-45), 12 REQ-IDs at 100% coverage
+last_updated: "2026-04-29T10:31:07.731Z"
 last_activity: 2026-04-29
 progress:
-  total_phases: 7
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 14
+  completed_phases: 11
+  total_plans: 38
+  completed_plans: 36
+  percent: 95
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-29)
 
 ## Current Position
 
-Phase: Phase 39 (next) of 7 v1.6 phases (39-45)
+Phase: 999.1 of 7 (explorer hide zero count resource types toggle)
 Plan: Not started
 Status: Ready to plan Phase 39
-Last activity: 2026-04-29 — v1.6 ROADMAP.md drafted; 12 REQ-IDs mapped to 7 phases at 100% coverage
+Last activity: 2026-04-29
 
 Progress: [░░░░░░░░░░] 0%
 
