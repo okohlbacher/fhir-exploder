@@ -1,0 +1,212 @@
+{
+  "pair-01-onkologie-mtb": {
+    "pair_id": 1,
+    "section": "§1",
+    "label": "onkologie ↔ mtb",
+    "within_family": true,
+    "hex_a": "#c92a2a",
+    "hex_b": "#c92a2a",
+    "delta_e_2000": 0,
+    "passes_threshold": false
+  },
+  "pair-02-bildgebung-studie": {
+    "pair_id": 2,
+    "section": "§1",
+    "label": "bildgebung ↔ studie",
+    "within_family": true,
+    "hex_a": "#0b7285",
+    "hex_b": "#0b7285",
+    "delta_e_2000": 0,
+    "passes_threshold": false
+  },
+  "pair-03-molekulargenetik-seltene": {
+    "pair_id": 3,
+    "section": "§1",
+    "label": "molekulargenetik ↔ seltene",
+    "within_family": true,
+    "hex_a": "#9c36b5",
+    "hex_b": "#9c36b5",
+    "delta_e_2000": 0,
+    "passes_threshold": false
+  },
+  "pair-04-pathologie-mikrobiologie": {
+    "pair_id": 4,
+    "section": "§1",
+    "label": "pathologie ↔ mikrobiologie",
+    "within_family": true,
+    "hex_a": "#6741d9",
+    "hex_b": "#6741d9",
+    "delta_e_2000": 0,
+    "passes_threshold": false
+  },
+  "pair-05-biobank-intensivmedizin": {
+    "pair_id": 5,
+    "section": "§1",
+    "label": "biobank ↔ intensivmedizin",
+    "within_family": true,
+    "hex_a": "#087050",
+    "hex_b": "#087050",
+    "delta_e_2000": 0,
+    "passes_threshold": false
+  },
+  "pair-06-kardiologie-dokument": {
+    "pair_id": 6,
+    "section": "§1",
+    "label": "kardiologie ↔ dokument",
+    "within_family": true,
+    "hex_a": "#3b5bdb",
+    "hex_b": "#3b5bdb",
+    "delta_e_2000": 0,
+    "passes_threshold": false
+  },
+  "pair-07-symptom-pro": {
+    "pair_id": 7,
+    "section": "§1",
+    "label": "symptom ↔ pro",
+    "within_family": true,
+    "hex_a": "#c2255c",
+    "hex_b": "#c2255c",
+    "delta_e_2000": 0,
+    "passes_threshold": false
+  },
+  "pair-08-medikation-bildgebung": {
+    "pair_id": 8,
+    "section": "§2",
+    "label": "medikation ↔ bildgebung",
+    "within_family": false,
+    "hex_a": "#fd7e14",
+    "hex_b": "#0b7285",
+    "delta_e_2000": 52.5942,
+    "passes_threshold": true
+  },
+  "pair-09-bildgebung-biobank": {
+    "pair_id": 9,
+    "section": "§2",
+    "label": "bildgebung ↔ biobank",
+    "within_family": false,
+    "hex_a": "#0b7285",
+    "hex_b": "#087050",
+    "delta_e_2000": 22.7379,
+    "passes_threshold": true
+  },
+  "pair-10-biobank-dokument": {
+    "pair_id": 10,
+    "section": "§2",
+    "label": "biobank ↔ dokument",
+    "within_family": false,
+    "hex_a": "#087050",
+    "hex_b": "#3b5bdb",
+    "delta_e_2000": 37.3257,
+    "passes_threshold": true
+  },
+  "pair-11-dokument-intensivmedizin": {
+    "pair_id": 11,
+    "section": "§2",
+    "label": "dokument ↔ intensivmedizin",
+    "within_family": false,
+    "hex_a": "#3b5bdb",
+    "hex_b": "#087050",
+    "delta_e_2000": 37.3257,
+    "passes_threshold": true
+  },
+  "pair-12-intensivmedizin-kardiologie": {
+    "pair_id": 12,
+    "section": "§2",
+    "label": "intensivmedizin ↔ kardiologie",
+    "within_family": false,
+    "hex_a": "#087050",
+    "hex_b": "#3b5bdb",
+    "delta_e_2000": 37.3257,
+    "passes_threshold": true
+  },
+  "pair-13-kardiologie-mikrobiologie": {
+    "pair_id": 13,
+    "section": "§2",
+    "label": "kardiologie ↔ mikrobiologie",
+    "within_family": false,
+    "hex_a": "#3b5bdb",
+    "hex_b": "#6741d9",
+    "delta_e_2000": 1.4062,
+    "passes_threshold": false
+  },
+  "pair-14-mikrobiologie-molekulargenetik": {
+    "pair_id": 14,
+    "section": "§2",
+    "label": "mikrobiologie ↔ molekulargenetik",
+    "within_family": false,
+    "hex_a": "#6741d9",
+    "hex_b": "#9c36b5",
+    "delta_e_2000": 5.6364,
+    "passes_threshold": true
+  },
+  "pair-15-molekulargenetik-mtb": {
+    "pair_id": 15,
+    "section": "§2",
+    "label": "molekulargenetik ↔ mtb",
+    "within_family": false,
+    "hex_a": "#9c36b5",
+    "hex_b": "#c92a2a",
+    "delta_e_2000": 50.7228,
+    "passes_threshold": true
+  },
+  "pair-16-mtb-onkologie": {
+    "pair_id": 16,
+    "section": "§2",
+    "label": "mtb ↔ onkologie",
+    "within_family": true,
+    "hex_a": "#c92a2a",
+    "hex_b": "#c92a2a",
+    "delta_e_2000": 0,
+    "passes_threshold": false
+  },
+  "pair-17-onkologie-pathologie": {
+    "pair_id": 17,
+    "section": "§2",
+    "label": "onkologie ↔ pathologie",
+    "within_family": false,
+    "hex_a": "#c92a2a",
+    "hex_b": "#6741d9",
+    "delta_e_2000": 59.2543,
+    "passes_threshold": true
+  },
+  "pair-18-pathologie-pro": {
+    "pair_id": 18,
+    "section": "§2",
+    "label": "pathologie ↔ pro",
+    "within_family": false,
+    "hex_a": "#6741d9",
+    "hex_b": "#c2255c",
+    "delta_e_2000": 43.9451,
+    "passes_threshold": true
+  },
+  "pair-19-pro-seltene": {
+    "pair_id": 19,
+    "section": "§2",
+    "label": "pro ↔ seltene",
+    "within_family": false,
+    "hex_a": "#c2255c",
+    "hex_b": "#9c36b5",
+    "delta_e_2000": 37.0848,
+    "passes_threshold": true
+  },
+  "pair-20-seltene-studie": {
+    "pair_id": 20,
+    "section": "§2",
+    "label": "seltene ↔ studie",
+    "within_family": false,
+    "hex_a": "#9c36b5",
+    "hex_b": "#0b7285",
+    "delta_e_2000": 9.3391,
+    "passes_threshold": true
+  },
+  "pair-21-studie-symptom": {
+    "pair_id": 21,
+    "section": "§2",
+    "label": "studie ↔ symptom",
+    "within_family": false,
+    "hex_a": "#0b7285",
+    "hex_b": "#c2255c",
+    "delta_e_2000": 28.4882,
+    "passes_threshold": true
+  }
+}

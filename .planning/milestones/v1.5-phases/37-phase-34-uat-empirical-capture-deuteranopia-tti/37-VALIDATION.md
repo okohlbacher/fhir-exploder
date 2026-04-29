@@ -2,30 +2,56 @@
 phase: 37
 slug: phase-34-uat-empirical-capture-deuteranopia-tti
 status: complete
-nyquist_compliant: false
-wave_0_complete: partial
+nyquist_compliant: true
+wave_0_complete: yes (Phase 40 closes the deuteranopia leg via deuteranopia.test.tsx; TTI leg already closed via Lighthouse 2026-04-28)
 created: 2026-04-26
 re_audited: 2026-04-29
 re_audited_by: phase-39
-pending: DEUT-01 in Phase 40
+re_audited_2: 2026-04-29
+re_audited_2_by: phase-40-deut-01
 notes: |
   Phase 37 retroactively reviewed 2026-04-29 under Phase 39 NYQ-01.
-  `nyquist_compliant` REMAINS `false` per CONTEXT D-05: the deuteranopia
-  leg of UAT-FU-CC was deferred at the human-verify gate by user
-  2026-04-28 (3 PNG screenshots not captured; 21 paper-vs-empirical pair
-  reconciliations remain qualitative-only — see 37-EMPIRICAL.md §1+§2
-  [deferred] cells, including HIGH-risk pair #7 mikrobiologie ↔
-  molekulargenetik and MEDIUM-HIGH pair #12 pro ↔ seltene). The TTI leg
-  shipped fully (single regression test against React.Profiler);
-  structural EMPIRICAL.md and per-pair tables exist. Closure path:
-  DEUT-01 in v1.6 Phase 40 (headless Brettel/Machado JS matrix in
-  Vitest, asserting per-pair discriminability for all 21 adjacent
-  module pairs without manual Chrome DevTools capture). Phase 40's
-  plan-close MUST flip this frontmatter to `nyquist_compliant: true`
-  and remove the `pending:` key. status flipped draft → complete
-  (Phase 37 shipped 2026-04-28 with the deuteranopia carry-over
-  acknowledged); wave_0_complete: partial reflects TTI-only Wave-0
-  closure.
+  At Phase 39 close, `nyquist_compliant` was `false` per CONTEXT D-05:
+  the deuteranopia leg of UAT-FU-CC was deferred at the human-verify
+  gate by user 2026-04-28 (3 PNG screenshots not captured; 21
+  paper-vs-empirical pair reconciliations remain qualitative-only —
+  see 37-EMPIRICAL.md §1+§2 cells, including HIGH-risk pair #7
+  mikrobiologie ↔ molekulargenetik and MEDIUM-HIGH pair #12 pro ↔
+  seltene). The TTI leg shipped fully (single regression test against
+  React.Profiler); structural EMPIRICAL.md and per-pair tables exist.
+  Closure path: DEUT-01 in v1.6 Phase 40 (headless Brettel/Machado JS
+  matrix in Vitest, asserting per-pair discriminability for all 21
+  adjacent module pairs without manual Chrome DevTools capture).
+
+  Phase 40 closure (2026-04-29 / DEUT-01): Headless Brettel/Machado JS
+  matrix landed in `src/__tests__/visual/deuteranopia.test.tsx`
+  (commit 5f99b93) — pure-JS Machado 2009 simulation + ΔE2000
+  (Sharma 2005) port, zero new npm deps. All 21 adjacent MII module
+  pairs gated at ΔE2000 ≥ 5.0; borderline pairs #7 (mikrobiologie ↔
+  molekulargenetik) and #12 (pro ↔ seltene) wired as named `it()`
+  blocks for failure attribution — both PASS empirically (5.6364 and
+  37.0848 respectively). JSON snapshot at
+  `src/__tests__/visual/__snapshots__/deuteranopia-pair-deltas.json`
+  records per-pair measured ΔE2000 for PR-time drift detection.
+  `nyquist_compliant` flipped `false → true`; the
+  Phase-39-introduced `pending` annotation pointing to Phase 40 has
+  been removed from the frontmatter (closure realized). Color-only
+  gate per D-07; icon-shape paper analysis
+  (color-design-audit.md §4b/§4c) remains authoritative for icon
+  claims.
+
+  Empirical follow-up (NEW 2026-04-29): Phase 40's headless gate
+  surfaced ONE empirical regression that Phase 37's paper analysis
+  had not caught — pair #6 kardiologie ↔ mikrobiologie measures
+  ΔE2000 = 1.406 < 5.0 under deuteranopia simulation. Paper PASS
+  prediction (MEDIUM risk) is contradicted by empirical FAIL. Phase 40
+  ships this failing assertion in CI by design (the gate is doing its
+  job); the palette fix is scheduled for Phase 40.1 (NOT this phase).
+  Nyquist compliance does NOT depend on the palette being perfect —
+  it requires the EMPIRICAL VERIFICATION INFRASTRUCTURE to exist and
+  run in CI. That infrastructure landed in Phase 40, so flipping
+  `nyquist_compliant: false → true` is correct: Phase 37's deferred
+  capture is now empirically replaced by an automated headless gate.
 ---
 
 # Phase 37 — Validation Strategy

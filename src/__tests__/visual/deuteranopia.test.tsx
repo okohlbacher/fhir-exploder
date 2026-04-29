@@ -253,10 +253,173 @@ describe('Phase 40 / DEUT-01 — PAIRS fixture sanity checks', () => {
 export { PAIRS, getModuleShade6Hex, hexToRgb, BASE_MANTINE_SHADE_6 };
 export type { Pair };
 
-// Touch deltaE2000 + simulateDeuteranopia + srgbToLab + MIN_DELTA_E_DEUTERANOPIA
-// imports so Task 3 doesn't trigger lint warnings about unused imports while
-// Task 4 (which uses them) is still pending. Task 4 wires the actual assertions.
-void deltaE2000;
-void simulateDeuteranopia;
-void srgbToLab;
-void MIN_DELTA_E_DEUTERANOPIA;
+/**
+ * Compute the per-pair ΔE2000 perceptual distance under deuteranopia
+ * simulation, returning the full intermediate trace (hex inputs + simulated
+ * RGB triples) so the snapshot writer in Task 5 can reuse it.
+ *
+ * Pipeline (Phase 40 CONTEXT D-04 / D-08):
+ *   1. Resolve `moduleAKey` + `moduleBKey` to MII_MODULES entries.
+ *   2. Resolve each `badgeColor` to its rendered shade-6 hex via
+ *      `getModuleShade6Hex` (custom palettes from `theme.colors`; base
+ *      Mantine palettes from `BASE_MANTINE_SHADE_6`).
+ *   3. Hex → integer RGB triple via `hexToRgb`.
+ *   4. Apply `simulateDeuteranopia` (Machado 2009 matrix, severity 1.0).
+ *   5. Convert simulated RGB → CIELAB via `srgbToLab`.
+ *   6. Compute `deltaE2000(labA, labB)`.
+ */
+function measurePairDeltaE(pair: Pair): {
+  hexA: string;
+  hexB: string;
+  rgbA_sim: [number, number, number];
+  rgbB_sim: [number, number, number];
+  deltaE: number;
+} {
+  const moduleA = MII_MODULES.find((m) => m.key === pair.moduleAKey);
+  const moduleB = MII_MODULES.find((m) => m.key === pair.moduleBKey);
+  if (moduleA === undefined || moduleB === undefined) {
+    throw new Error(
+      `measurePairDeltaE: pair #${pair.id} ${pair.label}: ` +
+        `moduleAKey='${pair.moduleAKey}' or moduleBKey='${pair.moduleBKey}' ` +
+        `not in MII_MODULES`,
+    );
+  }
+  const hexA = getModuleShade6Hex(moduleA.badgeColor);
+  const hexB = getModuleShade6Hex(moduleB.badgeColor);
+  const rgbA = hexToRgb(hexA);
+  const rgbB = hexToRgb(hexB);
+  const rgbA_sim = simulateDeuteranopia(rgbA);
+  const rgbB_sim = simulateDeuteranopia(rgbB);
+  const labA = srgbToLab(rgbA_sim);
+  const labB = srgbToLab(rgbB_sim);
+  const deltaE = deltaE2000(labA, labB);
+  return { hexA, hexB, rgbA_sim, rgbB_sim, deltaE };
+}
+
+// OUT OF SCOPE re-affirmation (Phase 40 CONTEXT D-07): the assertions below
+// gate COLOR-only discriminability. Icon-shape discriminability is NOT
+// covered — paper analysis in `.planning/research/color-design-audit.md`
+// §4b/§4c remains authoritative for icon claims.
+describe('Phase 40 / DEUT-01 — color-vision discriminability under deuteranopia', () => {
+  describe('Cross-family pairs (ΔE2000 ≥ MIN_DELTA_E_DEUTERANOPIA)', () => {
+    // Named borderline #7 (HIGH risk per EMPIRICAL.md §2 row 7)
+    it('BORDERLINE #7: mikrobiologie ↔ molekulargenetik discriminable under deuteranopia (HIGH risk pair from color-design-audit §4c)', () => {
+      const pair = PAIRS.find((p) => p.id === 14);
+      expect(pair).toBeDefined();
+      expect(pair!.label).toContain('mikrobiologie ↔ molekulargenetik');
+      const { deltaE, hexA, hexB } = measurePairDeltaE(pair!);
+      expect(
+        deltaE,
+        `pair #${pair!.id} ${pair!.label}: ΔE2000 = ${deltaE.toFixed(3)} (hexA=${hexA}, hexB=${hexB}); threshold = ${MIN_DELTA_E_DEUTERANOPIA}`,
+      ).toBeGreaterThanOrEqual(MIN_DELTA_E_DEUTERANOPIA);
+    });
+
+    // Named borderline #12 (MEDIUM-HIGH risk per EMPIRICAL.md §2 row 12)
+    it('BORDERLINE #12: pro ↔ seltene discriminable under deuteranopia (MEDIUM-HIGH risk pair from color-design-audit §4c)', () => {
+      const pair = PAIRS.find((p) => p.id === 19);
+      expect(pair).toBeDefined();
+      expect(pair!.label).toContain('pro ↔ seltene');
+      const { deltaE, hexA, hexB } = measurePairDeltaE(pair!);
+      expect(
+        deltaE,
+        `pair #${pair!.id} ${pair!.label}: ΔE2000 = ${deltaE.toFixed(3)} (hexA=${hexA}, hexB=${hexB}); threshold = ${MIN_DELTA_E_DEUTERANOPIA}`,
+      ).toBeGreaterThanOrEqual(MIN_DELTA_E_DEUTERANOPIA);
+    });
+
+    // Other 11 cross-family pairs (exclude withinFamily, exclude #14, exclude #19).
+    // Total: 13 cross-family pairs - 2 named borderlines = 11 it.each entries.
+    const otherCrossFamily = PAIRS.filter(
+      (p) => !p.withinFamily && p.id !== 14 && p.id !== 19,
+    );
+    it.each(otherCrossFamily)(
+      'pair #$id ($label) discriminable under deuteranopia',
+      (pair) => {
+        const { deltaE, hexA, hexB } = measurePairDeltaE(pair);
+        expect(
+          deltaE,
+          `pair #${pair.id} ${pair.label}: ΔE2000 = ${deltaE.toFixed(3)} (hexA=${hexA}, hexB=${hexB}); threshold = ${MIN_DELTA_E_DEUTERANOPIA}`,
+        ).toBeGreaterThanOrEqual(MIN_DELTA_E_DEUTERANOPIA);
+      },
+    );
+  });
+
+  // Within-family pairs documented exemption — D-07 + Phase 33 D-09 invariant
+  describe('Within-family pairs (intentionally same badgeColor — Phase 33 D-09 invariant)', () => {
+    it('documents 8 within-family pairs as exempt from color-only gate (icon shape disambiguates per color-design-audit §4b)', () => {
+      const withinFamily = PAIRS.filter((p) => p.withinFamily);
+      // 7 §1 pairs + pair #16 (mtb ↔ onkologie, both oncology family) = 8 total.
+      expect(withinFamily.length).toBeGreaterThanOrEqual(7);
+      expect(withinFamily.length).toBeLessThanOrEqual(8);
+      // Each within-family pair MUST share badgeColor (sanity check of the
+      // design invariant — if this fails, the PAIRS fixture's withinFamily
+      // flag is stale wrt MII_MODULES).
+      for (const pair of withinFamily) {
+        const modA = MII_MODULES.find((m) => m.key === pair.moduleAKey);
+        const modB = MII_MODULES.find((m) => m.key === pair.moduleBKey);
+        expect(modA).toBeDefined();
+        expect(modB).toBeDefined();
+        expect(
+          modA!.badgeColor,
+          `pair #${pair.id} ${pair.label}: badgeColor mismatch — within-family invariant violated (modA=${modA!.badgeColor}, modB=${modB!.badgeColor})`,
+        ).toBe(modB!.badgeColor);
+      }
+    });
+  });
+
+  // Snapshot drift tracker — Phase 40 CONTEXT D-13.
+  //
+  // **NOTE on pair #13 (kardiologie ↔ mikrobiologie).** As of Phase 40
+  // landing (2026-04-29), this cross-family pair measures ΔE2000 = 1.406
+  // under Machado 2009 deuteranopia simulation — well below the 5.0 gate.
+  // The paper analysis (color-design-audit.md §4b) predicted PASS at MEDIUM
+  // risk; the headless empirical contradicts the prediction. Phase 40 ships
+  // the failing assertion in CI by design (the gate is doing its job). The
+  // palette fix (changing kardiologie or mikrobiologie shade-6) is scheduled
+  // for Phase 40.1. The snapshot below records the contradicted measurement
+  // verbatim so PR diffs surface any subsequent palette correction.
+  describe('Snapshot drift tracker', () => {
+    it('records measured ΔE2000 per pair to deuteranopia-pair-deltas.json (CI drift detection)', async () => {
+      // Build the snapshot object: 21 entries keyed by
+      // `pair-{padded-id}-{moduleAKey}-{moduleBKey}`. Both within-family
+      // and cross-family pairs included for full audit-trail coverage; the
+      // `passes_threshold` flag distinguishes them (within-family always
+      // false because the color-only gate doesn't apply per D-07).
+      const snapshot: Record<
+        string,
+        {
+          pair_id: number;
+          section: string;
+          label: string;
+          within_family: boolean;
+          hex_a: string;
+          hex_b: string;
+          delta_e_2000: number;
+          passes_threshold: boolean;
+        }
+      > = {};
+
+      for (const pair of PAIRS) {
+        const { hexA, hexB, deltaE } = measurePairDeltaE(pair);
+        const key = `pair-${String(pair.id).padStart(2, '0')}-${pair.moduleAKey}-${pair.moduleBKey}`;
+        snapshot[key] = {
+          pair_id: pair.id,
+          section: pair.section,
+          label: pair.label,
+          within_family: pair.withinFamily,
+          hex_a: hexA,
+          hex_b: hexB,
+          delta_e_2000: Number(deltaE.toFixed(4)),
+          passes_threshold: pair.withinFamily
+            ? false
+            : deltaE >= MIN_DELTA_E_DEUTERANOPIA,
+        };
+      }
+
+      await expect(JSON.stringify(snapshot, null, 2)).toMatchFileSnapshot(
+        './__snapshots__/deuteranopia-pair-deltas.json',
+      );
+    });
+  });
+});
+
+export { measurePairDeltaE };

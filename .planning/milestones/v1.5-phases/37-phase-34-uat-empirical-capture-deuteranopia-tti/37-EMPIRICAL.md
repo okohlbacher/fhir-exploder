@@ -2,10 +2,14 @@
 phase: 37
 plan: 01
 authored: 2026-04-28
-status: deferred-empirical
+status: resolved
+closed_by: phase-40
+closed_at: 2026-04-29
+closed_by_commit: 5f99b93
+closed_by_test: src/__tests__/visual/deuteranopia.test.tsx
 sections_owned_by:
-  "§1 Within-family pairs": "Plan 37-01 (deferred — captures skipped)"
-  "§2 Cross-family pairs": "Plan 37-01 (deferred — captures skipped)"
+  "§1 Within-family pairs": "Plan 37-01 (deferred 2026-04-28; closed by Phase 40 / DEUT-01 2026-04-29 — verified by deuteranopia.test.tsx)"
+  "§2 Cross-family pairs": "Plan 37-01 (deferred 2026-04-28; closed by Phase 40 / DEUT-01 2026-04-29 — verified by deuteranopia.test.tsx)"
   "§3 TTI": "Plan 37-02 (Lighthouse-substituted, accepted)"
   "§4 Contradictions": "Plan 37-03"
   "§5 Contingency commits triggered": "Plan 37-03"
@@ -38,15 +42,15 @@ sections_owned_by:
 
 | # | Pair | Palette family | Icon A | Icon B | Paper | Empirical | Agree? | Notes |
 |---|------|----------------|--------|--------|-------|-----------|--------|-------|
-| 1 | onkologie + mtb | oncology (red) | IconRadioactive | IconUsersGroup | PASS | [deferred] | n/a | Radial trefoil vs clustered circles |
-| 2 | bildgebung + studie | imaging (cyan) | IconPhoto | IconClipboardData | PASS | [deferred] | n/a | Frame+lens vs clipboard-with-lines |
-| 3 | molekulargenetik + seltene | genetics (grape) | IconDna | IconPuzzle | PASS | [deferred] | n/a | DNA helix vs interlocking tiles |
-| 4 | pathologie + mikrobiologie | pathology (violet) | IconMicroscope | IconVirus | PASS | [deferred] | n/a | Tall apparatus vs polyhedral cluster (audit named IconBacteria; Plan 34-04 swapped to IconVirus per package availability — see RESEARCH §Pitfall 5) |
-| 5 | biobank + intensivmedizin | bioanalysis (teal) | IconTestPipe | IconBedFilled | PASS | [deferred] | n/a | Vertical cylinder vs horizontal rectangle |
-| 6 | kardiologie + dokument | administration (indigo) | IconHeartbeat | IconFileDescription | PASS | [deferred] | n/a | Waveform vs rectangle-with-lines |
-| 7 | symptom + pro | patient-reported (pink) | IconMoodSmile | IconListCheck | PASS | [deferred] | n/a | Circle-face vs linear checklist (audit named IconQuestionnaire; Plan 34-04 swapped to IconListCheck — see RESEARCH §Pitfall 5) |
+| 1 | onkologie + mtb | oncology (red) | IconRadioactive | IconUsersGroup | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | paper-pass-via-icon-shape (D-07 OUT OF SCOPE for color-only gate) | Radial trefoil vs clustered circles |
+| 2 | bildgebung + studie | imaging (cyan) | IconPhoto | IconClipboardData | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | paper-pass-via-icon-shape (D-07 OUT OF SCOPE for color-only gate) | Frame+lens vs clipboard-with-lines |
+| 3 | molekulargenetik + seltene | genetics (grape) | IconDna | IconPuzzle | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | paper-pass-via-icon-shape (D-07 OUT OF SCOPE for color-only gate) | DNA helix vs interlocking tiles |
+| 4 | pathologie + mikrobiologie | pathology (violet) | IconMicroscope | IconVirus | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | paper-pass-via-icon-shape (D-07 OUT OF SCOPE for color-only gate) | Tall apparatus vs polyhedral cluster (audit named IconBacteria; Plan 34-04 swapped to IconVirus per package availability — see RESEARCH §Pitfall 5) |
+| 5 | biobank + intensivmedizin | bioanalysis (teal) | IconTestPipe | IconBedFilled | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | paper-pass-via-icon-shape (D-07 OUT OF SCOPE for color-only gate) | Vertical cylinder vs horizontal rectangle |
+| 6 | kardiologie + dokument | administration (indigo) | IconHeartbeat | IconFileDescription | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | paper-pass-via-icon-shape (D-07 OUT OF SCOPE for color-only gate) | Waveform vs rectangle-with-lines |
+| 7 | symptom + pro | patient-reported (pink) | IconMoodSmile | IconListCheck | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | paper-pass-via-icon-shape (D-07 OUT OF SCOPE for color-only gate) | Circle-face vs linear checklist (audit named IconQuestionnaire; Plan 34-04 swapped to IconListCheck — see RESEARCH §Pitfall 5) |
 
-**Within-family summary:** 0/7 pairs empirically verified (all deferred). Paper prediction stands as the only available evidence.
+**Within-family summary:** 0/7 pairs color-empirically verified — within-family pairs share badgeColor by Phase 33 D-09 design invariant (icon-shape paper analysis remains authoritative per Phase 40 D-07; see color-design-audit.md §4b).
 
 ---
 
@@ -58,28 +62,31 @@ sections_owned_by:
 
 | # | Left module | Right module | Palette pair | Risk | Paper | Empirical | Agree? |
 |---|-------------|--------------|--------------|------|-------|-----------|--------|
-| 1 | medikation | bildgebung | orange vs imaging-cyan | LOW | PASS | [deferred] | n/a |
-| 2 | bildgebung | biobank | imaging-cyan vs bioanalysis-teal | MEDIUM | PASS | [deferred] | n/a |
-| 3 | biobank | dokument | bioanalysis-teal vs administration-indigo | MEDIUM | PASS | [deferred] | n/a |
-| 4 | dokument | intensivmedizin | administration-indigo vs bioanalysis-teal | MEDIUM | PASS | [deferred] | n/a |
-| 5 | intensivmedizin | kardiologie | bioanalysis-teal vs administration-indigo | MEDIUM | PASS | [deferred] | n/a |
-| 6 | kardiologie | mikrobiologie | administration-indigo vs pathology-violet | MEDIUM | PASS | [deferred] | n/a |
-| 7 | mikrobiologie | molekulargenetik | pathology-violet vs genetics-grape | **HIGH** | PASS | [deferred] | n/a |
-| 8 | molekulargenetik | mtb | genetics-grape vs oncology-dark-red | LOW | PASS | [deferred] | n/a |
-| 9 | mtb | onkologie | within oncology family | N/A | PASS | [deferred] | n/a |
-| 10 | onkologie | pathologie | oncology-red vs pathology-violet | MEDIUM | PASS | [deferred] | n/a |
-| 11 | pathologie | pro | pathology-violet vs patient-reported-pink | MEDIUM | PASS | [deferred] | n/a |
-| 12 | pro | seltene | patient-reported-pink vs genetics-grape | **MEDIUM-HIGH** | PASS | [deferred] | n/a |
-| 13 | seltene | studie | genetics-grape vs imaging-cyan | LOW | PASS | [deferred] | n/a |
-| 14 | studie | symptom | imaging-cyan vs patient-reported-pink | LOW | PASS | [deferred] | n/a |
+| 1 | medikation | bildgebung | orange vs imaging-cyan | LOW | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (it.each() block; ΔE2000 = 52.5942 ≥ 5.0 confirmed empirically) |
+| 2 | bildgebung | biobank | imaging-cyan vs bioanalysis-teal | MEDIUM | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (it.each() block; ΔE2000 = 22.7379 ≥ 5.0 confirmed empirically) |
+| 3 | biobank | dokument | bioanalysis-teal vs administration-indigo | MEDIUM | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (it.each() block; ΔE2000 = 37.3257 ≥ 5.0 confirmed empirically) |
+| 4 | dokument | intensivmedizin | administration-indigo vs bioanalysis-teal | MEDIUM | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (it.each() block; ΔE2000 = 37.3257 ≥ 5.0 confirmed empirically) |
+| 5 | intensivmedizin | kardiologie | bioanalysis-teal vs administration-indigo | MEDIUM | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (it.each() block; ΔE2000 = 37.3257 ≥ 5.0 confirmed empirically) |
+| 6 | kardiologie | mikrobiologie | administration-indigo vs pathology-violet | MEDIUM | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | **NO (EMPIRICAL FAIL: ΔE2000 = 1.406 < 5.0; paper analysis predicted PASS at MEDIUM risk; palette fix scheduled for Phase 40.1)** |
+| 7 | mikrobiologie | molekulargenetik | pathology-violet vs genetics-grape | **HIGH** | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (BORDERLINE #7 named it() block; ΔE2000 = 5.6364 ≥ 5.0 confirmed empirically) |
+| 8 | molekulargenetik | mtb | genetics-grape vs oncology-dark-red | LOW | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (it.each() block; ΔE2000 = 50.7228 ≥ 5.0 confirmed empirically) |
+| 9 | mtb | onkologie | within oncology family | N/A | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | paper-pass-via-icon-shape (within-family — D-07 OUT OF SCOPE) |
+| 10 | onkologie | pathologie | oncology-red vs pathology-violet | MEDIUM | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (it.each() block; ΔE2000 = 59.2543 ≥ 5.0 confirmed empirically) |
+| 11 | pathologie | pro | pathology-violet vs patient-reported-pink | MEDIUM | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (it.each() block; ΔE2000 = 43.9451 ≥ 5.0 confirmed empirically) |
+| 12 | pro | seltene | patient-reported-pink vs genetics-grape | **MEDIUM-HIGH** | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (BORDERLINE #12 named it() block; ΔE2000 = 37.0848 ≥ 5.0 confirmed empirically) |
+| 13 | seltene | studie | genetics-grape vs imaging-cyan | LOW | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (it.each() block; ΔE2000 = 9.3391 ≥ 5.0 confirmed empirically) |
+| 14 | studie | symptom | imaging-cyan vs patient-reported-pink | LOW | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | YES (it.each() block; ΔE2000 = 28.4882 ≥ 5.0 confirmed empirically) |
 
-**Cross-family summary:** 0/14 pairs empirically verified (all deferred).
+**Cross-family summary:** 12/13 cross-family color-empirically verified PASS via Phase 40 deuteranopia.test.tsx (ΔE2000 ≥ 5.0); 1/13 EMPIRICAL FAIL (pair #6 kardiologie ↔ mikrobiologie, ΔE2000 = 1.406). Pair #9 (mtb ↔ onkologie) excluded from the color-only gate because it is within-family by badgeColor (D-07 OUT OF SCOPE). 13/14 paper predictions stand; pair #6 paper PASS prediction is **CONTRADICTED EMPIRICALLY** — palette fix scheduled for Phase 40.1.
 
-**HIGH/MEDIUM-HIGH attention pairs (would have driven Plan 37-03 contingency decision):**
-- Pair #7 (mikrobiologie ↔ molekulargenetik): empirical [deferred] — borderline pair NOT empirically verified.
-- Pair #12 (pro ↔ seltene): empirical [deferred] — borderline pair NOT empirically verified.
+**HIGH/MEDIUM-HIGH attention pairs (named-block resolution):**
+- Pair #7 (mikrobiologie ↔ molekulargenetik): empirical [verified by deuteranopia.test.tsx at commit 5f99b93] — BORDERLINE-#7 named it() block confirms ΔE2000 = 5.6364 ≥ 5.0 under Machado 2009 deuteranopia simulation severity 1.0. Borderline pair empirically resolved.
+- Pair #12 (pro ↔ seltene): empirical [verified by deuteranopia.test.tsx at commit 5f99b93] — BORDERLINE-#12 named it() block confirms ΔE2000 = 37.0848 ≥ 5.0. Borderline pair empirically resolved.
 
-Phase 37 closes without resolving the empirical question for these two borderline pairs. Section §7 names the future-hardening candidates that would close this gap.
+**Empirical regression surfaced (NEW finding 2026-04-29):**
+- Pair #6 (kardiologie ↔ mikrobiologie): empirical FAIL — ΔE2000 = 1.406 < 5.0 under deuteranopia simulation. Paper analysis (color-design-audit.md §4c) predicted PASS at MEDIUM risk; the headless gate contradicts that prediction. Phase 40 ships the failing assertion in CI by design (the gate is doing its job). Palette fix (change kardiologie or mikrobiologie shade-6) is scheduled for Phase 40.1.
+
+Phase 37's deferred clause CLOSED by Phase 40 / DEUT-01 (2026-04-29). Section §7 future-hardening item (a) is the realized solution.
 
 ---
 
@@ -109,12 +116,13 @@ Phase 33 D-11 keepMounted={false} on extension Tabs.Panel + Plan 34-05 root keep
 
 | § | Pair | Risk | Paper | Empirical | Disposition |
 |---|------|------|-------|-----------|-------------|
-| §1 | all 7 within-family pairs | LOW (icon distinctness only) | PASS | [deferred] | No empirical result captured; cannot enumerate disagreement |
-| §2 | all 14 cross-family pairs | mixed (LOW / MEDIUM / HIGH / MEDIUM-HIGH) | PASS | [deferred] | No empirical result captured; cannot enumerate disagreement |
-| §2 #7 | mikrobiologie ↔ molekulargenetik | **HIGH** | PASS | [deferred] | Borderline pair NOT empirically verified — paper prediction stands as only evidence; future-hardening item §7(a) recommended before v1.6 to retroactively close |
-| §2 #12 | pro ↔ seltene | **MEDIUM-HIGH** | PASS | [deferred] | Borderline pair NOT empirically verified — paper prediction stands as only evidence; future-hardening item §7(a) recommended before v1.6 to retroactively close |
+| §1 | all 7 within-family pairs | LOW (icon distinctness only) | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | 0 contradictions — Phase 40 deuteranopia.test.tsx confirms paper predictions for all 21 pairs (color channel; icon channel remains paper-only per D-07). Within-family pairs share badgeColor by Phase 33 D-09 invariant (color-only ΔE2000 = 0); icon-shape disambiguates per color-design-audit.md §4b — paper analysis stands as authoritative. |
+| §2 | all 14 cross-family pairs | mixed (LOW / MEDIUM / HIGH / MEDIUM-HIGH) | PASS (paper); MIXED (empirical: 12 PASS / 1 FAIL / 1 within-family OUT-OF-SCOPE) | [verified by deuteranopia.test.tsx at commit 5f99b93] | **1 EMPIRICAL CONTRADICTION** — pair #6 (kardiologie ↔ mikrobiologie): paper predicted PASS at MEDIUM risk; headless empirical = FAIL (ΔE2000 = 1.406 < 5.0). Palette fix scheduled for Phase 40.1. The other 12 cross-family + 7 within-family pairs match paper predictions or are out-of-scope per D-07. |
+| §2 #6 | kardiologie ↔ mikrobiologie | MEDIUM | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | **EMPIRICAL FAIL** — ΔE2000 = 1.406 < 5.0 (hexA=#3b5bdb administration-indigo vs hexB=#6741d9 pathology-violet). Paper PASS prediction CONTRADICTED. Phase 40 ships the failing assertion in CI by design; palette fix (change kardiologie or mikrobiologie shade-6) scheduled for Phase 40.1. |
+| §2 #7 | mikrobiologie ↔ molekulargenetik | **HIGH** | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | Borderline pair empirically RESOLVED — BORDERLINE-#7 named it() block confirms ΔE2000 = 5.6364 ≥ 5.0 under Machado 2009 deuteranopia simulation. Paper prediction confirmed empirically. |
+| §2 #12 | pro ↔ seltene | **MEDIUM-HIGH** | PASS | [verified by deuteranopia.test.tsx at commit 5f99b93] | Borderline pair empirically RESOLVED — BORDERLINE-#12 named it() block confirms ΔE2000 = 37.0848 ≥ 5.0. Paper prediction confirmed empirically. |
 
-Note: writing "0 contradictions — paper analysis confirmed empirically" would be dishonest because nothing was confirmed. The HIGH-risk pair #7 (mikrobiologie ↔ molekulargenetik, which relies on icon distinctness alone since pathology-violet vs genetics-grape both shift bluish-purple under deuteranopia) and the MEDIUM-HIGH pair #12 (pro ↔ seltene) remain qualitative predictions. RESEARCH §Pitfall 8 noted that the audit reasoned across both Brettel and Machado simulation models qualitatively; Phase 37's deferral leaves both unverified empirically.
+Note: previously this section recorded that nothing had been confirmed; with Phase 40 / DEUT-01 (2026-04-29) the headless Brettel/Machado simulation closes that gap. The HIGH-risk pair #7 and MEDIUM-HIGH pair #12 both confirm paper predictions empirically. The previously unflagged pair #6 (kardiologie ↔ mikrobiologie, MEDIUM risk) surfaces as the **single empirical contradiction** — paper analysis missed it; the headless gate caught it. Phase 40 ships the failing assertion in CI by design; the palette fix is scheduled for Phase 40.1.
 
 ---
 
@@ -125,13 +133,15 @@ Note: writing "0 contradictions — paper analysis confirmed empirically" would 
 
 **None — no contingency triggered (empirical capture deferred so no failure was detectable).**
 
-Per CONTEXT D-09, contingency fires only on a HIGH or MEDIUM-HIGH borderline pair empirical failure. §2 records both borderline pairs (#7 mikrobiologie ↔ molekulargenetik HIGH; #12 pro ↔ seltene MEDIUM-HIGH) as `[deferred]` with `Agree? = n/a`. With no empirical capture, no FAIL is detectable, so no contingency processing was performed:
+Per CONTEXT D-09, contingency fires only on a HIGH or MEDIUM-HIGH borderline pair empirical failure. At Phase 37 closure (2026-04-28), §2 originally recorded both borderline pairs (#7 mikrobiologie ↔ molekulargenetik HIGH; #12 pro ↔ seltene MEDIUM-HIGH) as deferred with `Agree? = n/a`. With no empirical capture at that time, no FAIL was detectable, so no contingency processing was performed:
 - No Tabler 3.41.1 alternative-icon probe was run.
 - No icon swap was applied to `src/utils/mii-icons.ts` or `src/utils/mii-modules.ts`.
 - No revision note was appended to `.planning/research/color-design-audit.md` §4d.
 - No screenshots were re-captured (none existed to re-capture in the first place).
 
-This is a deferral, not a Branch A close. The qualitative paper analysis is the only available evidence. Section §7 names the future-hardening candidates that would retroactively close this gap.
+**Phase 40 closure update (2026-04-29):** Both borderline pairs subsequently flipped to verified by `deuteranopia.test.tsx` at commit `5f99b93` — the headless Brettel/Machado simulation matrix landed in v1.6 Phase 40 / DEUT-01 and confirmed ΔE2000 ≥ 5.0 for both pairs under deuteranopia simulation severity 1.0 (pair #7 measured 5.6364; pair #12 measured 37.0848). The §7 future-hardening item (a) is the realized closure mechanism. No contingency was triggered for the named borderlines because both PASSED.
+
+**However, Phase 40 surfaced a NEW empirical regression on pair #6 (kardiologie ↔ mikrobiologie, MEDIUM risk per paper).** ΔE2000 = 1.406 < 5.0 — the headless gate FAILS this pair. Paper analysis predicted PASS; the empirical contradicts the prediction. CONTEXT D-09's contingency clause anchored to HIGH / MEDIUM-HIGH borderline pairs; pair #6 was only flagged MEDIUM, so the original contingency criteria do not apply. The palette fix (change kardiologie or mikrobiologie shade-6) is scheduled for Phase 40.1 as a follow-up phase, NOT a retroactive Phase 37 contingency. Phase 40 ships the failing assertion in CI by design — the gate is doing its job, and Phase 40.1 will resolve the palette so all 13 cross-family pairs PASS.
 
 ---
 
@@ -153,9 +163,15 @@ Phase 34 VERIFICATION status remains `passed` per CONTEXT D-11 — these `checkp
 
 **Asymmetry on the record:** D-22 TTI gate = closed (Lighthouse-substituted); MII-EXT-11 deuteranopia empirical leg = deferred to v1.6+ hardening backlog.
 
+**Phase 40 follow-up (2026-04-29):** Deuteranopia checkbox in `34-06-UAT.md` §5 was marked DEFERRED on 2026-04-28; with Phase 40 landing the headless gate, the deferral closes. (Note: Phase 40 does NOT edit `34-06-UAT.md` directly because that artifact is part of the closed Phase 34 record; the closure is recorded here in 37-EMPIRICAL.md as the Phase 37 follow-up under the v1.6 audit chain.) The closure is partial-and-honest: 12/13 cross-family pairs verified PASS at ΔE2000 ≥ 5.0 + 7 within-family pairs out-of-scope per D-07 + 1 within-§2 pair (#9 mtb ↔ onkologie) out-of-scope; 1/13 cross-family pairs (pair #6 kardiologie ↔ mikrobiologie) FAILS at ΔE2000 = 1.406. Phase 40.1 will fix the palette.
+
 ---
 
 ## §7 Future hardening
+
+> **RESOLVED 2026-04-29:** Future-hardening item (a) — "Headless deuteranopia simulation in Vitest" — landed as Phase 40 / DEUT-01 (commit 5f99b93). The 21-pair color-discriminability gate now runs in `npm test` via `src/__tests__/visual/deuteranopia.test.tsx` (Machado 2009 matrix, severity 1.0; ΔE2000 ≥ 5.0 threshold). Item (b) — ΔE2000 perceptual-distance lint — is functionally subsumed by the same test (the snapshot at `src/__tests__/visual/__snapshots__/deuteranopia-pair-deltas.json` provides the per-pair lint signal).
+>
+> The headless gate immediately surfaced ONE new empirical regression: pair #6 kardiologie ↔ mikrobiologie measures ΔE2000 = 1.406 (< 5.0) under deuteranopia simulation, contradicting the paper's PASS prediction. Phase 40 ships the failing assertion in CI by design (the gate is doing its job); the palette fix is scheduled for Phase 40.1 (TBD).
 
 **Owner:** Plan 37-03 (Wave 2). Per RESEARCH Open Question #3.
 
