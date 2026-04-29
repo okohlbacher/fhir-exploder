@@ -72,6 +72,32 @@ function makeEmptyClient() {
   };
 }
 
+/**
+ * Phase 42 (MII-EXT-15): test client whose `client.get` parses the FHIR
+ * resource type out of the URL (`${type}?...`) and returns a Bundle with
+ * `total = perTypeCount[type] ?? 0`. Used by the pre-probe-counts tests to
+ * exercise the per-type sum (D-02), zero-count dimming (D-06), and the
+ * coordinator-feed contract (D-05) at the component level.
+ */
+function makeCountClient(perTypeCount: Record<string, number>) {
+  return {
+    get: vi.fn((url: string) => {
+      // URL pattern from useMiiExtensionCounts:
+      //   `${type}?${param}=Patient/${patientId}&_summary=count&_count=0`
+      const m = url.match(/^([A-Z][A-Za-z]+)\?/);
+      const type = m?.[1] ?? '';
+      const total = perTypeCount[type] ?? 0;
+      return Promise.resolve({
+        resourceType: 'Bundle',
+        type: 'searchset',
+        total,
+        entry: [],
+      });
+    }),
+    fhirUrl: (s: string) => ({ toString: () => s }),
+  };
+}
+
 function renderTabs(patientId: string) {
   return render(
     <MantineProvider>
@@ -170,5 +196,217 @@ describe('MiiModuleTabs hide-empty toggle (MII-EXT-14, Plan 34-05)', () => {
       const pills = screen.queryByText('Onkologie');
       expect(pills).toBeNull();
     });
+  });
+});
+
+describe('Phase 42 (MII-EXT-15) — pre-probe counts on extension tabs', () => {
+  it('count appends to extension tab labels', async () => {
+    // Onkologie module aggregates Condition + Observation + Procedure +
+    // MedicationStatement (4 types). Bildgebung aggregates ImagingStudy +
+    // DiagnosticReport (2 types). After resolve, the labels should read
+    // "Onkologie (11)" (5+3+2+1) and "Bildgebung (6)" (4+2).
+    mocks.client = makeCountClient({
+      Condition: 5,
+      Observation: 3,
+      Procedure: 2,
+      MedicationStatement: 1,
+      ImagingStudy: 4,
+      DiagnosticReport: 2,
+    });
+
+    await act(async () => {
+      renderTabs('p-counts');
+    });
+
+    // Expand the Collapse so the extension pills render.
+    const collapseToggle = screen.getByText(/Extension modules \(\d+\)/);
+    await act(async () => {
+      fireEvent.click(collapseToggle);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Onkologie \(11\)/)).toBeTruthy();
+    });
+    expect(screen.getByText(/Bildgebung \(6\)/)).toBeTruthy();
+  });
+
+  it('no placeholder while fetching', async () => {
+    // Hanging promise: resolve never fires, so counts stay undefined and
+    // the label MUST be just "Onkologie" (no parens, no Loader, no skeleton).
+    mocks.client = {
+      get: vi.fn(() => new Promise<unknown>(() => {})),
+      fhirUrl: (s: string) => ({ toString: () => s }),
+    };
+
+    const { unmount } = render(
+      <MantineProvider>
+        <MiiModuleTabs patientId="p-fetching" />
+      </MantineProvider>,
+    );
+
+    const collapseToggle = screen.getByText(/Extension modules \(\d+\)/);
+    await act(async () => {
+      fireEvent.click(collapseToggle);
+    });
+
+    // The bare label exists (no count appended), and no count-suffix variant
+    // is anywhere in the DOM.
+    expect(screen.getByText('Onkologie')).toBeTruthy();
+    expect(screen.queryByText(/Onkologie \(/)).toBeNull();
+
+    // Cleanup so the never-resolving promise doesn't leak between tests.
+    unmount();
+  });
+
+  it('base exemption — base tabs receive no count or testid', async () => {
+    // Even with high counts mocked for the base modules' resource types,
+    // the base 7 tabs (Person, Fall, …) must NOT render `Person (999)`
+    // and MUST NOT carry `data-testid="extension-tab-pill"`.
+    mocks.client = makeCountClient({
+      Patient: 999,
+      Encounter: 999,
+      Condition: 999,
+      Procedure: 999,
+      Consent: 999,
+      Observation: 999,
+      MedicationStatement: 999,
+      ImagingStudy: 999,
+      DiagnosticReport: 999,
+    });
+
+    await act(async () => {
+      renderTabs('p-base');
+    });
+
+    // Expand so extension pills are present too.
+    const collapseToggle = screen.getByText(/Extension modules \(\d+\)/);
+    await act(async () => {
+      fireEvent.click(collapseToggle);
+    });
+
+    await waitFor(() => {
+      // Wait until at least one extension tab has its count rendered.
+      expect(screen.getByText(/Onkologie \(\d+\)/)).toBeTruthy();
+    });
+
+    // Base 7 must remain bare: "Person", "Fall", "Diagnose", "Prozedur",
+    // "Consent", "Laborbefund", "Medikation".
+    expect(screen.getByText('Person')).toBeTruthy();
+    expect(screen.queryByText(/Person \(/)).toBeNull();
+    expect(screen.queryByText(/Fall \(/)).toBeNull();
+    expect(screen.queryByText(/Diagnose \(/)).toBeNull();
+    expect(screen.queryByText(/Prozedur \(/)).toBeNull();
+    expect(screen.queryByText(/Consent \(/)).toBeNull();
+    expect(screen.queryByText(/Laborbefund \(/)).toBeNull();
+    expect(screen.queryByText(/Medikation \(/)).toBeNull();
+
+    // Exactly 14 extension-tab-pill testids (one per extension module).
+    const pills = screen.queryAllByTestId('extension-tab-pill');
+    expect(pills.length).toBe(14);
+  });
+
+  it('dim on zero — opacity 0.55 + data-empty=true', async () => {
+    // All zeros for Onkologie's 4 types (Condition/Observation/Procedure/
+    // MedicationStatement); ImagingStudy + DiagnosticReport non-zero so
+    // Bildgebung resolves to count > 0 (NOT dimmed).
+    mocks.client = makeCountClient({
+      Condition: 0,
+      Observation: 0,
+      Procedure: 0,
+      MedicationStatement: 0,
+      ImagingStudy: 4,
+      DiagnosticReport: 2,
+    });
+
+    await act(async () => {
+      renderTabs('p-dim');
+    });
+
+    const collapseToggle = screen.getByText(/Extension modules \(\d+\)/);
+    await act(async () => {
+      fireEvent.click(collapseToggle);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Onkologie \(0\)/)).toBeTruthy();
+      expect(screen.getByText(/Bildgebung \(6\)/)).toBeTruthy();
+    });
+
+    // Find the Onkologie pill via its label, then walk up to the testid host.
+    const onkologieLabel = screen.getByText(/Onkologie \(0\)/);
+    const onkologiePill = onkologieLabel.closest(
+      '[data-testid="extension-tab-pill"]',
+    ) as HTMLElement;
+    expect(onkologiePill).toBeTruthy();
+    expect(onkologiePill.getAttribute('data-empty')).toBe('true');
+    expect(onkologiePill.style.opacity).toBe('0.55');
+
+    // Bildgebung (count=6) must be data-empty="false" with no opacity-0.55
+    // dimming on its content host.
+    const bildgebungLabel = screen.getByText(/Bildgebung \(6\)/);
+    const bildgebungPill = bildgebungLabel.closest(
+      '[data-testid="extension-tab-pill"]',
+    ) as HTMLElement;
+    expect(bildgebungPill).toBeTruthy();
+    expect(bildgebungPill.getAttribute('data-empty')).toBe('false');
+    expect(bildgebungPill.style.opacity).not.toBe('0.55');
+  });
+
+  it('pre-probe feeds toggle — Hide N modules accurate without click', async () => {
+    // All 14 extension modules resolve to count=0 — the pre-probe should
+    // populate emptyMap WITHOUT any extension tab being clicked.
+    mocks.client = makeEmptyClient();
+
+    await act(async () => {
+      renderTabs('p-toggle-mount');
+    });
+
+    // Expand the Collapse to expose the toggle.
+    const collapseToggle = screen.getByText(/Extension modules \(\d+\)/);
+    await act(async () => {
+      fireEvent.click(collapseToggle);
+    });
+
+    // The pre-probe should resolve all 14 → "Hide 14 empty modules".
+    // No extension tab click required.
+    await waitFor(() => {
+      expect(screen.getByText(/Hide 14 empty modules/)).toBeTruthy();
+    });
+  });
+
+  it('idempotency — pre-probe + post-visit publisher do not double-count', async () => {
+    // After the pre-probe resolves 14 empty modules, clicking into one of
+    // them fires Phase 34's post-visit publisher with `isEmpty=true` for
+    // that same key. The coordinator's reportEmptiness de-dupes (line 106
+    // of useEmptyExtensionsCoordinator.tsx), so the count must stay at 14
+    // — not 15, not 28.
+    mocks.client = makeEmptyClient();
+
+    await act(async () => {
+      renderTabs('p-idem');
+    });
+
+    const collapseToggle = screen.getByText(/Extension modules \(\d+\)/);
+    await act(async () => {
+      fireEvent.click(collapseToggle);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Hide 14 empty modules/)).toBeTruthy();
+    });
+
+    // Click into Onkologie — Phase 34's MiiModuleTab will run its own
+    // publisher for the same module, with isEmpty=true.
+    const onkologieLabel = await screen.findByText(/Onkologie/);
+    await act(async () => {
+      fireEvent.click(onkologieLabel);
+    });
+
+    // Count must still read 14 (no double-count, no infinite loop).
+    await waitFor(() => {
+      expect(screen.getByText(/Hide 14 empty modules/)).toBeTruthy();
+    });
+    expect(screen.queryByText(/Hide 15 empty modules/)).toBeNull();
+    expect(screen.queryByText(/Hide 28 empty modules/)).toBeNull();
   });
 });
