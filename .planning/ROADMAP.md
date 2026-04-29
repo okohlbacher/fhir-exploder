@@ -112,12 +112,14 @@ Full details: [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md) . [Audit]
   2. The five v1.5 phases currently `nyquist_compliant: false` (32, 34, 35, 36, 37) have their VALIDATION.md frontmatter flipped to `nyquist_compliant: true` after retroactive test-coverage review (`grep -c 'nyquist_compliant: false' v1.5-phases/**/VALIDATION.md` returns 0).
   3. `.planning/milestones/v1.5-phases/38.1-*/38.1-VERIFICATION.md` exists with `status: passed`, sourcing evidence from `38.1-01-SUMMARY.md` (`re_walk: passed`, 6/6 tasks, +6 test baseline) and the Phase 33 HUMAN-UAT cross-references on Tests 1, 2, 6.
   4. `.planning/milestones/v1.5-MILESTONE-AUDIT.md` re-run notes the audit-trail debt as resolved (no remaining `nyquist_compliant: false` rows; no missing VALIDATION.md / VERIFICATION.md entries).
-**Plans**: TBD
-**Effort**: small (~1 day total — 3 retroactive VALIDATION.md + 1 VERIFICATION.md + 5 nyquist flag flips + audit refresh)
+**Plans**: 3 plans (2 waves; pure-doc work)
+**Effort**: small (~1 day total — 3 retroactive VALIDATION.md + 1 VERIFICATION.md + 5 nyquist flag flips + audit refresh + final archive)
 **Execution**: Fully automatable (doc-only; no source diff; verifier confirms grep counts)
 
 Plans:
-- [ ] 39-01: TBD (write 3 retroactive VALIDATION.md + 1 VERIFICATION.md, flip 5 nyquist flags, refresh audit)
+- [ ] 39-01-PLAN.md — wave 1: write 3 retroactive VALIDATION.md (phases 31, 33, 38)
+- [ ] 39-02-PLAN.md — wave 1: write 38.1-VERIFICATION.md (AUDIT-01) + flip nyquist on 32/34/35/36, annotate Phase 37 with pending: DEUT-01 in Phase 40 (NYQ-01)
+- [ ] 39-03-PLAN.md — wave 2: refresh v1.5-MILESTONE-AUDIT.md + archive 10 v1.5 phase dirs to .planning/milestones/v1.5-phases/
 
 ### Phase 40: Headless deuteranopia simulation in Vitest (DEUT)
 **Goal**: A CI-runnable color-vision discriminability gate so v1.6+ icon/palette changes are blocked at PR time if any of the 21 MII module adjacent pairs collapses under deuteranopia.
@@ -240,7 +242,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 | 21-22 (v1.3) | v1.3 | 9/9 | ✅ Shipped | 2026-04-16 |
 | 23-30 (v1.4) | v1.4 | 35/35 | ✅ Shipped | 2026-04-23 |
 | 31-38.2 (v1.5) | v1.5 | 32/32 | ✅ Shipped | 2026-04-29 |
-| 39. v1.5 audit-trail backfill (NYQ + AUDIT) | v1.6 | 0/TBD | Not started | - |
+| 39. v1.5 audit-trail backfill (NYQ + AUDIT) | v1.6 | 0/3 | Not started | - |
 | 40. Headless deuteranopia simulation (DEUT) | v1.6 | 0/TBD | Not started | - |
 | 41. Explorer + Quality UX polish (EXPL + QUAL-01/02/03) | v1.6 | 0/TBD | Not started | - |
 | 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 0/TBD | Not started | - |
