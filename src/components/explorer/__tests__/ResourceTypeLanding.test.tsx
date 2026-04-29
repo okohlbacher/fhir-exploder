@@ -1,14 +1,15 @@
 /**
- * ResourceTypeLanding tests — EXPL-01 (Plan 41-01).
+ * ResourceTypeLanding tests — EXPL-01 (Plan 41-01) + 2026-04-29 UAT amendment.
  *
  * Regression suite for the hide-empty-resource-types Switch:
- *   - Default OFF (Switch unchecked, empty types SHOWN) — flips v1.5
- *     "hide-empty-by-default" behavior.
- *   - Toggle ON filters out `counts[type] === 0` rows.
- *   - State persists across re-renders via Mantine `useLocalStorage`
- *     under key `explorer.hideEmptyResourceTypes.v1`.
+ *   - Default ON (Switch checked, zero-count types HIDDEN) — restores
+ *     v1.5 "hide-empty-by-default" UX after UAT feedback flipped the
+ *     planned default.
+ *   - Toggle OFF reveals `counts[type] === 0` rows.
+ *   - State persists via Mantine `useLocalStorage` under key
+ *     `explorer.hideEmptyResourceTypes.v1` (shared with ResourceTypeRail).
  *   - Synthea-zero set (AllergyIntolerance, Consent, Immunization,
- *     ServiceRequest, MedicationStatement) is hidden when toggle ON.
+ *     ServiceRequest, MedicationStatement) is hidden by default.
  *   - When no zero-count types exist, Switch is rendered but disabled.
  *   - Loading rows always render (filter ignores non-numeric counts).
  */
@@ -135,7 +136,7 @@ describe('ResourceTypeLanding — EXPL-01 hide-empty toggle', () => {
     countsMock.mockReset();
   });
 
-  it('Test 1 — defaults to OFF and shows all types (including zero-count)', () => {
+  it('Test 1 — defaults to ON and hides zero-count types', () => {
     countsMock.mockReturnValue({
       Patient: 100,
       Consent: 0,
@@ -147,34 +148,34 @@ describe('ResourceTypeLanding — EXPL-01 hide-empty toggle', () => {
       Observation: 5,
     });
     renderLanding();
-    expect(getSwitch().checked).toBe(false);
+    expect(getSwitch().checked).toBe(true);
     expectListItemPresent('Patient');
-    expectListItemPresent('Consent');
-    expectListItemPresent('AllergyIntolerance');
-  });
-
-  it('Test 2 — clicking the Switch hides zero-count types', () => {
-    countsMock.mockReturnValue({
-      Patient: 100,
-      Consent: 0,
-      AllergyIntolerance: 0,
-      Immunization: 0,
-      ServiceRequest: 0,
-      MedicationStatement: 0,
-      Encounter: 5,
-      Observation: 5,
-    });
-    renderLanding();
-    fireEvent.click(getSwitch());
     expectListItemAbsent('Consent');
     expectListItemAbsent('AllergyIntolerance');
+  });
+
+  it('Test 2 — toggling the Switch off reveals zero-count types', () => {
+    countsMock.mockReturnValue({
+      Patient: 100,
+      Consent: 0,
+      AllergyIntolerance: 0,
+      Immunization: 0,
+      ServiceRequest: 0,
+      MedicationStatement: 0,
+      Encounter: 5,
+      Observation: 5,
+    });
+    renderLanding();
+    fireEvent.click(getSwitch()); // ON → OFF
+    expectListItemPresent('Consent');
+    expectListItemPresent('AllergyIntolerance');
     expectListItemPresent('Patient');
   });
 
-  it('Test 3 — initial state hydrates from localStorage', () => {
+  it('Test 3 — initial state hydrates from localStorage (OFF override)', () => {
     window.localStorage.setItem(
       'explorer.hideEmptyResourceTypes.v1',
-      JSON.stringify(true),
+      JSON.stringify(false),
     );
     countsMock.mockReturnValue({
       Patient: 100,
@@ -187,12 +188,12 @@ describe('ResourceTypeLanding — EXPL-01 hide-empty toggle', () => {
       MedicationStatement: 0,
     });
     renderLanding();
-    expect(getSwitch().checked).toBe(true);
-    expectListItemAbsent('Consent');
+    expect(getSwitch().checked).toBe(false);
+    expectListItemPresent('Consent');
     expectListItemPresent('Patient');
   });
 
-  it('Test 4 — Synthea-zero set: 5 zero-count types hidden when toggle ON', () => {
+  it('Test 4 — Synthea-zero set: 5 zero-count types hidden by default (ON)', () => {
     countsMock.mockReturnValue({
       AllergyIntolerance: 0,
       Consent: 0,
@@ -204,7 +205,7 @@ describe('ResourceTypeLanding — EXPL-01 hide-empty toggle', () => {
       Observation: 80,
     });
     renderLanding();
-    fireEvent.click(getSwitch());
+    expect(getSwitch().checked).toBe(true);
     expectListItemAbsent('AllergyIntolerance');
     expectListItemAbsent('Consent');
     expectListItemAbsent('Immunization');
@@ -248,10 +249,9 @@ describe('ResourceTypeLanding — EXPL-01 hide-empty toggle', () => {
       Observation: 80,
     });
     renderLanding();
-    fireEvent.click(getSwitch());
-    // Encounter still rendered (loading state preserved).
+    // Default-ON, but Encounter is still loading so filter is short-circuited.
     expectListItemPresent('Encounter');
-    // Patient still rendered.
     expectListItemPresent('Patient');
+    expectListItemPresent('Consent');
   });
 });

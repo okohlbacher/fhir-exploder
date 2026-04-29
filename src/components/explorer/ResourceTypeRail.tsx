@@ -13,7 +13,8 @@
  */
 import { useMemo, useState } from 'react';
 import { useMatch, useNavigate } from 'react-router-dom';
-import { Badge, Box, Group, ScrollArea, Stack, Text, TextInput, UnstyledButton } from '@mantine/core';
+import { Badge, Box, Group, ScrollArea, Stack, Switch, Text, TextInput, Tooltip, UnstyledButton } from '@mantine/core';
+import { useLocalStorage } from '@mantine/hooks';
 import { IconSearch } from '@tabler/icons-react';
 import type { CapabilityStatement } from '@medplum/fhirtypes';
 import type { MedplumClient } from '@medplum/core';
@@ -30,10 +31,29 @@ export function ResourceTypeRail({ capability, client }: ResourceTypeRailProps) 
   const navigate = useNavigate();
   const [filter, setFilter] = useState('');
 
+  // Shared with ResourceTypeLanding's Switch via the same localStorage key —
+  // toggling either keeps both surfaces in sync. Default ON (hide zero-counts).
+  const [hideEmpty, setHideEmpty] = useLocalStorage<boolean>({
+    key: 'explorer.hideEmptyResourceTypes.v1',
+    defaultValue: true,
+    getInitialValueInEffect: false,
+  });
+
   const parsedTypes = useMemo(() => parseResourceTypes(capability), [capability]);
   const typeNames = useMemo(() => parsedTypes.map((t) => t.type), [parsedTypes]);
   const counts = useResourceCounts(client, typeNames);
   const grouped = useMemo(() => groupByCategory(parsedTypes), [parsedTypes]);
+
+  const loadingCount = useMemo(
+    () => typeNames.filter((t) => counts[t] === 'loading').length,
+    [typeNames, counts],
+  );
+  const countsReady = loadingCount === 0;
+
+  const zeroCount = useMemo(
+    () => typeNames.filter((t) => counts[t] === 0).length,
+    [typeNames, counts],
+  );
 
   const orderedCategories = useMemo(() => {
     const ordered = CATEGORY_ORDER.filter((cat) => grouped.has(cat));
@@ -57,21 +77,42 @@ export function ResourceTypeRail({ capability, client }: ResourceTypeRailProps) 
       }}
     >
       <Box p="sm" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
-        <TextInput
-          size="xs"
-          placeholder="Filter types…"
-          value={filter}
-          onChange={(e) => setFilter(e.currentTarget.value)}
-          leftSection={<IconSearch size={12} />}
-        />
+        <Stack gap="xs">
+          <TextInput
+            size="xs"
+            placeholder="Filter types…"
+            value={filter}
+            onChange={(e) => setFilter(e.currentTarget.value)}
+            leftSection={<IconSearch size={12} />}
+          />
+          <Tooltip
+            label="No empty types"
+            disabled={zeroCount > 0 || !countsReady}
+            withArrow
+          >
+            <Switch
+              size="xs"
+              label={zeroCount > 0 ? `Hide empty (${zeroCount})` : 'Hide empty resource types'}
+              checked={hideEmpty}
+              onChange={(e) => setHideEmpty(e.currentTarget.checked)}
+              disabled={countsReady && zeroCount === 0}
+              aria-label="Hide empty resource types"
+            />
+          </Tooltip>
+        </Stack>
       </Box>
       <ScrollArea style={{ flex: 1 }}>
         <Stack gap={0} p={4}>
           {orderedCategories.map((category) => {
             const types = grouped.get(category)!;
-            const visible = lcFilter
+            let visible = lcFilter
               ? types.filter((t) => t.type.toLowerCase().includes(lcFilter))
               : types;
+            if (countsReady && hideEmpty) {
+              visible = visible.filter(
+                (t) => !(typeof counts[t.type] === 'number' && (counts[t.type] as number) === 0),
+              );
+            }
             if (visible.length === 0) return null;
             return (
               <Box key={category} mb={6}>

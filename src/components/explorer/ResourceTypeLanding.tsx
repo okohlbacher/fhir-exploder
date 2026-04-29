@@ -24,9 +24,10 @@ export function ResourceTypeLanding() {
 
   // EXPL-01 / D-04: localStorage-persisted toggle for hiding zero-count types.
   // Inverted polarity vs the Switch UI: `hideEmpty=true` means hide, `false` means show.
+  // Default ON (hide) — shared with ResourceTypeRail's twin Switch.
   const [hideEmpty, setHideEmpty] = useLocalStorage<boolean>({
     key: 'explorer.hideEmptyResourceTypes.v1',
-    defaultValue: false,
+    defaultValue: true,
     getInitialValueInEffect: false,
   });
 
