@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "fetch:profiles": "node scripts/fetch-mii-profiles.mjs",
-    "prepare": "node scripts/fetch-mii-profiles.mjs || true"
+    "fetch:ips-profiles": "node scripts/fetch-ips-profiles.mjs",
+    "prepare": "node scripts/fetch-mii-profiles.mjs || true; node scripts/fetch-ips-profiles.mjs || true"
   },
   "dependencies": {
     "@mantine/charts": "^8.3.18",
