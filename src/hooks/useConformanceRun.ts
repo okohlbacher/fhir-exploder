@@ -40,6 +40,7 @@ import {
   clearProbeCache,
   resetProbeForType,
   detectValidatorVariant,
+  VALIDATOR_BEARER_TOKEN_KEY,
   type ActiveStrategy,
   type ProbeKey,
 } from '../quality/cascadingValidator';
@@ -212,7 +213,7 @@ export function useConformanceRun({
     let bearerLen = 0;
     if (ext.auth?.type === 'bearer' && typeof window !== 'undefined') {
       try {
-        bearerLen = (window.localStorage.getItem('validator.bearerToken.v1') ?? '').length;
+        bearerLen = (window.localStorage.getItem(VALIDATOR_BEARER_TOKEN_KEY) ?? '').length;
       } catch {
         bearerLen = 0;
       }

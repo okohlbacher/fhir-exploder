@@ -30,14 +30,16 @@ import {
 } from '@mantine/core';
 import { IconShield } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
+import { VALIDATOR_BEARER_TOKEN_KEY } from '../../quality/cascadingValidator';
 
 /**
  * SECURITY: NEVER serialize this key's value to disk. The token lives in
  * localStorage only — entered here, read fresh per call by the cascade,
  * cleared via the Clear button or by setting an empty value and saving.
- * See 43-CONTEXT.md D-01/D-02 + 43-RESEARCH.md Pitfall 7.
+ * See 43-CONTEXT.md D-01/D-02 + 43-RESEARCH.md Pitfall 7. The shared
+ * constant is exported by cascadingValidator.ts (single source of truth);
+ * this module imports it to keep all writers/readers aligned (WR-01).
  */
-const VALIDATOR_BEARER_TOKEN_KEY = 'validator.bearerToken.v1';
 const TOKEN_CHANGED_EVENT = 'validator-bearer-token-changed';
 
 interface ValidatorAuthSettingsModalProps {
