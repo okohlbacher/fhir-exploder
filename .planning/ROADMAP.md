@@ -98,7 +98,7 @@ Full details: [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md) . [Audit]
 - [x] **Phase 41: Explorer + Quality UX polish (EXPL + QUAL-01 + QUAL-02 + QUAL-03)** — Hide-empty-types toggle, N/A-rows-to-bottom sort fix, per-type matrix heat gradient, CSV export (completed 2026-04-29)
 - [x] **Phase 42: Pre-probe extension-module counts (MII-EXT-15)** — Tab labels show `Onkologie (12)` before click via parallel `_summary=count` probes; zero-count tabs dimmed (completed 2026-04-29)
 - [x] **Phase 43: Validator hardening — auth + semantic near-miss (VAL-06 + VAL-07)** — HTTP Basic/Bearer on external validator + opt-in SNOMED CT / ICD-10 graph-walked "Did you mean?" suggestions (completed 2026-04-30)
-- [ ] **Phase 44: IPS Compositions support (IPS-01)** — Bundle validation against IPS profile with Empty-Sections-and-Missing-Data drill-down
+- [x] **Phase 44: IPS Compositions support (IPS-01)** — Bundle validation against IPS profile with Empty-Sections-and-Missing-Data drill-down (completed 2026-04-30)
 - [ ] **Phase 45: Mantine 9 upgrade (STACK-01)** — Conditional on `@medplum/react` peer-dep readiness; defers to v1.7 with `WAIVE-AND-DEFER` if gate fails
 
 ## Phase Details
@@ -208,8 +208,8 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 44-01-PLAN.md — wave 1: IPS profile fetch script (hl7.fhir.uv.ips@2.0.0) + IPS_REGISTRY (URL-keyed lazy thunks) + LICENSE/ATTRIBUTION update + shared trim() extraction + prepare-hook chain (T-44-01, T-44-05)
-- [ ] 44-02-PLAN.md — wave 2: ipsBundleValidator (16-section catalogue) + IPSPanel UI (paste + server-picker tabs) + /quality/ips route + sidebar + three-fixture regression (T-44-02, T-44-03, T-44-04, T-44-06)
+- [x] 44-01-PLAN.md — wave 1: IPS profile fetch script (hl7.fhir.uv.ips@2.0.0) + IPS_REGISTRY (URL-keyed lazy thunks) + LICENSE/ATTRIBUTION update + shared trim() extraction + prepare-hook chain (T-44-01, T-44-05)
+- [x] 44-02-PLAN.md — wave 2: ipsBundleValidator (16-section catalogue) + IPSPanel UI (paste + server-picker tabs) + /quality/ips route + sidebar + three-fixture regression (T-44-02, T-44-03, T-44-04, T-44-06)
 
 ### Phase 45: Mantine 9 upgrade (STACK-01)
 **Goal**: Bump Mantine 8 → 9 (and React 18 → 19 if required by upgrade) to track the upstream stack — conditional on `@medplum/react` peer-dep range allowing it. If the gate fails, defer to v1.7 with a documented `WAIVE-AND-DEFER` decision.
@@ -246,7 +246,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 | 41. Explorer + Quality UX polish (EXPL + QUAL-01/02/03) | v1.6 | 3/3 | Complete    | 2026-04-29 |
 | 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 2/2 | Complete    | 2026-04-29 |
 | 43. Validator hardening — auth + semantic (VAL-06 + VAL-07) | v1.6 | 2/2 | Complete    | 2026-04-30 |
-| 44. IPS Compositions support (IPS-01) | v1.6 | 0/2 | Not started | - |
+| 44. IPS Compositions support (IPS-01) | v1.6 | 2/2 | Complete    | 2026-04-30 |
 | 45. Mantine 9 upgrade (STACK-01) | v1.6 | 0/TBD | Not started | - |
 
 ## Backlog
