@@ -52,6 +52,17 @@ export type ConformanceRunStatus =
   | 'cancelled'
   | 'error';
 
+/**
+ * Phase 43 VAL-06 — auth banner state surfaced from the cascade's notify stream.
+ *   'none'    — no auth configured (default; banner hidden)
+ *   'ok'      — auth configured, run completed without auth-related demotion
+ *   'missing' — bearer auth configured, but localStorage token absent
+ *               (cascade demoted via notify('auth-missing'))
+ *   'failed'  — auth configured, validator returned 401/403
+ *               (cascade demoted via notify('auth-failed'))
+ */
+export type AuthBannerState = 'none' | 'ok' | 'missing' | 'failed';
+
 /** Issue with attached resource id for UI rendering. */
 export type AttributedIssue = OperationOutcomeIssue & {
   _resourceId?: string;
@@ -69,6 +80,10 @@ export interface ConformanceRunState {
   activeStrategy: ActiveStrategy | null;
   /** Detected variant suffix for the Active-strategy status line (D-18). */
   activeStrategyVariant: string | null;
+  /** Phase 43 VAL-06 — current auth banner state (driven by cascade notify events). */
+  authBannerState: AuthBannerState;
+  /** Phase 43 VAL-06 — currently configured auth.type (mirrors settings; convenience). */
+  authType: 'basic' | 'bearer' | undefined;
   start: () => void;
   cancel: () => void;
 }
@@ -124,6 +139,11 @@ export function useConformanceRun({
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
   const [activeStrategy, setActiveStrategy] = useState<ActiveStrategy | null>(null);
   const [activeStrategyVariant, setActiveStrategyVariant] = useState<string | null>(null);
+  // Phase 43 VAL-06 — auth banner state, driven by cascade notify events.
+  // Reset to 'ok' (or 'none' when no auth configured) at the start of each
+  // run before notify can fire; transitions to 'missing' / 'failed' if the
+  // cascade demotes due to auth-missing or auth-failed.
+  const [authBannerState, setAuthBannerState] = useState<AuthBannerState>('none');
   const cancelledRef = useRef(false);
   const valueSetCacheRef = useRef(new ValueSetCache());
   const probeCacheRef = useRef<Map<ProbeKey, ActiveStrategy>>(new Map());
@@ -162,6 +182,10 @@ export function useConformanceRun({
     abortRef.current = new AbortController();
     setActiveStrategy(null);
     setActiveStrategyVariant(null);
+    // Phase 43 VAL-06: reset auth banner state at the start of every run.
+    // 'ok' when auth is configured (run-in-progress optimism), else 'none'.
+    const configuredAuthType = settings?.validation?.externalValidator?.auth?.type;
+    setAuthBannerState(configuredAuthType ? 'ok' : 'none');
 
     void (async () => {
       try {
@@ -322,10 +346,19 @@ export function useConformanceRun({
                         `External validator unreachable — falling back to ${payload.to}.\n` +
                         `Likely CORS or network. Check browser console and the validator's Access-Control-Allow-Origin header.`,
                     });
+                  } else if (kind === 'auth-missing') {
+                    // Phase 43 D-02 — bearer configured but localStorage token absent.
+                    // Banner copy in ValidationPanel translates this to
+                    // "auth: bearer (token missing — set in Settings)".
+                    setAuthBannerState('missing');
+                  } else if (kind === 'auth-failed') {
+                    // Phase 43 D-13 — validator returned 401/403. Banner copy
+                    // becomes "auth: <type> — failed (server fallback)".
+                    setAuthBannerState('failed');
                   }
-                  // kind === 'demote' is silent — HTTP 4xx/5xx from a
-                  // reachable validator returns a real OperationOutcome body;
-                  // the user sees the issue in the table.
+                  // kind === 'demote' is silent — HTTP 4xx/5xx (other than
+                  // 401/403) from a reachable validator returns a real
+                  // OperationOutcome body; the user sees the issue in the table.
                 },
               });
 
@@ -417,6 +450,8 @@ export function useConformanceRun({
     errorMessage,
     activeStrategy,
     activeStrategyVariant,
+    authBannerState,
+    authType: settings?.validation?.externalValidator?.auth?.type,
     start,
     cancel,
   };

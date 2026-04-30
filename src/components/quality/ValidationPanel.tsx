@@ -478,6 +478,20 @@ export function ValidationPanel(_props: ValidationPanelProps) {
                   : run.activeStrategy}
               </Text>
             )}
+            {/*
+              Phase 43 VAL-06 / D-02 / D-13 / D-21 / T-43-07 — auth banner.
+              Renders only when an auth.type is configured. Copy reflects
+              the current cascade state truthfully (no credentials in DOM).
+            */}
+            {run.authType && (
+              <Text size="xs" c="dimmed" data-testid="validator-auth-banner">
+                {run.authBannerState === 'missing'
+                  ? `auth: ${run.authType} (token missing — set in Settings)`
+                  : run.authBannerState === 'failed'
+                    ? `auth: ${run.authType} — failed (server fallback)`
+                    : `auth: ${run.authType}`}
+              </Text>
+            )}
             <Text size="sm" c="dimmed">
               {allNormalizedIssues.length} issues across{' '}
               {Object.keys(run.byResource).length} resources
