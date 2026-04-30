@@ -1,0 +1,17 @@
+{
+  "_comment": "IPS-01 fixture: malformed Bundle. type=collection (NOT document) and zero document-root entries. Walker MUST return at least 2 issues: (1) error/structure for Bundle.type mismatch, (2) error/required for missing summary entry.",
+  "resourceType": "Bundle",
+  "id": "ips-malformed",
+  "type": "collection",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:p3",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "p3",
+        "name": [{ "family": "Roe", "given": ["Richard"] }],
+        "gender": "other"
+      }
+    }
+  ]
+}

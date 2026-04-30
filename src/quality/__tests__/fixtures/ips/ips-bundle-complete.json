@@ -1,0 +1,111 @@
+{
+  "_comment": "IPS-01 fixture: minimal complete IPS document Bundle. Composition has all 3 REQUIRED sections (Problems 11450-4, Allergies 48765-2, Medications 10160-0) plus 2 OPTIONAL (Immunizations 11369-6, Vital Signs 8716-3). Each entry resolves to a sibling bundle.entry. Walker MUST return 0 issues.",
+  "resourceType": "Bundle",
+  "id": "ips-complete",
+  "type": "document",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:c1",
+      "resource": {
+        "resourceType": "Composition",
+        "id": "c1",
+        "status": "final",
+        "type": {
+          "coding": [
+            { "system": "http://loinc.org", "code": "60591-5", "display": "Patient summary" }
+          ]
+        },
+        "subject": { "reference": "Patient/p1" },
+        "date": "2026-04-30",
+        "author": [{ "reference": "Patient/p1" }],
+        "title": "International Patient Summary",
+        "section": [
+          {
+            "title": "Active Problems",
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "11450-4" }] },
+            "entry": [{ "reference": "Condition/cond1" }]
+          },
+          {
+            "title": "Allergies and Intolerances",
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "48765-2" }] },
+            "entry": [{ "reference": "AllergyIntolerance/a1" }]
+          },
+          {
+            "title": "Medication Summary",
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "10160-0" }] },
+            "entry": [{ "reference": "MedicationStatement/m1" }]
+          },
+          {
+            "title": "Immunizations",
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "11369-6" }] },
+            "entry": [{ "reference": "Immunization/i1" }]
+          },
+          {
+            "title": "Vital Signs",
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "8716-3" }] },
+            "entry": [{ "reference": "Observation/o1" }]
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:p1",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "p1",
+        "name": [{ "family": "Doe", "given": ["Jane"] }],
+        "gender": "female",
+        "birthDate": "1970-01-01"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond1",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond1",
+        "subject": { "reference": "Patient/p1" },
+        "code": { "text": "Hypertension" }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:a1",
+      "resource": {
+        "resourceType": "AllergyIntolerance",
+        "id": "a1",
+        "patient": { "reference": "Patient/p1" },
+        "code": { "text": "Penicillin allergy" }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:m1",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "m1",
+        "status": "active",
+        "subject": { "reference": "Patient/p1" },
+        "medicationCodeableConcept": { "text": "Lisinopril 10 mg" }
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:i1",
+      "resource": {
+        "resourceType": "Immunization",
+        "id": "i1",
+        "status": "completed",
+        "patient": { "reference": "Patient/p1" },
+        "vaccineCode": { "text": "Influenza vaccine" },
+        "occurrenceDateTime": "2024-10-01"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:o1",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "o1",
+        "status": "final",
+        "code": { "coding": [{ "system": "http://loinc.org", "code": "85354-9", "display": "Blood pressure panel" }] },
+        "subject": { "reference": "Patient/p1" }
+      }
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "_comment": "IPS-01 fixture: incomplete IPS document Bundle. Missing Allergies section (LOINC code for allergies absent). Medications section present but entry array empty. Problems section present + populated. Walker MUST return at least 2 issues: (1) error/required for missing Allergies, (2) warning/incomplete for empty Medications.",
+  "resourceType": "Bundle",
+  "id": "ips-incomplete",
+  "type": "document",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:c2",
+      "resource": {
+        "resourceType": "Composition",
+        "id": "c2",
+        "status": "final",
+        "type": {
+          "coding": [
+            { "system": "http://loinc.org", "code": "60591-5", "display": "Patient summary" }
+          ]
+        },
+        "subject": { "reference": "Patient/p2" },
+        "date": "2026-04-30",
+        "author": [{ "reference": "Patient/p2" }],
+        "title": "International Patient Summary",
+        "section": [
+          {
+            "title": "Active Problems",
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "11450-4" }] },
+            "entry": [{ "reference": "Condition/cond2" }]
+          },
+          {
+            "title": "Medication Summary",
+            "code": { "coding": [{ "system": "http://loinc.org", "code": "10160-0" }] },
+            "entry": []
+          }
+        ]
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:p2",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "p2",
+        "name": [{ "family": "Smith", "given": ["John"] }],
+        "gender": "male",
+        "birthDate": "1985-06-15"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond2",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond2",
+        "subject": { "reference": "Patient/p2" },
+        "code": { "text": "Asthma" }
+      }
+    }
+  ]
+}
