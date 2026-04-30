@@ -17,7 +17,7 @@
  *      status line (D-11 + D-18).
  *   7. Unmount aborts in-flight external AND server fetches (D-20).
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import type { MedplumClient } from '@medplum/core';
 import type { OperationOutcomeIssue, Resource, StructureDefinition } from '@medplum/fhirtypes';
@@ -207,7 +207,15 @@ export function useConformanceRun({
     }
     return undefined;
   }, []);
-  const extSerialized = (() => {
+  // WR-02: memoize so the localStorage read only fires when settings or the
+  // rotation bump changes. `bearerSignatureBump` is the canonical
+  // invalidation signal (driven by the `validator-bearer-token-changed`
+  // event listener above); the token-length read remains inside the memo
+  // body so it always re-runs when the bump flips. Behavior is unchanged
+  // because the existing `useEffect` dep on `extSerialized` already collapses
+  // to value-equality semantics — this just stops doing the work eagerly on
+  // unrelated re-renders.
+  const extSerialized = useMemo(() => {
     const ext = settings?.validation?.externalValidator;
     if (!ext) return JSON.stringify(null);
     let bearerLen = 0;
@@ -219,7 +227,7 @@ export function useConformanceRun({
       }
     }
     return JSON.stringify({ ...ext, _bearerLen: bearerLen, _bump: bearerSignatureBump });
-  })();
+  }, [settings, bearerSignatureBump]);
   useEffect(() => {
     clearProbeCache(probeCacheRef.current);
     setActiveStrategy(null);
