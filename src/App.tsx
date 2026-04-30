@@ -80,6 +80,12 @@ const ReferencesDrillDown = lazy(() =>
     default: m.ReferencesDrillDown,
   })),
 );
+// Plan 44-02 (IPS-01): /quality/ips reachable via Sidebar + QualityOverviewPage link.
+const IPSPanel = lazy(() =>
+  retry(() => import('./components/quality/IPSPanel')).then((m) => ({
+    default: m.default,
+  })),
+);
 
 function AppRoutes() {
   const { settings, usingDefaults, loading } = useSettings();
@@ -149,6 +155,7 @@ function AppRoutes() {
             <Route path="lab-ranges" element={<LabRangesDrillDown />} />
             <Route path="duplicates" element={<DuplicatesDrillDown />} />
             <Route path="references/:type" element={<ReferencesDrillDown />} />
+            <Route path="ips" element={<IPSPanel />} />
           </Route>
         </Route>
       </Routes>

@@ -105,6 +105,8 @@ const NAV_ITEMS: NavItem[] = [
       { label: 'Overview', to: '/quality', suppressParent: false },
       { label: 'Cohorts', to: '/quality/cohorts', suppressParent: true },
       { label: 'Thresholds', to: '/quality/thresholds', suppressParent: true },
+      // Plan 44-02 (IPS-01): IPS Validator sub-nav under Quality cluster.
+      { label: 'IPS Validator', to: '/quality/ips', suppressParent: true },
     ],
   },
 ];
@@ -151,8 +153,11 @@ function SidebarRow({ item }: { item: NavItem }) {
   // every render, then decide.
   const cohortsMatch = useMatch({ path: '/quality/cohorts', end: false });
   const thresholdsMatch = useMatch({ path: '/quality/thresholds', end: false });
+  const ipsMatch = useMatch({ path: '/quality/ips', end: false });
   const suppressed =
-    item.to === '/quality' ? !!cohortsMatch || !!thresholdsMatch : false;
+    item.to === '/quality'
+      ? !!cohortsMatch || !!thresholdsMatch || !!ipsMatch
+      : false;
   const active = !!match && !suppressed;
 
   // Show children when the user is anywhere under `item.to` (any match,

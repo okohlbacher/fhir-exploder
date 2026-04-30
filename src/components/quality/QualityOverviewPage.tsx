@@ -32,6 +32,7 @@ import {
   IconAdjustmentsAlt,
   IconAlertTriangle,
   IconCamera,
+  IconClipboardCheck,
   IconFileDownload,
   IconRefresh,
   IconUsersGroup,
@@ -368,6 +369,14 @@ export function QualityOverviewPage() {
             onClick={() => navigate('/quality/thresholds')}
           >
             Configure thresholds
+          </Button>
+          <Button
+            variant="light"
+            leftSection={<IconClipboardCheck size={16} />}
+            onClick={() => navigate('/quality/ips')}
+            aria-label="IPS Validator. Validate FHIR bundles against the IPS Composition profile."
+          >
+            IPS Validator
           </Button>
           <Button
             variant="light"
