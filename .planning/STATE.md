@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.6
-milestone_name: -- Hardening, UX Polish & Carry-Overs (in progress, started 2026-04-29)
-status: executing
-stopped_at: Phase 44 context gathered (--auto mode; 14 D-XX decisions auto-picked, 4 deferred to Claude's discretion)
-last_updated: "2026-04-30T11:40:00.503Z"
+milestone_name: Hardening, UX Polish & Carry-Overs (shipped 2026-04-30)
+status: shipped
+stopped_at: v1.6 milestone shipped — 7 phases (39-45, 45 deferred to v1.7), 14/14 active plans complete; ready for /gsd-new-milestone
+last_updated: "2026-04-30T13:03:41.978Z"
 last_activity: 2026-04-30
 progress:
   total_phases: 20
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-29)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 42 — pre-probe-extension-module-counts-mii-ext-15
+**Current focus:** v1.6 shipped — planning v1.7
 
 ## Current Position
 
-Phase: 999.1
-Plan: Not started
-Status: Executing Phase 42
+Phase: (none — between milestones)
+Plan: n/a
+Status: v1.6 milestone shipped 2026-04-30. Run `/gsd-new-milestone` to scope v1.7.
 Last activity: 2026-04-30
 
 v1.6 progress: 3/7 phases complete (39 ✓ audit-trail backfill, 40 ✓ DEUT-01 deuteranopia simulation, 41 ✓ EXPL-01 + QUAL-01/02/03 polish)

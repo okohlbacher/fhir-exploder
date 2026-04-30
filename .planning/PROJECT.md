@@ -73,13 +73,25 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 - [x] **TEST-REPAIR-01..02** (Phase 29.5): 22 → 0 baseline test failures (`SettingsProvider` / `ConnectionProvider` wrappers, `fhirUrl` mock, `useSearchParams` router mock, stale-DOM assertion updates). Unblocked the Phase 30 test gate with zero production changes.
 - [x] **UX-REDESIGN-01..08** (Phase 30): Design tokens (IBM Plex + indigo + warm neutrals) + 7-view restyle — Sidebar Server card + nested Quality sub-nav; Dashboard 4-card strip + MII Kerndatensatz tile grid; Patients list filter card + active-filter chips + row-index + initials avatar; Quality 2-tier toolbar + no-ring `OverviewStrip` + pills tabs + inline overall-%; Explorer 240-px `<ResourceTypeRail>` + Category breadcrumb; Patient detail 3-col header + Raw JSON/`$everything` actions + pills MII tabs; Cohorts 2-col grid
 
-### Active (v1.5 candidates — pending scope)
+### Validated (v1.6 — shipped 2026-04-30)
 
-- [ ] **UX-01** (deferred from Phase 29): External FHIR validator cascade (external → server `$validate` → local structural) with PHI gate, AbortController, probe cache, and `normalizeOperationOutcomeIssue` — `29-02-PLAN.md` preserved verbatim in the archive
-- [x] **EFF-R14** (deferred from Phase 27): Split `QualityMetricsContext` so single-metric updates re-render only their own tile *(complete 2026-04-24, Phase 32)* — 7 per-metric `React.createContext` providers + `<QualityMetricsProviders>` composer, facade `useQualityMetrics()` preserved over composition, Profiler-based per-tile isolation test passes 1/1. EFF-R14-01..06 satisfied.
-- [x] **Phase 31 (UX-01) — external FHIR validator cascade** *(complete 2026-04-23)* — Three-tier cascade (external HTTP → server `$validate` → local structural) with PHI gate alignment, OperationOutcome normalizer extraction, AbortSignal threading, CORS heuristic, probe cache, and Active-strategy status line. VAL-01..VAL-05 satisfied.
-- [ ] **Phase 30 UAT follow-ups (6)**: Explorer Date/Status per-resource-type extractor; HumanReadableView extension cleanup (identifier-system tooltip, address-extension modal); ResourceDetailPage remove *Clinical + raw* + rename *Developer → JSON*; empty per-patient MII/FHIR panel investigation; Dashboard MII tile count scoping or explicit labelling; per-type quality matrix card under Counts tab
-- [ ] **Phase 999.1**: 14 MII Kerndatensatz extension modules (Onkologie, Kardiologie, Intensivmedizin, Bildgebung, Pathologie, Mikrobiologie, Molekulargenetik, Seltene Erkrankungen, Symptom, Biobank, Studie, Dokument, MTB, PRO). Requires multi-type module schema, 21-tab UI grouping, per-module patient search param (some use `subject=`), Mantine color strategy for 21 modules.
+7 phases (39-45), 14 active plans. Phase 45 deferred to v1.7 via documented `WAIVE-AND-DEFER` (Mantine peer-dep gate failed). 1207 → 1240 tests passing across milestone; `npm run build` clean. See [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md) for full details.
+
+- [x] **NYQ-01 + AUDIT-01** — v1.5 audit-trail backfill: 3 retroactive VALIDATION.md files + 5 `nyquist_compliant: false → true` flips + 38.1-VERIFICATION.md — Phase 39
+- [x] **DEUT-01** — Headless deuteranopia simulation (Brettel/Machado JS matrix CIEDE2000 gate over 21 MII module adjacent pairs in vitest) — closes Phase 37 deferral — Phase 40
+- [x] **EXPL-01** — Explorer "Hide empty resource types" toggle (Mantine Switch, localStorage-persisted) — Phase 41 (former 999.1)
+- [x] **QUAL-01** — `/quality?tab=completeness` non-empty-types-to-top sort (N/A rows sink to bottom) — Phase 41 (former 999.2)
+- [x] **QUAL-02** — Per-type quality matrix heat-column gradient — Phase 41
+- [x] **QUAL-03** — CSV export of per-type quality matrix — Phase 41
+- [x] **MII-EXT-15** — Pre-probe extension-module counts on Patient detail (`useMiiExtensionCounts` fans out `_summary=count` with per-type cache + zero-count tab dimming) — Phase 42
+- [x] **VAL-06** — Validator HTTP authentication: Basic + Bearer (`Authorization` header injection AFTER PHI gate, bearer-token in `localStorage[validator.bearerToken.v1]` only — never persisted to settings.yaml; `auth-missing` / `auth-failed` notify events; banner reflects auth state) — Phase 43
+- [x] **VAL-07** — Semantic near-miss detection (opt-in `semanticNearMisses: boolean`; bounded BFS over `CodeSystem/$lookup` parent/child hierarchy, depth=3, ≤50 nodes, ≤10 suggestions; "Did you mean?" inline expandable rows in `ResourceIssueTable`) — Phase 43
+- [x] **IPS-01** — IPS Compositions support: `hl7.fhir.uv.ips@2.0.0` bundled (32 trimmed StructureDefinitions); URL-keyed lazy-load `IPS_REGISTRY` mirroring Phase 36; pure-function `validateIpsBundle` walker (16-section LOINC catalogue, 3 severity levels per D-09); new `IPSPanel.tsx` at `/quality/ips` (paste + server picker tabs); LICENSE/ATTRIBUTION compliance — Phase 44
+- [~] **STACK-01** — Mantine 9 / React 19 upgrade — DEFERRED to v1.7 (peer-dep gate: `@medplum/react@5.1.9` peers Mantine `^8.0.0` only) — Phase 45 closed `deferred` with no source diff
+
+### Active (v1.7 candidates — pending scope)
+
+- [ ] **STACK-01** (carried from v1.6): Mantine 9 / React 19 upgrade — re-run peer-dep gate at v1.7 milestone start; if `@medplum/react` peer range now allows `^9.x`, reactivate Phase 45 from `.planning/milestones/v1.6-phases/45-*/45-CONTEXT.md`
 
 ## Current State
 
@@ -101,7 +113,14 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 **localStorage keys** unchanged from v1.3: `quality.thresholds.v1`, `quality.trends.v1`, `quality.cohorts.v1`, `quality.activeCohortId.v1`, `quality.resourceTypes.v1`.
 
-## Current Milestone: v1.6 Hardening, UX Polish & Carry-Overs
+## Next Milestone: v1.7 (planning)
+
+**Status:** Not yet scoped. Run `/gsd-new-milestone` to define v1.7 requirements + roadmap.
+
+**Carry-overs from v1.6:** STACK-01 (Mantine 9 / React 19 upgrade) — re-run peer-dep gate at milestone start.
+
+<details>
+<summary>Archived: v1.6 milestone goals (shipped 2026-04-30)</summary>
 
 **Goal:** Close v1.5 tech-debt carry-overs, ship Explorer/Quality UX polish, and add two standards-track features (IPS Compositions, validator auth) without major redirection.
 
@@ -131,6 +150,8 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 - Phase numbering continues from 38.2 (v1.5's last phase) → starts at Phase 39.
 - Estimate: ~2–3 focused engineering weeks (smaller than v1.5; mostly polish + hygiene, with IPS + Mantine 9 as the larger items).
 - v1.5 reference baselines: 1064 tests passing, `npm run build` clean, initial-load bundle 606.76 KB gz.
+
+</details>
 
 ### Out of Scope
 

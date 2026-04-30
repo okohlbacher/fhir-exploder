@@ -1,5 +1,103 @@
 # Milestones
 
+## v1.6 Hardening, UX Polish & Carry-Overs (Shipped: 2026-04-30)
+
+**Phases completed:** 20 phases, 48 plans, 78 tasks
+
+**Key accomplishments:**
+
+- Delivered the cohort-domain pure module (types, storage keys, parsePatientRefs, findActiveCohort) plus all 7 Wave 0 test files with skip-stubs locking VALIDATION.md -t filters for Plans 21-02..05 to un-skip.
+- 1. [Rule 3 — Blocking] Strict TS on test fixtures
+- Helper
+- Component shape:
+- Status:
+- FHIRPath AST-to-FHIR-search-URL translator and cohortResolver fhirpath branch — both foundations for CHRT-05 programmatic cohort definitions ship with full test coverage and a 10K-ID cap, ready for the Plan 22-03 UI layer.
+- MII FDPG Codex Structured Query v3 codec (cohortToFdpgSq / fdpgSqToCohort) with 1 MB cap and prototype-pollution defence, plus useCohorts.updateCohort/deleteCohort/duplicateCohort extensions satisfying D-10 cache-invalidation.
+- Wave 2 UI for CHRT-05 (FHIRPath Validate flow with 10s AbortController dry-run), CHRT-06 (FDPG Import/Export via FileButton + per-row Menu), and CHRT-07 (Edit/Duplicate/Delete modals) — wires the Wave 1 translator and codec into Mantine 8 chrome, with all 11 UI-SPEC toast strings locked verbatim.
+- One-liner:
+- One-liner:
+- proceed
+- One-liner:
+- Unit-level fix for the T-6.3 A UAT failure: scoped FHIR counts plumbed through useResourceCounts + autoStart:true added to 4 stale report hooks so cohort activation actually changes the quality dashboard.
+- Milestone audit:
+- Pure `asyncRunReducer` + React `useAsyncRun<TIssue>` hook with closure-scoped cancellation, ref-of-handles for cross-run cancel, and `autoStart` opt-in — 17/17 new tests green, zero `as` casts, zero `cancelledRef` variables.
+- Module-scope `Map<\`${serverUrl}::${type}\`, number>` read-through cache in `useResourceCounts` with closure-scoped `let cancelled` replacing `cancelledRef` and memoized `typesKey` absorbing the Phase 27 R12 effect-dep bug — all in one file touch.
+- Per-serverUrl `Map<serverUrl, QualityMetricsCache>` registry with 2-entry LRU + MRU touch replaces the rotating singleton in `useCompletenessReport` / `useCodingCoverage`; `SettingsContext.setSettings` and the Settings "Clear metrics cache" button now invalidate BOTH the metrics registry AND the count cache under a single user action.
+- All 4 async report hooks (`usePlausibilityReport`, `useLabRangesReport`, `useDuplicateReport`, `useReferenceReport`) now wrap `useAsyncRun<NormalizedIssue>` from Plan 24-01 — 635 → 340 LOC across the four files (-46%), zero `cancelledRef` variables remain, zero new `as` casts in the 6 quality consumer panels, all 4 existing panel test suites pass UNCHANGED, full vitest suite shows the same 22 pre-existing failures (no regressions).
+- PerTypeCoverageReport gains a deterministic representative CodeableConcept per aggregation path, populated in the walker's existing single pass, eliminating the `useExamplesByPath` double-fetch and halving coding drill-down server calls.
+- Generic N-run worker-pool hook (sibling to useAsyncRun) extracted from useCompletenessReport and useCodingCoverage; two shared UI primitives (SortableTh, RunProgress) collapse duplicated inline definitions from 11 Quality-module files.
+- Unified drill-down chrome extracted to `<DrillDownShell>`; 5 simple drill-downs collapse to a single invocation each and 2 asymmetric drill-downs (Coding, Completeness) PARTIAL-migrate via the shell-chrome + bespoke-body-sibling composition pattern, producing 164 LOC of gross reduction in this plan and a 287 LOC cumulative reduction versus RESEARCH.md's pre-25-02 baseline.
+- Cold-opening `/quality?tab=counts` no longer fires Completeness or Coding Coverage sampling -- the two Tabs.Panel entries drop `keepMounted` and the parent `<Tabs>` flips to `keepMounted={false}` so the Mantine OR-combine semantics let each panel's own prop decide. A new `vi.spyOn(SamplingModule, 'sampleResources')` regression test codifies the behavior with `.not.toHaveBeenCalled()` on cold Counts-tab mount. Closes Phase 25 with all 6 QDDEP requirements delivered.
+- Triplicated "Not connected" alert block extracted into a render-prop `<ConnectionGatedOutlet>` primitive with a children-slot escape hatch; three layouts migrated, regression-fenced by two new test files (11 tests).
+- Extracted wildcard identifier search into shared helper (5000/20 defaults to preserve call-site behavior), migrated 3 CompletenessRow links to Anchor+Link, and useCallback-wrapped setSettings to drop the exhaustive-deps eslint-disable — 3 atomic commits, zero test regressions, zero new lint warnings.
+- Sidebar nested-route activation migrated from exact-match to useMatch with per-row exact flag and most-specific-wins Quality/Cohorts rule — /patients/123, /explorer/Patient/1, /quality/plausibility/Observation now highlight their section roots; /quality/cohorts highlights ONLY Cohorts.
+- 1. [Rule 1 — Test design] Test B Text-node identity signal does not flip RED → GREEN
+- 1. [Rule 3 — Blocking issue] lazy-routes test harness initially included full AppLayout, which dragged in Sidebar's context dependencies
+- One-liner:
+- 1. [Rule 4 - Architectural assumption mismatch] DrillDownShell ref type — already correct, no edit applied
+- Source (15)
+- Three retroactive v1.5 VALIDATION.md files written — Phase 31 cites the 33-test cascade surface (phiGate/normalizers/cascadingValidator + ValidationPanel.phi-gate.integration); Phase 33 cites the ~66 net new tests across mii-modules + MiiModuleTab + ClinicalTimeline (836 → 902); Phase 38 declares observational posture with `phase_character: human_uat_observational` and enumerates the 12 walked HUMAN-UAT tests as its validation contract. All three flip `nyquist_compliant: true` based on retroactive review of existing test inventory; none fabricate compliance.
+- Closed AUDIT-01 + 4/5 NYQ-01 nyquist flips by retroactively writing 38.1-VERIFICATION.md (status passed, 6/6) and flipping `nyquist_compliant: false → true` on Phases 32/34/35/36; Phase 37 kept `false` with `pending: DEUT-01 in Phase 40` annotation per CONTEXT D-05.
+- One-liner:
+- Pure-JS Machado 2009 deuteranopia simulation + CIEDE2000 perceptual-distance gate covering all 21 MII module adjacent pairs in Vitest; surfaced one empirical regression (pair #6 kardiologie ↔ mikrobiologie ΔE2000 = 1.406 < 5.0) that paper analysis had missed.
+- `useMiiExtensionCounts(patientId)` React hook fans out one `_summary=count` GET per (extension module, FHIR type) pair on patient mount, sums per-type totals into per-module counts (D-02), and feeds the Phase-34 `EmptyExtensionsCoordinator` so the "Hide N empty modules" toggle is accurate on mount instead of accumulating after each extension tab is clicked (D-05).
+- `MiiModuleTabs.tsx` now consumes `useMiiExtensionCounts(patientId)` from inside `MiiModuleTabsInner` so extension tabs render `{germanLabel} (N)` on patient mount, dim 0-count pills via outer-div `opacity: 0.55` (preserving Mantine 8's active-pill indicator per Pitfall #5), and feed the Phase-34 `EmptyExtensionsCoordinator` with accurate emptiness counts WITHOUT requiring any tab click. Live-Blaze UAT scaffold authored for ROADMAP §42 SC #4.
+- One-liner:
+- One-liner:
+- hl7.fhir.uv.ips@2.0.0 (CC0-1.0) bundled as 32 trimmed StructureDefinitions with URL-keyed lazy-load IPS_REGISTRY, getIpsProfileForUrl helper, LICENSE attribution, and Wave 0 stubs ready for Plan 44-02 walker.
+- Pure-function IPS bundle walker + IPSPanel UI (paste tab + server picker + Validate button) reachable at `/quality/ips`, surfacing missing-required-section, empty-entry, and unresolvable-reference findings via the unmodified Phase 15 ResourceIssueTable.
+
+---
+
+## v1.6 Hardening, UX Polish & Carry-Overs (Shipped: 2026-04-30)
+
+**Phases completed:** 20 phases, 48 plans, 78 tasks
+
+**Key accomplishments:**
+
+- Delivered the cohort-domain pure module (types, storage keys, parsePatientRefs, findActiveCohort) plus all 7 Wave 0 test files with skip-stubs locking VALIDATION.md -t filters for Plans 21-02..05 to un-skip.
+- 1. [Rule 3 — Blocking] Strict TS on test fixtures
+- Helper
+- Component shape:
+- Status:
+- FHIRPath AST-to-FHIR-search-URL translator and cohortResolver fhirpath branch — both foundations for CHRT-05 programmatic cohort definitions ship with full test coverage and a 10K-ID cap, ready for the Plan 22-03 UI layer.
+- MII FDPG Codex Structured Query v3 codec (cohortToFdpgSq / fdpgSqToCohort) with 1 MB cap and prototype-pollution defence, plus useCohorts.updateCohort/deleteCohort/duplicateCohort extensions satisfying D-10 cache-invalidation.
+- Wave 2 UI for CHRT-05 (FHIRPath Validate flow with 10s AbortController dry-run), CHRT-06 (FDPG Import/Export via FileButton + per-row Menu), and CHRT-07 (Edit/Duplicate/Delete modals) — wires the Wave 1 translator and codec into Mantine 8 chrome, with all 11 UI-SPEC toast strings locked verbatim.
+- One-liner:
+- One-liner:
+- proceed
+- One-liner:
+- Unit-level fix for the T-6.3 A UAT failure: scoped FHIR counts plumbed through useResourceCounts + autoStart:true added to 4 stale report hooks so cohort activation actually changes the quality dashboard.
+- Milestone audit:
+- Pure `asyncRunReducer` + React `useAsyncRun<TIssue>` hook with closure-scoped cancellation, ref-of-handles for cross-run cancel, and `autoStart` opt-in — 17/17 new tests green, zero `as` casts, zero `cancelledRef` variables.
+- Module-scope `Map<\`${serverUrl}::${type}\`, number>` read-through cache in `useResourceCounts` with closure-scoped `let cancelled` replacing `cancelledRef` and memoized `typesKey` absorbing the Phase 27 R12 effect-dep bug — all in one file touch.
+- Per-serverUrl `Map<serverUrl, QualityMetricsCache>` registry with 2-entry LRU + MRU touch replaces the rotating singleton in `useCompletenessReport` / `useCodingCoverage`; `SettingsContext.setSettings` and the Settings "Clear metrics cache" button now invalidate BOTH the metrics registry AND the count cache under a single user action.
+- All 4 async report hooks (`usePlausibilityReport`, `useLabRangesReport`, `useDuplicateReport`, `useReferenceReport`) now wrap `useAsyncRun<NormalizedIssue>` from Plan 24-01 — 635 → 340 LOC across the four files (-46%), zero `cancelledRef` variables remain, zero new `as` casts in the 6 quality consumer panels, all 4 existing panel test suites pass UNCHANGED, full vitest suite shows the same 22 pre-existing failures (no regressions).
+- PerTypeCoverageReport gains a deterministic representative CodeableConcept per aggregation path, populated in the walker's existing single pass, eliminating the `useExamplesByPath` double-fetch and halving coding drill-down server calls.
+- Generic N-run worker-pool hook (sibling to useAsyncRun) extracted from useCompletenessReport and useCodingCoverage; two shared UI primitives (SortableTh, RunProgress) collapse duplicated inline definitions from 11 Quality-module files.
+- Unified drill-down chrome extracted to `<DrillDownShell>`; 5 simple drill-downs collapse to a single invocation each and 2 asymmetric drill-downs (Coding, Completeness) PARTIAL-migrate via the shell-chrome + bespoke-body-sibling composition pattern, producing 164 LOC of gross reduction in this plan and a 287 LOC cumulative reduction versus RESEARCH.md's pre-25-02 baseline.
+- Cold-opening `/quality?tab=counts` no longer fires Completeness or Coding Coverage sampling -- the two Tabs.Panel entries drop `keepMounted` and the parent `<Tabs>` flips to `keepMounted={false}` so the Mantine OR-combine semantics let each panel's own prop decide. A new `vi.spyOn(SamplingModule, 'sampleResources')` regression test codifies the behavior with `.not.toHaveBeenCalled()` on cold Counts-tab mount. Closes Phase 25 with all 6 QDDEP requirements delivered.
+- Triplicated "Not connected" alert block extracted into a render-prop `<ConnectionGatedOutlet>` primitive with a children-slot escape hatch; three layouts migrated, regression-fenced by two new test files (11 tests).
+- Extracted wildcard identifier search into shared helper (5000/20 defaults to preserve call-site behavior), migrated 3 CompletenessRow links to Anchor+Link, and useCallback-wrapped setSettings to drop the exhaustive-deps eslint-disable — 3 atomic commits, zero test regressions, zero new lint warnings.
+- Sidebar nested-route activation migrated from exact-match to useMatch with per-row exact flag and most-specific-wins Quality/Cohorts rule — /patients/123, /explorer/Patient/1, /quality/plausibility/Observation now highlight their section roots; /quality/cohorts highlights ONLY Cohorts.
+- 1. [Rule 1 — Test design] Test B Text-node identity signal does not flip RED → GREEN
+- 1. [Rule 3 — Blocking issue] lazy-routes test harness initially included full AppLayout, which dragged in Sidebar's context dependencies
+- One-liner:
+- 1. [Rule 4 - Architectural assumption mismatch] DrillDownShell ref type — already correct, no edit applied
+- Source (15)
+- Three retroactive v1.5 VALIDATION.md files written — Phase 31 cites the 33-test cascade surface (phiGate/normalizers/cascadingValidator + ValidationPanel.phi-gate.integration); Phase 33 cites the ~66 net new tests across mii-modules + MiiModuleTab + ClinicalTimeline (836 → 902); Phase 38 declares observational posture with `phase_character: human_uat_observational` and enumerates the 12 walked HUMAN-UAT tests as its validation contract. All three flip `nyquist_compliant: true` based on retroactive review of existing test inventory; none fabricate compliance.
+- Closed AUDIT-01 + 4/5 NYQ-01 nyquist flips by retroactively writing 38.1-VERIFICATION.md (status passed, 6/6) and flipping `nyquist_compliant: false → true` on Phases 32/34/35/36; Phase 37 kept `false` with `pending: DEUT-01 in Phase 40` annotation per CONTEXT D-05.
+- One-liner:
+- Pure-JS Machado 2009 deuteranopia simulation + CIEDE2000 perceptual-distance gate covering all 21 MII module adjacent pairs in Vitest; surfaced one empirical regression (pair #6 kardiologie ↔ mikrobiologie ΔE2000 = 1.406 < 5.0) that paper analysis had missed.
+- `useMiiExtensionCounts(patientId)` React hook fans out one `_summary=count` GET per (extension module, FHIR type) pair on patient mount, sums per-type totals into per-module counts (D-02), and feeds the Phase-34 `EmptyExtensionsCoordinator` so the "Hide N empty modules" toggle is accurate on mount instead of accumulating after each extension tab is clicked (D-05).
+- `MiiModuleTabs.tsx` now consumes `useMiiExtensionCounts(patientId)` from inside `MiiModuleTabsInner` so extension tabs render `{germanLabel} (N)` on patient mount, dim 0-count pills via outer-div `opacity: 0.55` (preserving Mantine 8's active-pill indicator per Pitfall #5), and feed the Phase-34 `EmptyExtensionsCoordinator` with accurate emptiness counts WITHOUT requiring any tab click. Live-Blaze UAT scaffold authored for ROADMAP §42 SC #4.
+- One-liner:
+- One-liner:
+- hl7.fhir.uv.ips@2.0.0 (CC0-1.0) bundled as 32 trimmed StructureDefinitions with URL-keyed lazy-load IPS_REGISTRY, getIpsProfileForUrl helper, LICENSE attribution, and Wave 0 stubs ready for Plan 44-02 walker.
+- Pure-function IPS bundle walker + IPSPanel UI (paste tab + server picker + Validate button) reachable at `/quality/ips`, surfacing missing-required-section, empty-entry, and unresolvable-reference findings via the unmodified Phase 15 ResourceIssueTable.
+
+---
+
 ## v1.5 Validation, Performance & MII Extensions (Shipped: 2026-04-29)
 
 **Phases completed:** 7 phases, 30 plans, 79 tasks
