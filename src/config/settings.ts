@@ -1,5 +1,5 @@
 import yaml from 'js-yaml';
-import type { AppSettings } from './types';
+import type { AppSettings, ValidatorAuthConfig } from './types';
 
 // Mirror of SETTINGS_STORAGE_KEY in src/contexts/SettingsContext.tsx.
 // Duplicated here to avoid a circular module dependency
@@ -75,8 +75,21 @@ function deepMerge(defaults: AppSettings, partial: Record<string, unknown>): App
     // D-07 + D-18: external validator cascade block. Field-level narrowing
     // mirrors validatorUrl/batchSize pattern — invalid url drops the entire
     // block; invalid timeoutMs falls back to 15000.
+    //
+    // Phase 43 VAL-06 / D-01 / D-02 / T-43-06: also narrow `auth` and
+    // `semanticNearMisses`. CRITICAL: when `auth.type === 'bearer'`, the
+    // narrowing produces ONLY `{ type: 'bearer' }`. Any `token`/`credentials`/
+    // `password` fields the user may have placed in YAML are silently dropped
+    // here — bearer secrets NEVER cross the YAML→runtime boundary.
     let externalValidator:
-      | { url: string; enabled: boolean; timeoutMs: number; label?: string }
+      | {
+          url: string;
+          enabled: boolean;
+          timeoutMs: number;
+          label?: string;
+          auth?: ValidatorAuthConfig;
+          semanticNearMisses?: boolean;
+        }
       | undefined = undefined;
     if (validation.externalValidator && typeof validation.externalValidator === 'object') {
       const ext = validation.externalValidator as Record<string, unknown>;
@@ -90,9 +103,37 @@ function deepMerge(defaults: AppSettings, partial: Record<string, unknown>): App
         typeof ext.label === 'string' && ext.label.trim().length > 0
           ? ext.label.trim()
           : undefined;
+
+      // Phase 43 D-01/D-02 — auth narrowing. Bearer credentials in YAML are
+      // intentionally dropped; the only legitimate channel for a bearer token
+      // is the localStorage key managed by ValidatorAuthSettingsModal.
+      let auth: ValidatorAuthConfig | undefined;
+      if (ext.auth && typeof ext.auth === 'object') {
+        const a = ext.auth as Record<string, unknown>;
+        if (a.type === 'basic') {
+          const u = typeof a.username === 'string' ? a.username : undefined;
+          const p = typeof a.password === 'string' ? a.password : undefined;
+          if (u && p) auth = { type: 'basic', username: u, password: p };
+          // incomplete basic (missing username or password) → auth stays undefined
+        } else if (a.type === 'bearer') {
+          // T-43-06 lock: bearer credentials in YAML are silently dropped.
+          // We deliberately construct the object with NO `token`/`password`/
+          // `credentials` fields, regardless of what `a` carries.
+          auth = { type: 'bearer' };
+        }
+        // unknown auth.type → auth stays undefined
+      }
+
+      // Phase 43 D-11 — semanticNearMisses narrowing. Default-off; only
+      // attach to runtime when YAML explicitly opts in to `true`.
+      const semanticNearMisses =
+        typeof ext.semanticNearMisses === 'boolean' ? ext.semanticNearMisses : false;
+
       if (extUrl.length > 0) {
         externalValidator = { url: extUrl, enabled: extEnabled, timeoutMs: extTimeoutMs };
         if (extLabel) externalValidator.label = extLabel;
+        if (auth) externalValidator.auth = auth;
+        if (semanticNearMisses) externalValidator.semanticNearMisses = true;
       }
     }
     result.validation = {

@@ -32,7 +32,7 @@ terminology:
 #     high: 500
 #     unit: "mg/dL"
 
-# External FHIR validator cascade (Phase 31 UX-01)
+# External FHIR validator cascade (Phase 31 UX-01 + Phase 43 VAL-06/VAL-07)
 # Enables a 3-tier cascade: external → server $validate → local checker.
 # Every external call is PHI-gated (acknowledge PHI flow before first
 # fetch) and AbortController-wrapped with a 15-second default timeout.
@@ -44,3 +44,22 @@ terminology:
 #     enabled: false         # set true to activate the external tier
 #     timeoutMs: 15000       # optional; default 15000
 #     label: ""              # optional; blank = auto-detect from URL
+#
+#     # Phase 43 VAL-06 — HTTP authentication for protected validators.
+#     # Basic-auth credentials are accepted as plaintext below (intentional;
+#     # same trust boundary as the FHIR server URL above).
+#     # auth:
+#     #   type: basic
+#     #   username: alice
+#     #   password: secret
+#     #
+#     # Bearer tokens are entered via Settings → "Set bearer token" modal
+#     # (NEVER set them here on disk — the parser silently drops any
+#     # `token` / `credentials` / `password` fields when type is bearer).
+#     # auth:
+#     #   type: bearer
+#
+#     # Phase 43 VAL-07 — opt-in "Did you mean?" SNOMED/ICD-10 suggestions
+#     # for `code-invalid` issues. Default false; set to true to walk the
+#     # configured terminology server's $lookup hierarchy (depth 3, top 10).
+#     # semanticNearMisses: false

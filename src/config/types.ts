@@ -1,3 +1,25 @@
+/**
+ * Authentication config for the Phase 43 external-validator cascade.
+ *
+ * SECURITY (43-CONTEXT.md D-01 / D-02):
+ *   - Basic-auth credentials are accepted as plaintext in settings.yaml on
+ *     the user's local disk. Same trust boundary as the FHIR server URL.
+ *   - Bearer tokens NEVER persist to settings.yaml. The schema deliberately
+ *     omits any `token` / `credentials` field; the YAML parser silently drops
+ *     such fields if they appear (see src/config/settings.ts narrowing).
+ *     Bearer tokens live in localStorage under a versioned key managed by
+ *     ValidatorAuthSettingsModal — see that component for the exact key and
+ *     read/write helpers.
+ *
+ * NOTE: do NOT add a `token` field here. Doing so opens T-43-06 by giving
+ * users a place to paste org-issued bearer secrets into the on-disk YAML.
+ */
+export interface ValidatorAuthConfig {
+  type: 'basic' | 'bearer';
+  username?: string;  // basic only
+  password?: string;  // basic only — plaintext in settings.yaml is INTENTIONAL (D-01)
+}
+
 export interface AppSettings {
   fhir: {
     serverUrl: string;
@@ -37,6 +59,19 @@ export interface AppSettings {
       timeoutMs?: number;
       /** Optional override for the variant suffix in the Active-strategy status line (D-18). Blank → URL-pattern heuristic. */
       label?: string;
+      /**
+       * Phase 43 VAL-06: HTTP authentication for the external validator.
+       * Basic credentials live in YAML; bearer tokens NEVER do (see
+       * ValidatorAuthConfig docstring + 43-CONTEXT.md D-01/D-02).
+       */
+      auth?: ValidatorAuthConfig;
+      /**
+       * Phase 43 VAL-07: opt-in semantic near-miss suggestions for
+       * `code-invalid` issues. Walks the configured terminology server
+       * via `$lookup` (depth 3, 50-node abort, top-10 results). Default
+       * false (43-CONTEXT.md D-11).
+       */
+      semanticNearMisses?: boolean;
     };
   };
   /** Plausibility check thresholds (D-08). */
