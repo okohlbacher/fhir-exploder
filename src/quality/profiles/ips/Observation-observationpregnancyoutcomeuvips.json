@@ -1,0 +1,748 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "http://hl7.org/fhir/uv/ips/StructureDefinition/Observation-pregnancy-outcome-uv-ips",
+  "name": "ObservationPregnancyOutcomeUvIps",
+  "type": "Observation",
+  "snapshot": {
+    "element": [
+      {
+        "path": "Observation",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "path": "Observation.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "id"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "Observation.meta",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Meta"
+          }
+        ]
+      },
+      {
+        "path": "Observation.implicitRules",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "uri"
+          }
+        ]
+      },
+      {
+        "path": "Observation.language",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "Observation.text",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Narrative"
+          }
+        ]
+      },
+      {
+        "path": "Observation.contained",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Resource"
+          }
+        ]
+      },
+      {
+        "path": "Observation.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Observation.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Observation.identifier",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Identifier"
+          }
+        ]
+      },
+      {
+        "path": "Observation.basedOn",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/CarePlan|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/DeviceRequest|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/ImmunizationRecommendation|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/MedicationRequest|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/NutritionOrder|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/ServiceRequest|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.partOf",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/MedicationAdministration|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/MedicationDispense|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/MedicationStatement|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Procedure|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Immunization|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/ImagingStudy|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.status",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ObservationStatus"
+            }
+          ],
+          "strength": "required",
+          "description": "Codes providing the status of an observation.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/observation-status|4.0.1"
+        }
+      },
+      {
+        "path": "Observation.category",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Observation.code",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/uv/ips/StructureDefinition/CodeableConcept-uv-ips"
+            ]
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "ObservationCode"
+            }
+          ],
+          "strength": "required",
+          "valueSet": "http://hl7.org/fhir/uv/ips/ValueSet/pregnancies-summary-uv-ips"
+        }
+      },
+      {
+        "path": "Observation.subject",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.subject.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "Observation.subject.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Observation.subject.reference",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "Observation.subject.type",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "uri"
+          }
+        ]
+      },
+      {
+        "path": "Observation.subject.identifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Identifier"
+          }
+        ]
+      },
+      {
+        "path": "Observation.subject.display",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "Observation.focus",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Resource|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.encounter",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Encounter|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.effective[x]",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "Observation.issued",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "instant"
+          }
+        ]
+      },
+      {
+        "path": "Observation.performer",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Practitioner|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/PractitionerRole|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Organization|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/CareTeam|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Patient|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/RelatedPerson|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.value[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Quantity"
+          },
+          {
+            "code": "CodeableConcept"
+          },
+          {
+            "code": "string"
+          },
+          {
+            "code": "boolean"
+          },
+          {
+            "code": "integer"
+          },
+          {
+            "code": "Range"
+          },
+          {
+            "code": "Ratio"
+          },
+          {
+            "code": "SampledData"
+          },
+          {
+            "code": "time"
+          },
+          {
+            "code": "dateTime"
+          },
+          {
+            "code": "Period"
+          }
+        ]
+      },
+      {
+        "path": "Observation.value[x]",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "sliceName": "valueQuantity",
+        "type": [
+          {
+            "code": "Quantity"
+          }
+        ]
+      },
+      {
+        "path": "Observation.dataAbsentReason",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Observation.interpretation",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Observation.note",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Annotation"
+          }
+        ]
+      },
+      {
+        "path": "Observation.bodySite",
+        "min": 0,
+        "max": "0",
+        "mustSupport": false,
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Observation.method",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Observation.specimen",
+        "min": 0,
+        "max": "0",
+        "mustSupport": false,
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Specimen|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.device",
+        "min": 0,
+        "max": "0",
+        "mustSupport": false,
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Device|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/DeviceMetric|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.referenceRange",
+        "min": 0,
+        "max": "0",
+        "mustSupport": false,
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "Observation.referenceRange.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "Observation.referenceRange.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Observation.referenceRange.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Observation.referenceRange.low",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Quantity",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/SimpleQuantity|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.referenceRange.high",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Quantity",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/SimpleQuantity|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.referenceRange.type",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Observation.referenceRange.appliesTo",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Observation.referenceRange.age",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Range"
+          }
+        ]
+      },
+      {
+        "path": "Observation.referenceRange.text",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "Observation.hasMember",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Observation|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/QuestionnaireResponse|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/MolecularSequence|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.derivedFrom",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/DocumentReference|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/ImagingStudy|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Media|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/QuestionnaireResponse|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Observation|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/MolecularSequence|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Observation.component",
+        "min": 0,
+        "max": "0",
+        "mustSupport": false,
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "Observation.component.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "Observation.component.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Observation.component.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Observation.component.code",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Observation.component.value[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Quantity"
+          },
+          {
+            "code": "CodeableConcept"
+          },
+          {
+            "code": "string"
+          },
+          {
+            "code": "boolean"
+          },
+          {
+            "code": "integer"
+          },
+          {
+            "code": "Range"
+          },
+          {
+            "code": "Ratio"
+          },
+          {
+            "code": "SampledData"
+          },
+          {
+            "code": "time"
+          },
+          {
+            "code": "dateTime"
+          },
+          {
+            "code": "Period"
+          }
+        ]
+      },
+      {
+        "path": "Observation.component.dataAbsentReason",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Observation.component.interpretation",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Observation.component.referenceRange",
+        "min": 0,
+        "max": "*"
+      }
+    ]
+  }
+}

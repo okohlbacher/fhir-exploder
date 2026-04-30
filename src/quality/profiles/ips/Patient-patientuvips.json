@@ -1,0 +1,685 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips",
+  "name": "PatientUvIps",
+  "type": "Patient",
+  "snapshot": {
+    "element": [
+      {
+        "path": "Patient",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "path": "Patient.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "id"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "Patient.meta",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Meta"
+          }
+        ]
+      },
+      {
+        "path": "Patient.implicitRules",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "uri"
+          }
+        ]
+      },
+      {
+        "path": "Patient.language",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "Patient.text",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Narrative"
+          }
+        ]
+      },
+      {
+        "path": "Patient.contained",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Resource"
+          }
+        ]
+      },
+      {
+        "path": "Patient.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Patient.extension",
+        "min": 0,
+        "max": "*",
+        "sliceName": "genderIdentity",
+        "type": [
+          {
+            "code": "Extension",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/individual-genderIdentity|5.3.0-ballot-tc1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Patient.extension",
+        "min": 0,
+        "max": "*",
+        "sliceName": "personalPronouns",
+        "type": [
+          {
+            "code": "Extension",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/individual-pronouns|5.3.0-ballot-tc1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Patient.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Patient.identifier",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Identifier"
+          }
+        ]
+      },
+      {
+        "path": "Patient.active",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "boolean"
+          }
+        ]
+      },
+      {
+        "path": "Patient.name",
+        "min": 1,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "HumanName"
+          }
+        ]
+      },
+      {
+        "path": "Patient.name.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "Patient.name.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Patient.name.use",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "NameUse"
+            }
+          ],
+          "strength": "required",
+          "description": "The use of a human name.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/name-use|4.0.1"
+        }
+      },
+      {
+        "path": "Patient.name.text",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "Patient.name.family",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "Patient.name.given",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "Patient.name.prefix",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "Patient.name.suffix",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "Patient.name.period",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Period"
+          }
+        ]
+      },
+      {
+        "path": "Patient.telecom",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "ContactPoint"
+          }
+        ]
+      },
+      {
+        "path": "Patient.gender",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "AdministrativeGender"
+            }
+          ],
+          "strength": "required",
+          "description": "The gender of a person used for administrative purposes.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/administrative-gender|4.0.1"
+        }
+      },
+      {
+        "path": "Patient.birthDate",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "date"
+          }
+        ]
+      },
+      {
+        "path": "Patient.deceased[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "boolean"
+          },
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "Patient.address",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Address"
+          }
+        ]
+      },
+      {
+        "path": "Patient.maritalStatus",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Patient.multipleBirth[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "boolean"
+          },
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "Patient.photo",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Attachment"
+          }
+        ]
+      },
+      {
+        "path": "Patient.contact",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "Patient.contact.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "Patient.contact.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Patient.contact.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Patient.contact.relationship",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Patient.contact.name",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "HumanName"
+          }
+        ]
+      },
+      {
+        "path": "Patient.contact.telecom",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "ContactPoint"
+          }
+        ]
+      },
+      {
+        "path": "Patient.contact.address",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Address"
+          }
+        ]
+      },
+      {
+        "path": "Patient.contact.gender",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "AdministrativeGender"
+            }
+          ],
+          "strength": "required",
+          "description": "The gender of a person used for administrative purposes.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/administrative-gender|4.0.1"
+        }
+      },
+      {
+        "path": "Patient.contact.organization",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Organization|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Patient.contact.period",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Period"
+          }
+        ]
+      },
+      {
+        "path": "Patient.communication",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "Patient.communication.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "Patient.communication.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Patient.communication.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Patient.communication.language",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "Patient.communication.preferred",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "boolean"
+          }
+        ]
+      },
+      {
+        "path": "Patient.generalPractitioner",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Organization|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Practitioner|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/PractitionerRole|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Patient.managingOrganization",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Organization|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Patient.link",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "BackboneElement"
+          }
+        ]
+      },
+      {
+        "path": "Patient.link.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "Patient.link.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Patient.link.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "Patient.link.other",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-hierarchy",
+                "valueBoolean": false
+              }
+            ],
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Patient|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/RelatedPerson|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "Patient.link.type",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "LinkType"
+            }
+          ],
+          "strength": "required",
+          "description": "The type of link between this patient resource and another patient resource.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/link-type|4.0.1"
+        }
+      }
+    ]
+  }
+}

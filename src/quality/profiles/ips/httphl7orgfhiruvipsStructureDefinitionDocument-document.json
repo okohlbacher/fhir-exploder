@@ -1,0 +1,15 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "http://hl7.org/fhir/uv/ips/StructureDefinition/Document",
+  "name": "Document",
+  "type": "http://hl7.org/fhir/uv/ips/StructureDefinition/Document",
+  "snapshot": {
+    "element": [
+      {
+        "path": "Document",
+        "min": 0,
+        "max": "*"
+      }
+    ]
+  }
+}

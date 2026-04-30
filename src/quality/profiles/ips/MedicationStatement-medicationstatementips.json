@@ -1,0 +1,659 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "http://hl7.org/fhir/uv/ips/StructureDefinition/MedicationStatement-uv-ips",
+  "name": "MedicationStatementIPS",
+  "type": "MedicationStatement",
+  "snapshot": {
+    "element": [
+      {
+        "path": "MedicationStatement",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "path": "MedicationStatement.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "id"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.meta",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Meta"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.implicitRules",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "uri"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.language",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.text",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Narrative"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.contained",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Resource"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.identifier",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Identifier"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.basedOn",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/MedicationRequest|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/CarePlan|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/ServiceRequest|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.partOf",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/MedicationAdministration|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/MedicationDispense|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/MedicationStatement|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Procedure|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Observation|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.status",
+        "min": 1,
+        "max": "1",
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "extension": [
+            {
+              "url": "http://hl7.org/fhir/StructureDefinition/elementdefinition-bindingName",
+              "valueString": "MedicationStatementStatus"
+            }
+          ],
+          "strength": "required",
+          "description": "A coded concept indicating the current status of a MedicationStatement.",
+          "valueSet": "http://hl7.org/fhir/ValueSet/medication-statement-status|4.0.1"
+        }
+      },
+      {
+        "path": "MedicationStatement.statusReason",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.category",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.medication[x]",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "CodeableConcept",
+            "profile": [
+              "http://hl7.org/fhir/uv/ips/StructureDefinition/CodeableConcept-uv-ips"
+            ]
+          },
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/uv/ips/StructureDefinition/Medication-uv-ips"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.subject",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/uv/ips/StructureDefinition/Patient-uv-ips"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.subject.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.subject.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.subject.reference",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.subject.type",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "uri"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.subject.identifier",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Identifier"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.subject.display",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.context",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Encounter|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/EpisodeOfCare|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.effective[x]",
+        "min": 1,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "dateTime"
+          },
+          {
+            "code": "Period"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.effective[x]",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "sliceName": "effectiveDateTime",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dateAsserted",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.informationSource",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Patient|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Practitioner|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/PractitionerRole|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/RelatedPerson|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Organization|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.derivedFrom",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Resource|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.reasonCode",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.reasonReference",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Reference",
+            "targetProfile": [
+              "http://hl7.org/fhir/StructureDefinition/Condition|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/Observation|4.0.1",
+              "http://hl7.org/fhir/StructureDefinition/DiagnosticReport|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.note",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Annotation"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Dosage"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.modifierExtension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.sequence",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "integer"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.text",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.additionalInstruction",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.patientInstruction",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.timing",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Timing"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.asNeeded[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "boolean"
+          },
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.site",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.route",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.method",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.doseAndRate",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Element"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.doseAndRate.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.doseAndRate.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.doseAndRate.type",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "CodeableConcept"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.doseAndRate.dose[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Range"
+          },
+          {
+            "code": "Quantity",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/SimpleQuantity|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.doseAndRate.rate[x]",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Ratio"
+          },
+          {
+            "code": "Range"
+          },
+          {
+            "code": "Quantity",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/SimpleQuantity|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.maxDosePerPeriod",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Ratio"
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.maxDosePerAdministration",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Quantity",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/SimpleQuantity|4.0.1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "MedicationStatement.dosage.maxDosePerLifetime",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "code": "Quantity",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/SimpleQuantity|4.0.1"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

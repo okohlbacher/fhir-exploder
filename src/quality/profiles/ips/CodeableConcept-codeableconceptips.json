@@ -1,0 +1,126 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "http://hl7.org/fhir/uv/ips/StructureDefinition/CodeableConcept-uv-ips",
+  "name": "CodeableConceptIPS",
+  "type": "CodeableConcept",
+  "snapshot": {
+    "element": [
+      {
+        "path": "CodeableConcept",
+        "min": 0,
+        "max": "*"
+      },
+      {
+        "path": "CodeableConcept.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "CodeableConcept.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "CodeableConcept.coding",
+        "min": 0,
+        "max": "*",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "Coding",
+            "profile": [
+              "http://hl7.org/fhir/uv/ips/StructureDefinition/Coding-uv-ips"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "CodeableConcept.text",
+        "min": 0,
+        "max": "1",
+        "mustSupport": true,
+        "type": [
+          {
+            "code": "string"
+          }
+        ]
+      },
+      {
+        "path": "CodeableConcept.text.id",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      },
+      {
+        "path": "CodeableConcept.text.extension",
+        "min": 0,
+        "max": "*",
+        "type": [
+          {
+            "code": "Extension"
+          }
+        ]
+      },
+      {
+        "path": "CodeableConcept.text.extension",
+        "min": 0,
+        "max": "*",
+        "sliceName": "translation",
+        "type": [
+          {
+            "code": "Extension",
+            "profile": [
+              "http://hl7.org/fhir/StructureDefinition/translation|5.3.0-ballot-tc1"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "CodeableConcept.text.value",
+        "min": 0,
+        "max": "1",
+        "type": [
+          {
+            "extension": [
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/structuredefinition-fhir-type",
+                "valueUrl": "string"
+              },
+              {
+                "url": "http://hl7.org/fhir/StructureDefinition/regex",
+                "valueString": "[ \\r\\n\\t\\S]+"
+              }
+            ],
+            "code": "http://hl7.org/fhirpath/System.String"
+          }
+        ]
+      }
+    ]
+  }
+}

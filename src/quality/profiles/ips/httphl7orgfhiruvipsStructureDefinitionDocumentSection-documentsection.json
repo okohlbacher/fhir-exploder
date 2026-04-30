@@ -1,0 +1,15 @@
+{
+  "resourceType": "StructureDefinition",
+  "url": "http://hl7.org/fhir/uv/ips/StructureDefinition/DocumentSection",
+  "name": "DocumentSection",
+  "type": "http://hl7.org/fhir/uv/ips/StructureDefinition/DocumentSection",
+  "snapshot": {
+    "element": [
+      {
+        "path": "DocumentSection",
+        "min": 0,
+        "max": "*"
+      }
+    ]
+  }
+}
