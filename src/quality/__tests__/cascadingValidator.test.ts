@@ -319,4 +319,258 @@ describe('cascadingValidator', () => {
     // Wrapper support lands.
     expect(detectValidatorVariant('https://validator.fhir.org/validator')).toBe('HAPI');
   });
+
+  // ---------------------------------------------------------------------------
+  // Phase 43 VAL-06 (Plan 43-01 Task 3) — Authorization header injection,
+  // auth-missing / auth-failed notify events, PHI-gate ordering invariant.
+  //
+  // Decisions enforced:
+  //   D-02: bearer token loaded from localStorage 'validator.bearerToken.v1'
+  //         per call; absent → demote with notify('auth-missing').
+  //   D-04: header build runs AFTER PHI gate, BEFORE AbortController alloc.
+  //   D-05: header formats — `Basic ${btoa(u:p)}` and `Bearer ${token}`.
+  //   D-13: 401/403 → demote with notify('auth-failed').
+  //   D-21: notify payloads carry `{ from, to, authType?, status? }`; NO
+  //         credential strings.
+  //   T-43-05: bearer-token reader is NOT invoked when PHI is unacknowledged
+  //            (the PHI gate runs first and short-circuits).
+  // ---------------------------------------------------------------------------
+
+  it('Test 16 (auth basic): outgoing fetch carries Authorization: Basic <b64>', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({ resourceType: 'OperationOutcome', issue: [] }),
+        { status: 200 },
+      ),
+    );
+    const opts = buildOptions({
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        auth: { type: 'basic', username: 'alice', password: 'secret' },
+      } as CascadeOptions['externalValidator'],
+    });
+    await validateWithCascade(buildResource(), opts);
+    expect(fetchSpy).toHaveBeenCalled();
+    const init = fetchSpy.mock.calls[0]?.[1] as RequestInit | undefined;
+    const headers = (init?.headers ?? {}) as Record<string, string>;
+    expect(headers.Authorization).toBe(`Basic ${btoa('alice:secret')}`);
+  });
+
+  it('Test 17 (auth bearer): localStorage token → Authorization: Bearer <token>', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    window.localStorage.setItem('validator.bearerToken.v1', 'tok-abc-123');
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({ resourceType: 'OperationOutcome', issue: [] }),
+        { status: 200 },
+      ),
+    );
+    const opts = buildOptions({
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        auth: { type: 'bearer' },
+      } as CascadeOptions['externalValidator'],
+    });
+    await validateWithCascade(buildResource(), opts);
+    expect(fetchSpy).toHaveBeenCalled();
+    const init = fetchSpy.mock.calls[0]?.[1] as RequestInit | undefined;
+    const headers = (init?.headers ?? {}) as Record<string, string>;
+    expect(headers.Authorization).toBe('Bearer tok-abc-123');
+  });
+
+  it('Test 18 (auth-missing): bearer + empty localStorage → demote with notify(auth-missing)', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    // NO token in localStorage
+    const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue(new Response('{}'));
+    (createRemoteBackend as unknown as Mock).mockReturnValue({
+      kind: 'remote',
+      validate: vi.fn().mockResolvedValue([]),
+    });
+    const notify = vi.fn();
+    const opts = buildOptions({
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        auth: { type: 'bearer' },
+      } as CascadeOptions['externalValidator'],
+      settings: {
+        fhir: { serverUrl: SERVER_URL, auth: { mode: 'open' } },
+        validation: { validatorUrl: 'http://server-tier/' },
+      } as CascadeOptions['settings'] extends infer T ? T : never,
+      notify,
+    });
+    await validateWithCascade(buildResource(), opts);
+    // External fetch never fired (bearer token missing)
+    expect(fetchSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('hapi.fhir.org'),
+      expect.anything(),
+    );
+    expect(notify).toHaveBeenCalledWith(
+      'auth-missing',
+      expect.objectContaining({ from: 'external', to: 'server', authType: 'bearer' }),
+    );
+    expect(opts.probe.get(probeKey(SERVER_URL, EXT_URL, 'Patient'))).toBe('server');
+  });
+
+  it('Test 19 (auth-failed 401): basic auth + 401 → notify(auth-failed) + demote', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    vi.spyOn(global, 'fetch').mockResolvedValue(new Response('', { status: 401 }));
+    (createRemoteBackend as unknown as Mock).mockReturnValue({
+      kind: 'remote',
+      validate: vi.fn().mockResolvedValue([]),
+    });
+    const notify = vi.fn();
+    const opts = buildOptions({
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        auth: { type: 'basic', username: 'alice', password: 'secret' },
+      } as CascadeOptions['externalValidator'],
+      settings: {
+        fhir: { serverUrl: SERVER_URL, auth: { mode: 'open' } },
+        validation: { validatorUrl: 'http://server-tier/' },
+      } as CascadeOptions['settings'] extends infer T ? T : never,
+      notify,
+    });
+    await validateWithCascade(buildResource(), opts);
+    expect(notify).toHaveBeenCalledWith('auth-failed', {
+      from: 'external',
+      to: 'server',
+      authType: 'basic',
+      status: 401,
+    });
+    expect(opts.probe.get(probeKey(SERVER_URL, EXT_URL, 'Patient'))).toBe('server');
+  });
+
+  it('Test 19b (auth-failed 403): same as 19 but status 403', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    vi.spyOn(global, 'fetch').mockResolvedValue(new Response('', { status: 403 }));
+    (createRemoteBackend as unknown as Mock).mockReturnValue({
+      kind: 'remote',
+      validate: vi.fn().mockResolvedValue([]),
+    });
+    const notify = vi.fn();
+    const opts = buildOptions({
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        auth: { type: 'basic', username: 'alice', password: 'secret' },
+      } as CascadeOptions['externalValidator'],
+      settings: {
+        fhir: { serverUrl: SERVER_URL, auth: { mode: 'open' } },
+        validation: { validatorUrl: 'http://server-tier/' },
+      } as CascadeOptions['settings'] extends infer T ? T : never,
+      notify,
+    });
+    await validateWithCascade(buildResource(), opts);
+    expect(notify).toHaveBeenCalledWith('auth-failed', {
+      from: 'external',
+      to: 'server',
+      authType: 'basic',
+      status: 403,
+    });
+    expect(opts.probe.get(probeKey(SERVER_URL, EXT_URL, 'Patient'))).toBe('server');
+  });
+
+  it('Test 20 (T-43-02 no-leak): credentials NEVER appear in any notify payload', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    window.localStorage.setItem('validator.bearerToken.v1', 'tok-abc-123');
+    vi.spyOn(global, 'fetch').mockResolvedValue(new Response('', { status: 401 }));
+    (createRemoteBackend as unknown as Mock).mockReturnValue({
+      kind: 'remote',
+      validate: vi.fn().mockResolvedValue([]),
+    });
+    const notify = vi.fn();
+    const opts = buildOptions({
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        auth: { type: 'basic', username: 'alice', password: 'secret' },
+      } as CascadeOptions['externalValidator'],
+      settings: {
+        fhir: { serverUrl: SERVER_URL, auth: { mode: 'open' } },
+        validation: { validatorUrl: 'http://server-tier/' },
+      } as CascadeOptions['settings'] extends infer T ? T : never,
+      notify,
+    });
+    await validateWithCascade(buildResource(), opts);
+    const dump = JSON.stringify(notify.mock.calls);
+    expect(dump).not.toContain('secret');
+    expect(dump).not.toContain('alice');
+    expect(dump).not.toContain('tok-abc-123');
+    // Also assert no base64 of the credentials (Basic header b64 of alice:secret)
+    expect(dump).not.toContain(btoa('alice:secret'));
+  });
+
+  it('Test 21 (D-05 fresh encode): two consecutive validate calls re-encode basic credentials', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({ resourceType: 'OperationOutcome', issue: [] }),
+        { status: 200 },
+      ),
+    );
+    // Spy on btoa via the global to count invocations.
+    const btoaSpy = vi.spyOn(globalThis, 'btoa');
+    btoaSpy.mockClear();
+    const opts1 = buildOptions({
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        auth: { type: 'basic', username: 'alice', password: 'secret' },
+      } as CascadeOptions['externalValidator'],
+    });
+    await validateWithCascade(buildResource(), opts1);
+    const opts2 = buildOptions({
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        auth: { type: 'basic', username: 'alice', password: 'secret' },
+      } as CascadeOptions['externalValidator'],
+    });
+    await validateWithCascade(buildResource(), opts2);
+    // The cascade may call btoa for other reasons too (URL encoding etc.) —
+    // assert it was called at least twice WITH the credential string.
+    const credCalls = btoaSpy.mock.calls.filter(([s]) => s === 'alice:secret');
+    expect(credCalls.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('Test 22 (T-43-05 ordering): bearer + PHI NOT acknowledged → localStorage NEVER read for bearer token', async () => {
+    // PHI ack key absent → gate fails. Token reader MUST NOT run.
+    const tokenReadSpy = vi.spyOn(Storage.prototype, 'getItem');
+    tokenReadSpy.mockClear();
+    (createRemoteBackend as unknown as Mock).mockReturnValue({
+      kind: 'remote',
+      validate: vi.fn().mockResolvedValue([]),
+    });
+    vi.spyOn(global, 'fetch').mockResolvedValue(new Response('{}'));
+    const opts = buildOptions({
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        auth: { type: 'bearer' },
+      } as CascadeOptions['externalValidator'],
+      settings: {
+        fhir: { serverUrl: SERVER_URL, auth: { mode: 'open' } },
+        validation: { validatorUrl: 'http://server-tier/' },
+      } as CascadeOptions['settings'] extends infer T ? T : never,
+    });
+    await validateWithCascade(buildResource(), opts);
+    const bearerReads = tokenReadSpy.mock.calls.filter(
+      ([key]) => key === 'validator.bearerToken.v1',
+    );
+    expect(bearerReads).toHaveLength(0);
+  });
 });

@@ -31,7 +31,7 @@ import type {
   OperationOutcome,
   OperationOutcomeIssue,
 } from '@medplum/fhirtypes';
-import type { AppSettings } from '../config/types';
+import type { AppSettings, ValidatorAuthConfig } from '../config/types';
 import type { NormalizedIssue } from './types';
 import { isPhiAcknowledged } from './phiGate';
 import { normalizeOperationOutcomeIssue } from './normalizers';
@@ -42,20 +42,63 @@ import { getProfileForType } from './profiles';
 export type ActiveStrategy = 'external' | 'server' | 'local' | 'probe-failed';
 export type ProbeKey = string;
 
+/**
+ * Phase 43 VAL-06 (D-02) — bearer-token storage key.
+ *
+ * SECURITY: NEVER serialize this key's value to disk. The token lives in
+ * localStorage only, written by ValidatorAuthSettingsModal and read fresh
+ * per `tryExternal` call. See 43-CONTEXT.md D-01/D-02.
+ */
+export const VALIDATOR_BEARER_TOKEN_KEY = 'validator.bearerToken.v1';
+
+/** Read the bearer token from localStorage. Returns null on absence/error. */
+export function readBearerToken(): string | null {
+  if (typeof window === 'undefined' || !window.localStorage) return null;
+  try {
+    const raw = window.localStorage.getItem(VALIDATOR_BEARER_TOKEN_KEY);
+    return raw && raw.length > 0 ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
 export interface CascadeOptions {
   serverUrl: string;
   resourceType: string;
-  externalValidator?: { url: string; enabled: boolean; timeoutMs: number; label?: string };
+  /**
+   * External validator block — NOTE: never store credentials on this object.
+   * `auth` carries TYPE + (basic) username/password only; bearer tokens are
+   * read fresh per call from localStorage inside `tryExternal` so the token
+   * never crosses the `notify()` boundary (T-43-02).
+   */
+  externalValidator?: {
+    url: string;
+    enabled: boolean;
+    timeoutMs: number;
+    label?: string;
+    auth?: ValidatorAuthConfig;
+  };
   probe: Map<ProbeKey, ActiveStrategy>;
   abort: AbortController;
   profile?: StructureDefinition | null;
   settings: AppSettings | null;
+  /**
+   * Phase 43 D-21 — notify payloads carry telemetry only:
+   *   `from`, `to`         — tier transition (existing)
+   *   `timeoutMs`          — set on `'timeout'` kind only (existing)
+   *   `authType`, `status` — set on `'auth-missing'` / `'auth-failed'` kinds
+   * Credentials (username, password, base64, raw token) MUST NEVER appear in
+   * the payload; the cascade builds the Authorization header LOCALLY inside
+   * `tryExternal` and discards it before notify is called.
+   */
   notify?: (
-    kind: 'timeout' | 'cors' | 'demote',
+    kind: 'timeout' | 'cors' | 'demote' | 'auth-missing' | 'auth-failed',
     payload: {
       from: ActiveStrategy;
       to: ActiveStrategy;
       timeoutMs?: number;
+      authType?: 'basic' | 'bearer';
+      status?: number;
     },
   ) => void;
 }
@@ -129,8 +172,44 @@ async function tryExternal(
   if (!ext || !ext.enabled || !ext.url) return null;
 
   // D-09 PHI GATE — re-evaluated per-fetch (PITFALLS #3). MUST run BEFORE AbortController alloc.
+  // Phase 43 D-04 / T-43-05 ORDERING LOCK: this gate is the FIRST guard in
+  // tryExternal. The Authorization header build below MUST stay AFTER this
+  // call. Reordering opens an auth-without-PHI bypass — see Test 22 +
+  // ValidationPanel.phi-gate.integration.test.tsx Tests D + E.
   if (!isPhiAcknowledged(opts.serverUrl, ext.url)) {
     return null;
+  }
+
+  // Phase 43 D-04 / D-05 / D-21 — Authorization header injection.
+  // Built AFTER PHI gate, BEFORE AbortController allocation. Header is a
+  // LOCAL variable; never attached to `opts.externalValidator` or any
+  // object that crosses the `notify()` boundary (T-43-02 mitigation).
+  // ANTI-PATTERN GUARD: this block lives OUTSIDE the fetch try/catch so
+  // header-build errors do not get swallowed by the CORS heuristic (PITFALL).
+  // Header formats (D-05): `Authorization: Basic <b64(user:pass)>` (RFC 7617)
+  // and `Authorization: Bearer <token>` (RFC 6750).
+  let authHeader: string | null = null;
+  if (ext.auth?.type === 'basic' && ext.auth.username && ext.auth.password) {
+    // RFC 7617 — Basic. Re-encoded per request (no caching of the b64 form).
+    authHeader = `Basic ${btoa(`${ext.auth.username}:${ext.auth.password}`)}`;
+  } else if (ext.auth?.type === 'bearer') {
+    // Read fresh per call so user-driven rotation via the modal takes effect
+    // immediately on the next validate. AFTER the PHI gate so the bearer key
+    // is never even read when PHI is unacknowledged (T-43-05 lock).
+    const token = readBearerToken();
+    if (!token) {
+      // D-02 / T-43-03: bearer configured but token absent → demote silently
+      // to server tier with auth-missing notify (banner copy reflects state).
+      opts.notify?.('auth-missing', {
+        from: 'external',
+        to: 'server',
+        authType: 'bearer',
+      });
+      opts.probe.set(probeKey(opts.serverUrl, ext.url, resource.resourceType), 'server');
+      return null;
+    }
+    // RFC 6750 — Bearer. Token is raw (caller is responsible for encoding).
+    authHeader = `Bearer ${token}`;
   }
 
   const timeoutController = new AbortController();
@@ -145,12 +224,29 @@ async function tryExternal(
     const query = profileCanonical ? `?profile=${encodeURIComponent(profileCanonical)}` : '';
     const base = ext.url.endsWith('/') ? ext.url : `${ext.url}/`;
     const url = `${base}${resource.resourceType}/$validate${query}`;
+    // Build headers object as a local — Authorization is conditionally added.
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/fhir+json',
+    };
+    if (authHeader) headers.Authorization = authHeader;
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/fhir+json' },
+      headers,
       body: JSON.stringify(resource),
       signal: timeoutController.signal,
     });
+    // Phase 43 D-13 / T-43-04: 401/403 → demote with auth-failed notify.
+    // Auth payload limited to authType + status; NO credential strings.
+    if (res.status === 401 || res.status === 403) {
+      opts.notify?.('auth-failed', {
+        from: 'external',
+        to: 'server',
+        authType: ext.auth?.type,
+        status: res.status,
+      });
+      opts.probe.set(probeKey(opts.serverUrl, ext.url, resource.resourceType), 'server');
+      return null;
+    }
     if (!res.ok) {
       opts.notify?.('demote', { from: 'external', to: 'server' });
       return null;
