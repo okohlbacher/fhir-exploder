@@ -546,6 +546,64 @@ describe('cascadingValidator', () => {
     expect(credCalls.length).toBeGreaterThanOrEqual(2);
   });
 
+  it('Test 23 (T-43-04 probe-rotate): probe cache invalidates when bearer token rotates', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    window.localStorage.setItem('validator.bearerToken.v1', 'token-A');
+    // Use mockImplementation so each fetch call returns a FRESH Response
+    // (Response.json() consumes the body; reusing the same instance fails
+    // the second call). Capture the Authorization header per call so we
+    // can prove the rotated token was actually sent on the second run.
+    const authHeadersSeen: string[] = [];
+    vi.spyOn(global, 'fetch').mockImplementation((_url, init) => {
+      const headers = ((init as RequestInit | undefined)?.headers ?? {}) as Record<
+        string,
+        string
+      >;
+      if (headers.Authorization) authHeadersSeen.push(headers.Authorization);
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ resourceType: 'OperationOutcome', issue: [] }),
+          { status: 200 },
+        ),
+      );
+    });
+    const probe = new Map<ProbeKey, ActiveStrategy>();
+    const opts1 = buildOptions({
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        auth: { type: 'bearer' },
+      } as CascadeOptions['externalValidator'],
+      probe,
+    });
+    await validateWithCascade(buildResource(), opts1);
+    const pk = probeKey(SERVER_URL, EXT_URL, 'Patient');
+    expect(probe.get(pk)).toBe('external');
+    expect(authHeadersSeen[0]).toBe('Bearer token-A');
+
+    // Rotate the token (the user opened the modal and saved a new token).
+    window.localStorage.setItem('validator.bearerToken.v1', 'token-B-rotated');
+    // The caller (useConformanceRun) wipes the probe cache when the bearer
+    // length signature changes — simulate that contract here.
+    clearProbeCache(probe);
+    expect(probe.has(pk)).toBe(false);
+
+    const opts2 = buildOptions({
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        auth: { type: 'bearer' },
+      } as CascadeOptions['externalValidator'],
+      probe,
+    });
+    await validateWithCascade(buildResource(), opts2);
+    expect(probe.get(pk)).toBe('external');
+    // The rotated token reached the validator on run 2.
+    expect(authHeadersSeen[1]).toBe('Bearer token-B-rotated');
+  });
+
   it('Test 22 (T-43-05 ordering): bearer + PHI NOT acknowledged → localStorage NEVER read for bearer token', async () => {
     // PHI ack key absent → gate fails. Token reader MUST NOT run.
     const tokenReadSpy = vi.spyOn(Storage.prototype, 'getItem');

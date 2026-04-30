@@ -151,7 +151,36 @@ export function useConformanceRun({
 
   // D-17: full-wipe probe cache on ANY externalValidator settings change.
   // Serialize via JSON.stringify to detect url/enabled/timeoutMs/label changes.
-  const extSerialized = JSON.stringify(settings?.validation?.externalValidator ?? null);
+  //
+  // Phase 43 VAL-06 / T-43-04 (RESEARCH Pitfall 2 + Open Question 2):
+  // Also include a signature derived from the bearer token in localStorage
+  // so a token rotation invalidates the probe cache and the next run
+  // re-probes the external tier. We serialize the token's LENGTH (not the
+  // raw value) so this dep can surface in React DevTools without leaking
+  // the secret. A custom 'validator-bearer-token-changed' event listener
+  // forces a re-render so the length signature is re-read promptly.
+  const [bearerSignatureBump, setBearerSignatureBump] = useState(0);
+  useEffect(() => {
+    const handler = () => setBearerSignatureBump((n) => n + 1);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('validator-bearer-token-changed', handler);
+      return () => window.removeEventListener('validator-bearer-token-changed', handler);
+    }
+    return undefined;
+  }, []);
+  const extSerialized = (() => {
+    const ext = settings?.validation?.externalValidator;
+    if (!ext) return JSON.stringify(null);
+    let bearerLen = 0;
+    if (ext.auth?.type === 'bearer' && typeof window !== 'undefined') {
+      try {
+        bearerLen = (window.localStorage.getItem('validator.bearerToken.v1') ?? '').length;
+      } catch {
+        bearerLen = 0;
+      }
+    }
+    return JSON.stringify({ ...ext, _bearerLen: bearerLen, _bump: bearerSignatureBump });
+  })();
   useEffect(() => {
     clearProbeCache(probeCacheRef.current);
     setActiveStrategy(null);

@@ -18,6 +18,7 @@ import {
   IconAlertTriangle,
   IconCheck,
   IconPlugConnected,
+  IconShield,
   IconTrash,
   IconX,
 } from '@tabler/icons-react';
@@ -32,6 +33,7 @@ import { useTerminologyHealth } from '../../hooks/useTerminologyHealth';
 import { TERMINOLOGY_STATUS_CONFIG } from '../../terminology/statusConfig';
 import { clearAllQualityMetrics } from '../../quality/metricsCache';
 import { clearAllQualityCountCache } from '../../hooks/useResourceCounts';
+import { ValidatorAuthSettingsModal } from './ValidatorAuthSettingsModal';
 
 interface SettingsPageProps {
   settings: AppSettings | null;
@@ -60,6 +62,8 @@ export function SettingsPage({ settings, usingDefaults }: SettingsPageProps) {
   const [password, setPassword] = useState('');
   const [token, setToken] = useState('');
   const [testStatus, setTestStatus] = useState<TestStatus>({ kind: 'idle' });
+  // Phase 43 VAL-06 / D-03 — bearer-token modal trigger state.
+  const [validatorAuthModalOpen, setValidatorAuthModalOpen] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -386,6 +390,31 @@ export function SettingsPage({ settings, usingDefaults }: SettingsPageProps) {
             <Code>{settings?.validation?.batchSize ?? 25}</Code>
           </div>
 
+          {/*
+            Phase 43 VAL-06 / D-03 — bearer-token modal trigger. Visible
+            ONLY when the external validator is configured with bearer auth
+            (basic auth credentials live in settings.yaml, not the modal).
+          */}
+          {settings?.validation?.externalValidator?.auth?.type === 'bearer' && (
+            <div>
+              <Text fw={600} size="sm" mb={4}>
+                Bearer token
+              </Text>
+              <Text c="dimmed" size="xs" mb={6}>
+                Stored in browser localStorage (<Code>validator.bearerToken.v1</Code>) — never
+                written to <Code>settings.yaml</Code>.
+              </Text>
+              <Button
+                variant="light"
+                size="sm"
+                leftSection={<IconShield size={16} />}
+                onClick={() => setValidatorAuthModalOpen(true)}
+              >
+                Set bearer token
+              </Button>
+            </div>
+          )}
+
           <div>
             <Button
               variant="light"
@@ -399,6 +428,12 @@ export function SettingsPage({ settings, usingDefaults }: SettingsPageProps) {
           </div>
         </Stack>
       </Paper>
+
+      <ValidatorAuthSettingsModal
+        opened={validatorAuthModalOpen}
+        onClose={() => setValidatorAuthModalOpen(false)}
+        validatorUrl={settings?.validation?.externalValidator?.url ?? ''}
+      />
 
       <Text c="dimmed" size="sm">
         FHIR server settings above are editable and persist in local storage. Other sections
