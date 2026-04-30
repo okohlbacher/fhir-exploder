@@ -100,6 +100,8 @@ describe('cascadingValidator', () => {
         field: 'Patient.name',
         description: 'required -- missing name',
         severity: 'error',
+        // Phase 43 VAL-07 (Plan 43-02 Task 2): raw FHIR issue.code preserved.
+        code: 'required',
       },
     ]);
     expect(opts.probe.get(probeKey(SERVER_URL, EXT_URL, 'Patient'))).toBe('external');
