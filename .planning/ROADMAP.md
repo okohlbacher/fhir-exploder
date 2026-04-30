@@ -99,7 +99,7 @@ Full details: [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md) . [Audit]
 - [x] **Phase 42: Pre-probe extension-module counts (MII-EXT-15)** — Tab labels show `Onkologie (12)` before click via parallel `_summary=count` probes; zero-count tabs dimmed (completed 2026-04-29)
 - [x] **Phase 43: Validator hardening — auth + semantic near-miss (VAL-06 + VAL-07)** — HTTP Basic/Bearer on external validator + opt-in SNOMED CT / ICD-10 graph-walked "Did you mean?" suggestions (completed 2026-04-30)
 - [x] **Phase 44: IPS Compositions support (IPS-01)** — Bundle validation against IPS profile with Empty-Sections-and-Missing-Data drill-down (completed 2026-04-30)
-- [ ] **Phase 45: Mantine 9 upgrade (STACK-01)** — Conditional on `@medplum/react` peer-dep readiness; defers to v1.7 with `WAIVE-AND-DEFER` if gate fails
+- [x] **Phase 45: Mantine 9 upgrade (STACK-01)** — Conditional on `@medplum/react` peer-dep readiness; defers to v1.7 with `WAIVE-AND-DEFER` if gate fails (completed 2026-04-30)
 
 ## Phase Details
 
@@ -226,7 +226,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 45-01: TBD (peer-dep pre-flight gate + decision record OR proceed with bump)
+- [x] 45-01: TBD (peer-dep pre-flight gate + decision record OR proceed with bump)
 - [ ] 45-02: TBD (Mantine 9 + React 19 codemod + breaking-change sweep + visual UAT — conditional on 45-01 PASS)
 
 ## Progress
@@ -247,7 +247,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 | 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 2/2 | Complete    | 2026-04-29 |
 | 43. Validator hardening — auth + semantic (VAL-06 + VAL-07) | v1.6 | 2/2 | Complete    | 2026-04-30 |
 | 44. IPS Compositions support (IPS-01) | v1.6 | 2/2 | Complete    | 2026-04-30 |
-| 45. Mantine 9 upgrade (STACK-01) | v1.6 | 0/TBD | Not started | - |
+| 45. Mantine 9 upgrade (STACK-01) | v1.6 | 1/0 | Complete    | 2026-04-30 |
 
 ## Backlog
 
@@ -266,7 +266,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 **Source:** Verifier observation surfaced during Phase 38 HUMAN-UAT walk (2026-04-28), Plan 38-02 Test 1 (Explorer Date/Status columns across 6 types). The MedicationStatement empty-state navigation made the noise pattern obvious.
 
 **Requirements:** EXPL-01 (Phase 41)
-**Plans:** 2/2 plans complete
+**Plans:** 1/0 plans complete
 
 ### Phase 999.2: Quality completeness — sort non-empty resource types to the top (BACKLOG)
 
