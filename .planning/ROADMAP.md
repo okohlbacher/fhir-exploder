@@ -202,14 +202,14 @@ Plans:
   2. Bundle validation entry-point lands in `ValidationPanel` (or a new dedicated `IPSPanel` reachable from `/quality`): user selects a Composition resource (or pastes a bundle), validator runs against the IPS profile and surfaces `OperationOutcome` issues classified by section.
   3. Per-section drill-down reuses Phase 15's `ResourceIssueTable` — Empty-Sections-and-Missing-Data findings render with section name, expected element, and severity; click-through to the underlying Composition resource works.
   4. Regression test fixture validates a known-incomplete IPS bundle and asserts at least 2 distinct empty-section findings (e.g. AllergyIntolerance section absent, Medications section empty); test passes 1064+/0 failing.
-**Plans**: TBD
+**Plans**: 2 plans (2 waves; 44-01 backbone → 44-02 user surface)
 **Effort**: large (2–3 days — package loader extension + panel UI + drill-down wiring + fixture-driven test)
 **Execution**: Fully automatable (with optional live-Blaze IPS UAT against a real IPS-tagged Composition if available)
 **UI hint**: yes
 
 Plans:
-- [ ] 44-01: TBD (IPS profile fetch script + registry wiring + LICENSE update)
-- [ ] 44-02: TBD (IPS panel UI + bundle validation runner + ResourceIssueTable drill-down + regression test)
+- [ ] 44-01-PLAN.md — wave 1: IPS profile fetch script (hl7.fhir.uv.ips@2.0.0) + IPS_REGISTRY (URL-keyed lazy thunks) + LICENSE/ATTRIBUTION update + shared trim() extraction + prepare-hook chain (T-44-01, T-44-05)
+- [ ] 44-02-PLAN.md — wave 2: ipsBundleValidator (16-section catalogue) + IPSPanel UI (paste + server-picker tabs) + /quality/ips route + sidebar + three-fixture regression (T-44-02, T-44-03, T-44-04, T-44-06)
 
 ### Phase 45: Mantine 9 upgrade (STACK-01)
 **Goal**: Bump Mantine 8 → 9 (and React 18 → 19 if required by upgrade) to track the upstream stack — conditional on `@medplum/react` peer-dep range allowing it. If the gate fails, defer to v1.7 with a documented `WAIVE-AND-DEFER` decision.
@@ -246,7 +246,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 | 41. Explorer + Quality UX polish (EXPL + QUAL-01/02/03) | v1.6 | 3/3 | Complete    | 2026-04-29 |
 | 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 2/2 | Complete    | 2026-04-29 |
 | 43. Validator hardening — auth + semantic (VAL-06 + VAL-07) | v1.6 | 2/2 | Complete    | 2026-04-30 |
-| 44. IPS Compositions support (IPS-01) | v1.6 | 0/TBD | Not started | - |
+| 44. IPS Compositions support (IPS-01) | v1.6 | 0/2 | Not started | - |
 | 45. Mantine 9 upgrade (STACK-01) | v1.6 | 0/TBD | Not started | - |
 
 ## Backlog
