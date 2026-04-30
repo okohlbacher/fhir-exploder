@@ -43,3 +43,31 @@ this file above.
 License text:
   CC-BY-4.0: https://creativecommons.org/licenses/by/4.0/legalcode
 ================================================================
+
+================================================================
+HL7 IPS Composition profile (HL7 International)
+
+This repository bundles the HL7 International Patient Summary (IPS)
+Composition profile (package `hl7.fhir.uv.ips`) under the directory
+`src/quality/profiles/ips/`. The bundled profile is a TRIMMED derivative
+of the upstream package (snapshot.element[] reduced to { path, min,
+max, mustSupport, sliceName, type, required-binding }) — no semantic
+changes to the profile definitions themselves.
+
+The HL7 IPS package ships under the **CC0-1.0** Public Domain
+Dedication. No attribution is legally required, but provenance is
+recorded here as good practice.
+
+  Package:        hl7.fhir.uv.ips
+  Bundled version: 2.0.0
+  Canonical URL:  http://hl7.org/fhir/uv/ips
+  License:        CC0-1.0
+  Source:         https://packages.fhir.org/hl7.fhir.uv.ips
+
+The FHIR Exploder source code (everything NOT under
+src/quality/profiles/ips/ and NOT under src/quality/profiles/extensions/)
+remains MIT-licensed per the body of this file above.
+
+License text:
+  CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+================================================================
