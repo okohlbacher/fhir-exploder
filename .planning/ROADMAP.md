@@ -97,7 +97,7 @@ Full details: [milestones/v1.5-ROADMAP.md](milestones/v1.5-ROADMAP.md) . [Audit]
 - [x] **Phase 40: Headless deuteranopia simulation in Vitest (DEUT)** — Brettel/Machado JS matrix CI gate for the 21 MII module adjacent pairs; closes Phase 37 deferral (completed 2026-04-29)
 - [x] **Phase 41: Explorer + Quality UX polish (EXPL + QUAL-01 + QUAL-02 + QUAL-03)** — Hide-empty-types toggle, N/A-rows-to-bottom sort fix, per-type matrix heat gradient, CSV export (completed 2026-04-29)
 - [x] **Phase 42: Pre-probe extension-module counts (MII-EXT-15)** — Tab labels show `Onkologie (12)` before click via parallel `_summary=count` probes; zero-count tabs dimmed (completed 2026-04-29)
-- [ ] **Phase 43: Validator hardening — auth + semantic near-miss (VAL-06 + VAL-07)** — HTTP Basic/Bearer on external validator + opt-in SNOMED CT / ICD-10 graph-walked "Did you mean?" suggestions
+- [x] **Phase 43: Validator hardening — auth + semantic near-miss (VAL-06 + VAL-07)** — HTTP Basic/Bearer on external validator + opt-in SNOMED CT / ICD-10 graph-walked "Did you mean?" suggestions (completed 2026-04-30)
 - [ ] **Phase 44: IPS Compositions support (IPS-01)** — Bundle validation against IPS profile with Empty-Sections-and-Missing-Data drill-down
 - [ ] **Phase 45: Mantine 9 upgrade (STACK-01)** — Conditional on `@medplum/react` peer-dep readiness; defers to v1.7 with `WAIVE-AND-DEFER` if gate fails
 
@@ -190,8 +190,8 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 43-01: TBD (settings.yaml schema + Authorization header injection + bearerToken.v1 storage + banner copy)
-- [ ] 43-02: TBD (semantic near-miss walker + opt-in setting + suggestion rows + Phase 31 normalizer extension + UAT)
+- [x] 43-01: TBD (settings.yaml schema + Authorization header injection + bearerToken.v1 storage + banner copy)
+- [x] 43-02: TBD (semantic near-miss walker + opt-in setting + suggestion rows + Phase 31 normalizer extension + UAT)
 
 ### Phase 44: IPS Compositions support (IPS-01)
 **Goal**: Validate FHIR resource bundles against the IPS (International Patient Summary) Composition profile so users can audit IPS conformance and see Empty-Sections-and-Missing-Data patterns in the existing drill-down chrome.
@@ -245,7 +245,7 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 | 40. Headless deuteranopia simulation (DEUT) | v1.6 | 1/1 | Complete    | 2026-04-29 |
 | 41. Explorer + Quality UX polish (EXPL + QUAL-01/02/03) | v1.6 | 3/3 | Complete    | 2026-04-29 |
 | 42. Pre-probe extension-module counts (MII-EXT-15) | v1.6 | 2/2 | Complete    | 2026-04-29 |
-| 43. Validator hardening — auth + semantic (VAL-06 + VAL-07) | v1.6 | 0/TBD | Not started | - |
+| 43. Validator hardening — auth + semantic (VAL-06 + VAL-07) | v1.6 | 2/2 | Complete    | 2026-04-30 |
 | 44. IPS Compositions support (IPS-01) | v1.6 | 0/TBD | Not started | - |
 | 45. Mantine 9 upgrade (STACK-01) | v1.6 | 0/TBD | Not started | - |
 
