@@ -633,4 +633,269 @@ describe('cascadingValidator', () => {
     );
     expect(bearerReads).toHaveLength(0);
   });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Phase 43 VAL-07 — semantic near-miss walker integration tests.
+  // Verifies the OPT-IN gate: walker only fires when
+  // (semanticNearMisses === true) AND (terminologyResolver provided) AND
+  // (onSuggestions callback provided) AND (issue.code === 'code-invalid').
+  // ─────────────────────────────────────────────────────────────────────
+
+  it('Test 24 (opt-in default-off): semanticNearMisses absent → walker NOT invoked, onSuggestions NEVER called', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    // Validator returns a code-invalid issue on Condition.code
+    const conditionResource = {
+      resourceType: 'Condition',
+      id: 'c1',
+      code: {
+        coding: [
+          { system: 'http://snomed.info/sct', code: 'BAD-SNOMED' },
+        ],
+      },
+    } as unknown as Resource;
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          resourceType: 'OperationOutcome',
+          issue: [
+            {
+              severity: 'error',
+              code: 'code-invalid',
+              expression: ['Condition.code'],
+              diagnostics: 'Invalid SNOMED',
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    const onSuggestions = vi.fn();
+    const lookupGet = vi.fn();
+    const opts = buildOptions({
+      resourceType: 'Condition',
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        // semanticNearMisses NOT set — must default to walker-disabled
+      },
+      terminologyResolver: {
+        client: { get: lookupGet },
+        lookupDisplay: vi.fn(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      onSuggestions,
+    });
+    await validateWithCascade(conditionResource, opts);
+    // Walker NEVER invoked → no $lookup calls AND no onSuggestions calls
+    expect(lookupGet).not.toHaveBeenCalled();
+    expect(onSuggestions).not.toHaveBeenCalled();
+  });
+
+  it('Test 24b (opt-in explicit-false): semanticNearMisses=false → walker NOT invoked', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    const conditionResource = {
+      resourceType: 'Condition',
+      id: 'c2',
+      code: { coding: [{ system: 'http://snomed.info/sct', code: 'BAD' }] },
+    } as unknown as Resource;
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          resourceType: 'OperationOutcome',
+          issue: [
+            {
+              severity: 'error',
+              code: 'code-invalid',
+              expression: ['Condition.code'],
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    const onSuggestions = vi.fn();
+    const lookupGet = vi.fn();
+    const opts = buildOptions({
+      resourceType: 'Condition',
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        semanticNearMisses: false, // explicit false — same as absent
+      },
+      terminologyResolver: {
+        client: { get: lookupGet },
+        lookupDisplay: vi.fn(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      onSuggestions,
+    });
+    await validateWithCascade(conditionResource, opts);
+    expect(lookupGet).not.toHaveBeenCalled();
+    expect(onSuggestions).not.toHaveBeenCalled();
+  });
+
+  it('Test 25 (opt-in ON, code-invalid): walker invoked once per (system,code); suggestions delivered via callback', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    const conditionResource = {
+      resourceType: 'Condition',
+      id: 'c3',
+      code: {
+        coding: [
+          { system: 'http://snomed.info/sct', code: 'BAD-CODE' },
+        ],
+      },
+    } as unknown as Resource;
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          resourceType: 'OperationOutcome',
+          issue: [
+            {
+              severity: 'error',
+              code: 'code-invalid',
+              expression: ['Condition.code'],
+              diagnostics: 'Bad SNOMED',
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    // Walker $lookup mock: seed has 1 parent.
+    const lookupGet = vi.fn().mockImplementation(async (path: string) => {
+      // First call (seed): parent + child requested
+      if (path.includes('property=parent') && path.includes('property=child')) {
+        return {
+          resourceType: 'Parameters',
+          parameter: [
+            {
+              name: 'property',
+              part: [
+                { name: 'code', valueCode: 'parent' },
+                { name: 'value', valueCode: 'GOOD-PARENT' },
+              ],
+            },
+          ],
+        };
+      }
+      // Subsequent depth-2 axis call returns empty
+      return { resourceType: 'Parameters', parameter: [] };
+    });
+    const onSuggestions = vi.fn();
+    const opts = buildOptions({
+      resourceType: 'Condition',
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        semanticNearMisses: true, // <- opt-in
+      },
+      terminologyResolver: {
+        client: { get: lookupGet },
+        lookupDisplay: vi.fn().mockResolvedValue('Good Parent Concept'),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      onSuggestions,
+    });
+    await validateWithCascade(conditionResource, opts);
+    // Walker invoked: at minimum the seed $lookup
+    expect(lookupGet).toHaveBeenCalled();
+    // onSuggestions called once with the rowKey + suggestions array
+    expect(onSuggestions).toHaveBeenCalledTimes(1);
+    const [rowKey, suggestions] = onSuggestions.mock.calls[0];
+    expect(rowKey).toBe('Condition/c3|Condition.code|code-invalid');
+    expect(suggestions.length).toBeGreaterThanOrEqual(1);
+    expect(suggestions[0].code).toBe('GOOD-PARENT');
+    expect(suggestions[0].relation).toBe('parent');
+  });
+
+  it('Test 26 (opt-in ON, non-code-invalid): walker NOT invoked for issue.code !== "code-invalid"', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    const conditionResource = {
+      resourceType: 'Condition',
+      id: 'c4',
+      code: { coding: [{ system: 'http://snomed.info/sct', code: 'X' }] },
+    } as unknown as Resource;
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          resourceType: 'OperationOutcome',
+          issue: [
+            {
+              severity: 'error',
+              code: 'invariant', // <- NOT code-invalid
+              expression: ['Condition.code'],
+              diagnostics: 'profile constraint violated',
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    const onSuggestions = vi.fn();
+    const lookupGet = vi.fn();
+    const opts = buildOptions({
+      resourceType: 'Condition',
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        semanticNearMisses: true, // opted in but no matching issue
+      },
+      terminologyResolver: {
+        client: { get: lookupGet },
+        lookupDisplay: vi.fn(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      onSuggestions,
+    });
+    await validateWithCascade(conditionResource, opts);
+    expect(lookupGet).not.toHaveBeenCalled();
+    expect(onSuggestions).not.toHaveBeenCalled();
+  });
+
+  it('Test 27 (opt-in ON, terminology client null): walker silently skipped (D-12)', async () => {
+    window.localStorage.setItem(phiAckKey(SERVER_URL, EXT_URL), 'true');
+    const conditionResource = {
+      resourceType: 'Condition',
+      id: 'c5',
+      code: { coding: [{ system: 'http://snomed.info/sct', code: 'X' }] },
+    } as unknown as Resource;
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          resourceType: 'OperationOutcome',
+          issue: [
+            {
+              severity: 'error',
+              code: 'code-invalid',
+              expression: ['Condition.code'],
+            },
+          ],
+        }),
+        { status: 200 },
+      ),
+    );
+    const onSuggestions = vi.fn();
+    const opts = buildOptions({
+      resourceType: 'Condition',
+      externalValidator: {
+        url: EXT_URL,
+        enabled: true,
+        timeoutMs: 15000,
+        semanticNearMisses: true,
+      },
+      terminologyResolver: {
+        client: null, // <- null
+        lookupDisplay: vi.fn(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+      onSuggestions,
+    });
+    await validateWithCascade(conditionResource, opts);
+    // walkNearMisses returns [] when client is null → onSuggestions NEVER called
+    expect(onSuggestions).not.toHaveBeenCalled();
+  });
 });

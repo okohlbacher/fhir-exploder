@@ -30,6 +30,7 @@ import type {
   StructureDefinition,
   OperationOutcome,
   OperationOutcomeIssue,
+  Coding,
 } from '@medplum/fhirtypes';
 import type { AppSettings, ValidatorAuthConfig } from '../config/types';
 import type { NormalizedIssue } from './types';
@@ -38,6 +39,11 @@ import { normalizeOperationOutcomeIssue } from './normalizers';
 import { validateStructural } from './structuralValidator';
 import { createRemoteBackend } from './remoteValidator';
 import { getProfileForType } from './profiles';
+import type { TerminologyResolver } from '../terminology/TerminologyResolver';
+import {
+  walkNearMisses,
+  type NearMissSuggestion,
+} from './semanticNearMissWalker';
 
 export type ActiveStrategy = 'external' | 'server' | 'local' | 'probe-failed';
 export type ProbeKey = string;
@@ -77,11 +83,39 @@ export interface CascadeOptions {
     timeoutMs: number;
     label?: string;
     auth?: ValidatorAuthConfig;
+    /**
+     * Phase 43 VAL-07 (D-11): opt-in semantic near-miss walker. Default
+     * undefined / false. When true AND `terminologyResolver` is provided
+     * AND a normalized issue carries `code === 'code-invalid'`, the cascade
+     * runs the BFS walker via `walkNearMisses` and emits suggestions through
+     * `onSuggestions`. When false / absent, the walker is NEVER invoked.
+     */
+    semanticNearMisses?: boolean;
   };
+  /**
+   * Phase 43 VAL-07: terminology resolver for the semanticNearMissWalker.
+   * Reuses Phase 4's `TerminologyResolver` (LRU cache + silent fallback).
+   * Cascade does NOT construct a resolver; the caller (useConformanceRun)
+   * threads the singleton from `useTerminology()`.
+   */
+  terminologyResolver?: TerminologyResolver | null;
   probe: Map<ProbeKey, ActiveStrategy>;
   abort: AbortController;
   profile?: StructureDefinition | null;
   settings: AppSettings | null;
+  /**
+   * Phase 43 VAL-07: side-channel for "Did you mean?" suggestions. Cascade
+   * invokes once per `code-invalid` issue with at least one near-miss; the
+   * key is `${resourceId}|${field}|${code}` (matches the row key
+   * ResourceIssueTable computes for expansion state). Caller (typically
+   * useConformanceRun) accumulates into a Map and threads to ResourceIssueTable
+   * via the `suggestions` prop. Default-off: never called when
+   * `externalValidator.semanticNearMisses` is absent or false.
+   */
+  onSuggestions?: (
+    rowKey: string,
+    suggestions: NearMissSuggestion[],
+  ) => void;
   /**
    * Phase 43 D-21 — notify payloads carry telemetry only:
    *   `from`, `to`         — tier transition (existing)
@@ -303,6 +337,87 @@ function tryLocal(resource: Resource, opts: CascadeOptions): OperationOutcomeIss
   return validateStructural(resource, profile);
 }
 
+/**
+ * Phase 43 VAL-07 helper — extract Coding values reachable from a FHIR path
+ * expression like `Condition.code` or `Observation.code.coding[0]`. Returns
+ * every Coding object encountered (in document order) so the walker can be
+ * called per (system, code) pair on the offending field.
+ *
+ * Supported path syntax (subset of FHIRPath sufficient for OperationOutcome
+ * `expression` / `location` outputs from HAPI / Firely / IG-Publisher):
+ *   - dot navigation: `Condition.code.coding`
+ *   - integer indexing: `Condition.code.coding[0]`
+ *
+ * Robust to:
+ *   - paths beginning with the resourceType prefix (stripped automatically)
+ *   - paths that resolve to a CodeableConcept (returns its `.coding[]`)
+ *   - paths that resolve to a Coding directly (returns `[that]`)
+ *   - missing intermediate keys (silent — returns `[]`)
+ *
+ * NOT supported (out of scope for v1.6 — falls through silently):
+ *   - FHIRPath functions like `where(...)` or `first()`
+ *   - extension(...) navigators
+ *   - resolve() across references
+ *
+ * Caller treats `[]` as "no near-miss applicable" — same semantics as the
+ * walker's silent fallback.
+ */
+function extractCodingsAtPath(resource: Resource, path: string): Coding[] {
+  if (!path) return [];
+  // Strip resourceType prefix if present.
+  const trimmed = path.startsWith(`${resource.resourceType}.`)
+    ? path.substring(resource.resourceType.length + 1)
+    : path;
+  const segments = trimmed.split('.').filter((s) => s.length > 0);
+
+  // Navigate. At each step we may have a single object, array, or undefined.
+  let cursor: unknown = resource;
+  for (const segment of segments) {
+    if (cursor == null) return [];
+    // Match `name[idx]` form
+    const idxMatch = segment.match(/^([^[]+)\[(\d+)\]$/);
+    const key = idxMatch ? idxMatch[1] : segment;
+    const idx = idxMatch ? parseInt(idxMatch[2]!, 10) : null;
+    if (typeof cursor !== 'object') return [];
+    const obj = cursor as Record<string, unknown>;
+    cursor = obj[key];
+    if (idx !== null) {
+      if (!Array.isArray(cursor)) return [];
+      cursor = cursor[idx];
+    }
+  }
+
+  // Resolve final cursor to Coding[].
+  if (cursor == null) return [];
+  // Direct Coding (has `system` and/or `code`)
+  const isCoding = (v: unknown): v is Coding =>
+    typeof v === 'object' &&
+    v !== null &&
+    ('system' in v || 'code' in v) &&
+    !('coding' in v); // CodeableConcept disambiguation
+  // CodeableConcept (has `.coding[]`)
+  const isCodeableConcept = (v: unknown): v is { coding: Coding[] } =>
+    typeof v === 'object' &&
+    v !== null &&
+    'coding' in v &&
+    Array.isArray((v as { coding: unknown }).coding);
+
+  const out: Coding[] = [];
+  const visit = (v: unknown): void => {
+    if (Array.isArray(v)) {
+      for (const item of v) visit(item);
+      return;
+    }
+    if (isCodeableConcept(v)) {
+      for (const c of v.coding) if (isCoding(c)) out.push(c);
+      return;
+    }
+    if (isCoding(v)) out.push(v);
+  };
+  visit(cursor);
+  return out;
+}
+
 export async function validateWithCascade(
   resource: Resource,
   options: CascadeOptions,
@@ -332,5 +447,54 @@ export async function validateWithCascade(
 
   options.probe.set(pk, activeStrategy);
 
-  return rawIssues.map((issue) => normalizeOperationOutcomeIssue(issue, resourceRef));
+  const normalized = rawIssues.map((issue) =>
+    normalizeOperationOutcomeIssue(issue, resourceRef),
+  );
+
+  // Phase 43 VAL-07 — Semantic near-miss walker invocation.
+  // Default-OFF gate: ALL three conditions MUST hold before the walker fires.
+  //   1. `externalValidator.semanticNearMisses === true` (D-11 opt-in)
+  //   2. `terminologyResolver` and its `.client` are non-null (D-12 fallback)
+  //   3. `onSuggestions` callback is provided (caller wants the data)
+  // If any precondition fails, the walker is NEVER invoked — this is the
+  // contract verified by Test wire-1 in ResourceIssueTable.test.tsx + the
+  // opt-in test added to cascadingValidator.test.ts below.
+  const ext = options.externalValidator;
+  if (
+    ext?.semanticNearMisses === true &&
+    options.terminologyResolver?.client != null &&
+    typeof options.onSuggestions === 'function'
+  ) {
+    // Filter to code-invalid issues only. Predicate routes on the raw FHIR
+    // `issue.code` field (preserved by normalizers.ts as of Plan 43-02 Task 2).
+    const codeInvalidIssues = normalized.filter(
+      (issue) => issue.code === 'code-invalid',
+    );
+    if (codeInvalidIssues.length > 0) {
+      // For each code-invalid issue, extract the offending Coding(s) from the
+      // resource at the issue's `field` path and walk near-misses for each
+      // (system, code) pair. Suggestions are delivered via the callback so
+      // the cascade contract (Promise<NormalizedIssue[]>) stays unchanged.
+      await Promise.all(
+        codeInvalidIssues.map(async (issue) => {
+          const codings = extractCodingsAtPath(resource, issue.field);
+          for (const coding of codings) {
+            if (!coding.system || !coding.code) continue;
+            const suggestions = await walkNearMisses(
+              coding.system,
+              coding.code,
+              options.terminologyResolver!,
+            );
+            if (suggestions.length === 0) continue;
+            // Row key matches what ResourceIssueTable computes for expansion
+            // state and tooltip lookup: `${resourceId}|${field}|${code}`.
+            const rowKey = `${issue.resourceId}|${issue.field}|${issue.code}`;
+            options.onSuggestions!(rowKey, suggestions);
+          }
+        }),
+      );
+    }
+  }
+
+  return normalized;
 }

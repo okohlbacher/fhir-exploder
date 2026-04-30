@@ -43,7 +43,21 @@ import {
   type ActiveStrategy,
   type ProbeKey,
 } from '../quality/cascadingValidator';
+import type { NearMissSuggestion } from '../quality/semanticNearMissWalker';
+import type { TerminologyResolver } from '../terminology/TerminologyResolver';
+import { TerminologyContext } from '../contexts/TerminologyContext';
+import { useContext } from 'react';
 import { toRecord } from '../utils/fhir-helpers';
+
+/**
+ * Local helper — returns the TerminologyResolver if a TerminologyProvider
+ * is mounted, else null. Unlike `useTerminology()`, never throws. Used by
+ * `useConformanceRun` so component tests that don't wrap in a provider
+ * still work; production callers always have a provider mounted at App root.
+ */
+function useOptionalTerminology(): TerminologyResolver | null {
+  return useContext(TerminologyContext);
+}
 
 export type ConformanceRunStatus =
   | 'idle'
@@ -84,6 +98,14 @@ export interface ConformanceRunState {
   authBannerState: AuthBannerState;
   /** Phase 43 VAL-06 — currently configured auth.type (mirrors settings; convenience). */
   authType: 'basic' | 'bearer' | undefined;
+  /**
+   * Phase 43 VAL-07 — "Did you mean?" suggestions emitted by the cascade
+   * during the last run. Keyed by `${resourceId}|${field}|${code}` (matches
+   * the row key ResourceIssueTable computes for expansion state). Empty Map
+   * when `validation.externalValidator.semanticNearMisses` is false / absent
+   * (default-off — D-11). Pass directly to `<ResourceIssueTable suggestions />`.
+   */
+  suggestions: Map<string, NearMissSuggestion[]>;
   start: () => void;
   cancel: () => void;
 }
@@ -144,6 +166,22 @@ export function useConformanceRun({
   // run before notify can fire; transitions to 'missing' / 'failed' if the
   // cascade demotes due to auth-missing or auth-failed.
   const [authBannerState, setAuthBannerState] = useState<AuthBannerState>('none');
+  // Phase 43 VAL-07 — accumulated "Did you mean?" suggestions for the last
+  // run. Resets to empty Map at the start of each run. Cascade calls
+  // onSuggestions per (resourceId|field|code) pair when the walker returns
+  // ≥1 suggestion; this Map flows directly to ResourceIssueTable.
+  const [suggestions, setSuggestions] = useState<
+    Map<string, NearMissSuggestion[]>
+  >(() => new Map());
+  // Phase 43 VAL-07 — terminology resolver (Phase 4) for the walker. The
+  // hook always runs (Rules of Hooks); useTerminology throws when no
+  // TerminologyProvider is mounted (typical in unit tests that wrap with
+  // only MantineProvider). We catch that case at module scope by branching
+  // on context presence, but the canonical usage pattern in production
+  // ALWAYS has a TerminologyProvider above this hook (mounted at the App
+  // root). For test resilience the cascade tolerates a null resolver via
+  // its own null-client guard.
+  const terminologyResolver = useOptionalTerminology();
   const cancelledRef = useRef(false);
   const valueSetCacheRef = useRef(new ValueSetCache());
   const probeCacheRef = useRef<Map<ProbeKey, ActiveStrategy>>(new Map());
@@ -197,6 +235,8 @@ export function useConformanceRun({
     setByResource({});
     setProgress({ current: 0, total: 0 });
     setErrorMessage(undefined);
+    // Phase 43 VAL-07 — fresh suggestions Map per run.
+    setSuggestions(new Map());
 
     // D-17: per-type reset on every "Validate sample" click.
     const externalValidatorUrl = settings?.validation?.externalValidator?.url ?? '';
@@ -304,8 +344,16 @@ export function useConformanceRun({
                 enabled: ext.enabled,
                 timeoutMs: ext.timeoutMs ?? 15000,
                 label: ext.label,
+                // Phase 43 VAL-07 (D-11) opt-in. Default-off when absent.
+                semanticNearMisses: ext.semanticNearMisses === true,
               }
             : undefined;
+
+        // Phase 43 VAL-07 — accumulator for "Did you mean?" suggestions
+        // emitted by the cascade across all resources in this run. Flushed
+        // to component state at the end of the run so React can render the
+        // chevrons in a single pass.
+        const suggestionsAccumulator = new Map<string, NearMissSuggestion[]>();
 
         // Step 5: Batch-iterate resources
         for (let i = 0; i < sample.length; i += effectiveBatchSize) {
@@ -352,6 +400,13 @@ export function useConformanceRun({
                 serverUrl: serverBaseUrl,
                 resourceType: r.resourceType,
                 externalValidator: cascadeExternalValidator,
+                terminologyResolver,
+                onSuggestions: (rowKey, sugs) => {
+                  // Append to local accumulator. Cascade only emits when
+                  // suggestions.length > 0, so storing the array directly
+                  // is safe (no need to filter empty arrays here).
+                  suggestionsAccumulator.set(rowKey, sugs);
+                },
                 probe: probeCacheRef.current,
                 abort: abortRef.current,
                 profile,
@@ -446,6 +501,13 @@ export function useConformanceRun({
             : null,
         );
 
+        // Phase 43 VAL-07 — flush accumulated suggestions to component
+        // state in a single render. Done outside the batch loop to avoid
+        // multiple re-renders mid-run.
+        if (suggestionsAccumulator.size > 0) {
+          setSuggestions(new Map(suggestionsAccumulator));
+        }
+
         if (!cancelledRef.current) {
           setStatus('complete');
         }
@@ -454,7 +516,7 @@ export function useConformanceRun({
         setErrorMessage(err instanceof Error ? err.message : String(err));
       }
     })();
-  }, [client, terminologyClient, resourceType, sampleSize, batchSize, settings, patientIds]);
+  }, [client, terminologyClient, resourceType, sampleSize, batchSize, settings, patientIds, terminologyResolver]);
 
   const cancel = useCallback(() => {
     cancelledRef.current = true;
@@ -481,6 +543,7 @@ export function useConformanceRun({
     activeStrategyVariant,
     authBannerState,
     authType: settings?.validation?.externalValidator?.auth?.type,
+    suggestions,
     start,
     cancel,
   };

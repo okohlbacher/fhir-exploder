@@ -505,7 +505,13 @@ export function ValidationPanel(_props: ValidationPanelProps) {
                 <ValidationIssueList issues={validationIssueListSource} />
               </Tabs.Panel>
               <Tabs.Panel value="resources" pt="md">
-                <ResourceIssueTable issues={allNormalizedIssues} />
+                {/* Phase 43 VAL-07: thread "Did you mean?" suggestions from
+                    the cascade run into ResourceIssueTable. Empty Map when
+                    semanticNearMisses is false (default-off, D-11). */}
+                <ResourceIssueTable
+                  issues={allNormalizedIssues}
+                  suggestions={run.suggestions}
+                />
               </Tabs.Panel>
             </Tabs>
           </Stack>
