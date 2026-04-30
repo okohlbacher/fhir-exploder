@@ -251,38 +251,11 @@ Phases 41, 42, 43, 44 are largely independent of each other (only consume alread
 
 ## Backlog
 
-### Phase 999.1: Explorer — toggle to hide zero-count resource types (BACKLOG)
+*No active backlog items — milestone v1.6 ships with all surfaced ideas accounted for.*
 
-**Status:** PROMOTED to v1.6 Phase 41 (EXPL-01) on 2026-04-29.
+## Resolved Backlog (archived 2026-04-30)
 
-**Goal:** Add a Mantine `Switch` near the top of the Explorer resource-type landing (`/explorer`) labeled "Hide empty resource types" (default off, persisted to localStorage). When on, types with `counts[type] === 0` collapse out of the list. When off, the existing full list is shown.
+Both items below were carried into v1.6 Phase 41 (Explorer + Quality UX polish) and shipped on 2026-04-29. Kept here for audit trail; CLI no longer treats them as pending phases.
 
-**Why:** Today `/explorer` lists every supported FHIR resource type. Many show 0 against typical Synthea bundles (e.g. on the Phase 38 walk: `MedicationStatement`, `AllergyIntolerance`, `Consent`, `Immunization`, `ServiceRequest` were all zero). The list is noisy when most types are empty.
-
-**Likely files:**
-- `src/components/explorer/ResourceTypeLanding.tsx` — landing component
-- Counts source: same map the Dashboard uses (`src/components/dashboard/DashboardPage.tsx`)
-
-**Source:** Verifier observation surfaced during Phase 38 HUMAN-UAT walk (2026-04-28), Plan 38-02 Test 1 (Explorer Date/Status columns across 6 types). The MedicationStatement empty-state navigation made the noise pattern obvious.
-
-**Requirements:** EXPL-01 (Phase 41)
-**Plans:** 1/0 plans complete
-
-### Phase 999.2: Quality completeness — sort non-empty resource types to the top (BACKLOG)
-
-**Status:** PROMOTED to v1.6 Phase 41 (QUAL-01) on 2026-04-29.
-
-**Goal:** Change the default sort behavior in `/quality?tab=completeness` so resource types with actual data (non-empty `total`) appear at the top of the per-type table; types with no records (`total === 0`, pct=null) sink to the bottom.
-
-**Why:** Today the panel's default sort is `completeness ASC / worst-first` (`CompletenessPanel.tsx`). Zero-count types map their pct to `null → -1` in `compareRows`, which under ascending sort puts them BEFORE every populated type. Result: against a Synthea bundle the user opens the page and sees five empty types stacked at the top (`AllergyIntolerance`, `Consent`, `Immunization`, `ServiceRequest`, `MedicationStatement` — all 0 records) before any meaningful row. Verifier observation: "non-empty Resources in `/quality?tab=completeness` are at the end rather than at the top of the list."
-
-**Suggested fix:** Treat `pct === null` as "not-applicable" rather than "worst possible" in `compareRows`. Push N/A rows to the end regardless of sort direction (mirror the existing `aSettled !== bSettled` pattern that already pushes loading/error rows to the end). Possibly add a small "—" badge or muted styling for the empty rows so it's obvious why they're sorted to the bottom.
-
-**Likely files:**
-- `src/components/quality/CompletenessPanel.tsx` — `compareRows` (line ~59) and `toRow` (line ~50ish)
-- Same pattern likely applies to `CoveragePanel`, `ValidationPanel`, `ReferencesPanel` if they sort similarly — audit before fixing.
-
-**Source:** Verifier observation during Phase 38 HUMAN-UAT walk (2026-04-28).
-
-**Requirements:** QUAL-01 (Phase 41)
-**Plans:** Carried into Phase 41
+- [x] **Former 999.1: Explorer hide-empty toggle** — promoted to **Phase 41 (EXPL-01)** on 2026-04-29; shipped via Mantine `Switch` on `/explorer` resource-type landing with localStorage persistence. Source: Phase 38 HUMAN-UAT verifier observation.
+- [x] **Former 999.2: Quality completeness non-empty-sort** — promoted to **Phase 41 (QUAL-01)** on 2026-04-29; shipped via `compareRows` N/A-to-bottom fix in `CompletenessPanel.tsx`. Source: Phase 38 HUMAN-UAT verifier observation.
