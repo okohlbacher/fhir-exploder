@@ -269,4 +269,107 @@ describe('Phase 31-02: UI-cascade PHI key agreement (CR-01 fix)', () => {
       ).toBe('true');
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Phase 43 VAL-06 (Plan 43-01 Task 4) — auth-without-PHI bypass guards.
+  //
+  // T-43-05 invariant: when PHI is NOT acknowledged, the cascade MUST NOT
+  // build any Authorization header AND MUST NOT read the bearer token from
+  // localStorage. The PHI gate runs FIRST in tryExternal and short-circuits
+  // before the header-build block. These tests lock that ordering at the
+  // integration layer (ValidationPanel render → useConformanceRun → cascade).
+  // Mirrors 43-RESEARCH.md Pitfall 1.
+  // ---------------------------------------------------------------------------
+
+  it('Test D (T-43-05 auth-without-PHI basic): basic auth configured + PHI not acknowledged → no Authorization header, no external fetch', async () => {
+    mocks.settings = {
+      fhir: { serverUrl: SERVER_URL, auth: { mode: 'open' } },
+      validation: {
+        batchSize: 25,
+        externalValidator: {
+          url: EXT_URL,
+          enabled: true,
+          timeoutMs: 15000,
+          auth: { type: 'basic', username: 'a', password: 'b' },
+        },
+      },
+    } as AppSettings;
+
+    // PHI ack key NOT set — gate fails. (window.localStorage was cleared in beforeEach.)
+
+    renderPanel();
+    await screen.findByText(/PHI will be sent to an external validator/i);
+
+    // Trigger run WITHOUT acknowledging
+    fireEvent.click(
+      await screen.findByRole('button', { name: /validate sample/i }),
+    );
+
+    // Give the run a tick to attempt fetches
+    await new Promise((r) => setTimeout(r, 50));
+
+    // External tier never fetched — cascade demoted at the PHI gate before
+    // the header-build block was even reached.
+    const calledWithExt = fetchSpy.mock.calls.some(
+      ([url]) => typeof url === 'string' && url.startsWith(EXT_URL),
+    );
+    expect(calledWithExt).toBe(false);
+
+    // No Authorization header on any outbound fetch (defense in depth — the
+    // PHI gate makes the build block unreachable, so this assertion is vacuous
+    // when the prior assertion passes; it documents the contract regardless).
+    for (const [, init] of fetchSpy.mock.calls) {
+      const headers = ((init as RequestInit | undefined)?.headers ?? {}) as Record<
+        string,
+        string
+      >;
+      expect(headers.Authorization).toBeUndefined();
+    }
+  });
+
+  it('Test E (T-43-05 auth-without-PHI bearer): bearer + token in localStorage + PHI not acknowledged → bearer key NEVER read', async () => {
+    // Seed a token that MUST NEVER be read (any read would be a contract bug).
+    window.localStorage.setItem('validator.bearerToken.v1', 'tok-MUST-NOT-LEAK');
+
+    mocks.settings = {
+      fhir: { serverUrl: SERVER_URL, auth: { mode: 'open' } },
+      validation: {
+        batchSize: 25,
+        externalValidator: {
+          url: EXT_URL,
+          enabled: true,
+          timeoutMs: 15000,
+          auth: { type: 'bearer' },
+        },
+      },
+    } as AppSettings;
+
+    // PHI ack key NOT set — gate fails.
+
+    // Spy on Storage.prototype.getItem AFTER seeding the token so the seed
+    // does not get counted. Other localStorage reads (PHI gate, banner
+    // dismissal, etc.) are fine; we filter to ONLY the bearer key.
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem');
+    getItemSpy.mockClear();
+
+    renderPanel();
+    await screen.findByText(/PHI will be sent to an external validator/i);
+
+    fireEvent.click(
+      await screen.findByRole('button', { name: /validate sample/i }),
+    );
+
+    // Allow the run to attempt fetches (it will demote at the PHI gate).
+    await new Promise((r) => setTimeout(r, 50));
+
+    const bearerReads = getItemSpy.mock.calls.filter(
+      ([key]) => key === 'validator.bearerToken.v1',
+    );
+    expect(bearerReads).toHaveLength(0);
+    // Belt-and-braces: external fetch must also have been skipped.
+    const calledWithExt = fetchSpy.mock.calls.some(
+      ([url]) => typeof url === 'string' && url.startsWith(EXT_URL),
+    );
+    expect(calledWithExt).toBe(false);
+  });
 });
