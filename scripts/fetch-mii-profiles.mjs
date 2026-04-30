@@ -31,6 +31,7 @@ import { defaultPackageLoader, LoadStatus } from 'fhir-package-loader';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { trim } from './lib/trim-profile.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, '..', 'src', 'quality', 'profiles', 'extensions');
@@ -73,27 +74,6 @@ const CANONICAL_URLS = {
   'de.medizininformatikinitiative.kerndatensatz.studie':        'https://www.medizininformatik-initiative.de/fhir/ext/modul-studie',
   'de.medizininformatikinitiative.kerndatensatz.symptom':       'https://www.medizininformatik-initiative.de/fhir/ext/modul-symptom',
 };
-
-function trim(sd) {
-  return {
-    resourceType: 'StructureDefinition',
-    url: sd.url,
-    name: sd.name,
-    type: sd.type,
-    snapshot: {
-      element: (sd.snapshot?.element ?? []).map((e) => {
-        const out = { path: e.path };
-        if (e.min !== undefined) out.min = e.min;
-        if (e.max !== undefined) out.max = e.max;
-        if (e.mustSupport !== undefined) out.mustSupport = e.mustSupport;
-        if (e.sliceName !== undefined) out.sliceName = e.sliceName;
-        if (e.type !== undefined) out.type = e.type;
-        if (e.binding?.strength === 'required') out.binding = e.binding;
-        return out;
-      }),
-    },
-  };
-}
 
 function slugify(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
