@@ -98,6 +98,16 @@ export interface NormalizedIssue {
   field: string;
   description: string;
   severity: IssueSeverity;
+  /**
+   * Raw FHIR `OperationOutcome.issue.code` (e.g., 'code-invalid', 'invariant',
+   * 'required'). Added Phase 43 VAL-07 so downstream routers (e.g., the
+   * semanticNearMissWalker) can predicate on the raw FHIR code without
+   * re-parsing the human-display `description` string. Optional for
+   * backward compatibility — the existing description squash format is
+   * preserved verbatim, so no UI consumer breaks. See 43-RESEARCH.md
+   * Pitfall 5.
+   */
+  code?: string;
 }
 
 /** Validation backend kind — structural runs offline, remote POSTs $validate. */

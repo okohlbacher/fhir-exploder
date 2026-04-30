@@ -35,5 +35,9 @@ export function normalizeOperationOutcomeIssue(
     field: issue.expression?.[0] ?? issue.location?.[0] ?? '',
     description: `${issue.code ?? ''} -- ${issue.diagnostics ?? issue.details?.text ?? ''}`,
     severity,
+    // Phase 43 VAL-07: raw FHIR issue.code preserved verbatim for downstream
+    // predicates (semanticNearMissWalker filters on `code === 'code-invalid'`).
+    // Description squash above is unchanged so existing UI consumers don't break.
+    code: typeof issue.code === 'string' ? issue.code : undefined,
   };
 }

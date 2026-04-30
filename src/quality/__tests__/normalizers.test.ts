@@ -106,4 +106,39 @@ describe('normalizeOperationOutcomeIssue', () => {
     // IG-Publisher populates location, not expression — normalizer falls back
     expect(err!.field).toBe('Observation.component[0]');
   });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Phase 43 VAL-07 (Pitfall 5): raw FHIR issue.code is preserved on
+  // NormalizedIssue.code so the semanticNearMissWalker can predicate on
+  // `code === 'code-invalid'` without re-parsing the description string.
+  // The existing description squash format MUST remain unchanged to avoid
+  // breaking ResourceIssueTable's existing render path.
+  // ─────────────────────────────────────────────────────────────────────
+
+  it('Test code-field-1: code-invalid issue → NormalizedIssue.code === "code-invalid" AND description still includes "code-invalid -- Bad code"', () => {
+    const result = normalizeOperationOutcomeIssue({
+      severity: 'warning',
+      code: 'code-invalid',
+      diagnostics: 'Bad code',
+    });
+    expect(result.code).toBe('code-invalid');
+    expect(result.description).toBe('code-invalid -- Bad code');
+  });
+
+  it('Test code-field-2: issue with no code → NormalizedIssue.code === undefined (optional, backward compat)', () => {
+    const result = normalizeOperationOutcomeIssue({
+      severity: 'error',
+    } as OperationOutcomeIssue);
+    expect(result.code).toBeUndefined();
+  });
+
+  it('Test code-field-3: non-code-invalid issue (invariant) → NormalizedIssue.code preserved verbatim, NOT filtered', () => {
+    const result = normalizeOperationOutcomeIssue({
+      severity: 'error',
+      code: 'invariant',
+      diagnostics: 'patient-name-required',
+    });
+    expect(result.code).toBe('invariant');
+    expect(result.description).toBe('invariant -- patient-name-required');
+  });
 });
