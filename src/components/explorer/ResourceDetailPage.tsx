@@ -9,6 +9,7 @@ import { NavigationBreadcrumbs } from './NavigationBreadcrumbs';
 import { HumanReadableView } from './HumanReadableView';
 import { DeveloperJsonView } from './DeveloperJsonView';
 import { PatientRelatedResources } from './PatientRelatedResources';
+import { IncomingReferencesPanel } from './IncomingReferencesPanel';
 
 /**
  * Validate that an extracted reference matches the FHIR resource pattern.
@@ -169,10 +170,6 @@ export function ResourceDetailPage() {
         </Alert>
       )}
 
-      {resource && resourceType === 'Patient' && id && (
-        <PatientRelatedResources patientId={id} />
-      )}
-
       {resource && (
         <Tabs value={activeTab} onChange={setActiveTab}>
           <Tabs.List>
@@ -191,6 +188,12 @@ export function ResourceDetailPage() {
             </Tabs.Panel>
           </div>
         </Tabs>
+      )}
+
+      {resource && (
+        resource.resourceType === 'Patient' && id
+          ? <PatientRelatedResources patientId={id} />
+          : <IncomingReferencesPanel resource={resource} />
       )}
     </Stack>
   );

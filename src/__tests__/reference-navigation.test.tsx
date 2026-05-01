@@ -32,7 +32,15 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock Medplum client: readResource always resolves to a minimal Condition
 const mockReadResource = vi.fn();
-const mockClient = { readResource: mockReadResource };
+// Phase 48-03: ResourceDetailPage now mounts IncomingReferencesPanel below the Tabs
+// for non-Patient resources. The panel calls client.fhirUrl(...) + client.get(...)
+// to fetch reverse-reference counts. Stub both so the mount doesn't crash.
+const mockGet = vi.fn().mockResolvedValue({ resourceType: 'Bundle', total: 0 });
+const mockClient = {
+  readResource: mockReadResource,
+  fhirUrl: (p: string) => ({ toString: () => `http://test/fhir/${p}` }),
+  get: mockGet,
+};
 
 vi.mock('@medplum/react-hooks', () => ({
   useMedplum: () => mockClient,
