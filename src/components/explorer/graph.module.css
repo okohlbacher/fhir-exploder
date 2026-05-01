@@ -1,0 +1,53 @@
+/* Phase 49 — D-11 theme bridge. Maps React Flow vars to Mantine 8 vars.
+ * Imported as a side-effect at the top of ResourceGraphView.tsx so Vite
+ * bundles it into the lazy chunk (preserves D-17 budget). */
+
+:global(.react-flow) {
+  /* Background canvas */
+  --xy-background-pattern-dots-color-default: var(--mantine-color-default-border);
+  --xy-background-color-default: var(--mantine-color-body);
+
+  /* Edges */
+  --xy-edge-stroke-default: var(--mantine-color-gray-5);
+  --xy-edge-stroke-width-default: 1.6;
+  --xy-edge-stroke-selected-default: var(--mantine-color-indigo-6);
+
+  /* Nodes — defaults for any built-in node renderer; our ResourceGraphNode
+     uses Mantine Card so these only affect any default-type nodes
+     React Flow falls back to. */
+  --xy-node-color-default: var(--mantine-color-text);
+  --xy-node-background-color-default: var(--mantine-color-body);
+  --xy-node-border-default: 1px solid var(--mantine-color-default-border);
+  --xy-node-boxshadow-hover-default: 0 0 0 1px var(--mantine-color-indigo-3);
+  --xy-node-boxshadow-selected-default: 0 0 0 2px var(--mantine-color-indigo-6);
+
+  /* Handles (connection points) */
+  --xy-handle-background-color-default: var(--mantine-color-indigo-6);
+  --xy-handle-border-color-default: var(--mantine-color-body);
+
+  /* Controls (zoom / fit-view buttons) */
+  --xy-controls-button-background-color-default: var(--mantine-color-default);
+  --xy-controls-button-background-color-hover-default: var(--mantine-color-default-hover);
+  --xy-controls-button-color-default: var(--mantine-color-text);
+  --xy-controls-button-border-color-default: var(--mantine-color-default-border);
+
+  /* Minimap */
+  --xy-minimap-background-color-default: var(--mantine-color-default);
+
+  /* Attribution chip — keep readable in both schemes */
+  --xy-attribution-background-color-default: var(--mantine-color-default);
+}
+
+/* Edge labels — FHIR field names (subject, encounter, has-member …) on
+   the edge midpoint; rendered as IBM Plex Mono per UI-SPEC §"Typography". */
+:global(.react-flow__edge-text) {
+  fill: var(--mantine-color-text);
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 11px;
+}
+
+:global(.react-flow__edge-textbg) {
+  fill: var(--mantine-color-body);
+  stroke: var(--mantine-color-default-border);
+  stroke-width: 1px;
+}
