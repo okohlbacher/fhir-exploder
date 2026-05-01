@@ -184,8 +184,8 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
   4. Layout is hierarchical (DAG) via `@dagrejs/dagre` ≥ 3.x rendered through `@xyflow/react` (React Flow 12). Switching the app theme (Mantine 8 light ↔ dark) re-themes the graph via CSS variables WITHOUT remounting the graph component. Zoom / pan / minimap controls are visible and functional.
   5. Pinned dependency versions for `@xyflow/react` and `@dagrejs/dagre` are recorded in `49-CONTEXT.md`; tests cover graph BFS bounds (depth cap), node-click navigation, and theme-switch invariant; `npm run build` clean.
 **Plans**: 3 plans
-  - [ ] 49-01-PLAN.md — Foundation: deps + lazy route + Graph button + Wave 0 scaffold (GRPH-01)
-  - [ ] 49-02-PLAN.md — useGraphBfs + ResourceGraphNode + applyDagreLayout + BFS unit tests + node RTL tests (GRPH-02 + GRPH-03)
+  - [x] 49-01-PLAN.md — Foundation: deps + lazy route + Graph button + Wave 0 scaffold (GRPH-01)
+  - [x] 49-02-PLAN.md — useGraphBfs + ResourceGraphNode + applyDagreLayout + BFS unit tests + node RTL tests (GRPH-02 + GRPH-03)
   - [ ] 49-03-PLAN.md — Theme bridge + ResourceGraphView wiring + final D-20 tests + bundle gate + HUMAN-UAT (GRPH-01 + GRPH-04)
 **Effort**: large (3+ days)
 **Execution**: Mixed (graph component + BFS + theme wiring is automatable; visual UAT — pan/zoom feel, minimap, dark-mode re-theme without flicker, click-navigate flow — needs a human walkthrough on live Blaze data)
@@ -226,7 +226,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 46. Foundation summary util | v1.7 | 2/2 | Complete    | 2026-05-01 |
 | 47. HumanReadableView readability | v1.7 | 2/2 | Complete    | 2026-05-01 |
 | 48. Incoming-references panel | v1.7 | 4/4 | Complete    | 2026-05-01 |
-| 49. Reference graph view | v1.7 | 0/3 | In progress | - |
+| 49. Reference graph view | v1.7 | 2/3 | In Progress|  |
 | 50. STACK-01 gate | v1.7 | TBD | Not started | - |
 
 ## Backlog
