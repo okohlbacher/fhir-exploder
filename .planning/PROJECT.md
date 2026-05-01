@@ -113,11 +113,44 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 **localStorage keys** unchanged from v1.3: `quality.thresholds.v1`, `quality.trends.v1`, `quality.cohorts.v1`, `quality.activeCohortId.v1`, `quality.resourceTypes.v1`.
 
-## Next Milestone: v1.7 (planning)
+## Current Milestone: v1.7 Resource Navigation
 
-**Status:** Not yet scoped. Run `/gsd-new-milestone` to define v1.7 requirements + roadmap.
+**Goal:** Make resources navigable. Improve the human-readable view, add a compact summary util used everywhere a resource appears in a list, surface incoming references at the bottom of resource details, and ship a graphical reference graph for the resource at hand.
 
-**Carry-overs from v1.6:** STACK-01 (Mantine 9 / React 19 upgrade) — re-run peer-dep gate at milestone start.
+**Target features (5 themes):**
+
+**Theme A — Foundation (shared util):**
+- Per-resource-type summary util `summarizeResource(r) → { primary, secondary? }` with a registry covering Patient, Observation, Condition, Encounter, MedicationStatement, Procedure, DiagnosticReport, AllergyIntolerance (rest fall back to generic). No status field — primary + optional secondary only.
+- Dedupe summary logic across SearchResultsPage, FhirResourcesView, MiiModuleTab.
+
+**Theme B — Readability (HumanReadableView):**
+- References auto-resolve via lazy fetch + session cache; render as `summarizeResource(ref).primary` inline, hover tooltip with full ref.
+- Property-level extensions (currently filtered by `_`-prefix check) surfaced in a controlled way.
+- Contained resources rendered (currently fall through to JSON modal).
+
+**Theme C — Reverse references ("Used by" panel):**
+- Curated catalog of reverse-reference search params per resource type (8–12 types covered, mirrors PatientRelatedResources scope).
+- New `IncomingReferencesPanel` at bottom of `ResourceDetailPage` for non-Patient resources; generalize the existing PatientRelatedResources idiom.
+- Click-through to a filtered explorer view, just like PatientRelatedResources today.
+
+**Theme D — Graph view (G1: this resource's reference graph):**
+- New lazy route `/explorer/:type/:id/graph` rendering the current resource's outgoing + incoming reference graph.
+- `@xyflow/react` (React Flow 12) + `@dagrejs/dagre` for hierarchical layout. Nodes are React components rendering `summarizeResource(r).primary` so Theme A is a hard prereq.
+- Click-to-navigate. Mantine 8 dark-mode integration via CSS variables. Default depth = 1.
+
+**Theme E — Carry-over from v1.6:**
+- STACK-01: Re-run `npm view @medplum/react peerDependencies` gate. If `@mantine/core` peer range now includes `^9.x`, proceed with Mantine 9 + React 19 upgrade. If not, defer again to v1.8 with the same WAIVE-AND-DEFER pattern.
+
+**Phase ordering:** Sequential A → B → C → D → E. Theme A is the foundation that B/C/D all consume; sequential ordering avoids cross-phase merge friction.
+
+**Bundle budget:** Initial-load delta target 0 KB gz (graph route is lazy-loaded; ~73 KB gz lands only when route is visited). Theme A util adds ~2–4 KB gz to initial chunk.
+
+**Reference baselines (v1.6 close):** 1240 tests passing, `npm run build` clean.
+
+<details>
+<summary>Archived: v1.6 milestone goals (shipped 2026-04-30)</summary>
+
+**Goal:** Close v1.5 tech-debt carry-overs, ship Explorer/Quality UX polish, and add two standards-track features (IPS Compositions, validator auth) without major redirection.
 
 <details>
 <summary>Archived: v1.6 milestone goals (shipped 2026-04-30)</summary>

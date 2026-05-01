@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.6
-milestone_name: Hardening, UX Polish & Carry-Overs (shipped 2026-04-30)
-status: shipped
-stopped_at: v1.6 milestone shipped — 7 phases (39-45, 45 deferred to v1.7), 14/14 active plans complete; ready for /gsd-new-milestone
-last_updated: "2026-04-30T13:03:41.978Z"
-last_activity: 2026-04-30
+milestone: v1.7
+milestone_name: Resource Navigation (started 2026-05-01)
+status: defining_requirements
+stopped_at: v1.7 milestone started — defining requirements
+last_updated: "2026-05-01T00:00:00.000Z"
+last_activity: 2026-05-01
 progress:
-  total_phases: 20
-  completed_phases: 16
-  total_plans: 48
-  completed_plans: 47
-  percent: 98
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,17 +21,17 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-29)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.6 shipped — planning v1.7
+**Current focus:** v1.7 — Resource Navigation (defining requirements)
 
 ## Current Position
 
-Phase: (none — between milestones)
-Plan: n/a
-Status: v1.6 milestone shipped 2026-04-30. Run `/gsd-new-milestone` to scope v1.7.
-Last activity: 2026-04-30
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-01 — Milestone v1.7 started
 
-v1.6 progress: 3/7 phases complete (39 ✓ audit-trail backfill, 40 ✓ DEUT-01 deuteranopia simulation, 41 ✓ EXPL-01 + QUAL-01/02/03 polish)
-Progress: [████░░░░░░] 43%
+v1.7 progress: 0/5 phases (planned: 46-50 — Foundation summary util → Readability → Incoming refs → Graph → STACK-01 gate)
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
