@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMedplum } from '@medplum/react-hooks';
-import { Tabs, Stack, Title, Alert, Skeleton, Button, Group } from '@mantine/core';
-import { IconArrowLeft } from '@tabler/icons-react';
+import { Tabs, Stack, Title, Alert, Skeleton, Button, Group, Tooltip } from '@mantine/core';
+import { IconArrowLeft, IconAffiliate } from '@tabler/icons-react';
 import type { Resource, ResourceType } from '@medplum/fhirtypes';
 import { useBreadcrumbTrail } from '../../hooks/useBreadcrumbTrail';
 import { NavigationBreadcrumbs } from './NavigationBreadcrumbs';
@@ -151,6 +151,23 @@ export function ResourceDetailPage() {
         >
           Back to results
         </Button>
+        <Tooltip label="Open the reference graph for this resource" withArrow>
+          <Button
+            variant="light"
+            color="indigo"
+            size="sm"
+            leftSection={<IconAffiliate size={16} />}
+            onClick={() =>
+              navigate(
+                patientId
+                  ? `/patients/${patientId}/${resourceType}/${id}/graph`
+                  : `/explorer/${resourceType}/${id}/graph`,
+              )
+            }
+          >
+            Graph
+          </Button>
+        </Tooltip>
         <Title order={2}>
           {resourceType}/{id}
         </Title>
