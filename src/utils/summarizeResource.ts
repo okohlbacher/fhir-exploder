@@ -40,6 +40,7 @@ import type {
   DiagnosticReport,
   AllergyIntolerance,
   HumanName,
+  CodeableConcept,
 } from '@medplum/fhirtypes';
 import { getCodeDisplay, toRecord } from './fhir-helpers';
 
@@ -259,8 +260,69 @@ function summarizeAllergyIntolerance(a: AllergyIntolerance): Summary {
   };
 }
 
-// Generic walker stub — Task 3 replaces this with the full 7-step walker.
+/**
+ * Generic walker (D-11) — handles every resource type NOT in the typed
+ * registry. Reads fields in precedence order; first non-empty hit wins.
+ * D-12: secondary is ALWAYS undefined for generic.
+ *
+ * Precedence:
+ *   1. code (CodeableConcept)
+ *   2. type (CodeableConcept | CodeableConcept[] | string)
+ *   3. category (CodeableConcept[] | CodeableConcept; first if array)
+ *   4. name (HumanName[] formatted via legacy comma-join, OR string literal)
+ *   5. description (string)
+ *   6. identifier[0].value (string)
+ *   7. id (last resort)
+ *
+ * Defense: bracket reads only; never spreads or merges parsed input
+ * (prototype-pollution defence). Inherits the Phase 22 CHRT-06 sanctioned
+ * toRecord pattern.
+ */
 function summarizeGeneric(r: Resource): Summary {
-  void toRecord;
+  const obj = toRecord(r);
+
+  // 1. code (CodeableConcept)
+  const code = obj.code as CodeableConcept | undefined;
+  if (code && typeof code === 'object') {
+    const display = getCodeDisplay(code);
+    if (display) return { primary: display };
+  }
+
+  // 2. type (CodeableConcept | CodeableConcept[] | string)
+  const type = obj.type;
+  if (typeof type === 'string') return { primary: type };
+  if (type && typeof type === 'object') {
+    const cc = (Array.isArray(type) ? type[0] : type) as CodeableConcept | undefined;
+    const display = getCodeDisplay(cc);
+    if (display) return { primary: display };
+  }
+
+  // 3. category (CodeableConcept[] | CodeableConcept; first if array)
+  const category = obj.category;
+  if (category && typeof category === 'object') {
+    const cc = (Array.isArray(category) ? category[0] : category) as CodeableConcept | undefined;
+    const display = getCodeDisplay(cc);
+    if (display) return { primary: display };
+  }
+
+  // 4. name (HumanName[] formatted OR string literal)
+  if (Array.isArray(obj.name) && obj.name.length > 0) {
+    const formatted = formatHumanName(obj.name[0] as HumanName);
+    if (formatted) return { primary: formatted };
+  }
+  if (typeof obj.name === 'string' && obj.name) return { primary: obj.name };
+
+  // 5. description (string)
+  if (typeof obj.description === 'string' && obj.description) {
+    return { primary: obj.description };
+  }
+
+  // 6. identifier[0].value (string)
+  if (Array.isArray(obj.identifier) && obj.identifier.length > 0) {
+    const idv = (obj.identifier[0] as { value?: string }).value;
+    if (idv) return { primary: idv };
+  }
+
+  // 7. id (last resort)
   return { primary: r.id ?? '' };
 }
