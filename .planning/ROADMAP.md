@@ -186,7 +186,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 **Plans**: 3 plans
   - [x] 49-01-PLAN.md — Foundation: deps + lazy route + Graph button + Wave 0 scaffold (GRPH-01)
   - [x] 49-02-PLAN.md — useGraphBfs + ResourceGraphNode + applyDagreLayout + BFS unit tests + node RTL tests (GRPH-02 + GRPH-03)
-  - [ ] 49-03-PLAN.md — Theme bridge + ResourceGraphView wiring + final D-20 tests + bundle gate + HUMAN-UAT (GRPH-01 + GRPH-04)
+  - [x] 49-03-PLAN.md — Theme bridge + ResourceGraphView wiring + final D-20 tests + bundle gate + HUMAN-UAT (GRPH-01 + GRPH-04)
 **Effort**: large (3+ days)
 **Execution**: Mixed (graph component + BFS + theme wiring is automatable; visual UAT — pan/zoom feel, minimap, dark-mode re-theme without flicker, click-navigate flow — needs a human walkthrough on live Blaze data)
 **UI hint**: yes
@@ -226,7 +226,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 46. Foundation summary util | v1.7 | 2/2 | Complete    | 2026-05-01 |
 | 47. HumanReadableView readability | v1.7 | 2/2 | Complete    | 2026-05-01 |
 | 48. Incoming-references panel | v1.7 | 4/4 | Complete    | 2026-05-01 |
-| 49. Reference graph view | v1.7 | 2/3 | In Progress|  |
+| 49. Reference graph view | v1.7 | 3/3 | Complete    | 2026-05-01 |
 | 50. STACK-01 gate | v1.7 | TBD | Not started | - |
 
 ## Backlog
