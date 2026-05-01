@@ -17,6 +17,7 @@
     "prepare": "node scripts/fetch-mii-profiles.mjs || true; node scripts/fetch-ips-profiles.mjs || true"
   },
   "dependencies": {
+    "@dagrejs/dagre": "3.0.0",
     "@mantine/charts": "^8.3.18",
     "@mantine/core": "^8.3.18",
     "@mantine/dates": "^8.3.18",
@@ -28,6 +29,7 @@
     "@medplum/react": "^5.1.7",
     "@medplum/react-hooks": "^5.1.7",
     "@tabler/icons-react": "^3.41.1",
+    "@xyflow/react": "12.10.2",
     "dayjs": "^1.11.20",
     "html-to-image": "^1.11.13",
     "js-yaml": "^4.1.1",
@@ -51,8 +53,8 @@
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "fhir-package-loader": "^2.2.4",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "fhir-package-loader": "^2.2.4",
     "globals": "^17.4.0",
     "jsdom": "^29.0.2",
     "rollup-plugin-visualizer": "^7.0.1",
