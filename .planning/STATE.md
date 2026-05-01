@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: Resource Navigation (started 2026-05-01)
-status: defining_requirements
-stopped_at: v1.7 milestone started — defining requirements
+status: roadmap_created
+stopped_at: v1.7 roadmap created — ready for /gsd-discuss-phase 46
 last_updated: "2026-05-01T00:00:00.000Z"
 last_activity: 2026-05-01
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -18,17 +18,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-29)
+See: .planning/PROJECT.md (updated 2026-04-30)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.7 — Resource Navigation (defining requirements)
+**Current focus:** v1.7 — Resource Navigation (roadmap created)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started (planning)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-01 — Milestone v1.7 started
+Status: Roadmap created — ready for /gsd-discuss-phase 46
+Last activity: 2026-05-01 — v1.7 roadmap created (5 phases 46-50, 13 REQ-IDs)
 
 v1.7 progress: 0/5 phases (planned: 46-50 — Foundation summary util → Readability → Incoming refs → Graph → STACK-01 gate)
 Progress: [░░░░░░░░░░] 0%
@@ -37,41 +37,50 @@ Progress: [░░░░░░░░░░] 0%
 
 **Velocity:**
 
-- Total plans completed (v1.6 so far): 7 (Phase 39: 3 plans / Phase 40: 1 plan / Phase 41: 3 plans)
+- Total plans completed (v1.6): 14 across 7 phases (39-45; Phase 45 closed `deferred` via WAIVE-AND-DEFER)
 - Total plans completed (v1.5): 32 (79 tasks across 10 phases including inserted 38.1 + 38.2)
 - Total plans completed (v1.4): 35 (51 tasks across 9 phases)
 - Total plans completed (v1.3): 9 (16 tasks across 2 phases)
 - Total plans completed (v1.2): 22 (across 7 phases)
-- v1.6 rough estimate: ~2–3 focused engineering weeks across 7 phases (39-45) per PROJECT.md
+- v1.7 planning estimate: TBD per phase (planner fills during /gsd-plan-phase)
 
 ## Accumulated Context
 
 ### Decisions
 
-- v1.6 scope locked: 7 phases (39-45), 12 REQ-IDs across 4 themes, 100% coverage
-- Phase 39 first — pure-doc audit-trail backfill (NYQ + AUDIT) clears v1.5 audit hygiene before any new feature work
-- Phase 45 (Mantine 9) last — largest blast radius + peer-dep gate; defers to v1.7 with `WAIVE-AND-DEFER` if `@medplum/react` peer-dep doesn't allow Mantine 9 / React 19
-- Phase 41 bundles 4 small UX-polish items (EXPL-01 + QUAL-01 + QUAL-02 + QUAL-03) into a single phase to share test-suite + bundle-size gate
-- Phases 41-44 are largely independent of each other (consume already-shipped v1.5 surfaces) — execution order can flex if priorities shift
-- Phase 40 (DEUT-01) ports Brettel/Machado JS simulation matrix into Vitest — closes Phase 37 deferred clause without manual Chrome DevTools capture
+**v1.7 (locked 2026-05-01 in /gsd-new-milestone):**
+
+- Phase ordering: sequential A→B→C→D→E (Phase 46→47→48→49→50); each phase depends on the previous's foundation (graph view consumes summary util + reference cache from earlier phases)
+- Theme A is the foundation — `summarizeResource` util MUST land first; B (readability), C (incoming refs), D (graph) all consume it via the registry
+- Graph scope = G1 only — current resource's reference graph; G2 schema graph deferred to v1.8+
+- Reverse-references via curated catalog — NOT CapabilityStatement-driven (deferred to v1.8+)
+- References resolve via lazy fetch + session cache — NOT eager prefetch
+- Two-slot summary `{ primary, secondary? }` only; NO status field/pill
+- Phase 50 (STACK-01) is conditional — gate-fail closes as `deferred` with no source diff (mirrors v1.6 Phase 45 precedent)
+- Bundle budget: initial-load delta target 0 KB gz; graph lazy-loads (~73 KB gz on `/explorer/:type/:id/graph` route only)
+
+**Carried from v1.6:**
+
+- v1.6 scope locked: 7 phases (39-45), 12 REQ-IDs across 4 themes, 100% coverage (Phase 45 deferred to v1.7 Phase 50)
 - Bearer tokens for VAL-06 stored in `localStorage` under `validator.bearerToken.v1` — explicit policy, NEVER persisted to settings.yaml on disk
 
 ### Roadmap Evolution
 
-- v1.6 milestone defined 2026-04-29 — `genomDE → MII CDS mapping pipeline` removed from candidate scope (moved to a separate project)
-- Backlog Phases 999.1 + 999.2 promoted into Phase 41 (EXPL-01 + QUAL-01)
+- 2026-05-01: v1.7 milestone roadmap created — 5 phases (46-50), 13 REQ-IDs across 5 themes (NAV/READ/REVR/GRPH/STACK), 100% coverage. Phase 50 absorbs STACK-01 carry-over from v1.6 Phase 45.
+- 2026-04-30: v1.6 shipped (7 phases, 14 active plans + Phase 45 deferred); STACK-01 carried forward to v1.7
+- 2026-04-29: v1.6 milestone defined (`genomDE → MII CDS mapping pipeline` removed from candidate scope)
+- Backlog Phases 999.1 + 999.2 promoted into v1.6 Phase 41 (EXPL-01 + QUAL-01)
 
 ### Pending Todos
 
-- Run `/gsd-discuss-phase 42` to capture design decisions, then `/gsd-plan-phase 42` to decompose into executable plans
-- Phase 37 retains `nyquist_compliant: false` with `pending: DEUT-01 in Phase 40` annotation — Phase 40 (DEUT-01) shipped; flip 37 to `true` when re-auditing v1.5 next
+- Run `/gsd-discuss-phase 46` to capture design decisions for Theme A foundation, then `/gsd-plan-phase 46` to decompose into executable plans
+- Phase 50 pre-flight: run `npm view @medplum/react peerDependencies` at phase start to determine gate verdict (pass → upgrade; fail → WAIVE-AND-DEFER)
+- Phase 49 dependency pinning: record `@xyflow/react` and `@dagrejs/dagre` versions in 49-CONTEXT.md before plan-phase
 
 ### Blockers/Concerns
 
-- Phase 45 (Mantine 9 / React 19) gated on `@medplum/react` peer-dep refresh — pre-flight check required at phase start; if not ready, phase defers to v1.7
-- ~~5 v1.5 phases carry `nyquist_compliant: false` (32, 34, 35, 36, 37)~~ — RESOLVED in Phase 39 (4 flipped to true; Phase 37 retained false pending Phase 40)
-- ~~3 v1.5 phases missing VALIDATION.md (31, 33, 38)~~ — RESOLVED in Phase 39 (retroactive VALIDATION.md written for all three)
-- ~~Phase 38.1 has no standalone VERIFICATION.md~~ — RESOLVED in Phase 39 (AUDIT-01: 38.1-VERIFICATION.md backfilled, status: passed, 6/6)
+- Phase 50 (Mantine 9 / React 19) gated on `@medplum/react` peer-dep refresh — same gate as v1.6 Phase 45; closure path (`validated` vs `deferred`) decided at phase start
+- Phase 47 + 49 carry visual UAT requirements that need live Blaze data — surface during /gsd-plan-phase as HUMAN-UAT items
 
 ### Quick Tasks Completed
 
@@ -82,6 +91,6 @@ Progress: [░░░░░░░░░░] 0%
 
 ## Session Continuity
 
-Last session: 2026-04-30T10:20:53.386Z
-Stopped at: Phase 44 context gathered (--auto mode; 14 D-XX decisions auto-picked, 4 deferred to Claude's discretion)
-Resume file: .planning/phases/44-ips-compositions-support-ips-01/44-CONTEXT.md
+Last session: 2026-05-01T00:00:00.000Z
+Stopped at: v1.7 roadmap created (5 phases, 13 REQ-IDs, 100% coverage)
+Resume file: .planning/ROADMAP.md (Phase Details section, Phases 46-50)

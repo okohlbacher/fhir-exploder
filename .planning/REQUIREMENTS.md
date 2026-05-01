@@ -62,20 +62,22 @@
 
 | REQ-ID | Phase | Plan(s) | Status |
 |--------|-------|---------|--------|
-| NAV-01 | TBD | TBD | pending |
-| NAV-02 | TBD | TBD | pending |
-| READ-01 | TBD | TBD | pending |
-| READ-02 | TBD | TBD | pending |
-| READ-03 | TBD | TBD | pending |
-| REVR-01 | TBD | TBD | pending |
-| REVR-02 | TBD | TBD | pending |
-| REVR-03 | TBD | TBD | pending |
-| GRPH-01 | TBD | TBD | pending |
-| GRPH-02 | TBD | TBD | pending |
-| GRPH-03 | TBD | TBD | pending |
-| GRPH-04 | TBD | TBD | pending |
-| STACK-01 | TBD | TBD | pending |
+| NAV-01 | Phase 46 | TBD | pending |
+| NAV-02 | Phase 46 | TBD | pending |
+| READ-01 | Phase 47 | TBD | pending |
+| READ-02 | Phase 47 | TBD | pending |
+| READ-03 | Phase 47 | TBD | pending |
+| REVR-01 | Phase 48 | TBD | pending |
+| REVR-02 | Phase 48 | TBD | pending |
+| REVR-03 | Phase 48 | TBD | pending |
+| GRPH-01 | Phase 49 | TBD | pending |
+| GRPH-02 | Phase 49 | TBD | pending |
+| GRPH-03 | Phase 49 | TBD | pending |
+| GRPH-04 | Phase 49 | TBD | pending |
+| STACK-01 | Phase 50 | TBD | pending |
 
 ---
+
+*Last updated: 2026-05-01 — v1.7 roadmap created (5 phases 46-50, 13 REQ-IDs mapped, 100% coverage). Phase ordering sequential A→B→C→D→E per locked decision; Phase 50 (STACK-01) independent + gate-driven.*
 
 *Last updated: 2026-05-01 — initial scope locked from /gsd-new-milestone discussion (4 user-confirmed answers: title "Resource Navigation"; lazy-fetch+session-cache; curated catalog; G1 only; sequential A→B→C→D→E; STACK-01 re-attempt).*
