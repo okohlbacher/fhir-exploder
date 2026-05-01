@@ -9,7 +9,6 @@
  *   - loading state: 4 skeleton cards while populated.length === 0 and any in flight
  *   - title prop: section <Title> renders the passed-in string
  */
-import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -44,11 +43,14 @@ Object.defineProperty(window, 'matchMedia', {
 const mockGet = vi.fn();
 const mockNavigate = vi.fn();
 
+// Stable client reference — new object per useMedplum() call would cause infinite useEffect re-fire
+const stableClient = {
+  get: mockGet,
+  fhirUrl: (p: string) => ({ toString: () => `http://test/fhir/${p}` }),
+};
+
 vi.mock('@medplum/react-hooks', () => ({
-  useMedplum: () => ({
-    get: mockGet,
-    fhirUrl: (p: string) => ({ toString: () => `http://test/fhir/${p}` }),
-  }),
+  useMedplum: () => stableClient,
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -125,8 +127,12 @@ describe('RelatedResourcesPanel', () => {
     await waitFor(() => {
       expect(mockGet).toHaveBeenCalledTimes(2);
     });
+    // Component returns null → no Title, no SimpleGrid/Card elements rendered.
+    // (MantineProvider may inject a <style> tag in the container; check for our DOM only.)
     await waitFor(() => {
-      expect(container.firstChild).toBeNull();
+      expect(screen.queryByText('Test')).toBeNull();
+      expect(container.querySelector('[class*=Card]')).toBeNull();
+      expect(container.querySelector('[class*=SimpleGrid]')).toBeNull();
     });
   });
 
