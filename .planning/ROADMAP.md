@@ -148,8 +148,8 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
   4. Contained resources (`Resource.contained[]`) render inline within the human-readable view, each displaying its own `summarizeResource()` output and expandable to a full ResourcePropertyTable view — no fall-through to the JSON modal.
   5. Tests cover the cache hit/miss/fallback paths for READ-01, the extension-surface presence for READ-02, and the contained-resource render path for READ-03; full suite passes; `npm run build` clean.
 **Plans**: 2 plans
-  - [ ] 47-01-PLAN.md — useReferenceResolver hook + ReferenceLink (READ-01)
-  - [ ] 47-02-PLAN.md — ExtensionChip + ContainedResourcesAccordion + HumanReadableView integration (READ-02 + READ-03)
+  - [x] 47-01-PLAN.md — useReferenceResolver hook + ReferenceLink (READ-01)
+  - [x] 47-02-PLAN.md — ExtensionChip + ContainedResourcesAccordion + HumanReadableView integration (READ-02 + READ-03)
 **Effort**: large (3+ days)
 **Execution**: Mixed (component + hook code is fully automatable; visual / interaction UAT — tooltip hover, modal transitions, contained-resource expand — needs a brief human walkthrough on live Blaze data)
 **UI hint**: yes
@@ -217,7 +217,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 31-38.2 (v1.5) | v1.5 | 32/32 | ✅ Shipped | 2026-04-29 |
 | 39-45 (v1.6) | v1.6 | 14/14 (45 deferred) | ✅ Shipped | 2026-04-30 |
 | 46. Foundation summary util | v1.7 | 2/2 | Complete    | 2026-05-01 |
-| 47. HumanReadableView readability | v1.7 | 0/2 | Planned     | - |
+| 47. HumanReadableView readability | v1.7 | 2/2 | Complete    | 2026-05-01 |
 | 48. Incoming-references panel | v1.7 | TBD | Not started | - |
 | 49. Reference graph view | v1.7 | TBD | Not started | - |
 | 50. STACK-01 gate | v1.7 | TBD | Not started | - |
