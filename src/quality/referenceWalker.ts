@@ -14,37 +14,19 @@
  * absolute URLs are skipped rather than thrown (T-17-03 mitigation).
  */
 import type { Resource } from '@medplum/fhirtypes';
+import { normalizeReference } from '../utils/referenceUrl';
+
+// Phase 47 / READ-01 (Q1 resolution): normalizeReference moved to
+// src/utils/referenceUrl.ts so useReferenceResolver, ReferenceLink, and the
+// future JSON peek drawer can share the same normalizer. Re-exported here
+// for back-compat with any external import (none in current codebase).
+export { normalizeReference } from '../utils/referenceUrl';
 
 export interface ExtractedReference {
   /** Path of the `reference` field, e.g. "Encounter.subject.reference". */
   path: string;
   /** Normalized reference in "Type/id" form. */
   reference: string;
-}
-
-function normalizeReference(value: string): string | null {
-  if (value.startsWith('#')) return null;
-  if (value.startsWith('urn:')) return null;
-  if (value.startsWith('http://') || value.startsWith('https://')) {
-    // Take the last two path segments from the URL *path* (after host).
-    // Strip "scheme://host/" prefix so the parts we use are real path segments.
-    const schemeIdx = value.indexOf('://');
-    const afterScheme = schemeIdx >= 0 ? value.slice(schemeIdx + 3) : value;
-    const firstSlash = afterScheme.indexOf('/');
-    if (firstSlash < 0) return null; // no path -> malformed for our purposes
-    const pathOnly = afterScheme.slice(firstSlash + 1);
-    const parts = pathOnly.split('/').filter(Boolean);
-    if (parts.length < 2) return null;
-    const type = parts[parts.length - 2];
-    const id = parts[parts.length - 1];
-    if (!type || !id) return null;
-    return `${type}/${id}`;
-  }
-  // Must look like "Type/id" -- split check keeps us from recording
-  // junk strings that happen to appear under a `reference` key.
-  const segs = value.split('/');
-  if (segs.length !== 2 || !segs[0] || !segs[1]) return null;
-  return value;
 }
 
 function walk(
