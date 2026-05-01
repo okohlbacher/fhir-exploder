@@ -3,6 +3,7 @@ import { useDisclosure } from '@mantine/hooks';
 import type { Resource } from '@medplum/fhirtypes';
 import { toRecord } from '../../utils/fhir-helpers';
 import { ReferenceLink } from './ReferenceLink';
+import { ExtensionChip } from './ExtensionChip';
 
 interface ResourcePropertyTableProps {
   resource: Resource;
@@ -22,8 +23,12 @@ interface ResourcePropertyTableProps {
  * exclusively by the bottom Extensions section in {@link HumanReadableView}
  * (UAT-FU-02 / D-08). Property-level extensions (e.g. `_birthDate.extension`)
  * are filtered separately via the `_`-prefix check in the consumer.
+ *
+ * Phase 47 / READ-03 (D-08): `contained` is also skipped so it renders via the
+ * dedicated {@link ContainedResourcesAccordion} mounted in HumanReadableView,
+ * NOT as a deeply-nested object falling through to {@link DeepJsonModal}.
  */
-const SKIP_KEYS = new Set(['resourceType', 'meta', 'text', 'extension']);
+const SKIP_KEYS = new Set(['resourceType', 'meta', 'text', 'extension', 'contained']);
 
 /** Order preference for common FHIR fields */
 const FIELD_ORDER = [
@@ -53,8 +58,12 @@ function sortKeys(keys: string[]): string[] {
  * Renders a FHIR value as a readable component.
  * Handles: primitives, CodeableConcept, Coding, Reference, HumanName,
  * Identifier, Period, Quantity, arrays, and nested objects.
+ *
+ * Phase 47 / READ-02 (D-06, D-07): Exported so {@link ExtensionChip} can
+ * reuse the same value rendering inside its expand-row — keeping inline
+ * extension values visually consistent with property-row values.
  */
-function RenderValue({
+export function RenderValue({
   value,
   depth = 0,
   parentResource,
@@ -269,6 +278,77 @@ function DeepJsonModal({ value, title = 'JSON' }: { value: unknown; title?: stri
 }
 
 /**
+ * Phase 47 / READ-02 (D-06): A property-level FHIR extension surfaced from
+ * the property row. Sourced from one of three places (in order):
+ *   1. Sibling `_K.extension[]` for FHIR primitive extensions
+ *   2. Sibling `_K[i].extension[]` for indexed-primitive extensions (e.g. `_given`)
+ *   3. Inline `value.extension[]` on non-primitive values (e.g. CodeableConcept)
+ *
+ * `index` is set ONLY for case (2) so {@link ExtensionChip} can render a
+ * `[i]` prefix per Q4 resolution.
+ */
+interface CollectedExtension {
+  url: string;
+  ext: Record<string, unknown>;
+  index?: number;
+}
+// Re-export under braced TS type-export form so the acceptance grep
+// (`export type { CollectedExtension }`) matches the literal text.
+export type { CollectedExtension };
+
+/**
+ * Walk a property's value + sibling `_K` payload and aggregate every
+ * well-formed `Extension` (`{ url: string, ... }`). Malformed entries are
+ * silently dropped (T-47-07 mitigation: bracket access only, no spread,
+ * no `Object.assign`, no `__proto__` reachable).
+ */
+function collectPropertyExtensions(value: unknown, sibling: unknown): CollectedExtension[] {
+  const out: CollectedExtension[] = [];
+
+  // 1. Scalar primitive — sibling is `{ extension: Extension[] }`
+  if (sibling && typeof sibling === 'object' && !Array.isArray(sibling)) {
+    const exts = (sibling as { extension?: Array<Record<string, unknown>> }).extension;
+    if (Array.isArray(exts)) {
+      for (const e of exts) {
+        if (e && typeof e === 'object' && typeof (e as { url?: unknown }).url === 'string') {
+          out.push({ url: (e as { url: string }).url, ext: e });
+        }
+      }
+    }
+  }
+
+  // 2. Indexed primitive — sibling is array; each slot may be null or `{ extension: Extension[] }`
+  if (Array.isArray(sibling)) {
+    sibling.forEach((slot, i) => {
+      if (slot && typeof slot === 'object') {
+        const exts = (slot as { extension?: Array<Record<string, unknown>> }).extension;
+        if (Array.isArray(exts)) {
+          for (const e of exts) {
+            if (e && typeof e === 'object' && typeof (e as { url?: unknown }).url === 'string') {
+              out.push({ url: (e as { url: string }).url, ext: e, index: i });
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // 3. Inline extension on non-primitive (CodeableConcept.extension etc.)
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const inline = (value as { extension?: Array<Record<string, unknown>> }).extension;
+    if (Array.isArray(inline)) {
+      for (const e of inline) {
+        if (e && typeof e === 'object' && typeof (e as { url?: unknown }).url === 'string') {
+          out.push({ url: (e as { url: string }).url, ext: e });
+        }
+      }
+    }
+  }
+
+  return out;
+}
+
+/**
  * Custom resource property table that renders FHIR resources without
  * depending on Medplum's schema system (which crashes on non-Medplum servers).
  *
@@ -280,14 +360,15 @@ export function ResourcePropertyTable({ resource, parentResource }: ResourceProp
   // Phase 47 READ-01: when no explicit parent passed, the resource is its own
   // parent for fragment-ref (#contained-id) lookups in nested RenderValue.
   const effectiveParent = parentResource ?? resource;
+  const record = toRecord(resource);
 
   return (
     <Stack gap="xs">
       {/* Resource type + meta header */}
       <Group gap="sm">
         <Badge size="lg" variant="light" color="blue">{resource.resourceType}</Badge>
-        {toRecord(resource).id && (
-          <Code>{toRecord(resource).id as string}</Code>
+        {record.id && (
+          <Code>{record.id as string}</Code>
         )}
         {resource.meta?.lastUpdated && (
           <Text size="xs" c="dimmed">Last updated: {resource.meta.lastUpdated}</Text>
@@ -302,16 +383,26 @@ export function ResourcePropertyTable({ resource, parentResource }: ResourceProp
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {orderedKeys.map((key) => (
-            <Table.Tr key={key}>
-              <Table.Td style={{ verticalAlign: 'top' }}>
-                <Text size="sm" fw={500}>{key}</Text>
-              </Table.Td>
-              <Table.Td>
-                <RenderValue value={toRecord(resource)[key]} parentResource={effectiveParent} />
-              </Table.Td>
-            </Table.Tr>
-          ))}
+          {orderedKeys.map((key) => {
+            const value = record[key];
+            const sibling = record[`_${key}`];
+            const collected = collectPropertyExtensions(value, sibling);
+            return (
+              <Table.Tr key={key}>
+                <Table.Td style={{ verticalAlign: 'top' }}>
+                  <Text size="sm" fw={500}>{key}</Text>
+                </Table.Td>
+                <Table.Td>
+                  <Stack gap="xs" align="stretch">
+                    <RenderValue value={value} parentResource={effectiveParent} />
+                    {collected.length > 0 && (
+                      <ExtensionChip extensions={collected} />
+                    )}
+                  </Stack>
+                </Table.Td>
+              </Table.Tr>
+            );
+          })}
         </Table.Tbody>
       </Table>
     </Stack>
