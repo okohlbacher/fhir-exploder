@@ -1,9 +1,9 @@
 ---
 phase: 49
 slug: theme-d-graph-view-reference-graph
-status: draft
-nyquist_compliant: false
-wave_0_complete: false
+status: ready
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-05-01
 ---
 
