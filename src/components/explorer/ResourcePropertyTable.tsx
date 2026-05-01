@@ -2,9 +2,17 @@ import { Anchor, Badge, Button, Code, Group, Modal, Stack, Table, Text, Tooltip 
 import { useDisclosure } from '@mantine/hooks';
 import type { Resource } from '@medplum/fhirtypes';
 import { toRecord } from '../../utils/fhir-helpers';
+import { ReferenceLink } from './ReferenceLink';
 
 interface ResourcePropertyTableProps {
   resource: Resource;
+  /**
+   * Phase 47 / READ-01 — parent resource for fragment-ref (`#contained-id`)
+   * lookup. When undefined, defaults to `resource` itself (top-level call).
+   * Pass-through so nested RenderValue calls keep the contained-resource
+   * scope correct.
+   */
+  parentResource?: Resource;
 }
 
 /**
@@ -46,7 +54,15 @@ function sortKeys(keys: string[]): string[] {
  * Handles: primitives, CodeableConcept, Coding, Reference, HumanName,
  * Identifier, Period, Quantity, arrays, and nested objects.
  */
-function RenderValue({ value, depth = 0 }: { value: unknown; depth?: number }): JSX.Element {
+function RenderValue({
+  value,
+  depth = 0,
+  parentResource,
+}: {
+  value: unknown;
+  depth?: number;
+  parentResource?: Resource;
+}): JSX.Element {
   if (value === null || value === undefined) {
     return <Text size="sm" c="dimmed">—</Text>;
   }
@@ -73,11 +89,11 @@ function RenderValue({ value, depth = 0 }: { value: unknown; depth?: number }): 
 
   if (Array.isArray(value)) {
     if (value.length === 0) return <Text size="sm" c="dimmed">—</Text>;
-    if (value.length === 1) return <RenderValue value={value[0]} depth={depth} />;
+    if (value.length === 1) return <RenderValue value={value[0]} depth={depth} parentResource={parentResource} />;
     return (
       <Stack gap={4}>
         {value.map((item, i) => (
-          <RenderValue key={i} value={item} depth={depth} />
+          <RenderValue key={i} value={item} depth={depth} parentResource={parentResource} />
         ))}
       </Stack>
     );
@@ -86,16 +102,16 @@ function RenderValue({ value, depth = 0 }: { value: unknown; depth?: number }): 
   if (typeof value === 'object') {
     const obj = value as Record<string, unknown>;
 
-    // Reference — include href so the click handler in ResourceDetailPage can intercept
+    // Reference — Phase 47 READ-01: ReferenceLink resolves via session cache,
+    // emits /explorer/Type/id href so existing handleReferenceClick interceptor
+    // in ResourceDetailPage continues to handle navigation.
     if (obj.reference && typeof obj.reference === 'string') {
-      const ref = obj.reference as string;
-      // Build a navigable href: Patient/id → /explorer/Patient/id
-      const href = ref.includes('/') ? `/explorer/${ref}` : ref;
       return (
-        <Group gap="xs">
-          <Anchor size="sm" href={href}>{ref}</Anchor>
-          {obj.display && <Text size="sm" c="dimmed">({obj.display as string})</Text>}
-        </Group>
+        <ReferenceLink
+          reference={obj.reference as string}
+          display={typeof obj.display === 'string' ? obj.display : undefined}
+          parentResource={parentResource}
+        />
       );
     }
 
@@ -209,7 +225,7 @@ function RenderValue({ value, depth = 0 }: { value: unknown; depth?: number }): 
                   <Text size="xs" c="dimmed" fw={500}>{k}</Text>
                 </Table.Td>
                 <Table.Td>
-                  <RenderValue value={v} depth={depth + 1} />
+                  <RenderValue value={v} depth={depth + 1} parentResource={parentResource} />
                 </Table.Td>
               </Table.Tr>
             ))}
@@ -258,9 +274,12 @@ function DeepJsonModal({ value, title = 'JSON' }: { value: unknown; title?: stri
  *
  * Replaces Medplum's ResourceTable for the Human-readable and Clinical+Raw views.
  */
-export function ResourcePropertyTable({ resource }: ResourcePropertyTableProps) {
+export function ResourcePropertyTable({ resource, parentResource }: ResourcePropertyTableProps) {
   const allKeys = Object.keys(resource).filter((k) => !SKIP_KEYS.has(k) && !k.startsWith('_'));
   const orderedKeys = sortKeys(allKeys);
+  // Phase 47 READ-01: when no explicit parent passed, the resource is its own
+  // parent for fragment-ref (#contained-id) lookups in nested RenderValue.
+  const effectiveParent = parentResource ?? resource;
 
   return (
     <Stack gap="xs">
@@ -289,7 +308,7 @@ export function ResourcePropertyTable({ resource }: ResourcePropertyTableProps) 
                 <Text size="sm" fw={500}>{key}</Text>
               </Table.Td>
               <Table.Td>
-                <RenderValue value={toRecord(resource)[key]} />
+                <RenderValue value={toRecord(resource)[key]} parentResource={effectiveParent} />
               </Table.Td>
             </Table.Tr>
           ))}
