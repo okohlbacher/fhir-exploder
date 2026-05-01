@@ -25,7 +25,7 @@
  *     `<Code>` text-node escaping; URL field is rendered as text inside
  *     `<Code>`, never as anchor `href`. NO raw-HTML injection sinks reachable.
  */
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Button, Code, Group, Stack, Text } from '@mantine/core';
 import { RenderValue, type CollectedExtension } from './ResourcePropertyTable';
 
@@ -34,15 +34,14 @@ export interface ExtensionChipProps {
 }
 
 export function ExtensionChip({ extensions }: ExtensionChipProps): JSX.Element | null {
+  // CRITICAL: hooks must run unconditionally before ANY early return (Rules of
+  // Hooks). useId() also gives us a collision-free aria-controls target.
   const [open, setOpen] = useState(false);
+  const panelId = useId();
   const count = extensions.length;
   if (count === 0) return null;
 
   const label = count === 1 ? '1 extension' : `${count} extensions`;
-  // Stable-enough panel id for aria-controls; collisions don't break anything.
-  const [panelId] = useState(
-    () => `ext-chip-panel-${Math.random().toString(36).slice(2, 8)}`,
-  );
 
   return (
     <Stack gap="xs" mt={0}>

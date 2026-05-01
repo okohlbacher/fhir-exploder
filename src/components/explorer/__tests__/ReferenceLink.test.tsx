@@ -106,8 +106,11 @@ describe('ReferenceLink', () => {
     );
   });
 
-  it('fragment ref + matching contained: resolves locally without hook', () => {
-    mockUseRefResolver.mockReturnValue({ resource: null, status: 'pending' });
+  it('fragment ref + matching contained: resolves locally from parent.contained[]', () => {
+    // Hook is called with undefined for fragment refs (Rules of Hooks: hooks
+    // must run unconditionally), but its result is ignored — the contained[]
+    // lookup wins.
+    mockUseRefResolver.mockReturnValue({ resource: null, status: 'failed' });
     const parent = {
       resourceType: 'Bundle',
       id: 'b1',
@@ -116,19 +119,40 @@ describe('ReferenceLink', () => {
       ],
     } as unknown as Resource;
     render(wrap(<ReferenceLink reference="#sub1" parentResource={parent} />));
-    expect(mockUseRefResolver).not.toHaveBeenCalled();
+    expect(mockUseRefResolver).toHaveBeenCalledWith(undefined);
     expect(screen.getByText(/Doe/)).toBeTruthy();
   });
 
   it('fragment ref + no matching contained: shows raw fragment text', () => {
+    mockUseRefResolver.mockReturnValue({ resource: null, status: 'failed' });
     render(wrap(<ReferenceLink reference="#orphan" parentResource={undefined} />));
     expect(screen.getByText('#orphan')).toBeTruthy();
-    expect(mockUseRefResolver).not.toHaveBeenCalled();
+    expect(mockUseRefResolver).toHaveBeenCalledWith(undefined);
   });
 
   it('display prop is shown only when not resolved', () => {
     mockUseRefResolver.mockReturnValue({ resource: null, status: 'failed' });
     render(wrap(<ReferenceLink reference="Patient/x" display="John Smith" />));
     expect(screen.getByText('(John Smith)')).toBeTruthy();
+  });
+
+  it('hooks-order safety: re-rendering same instance with reference flipped between fragment and Type/id does not crash (regression for CR-01)', () => {
+    mockUseRefResolver.mockReturnValue({ resource: null, status: 'failed' });
+    const parent = {
+      resourceType: 'Bundle',
+      id: 'b1',
+      contained: [{ resourceType: 'Patient', id: 'sub1', name: [{ family: 'Doe' }] }],
+    } as unknown as Resource;
+
+    const { rerender } = render(wrap(<ReferenceLink reference="#sub1" parentResource={parent} />));
+    expect(screen.getByText(/Doe/)).toBeTruthy();
+
+    // Flip to a non-fragment ref — must NOT throw (would crash if hooks order changed)
+    rerender(wrap(<ReferenceLink reference="Patient/abc" />));
+    expect(screen.getByRole('link')).toBeTruthy();
+
+    // Flip back — must still not crash
+    rerender(wrap(<ReferenceLink reference="#sub1" parentResource={parent} />));
+    expect(screen.getByText(/Doe/)).toBeTruthy();
   });
 });

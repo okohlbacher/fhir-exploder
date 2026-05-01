@@ -51,8 +51,16 @@ export function ReferenceLink({
   display,
   parentResource,
 }: ReferenceLinkProps): JSX.Element {
-  // Fragment refs: short-circuit BEFORE the hook so we never trigger a fetch.
-  if (reference.startsWith('#')) {
+  // CRITICAL: hooks must run unconditionally before ANY early return (Rules of
+  // Hooks). For fragment refs we pass `undefined` so the hook short-circuits
+  // to status='failed' without issuing a fetch.
+  const isFragment = reference.startsWith('#');
+  const { resource, status } = useReferenceResolver(
+    isFragment ? undefined : reference,
+  );
+
+  // Fragment refs: render from parentResource.contained[] without a fetch.
+  if (isFragment) {
     const contained = findContained(parentResource, reference);
     if (contained) {
       const summary = summarizeResource(contained).primary;
@@ -81,7 +89,6 @@ export function ReferenceLink({
     );
   }
 
-  const { resource, status } = useReferenceResolver(reference);
   const normalized = normalizeReference(reference);
   const slash = normalized?.indexOf('/') ?? -1;
   const type = normalized && slash >= 0 ? normalized.slice(0, slash) : '';

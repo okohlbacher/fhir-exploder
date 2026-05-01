@@ -164,4 +164,18 @@ describe('ExtensionChip', () => {
     );
     expect(screen.getByRole('button')).toBeTruthy();
   });
+
+  it('hooks-order safety: re-rendering same instance with extension count flipped between 0 and N does not crash (regression for CR-02)', () => {
+    const ext = { url: 'http://x', ext: { url: 'http://x', valueCode: 'v' } };
+    const { rerender } = render(wrap(<ExtensionChip extensions={[ext]} />));
+    expect(screen.getByRole('button')).toBeTruthy();
+
+    // Flip to zero extensions — component returns null. Hooks must still have run unconditionally.
+    rerender(wrap(<ExtensionChip extensions={[]} />));
+    expect(screen.queryByRole('button')).toBeNull();
+
+    // Flip back — must still render without crashing (hooks count must be stable)
+    rerender(wrap(<ExtensionChip extensions={[ext]} />));
+    expect(screen.getByRole('button')).toBeTruthy();
+  });
 });
