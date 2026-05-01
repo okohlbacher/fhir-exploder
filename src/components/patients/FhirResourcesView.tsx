@@ -17,6 +17,7 @@ import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import { useMedplum } from '@medplum/react-hooks';
 import type { Bundle, CapabilityStatement, Resource } from '@medplum/fhirtypes';
 import { toRecord } from '../../utils/fhir-helpers';
+import { summarizeResource } from '../../utils/summarizeResource';
 
 type CountState = number | 'loading' | 'error';
 
@@ -46,25 +47,6 @@ function usePatientLinkedTypes(capability: CapabilityStatement): {
     types.sort();
     return { types, paramByType };
   }, [capability]);
-}
-
-function getSummary(r: Resource): string {
-  const obj = toRecord(r);
-  for (const field of ['code', 'type', 'category']) {
-    const cc = obj[field];
-    if (cc && typeof cc === 'object') {
-      const concept = Array.isArray(cc) ? cc[0] : cc;
-      if (concept) {
-        const c = concept as Record<string, unknown>;
-        if (typeof c.text === 'string') return c.text;
-        if (Array.isArray(c.coding) && c.coding[0]) {
-          const coding = c.coding[0] as Record<string, unknown>;
-          return (coding.display as string) ?? (coding.code as string) ?? '';
-        }
-      }
-    }
-  }
-  return r.id ?? '';
 }
 
 function getDate(r: Resource): string {
@@ -220,7 +202,7 @@ export function FhirResourcesView({ patientId, capability }: FhirResourcesViewPr
                               href={`/patients/${patientId}/${r.resourceType}/${r.id}`}
                               onClick={(e) => e.preventDefault()}
                             >
-                              {getSummary(r)}
+                              {summarizeResource(r).primary}
                             </Anchor>
                           </Table.Td>
                           <Table.Td><Text size="sm">{getDate(r)}</Text></Table.Td>
