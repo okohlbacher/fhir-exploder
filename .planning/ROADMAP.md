@@ -164,7 +164,10 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
   3. Clicking a card navigates to a filtered explorer view (same click-through pattern as `PatientRelatedResources` today).
   4. `PatientRelatedResources.tsx` and `IncomingReferencesPanel` share a single render component (two props paths: forward-reference for Patient, reverse-reference for everything else) — no two-component duplication; existing Patient detail UX shows zero regression.
   5. Tests cover catalog shape (REVR-01), parallel count fetch + card render (REVR-02), and shared-component invariant (REVR-03); full suite passes; `npm run build` clean.
-**Plans**: TBD
+**Plans**: 3 plans
+  - [ ] 48-01-PLAN.md — reverseReferenceCatalog (REVR-01)
+  - [ ] 48-02-PLAN.md — RelatedResourcesPanel + IncomingReferencesPanel (REVR-02 + REVR-03 cross-wrapper invariant)
+  - [ ] 48-03-PLAN.md — PatientRelatedResources refactor + ResourceDetailPage mount relocation + HUMAN-UAT (REVR-03)
 **Effort**: medium (2-3 days)
 **Execution**: Mixed (catalog + panel + generalization is fully automatable; click-through navigation UAT on live Blaze data needs a brief human walkthrough)
 **UI hint**: yes
@@ -218,7 +221,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 39-45 (v1.6) | v1.6 | 14/14 (45 deferred) | ✅ Shipped | 2026-04-30 |
 | 46. Foundation summary util | v1.7 | 2/2 | Complete    | 2026-05-01 |
 | 47. HumanReadableView readability | v1.7 | 2/2 | Complete    | 2026-05-01 |
-| 48. Incoming-references panel | v1.7 | TBD | Not started | - |
+| 48. Incoming-references panel | v1.7 | 0/3 | Planned     | - |
 | 49. Reference graph view | v1.7 | TBD | Not started | - |
 | 50. STACK-01 gate | v1.7 | TBD | Not started | - |
 
