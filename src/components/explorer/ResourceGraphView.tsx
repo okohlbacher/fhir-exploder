@@ -1,53 +1,234 @@
-import { useParams } from 'react-router-dom';
-import { Stack, Title, Text, Skeleton } from '@mantine/core';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { useMedplum } from '@medplum/react-hooks';
+import {
+  Alert,
+  Button,
+  Group,
+  Paper,
+  Skeleton,
+  Slider,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+  useMantineColorScheme,
+} from '@mantine/core';
+import { useDebouncedValue } from '@mantine/hooks';
+import {
+  IconAlertCircle,
+  IconAlertTriangle,
+  IconArrowLeft,
+  IconInfoCircle,
+} from '@tabler/icons-react';
+import {
+  Background,
+  Controls,
+  MiniMap,
+  ReactFlow,
+  ReactFlowProvider,
+  type Edge,
+  type Node,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import './graph.module.css';
+import type { Resource, ResourceType } from '@medplum/fhirtypes';
+import { MAX_DEPTH, useGraphBfs } from './useGraphBfs';
+import { applyDagreLayout } from './applyDagreLayout';
+import { ResourceGraphNode } from './ResourceGraphNode';
+
+const NODE_TYPES = { resource: ResourceGraphNode } as const;
 
 /**
- * Phase 49 — GRPH-01..GRPH-04. Reference graph view for any FHIR resource.
+ * Phase 49 — Plan 49-03 (GRPH-01 + GRPH-04 wiring; closes GRPH-02 + GRPH-03 wiring).
  *
- * Wave 1 (Plan 49-01): SKELETON STUB. Mounted at:
- *   - `/explorer/:resourceType/:id/graph`
- *   - `/patients/:patientId/:resourceType/:id/graph` (preserves patient-context
- *     breadcrumb per RESEARCH §"Open Questions" Q-1)
- *
- * Wave 2 (Plan 49-02) fills in:
- *   - `useGraphBfs` hook (BFS over outgoing + incoming references, depth=3,
- *     node cap=150)
- *   - `ResourceGraphNode` custom React Flow node (Mantine Card 220×64,
- *     summarizeResource label, root-node accent border)
- *   - `applyDagreLayout` helper (TB direction, NODE_WIDTH/HEIGHT/NODESEP/
- *     RANKSEP/EDGESEP module constants — no magic numbers)
- *
- * Wave 3 (Plan 49-03) wires:
- *   - Theme bridge `graph.module.css` mapping React Flow `--xy-*` → Mantine
- *     `--mantine-color-*` CSS variables (D-11)
- *   - `<ReactFlowProvider>` + `<Controls />` + `<MiniMap />` chrome
- *   - The 5 mandatory tests (D-20.1..5)
- *   - Bundle-delta gate enforcement
- *   - HUMAN-UAT scaffold
- *
- * The `data-testid="graph-flow-root"` attribute on the outermost div is the
- * SAME DOM node before and after `useMantineColorScheme().setColorScheme(...)`
- * — this is the contract proven by Plan 03 Task 03's theme-switch invariant
- * test (D-20.4 / RESEARCH §"Test 4"). DO NOT remount this div based on theme.
- *
- * The `export function ResourceGraphView` (named, not default) is required by
- * the lazy-route shape in App.tsx:
- *   `lazy(() => retry(() => import(...)).then((m) => ({ default: m.ResourceGraphView })))`
- * (Phase 27 EFF-02 idiom).
+ * Lazy-loaded via React.lazy in App.tsx (Plan 49-01 Task 02). The data-testid
+ * attribute on the outermost div is the LOAD-BEARING CONTRACT for the
+ * theme-switch-invariant test (Plan 49-03 Task 03 / D-20.4): the SAME DOM
+ * node must exist before AND after `setColorScheme('dark')`.
  */
 export function ResourceGraphView() {
-  const { resourceType, id } = useParams<{
+  const { resourceType, id, patientId } = useParams<{
     resourceType: string;
     id: string;
+    patientId?: string;
   }>();
+  const client = useMedplum();
+  // Subscribe so the Mantine vars stay live; CSS bridge does the rest.
+  useMantineColorScheme();
+  const [resource, setResource] = useState<Resource | undefined>();
+  const [resourceFetchFailed, setResourceFetchFailed] = useState(false);
+  const [depth, setDepth] = useState(1);
+  const [debouncedDepth] = useDebouncedValue(depth, 200);
+
+  // Fetch the root resource (Phase 48 cancellation idiom).
+  useEffect(() => {
+    if (!resourceType || !id) return;
+    let cancelled = false;
+    setResource(undefined);
+    setResourceFetchFailed(false);
+    client
+      .readResource(resourceType as ResourceType, id)
+      .then((r) => {
+        if (cancelled) return;
+        setResource(r as Resource);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setResourceFetchFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, resourceType, id]);
+
+  const bfs = useGraphBfs(client, resource, debouncedDepth);
+
+  // Build React Flow nodes + edges from the BFS result.
+  const reactFlowGraph = useMemo<{ nodes: Node[]; edges: Edge[] }>(() => {
+    if (!bfs.result) return { nodes: [], edges: [] };
+    const nodes: Node[] = Array.from(bfs.result.nodes.values()).map((n) => ({
+      id: n.key,
+      type: 'resource',
+      position: { x: 0, y: 0 }, // overwritten by applyDagreLayout
+      data: { resource: n.resource, isRoot: n.isRoot },
+    }));
+    const edges: Edge[] = bfs.result.edges.map((e, i) => ({
+      id: `e-${i}-${e.source}->${e.target}`,
+      source: e.source,
+      target: e.target,
+      type: 'smoothstep',
+      label: e.label,
+      animated: false,
+    }));
+    const positioned = applyDagreLayout(nodes, edges, 'TB');
+    return { nodes: positioned, edges };
+  }, [bfs.result]);
+
+  const nodeCount = reactFlowGraph.nodes.length;
+  const edgeCount = reactFlowGraph.edges.length;
+  const truncated = bfs.result?.truncated === true;
+  const empty =
+    !bfs.loading &&
+    bfs.result !== undefined &&
+    nodeCount <= 1 &&
+    !truncated;
+  const allFailed =
+    resourceFetchFailed || (!bfs.loading && bfs.result === undefined);
+
+  const backHref = patientId
+    ? `/patients/${patientId}/${resourceType}/${id}`
+    : `/explorer/${resourceType}/${id}`;
+
   return (
     <div data-testid="graph-flow-root">
       <Stack gap="lg" p="lg">
-        <Title order={2}>Reference graph</Title>
-        <Text size="sm" c="dimmed" ff="monospace">
-          {resourceType}/{id}
-        </Text>
-        <Skeleton h="60vh" radius="lg" />
+        <Group gap="md" justify="space-between">
+          <Stack gap={4}>
+            <Title order={2}>Reference graph</Title>
+            <Text size="sm" c="dimmed" ff="monospace">
+              {resourceType}/{id}
+            </Text>
+          </Stack>
+          <Button
+            variant="subtle"
+            leftSection={<IconArrowLeft size={16} />}
+            component={Link}
+            to={backHref}
+          >
+            Back to resource
+          </Button>
+        </Group>
+
+        <Paper withBorder radius="lg" p="md">
+          <Group gap="md" align="center">
+            <Text size="sm" c="dimmed">
+              Depth
+            </Text>
+            <Slider
+              min={1}
+              max={MAX_DEPTH}
+              marks={[
+                { value: 1, label: '1' },
+                { value: 2, label: '2' },
+                { value: 3, label: '3' },
+              ]}
+              value={depth}
+              onChange={setDepth}
+              w={200}
+              color="indigo"
+            />
+            <Text size="xs" c="dimmed" ff="monospace" ml="auto">
+              {nodeCount} {nodeCount === 1 ? 'node' : 'nodes'} · {edgeCount}{' '}
+              {edgeCount === 1 ? 'edge' : 'edges'}
+            </Text>
+          </Group>
+        </Paper>
+
+        <Paper
+          withBorder
+          radius="lg"
+          p={0}
+          h="min(70vh, 720px)"
+          pos="relative"
+        >
+          {bfs.loading || !resource ? (
+            <SimpleGrid cols={2} spacing="md" p="md">
+              <Skeleton height={64} radius="md" w={220} />
+              <Skeleton height={64} radius="md" w={220} />
+              <Skeleton height={64} radius="md" w={220} />
+              <Skeleton height={64} radius="md" w={220} />
+            </SimpleGrid>
+          ) : (
+            <ReactFlowProvider>
+              <ReactFlow
+                nodes={reactFlowGraph.nodes}
+                edges={reactFlowGraph.edges}
+                nodeTypes={NODE_TYPES}
+                fitView
+                proOptions={{ hideAttribution: false }}
+              >
+                <Background />
+                <Controls position="top-right" />
+                <MiniMap position="bottom-right" pannable zoomable />
+              </ReactFlow>
+            </ReactFlowProvider>
+          )}
+        </Paper>
+
+        {truncated && (
+          <Alert
+            color="yellow"
+            variant="light"
+            icon={<IconAlertTriangle size={16} />}
+            title={`Showing 150 of ${nodeCount}+ nodes`}
+          >
+            The graph was truncated to keep rendering responsive. Reduce the
+            depth or click a child node to recenter and explore further.
+          </Alert>
+        )}
+        {empty && !truncated && !allFailed && (
+          <Alert
+            color="gray"
+            variant="light"
+            icon={<IconInfoCircle size={16} />}
+            title={`No references at depth ${depth}`}
+          >
+            This resource has no outgoing or incoming references within the
+            current depth. Try increasing the depth via the slider above.
+          </Alert>
+        )}
+        {allFailed && (
+          <Alert
+            color="red"
+            variant="light"
+            icon={<IconAlertCircle size={16} />}
+            title="Unable to load references"
+          >
+            The FHIR server did not return reference data. Check the Blaze
+            connection in Settings, then refresh.
+          </Alert>
+        )}
       </Stack>
     </div>
   );
