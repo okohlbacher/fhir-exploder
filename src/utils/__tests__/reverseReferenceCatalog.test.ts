@@ -19,7 +19,18 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { reverseReferenceCatalog } from '../reverseReferenceCatalog';
+import {
+  reverseReferenceCatalog,
+  type ReverseReferenceCatalog,
+  type ReverseReferenceEntry,
+} from '../reverseReferenceCatalog';
+
+// Wider-typed view for runtime drift-detection assertions that need to look up
+// `{type, param}` pairs the literal type narrows away (e.g. asserting
+// `MedicationStatement.reason-reference` is NOT present in Condition's entries —
+// the literal types correctly know that already, but the runtime test is the
+// drift-detection guarantee for future edits).
+const catalog: ReverseReferenceCatalog = reverseReferenceCatalog;
 
 const expectedPatient = [
   { type: 'Condition',           param: 'patient', icon: '🩺' },
@@ -91,18 +102,18 @@ describe('reverseReferenceCatalog — shape & coverage (D-14)', () => {
 
 describe('reverseReferenceCatalog — RESEARCH §1 corrections (D-03)', () => {
   it('Condition entry does NOT include MedicationStatement.reason-reference (R4 invalid per RESEARCH §1.b)', () => {
-    const condition = reverseReferenceCatalog.Condition;
+    const condition = catalog.Condition;
     expect(condition).toBeDefined();
-    const offending = condition!.find(
+    const offending = (condition as readonly ReverseReferenceEntry[]).find(
       (e) => e.type === 'MedicationStatement' && e.param === 'reason-reference',
     );
     expect(offending).toBeUndefined();
   });
 
   it('Encounter entry includes MedicationStatement.context (R4 valid per RESEARCH §1.a)', () => {
-    const encounter = reverseReferenceCatalog.Encounter;
+    const encounter = catalog.Encounter;
     expect(encounter).toBeDefined();
-    const found = encounter!.find(
+    const found = (encounter as readonly ReverseReferenceEntry[]).find(
       (e) => e.type === 'MedicationStatement' && e.param === 'context',
     );
     expect(found).toBeDefined();
@@ -112,9 +123,9 @@ describe('reverseReferenceCatalog — RESEARCH §1 corrections (D-03)', () => {
 describe('reverseReferenceCatalog — D-09 icon defaults', () => {
   it('non-Patient entries omit `icon`', () => {
     for (const key of NON_PATIENT_KEYS) {
-      const entries = reverseReferenceCatalog[key];
-      expect(entries).toBeDefined();
-      for (const entry of entries!) {
+      const entries = catalog[key];
+      expect(entries, `expected catalog key ${key} to be defined`).toBeDefined();
+      for (const entry of entries as readonly ReverseReferenceEntry[]) {
         expect(entry.icon, `entry ${key}/${entry.type}/${entry.param}`).toBeUndefined();
       }
     }
