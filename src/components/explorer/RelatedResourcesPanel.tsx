@@ -13,6 +13,15 @@ export interface RelatedResourcesPanelProps {
 }
 
 /**
+ * Composite key for the `counts` Record. Catalog entries can share a target
+ * ResourceType but differ in SearchParameter (e.g. Observation source-type:
+ * has-member + derived-from). Using `${e.type}:${e.param}` instead of `e.type`
+ * alone prevents parallel fetches from clobbering one another's count slot.
+ * (Closes WR-01 from 48-VERIFICATION.md / 48-REVIEW.md.)
+ */
+const entryKey = (e: ReverseReferenceEntry) => `${e.type}:${e.param}`;
+
+/**
  * Shared render component for reverse-reference / related-reference panels (D-04).
  *
  * Owns: parallel _summary=count fetch, in-flight skeleton, populated grid, click-navigate.
@@ -33,7 +42,7 @@ export function RelatedResourcesPanel({
   useEffect(() => {
     let cancelled = false;
     const initial: Record<string, number | 'loading'> = {};
-    for (const e of entries) initial[e.type] = 'loading';
+    for (const e of entries) initial[entryKey(e)] = 'loading';
     setCounts(initial);
 
     for (const e of entries) {
@@ -43,11 +52,11 @@ export function RelatedResourcesPanel({
         .then((raw) => {
           if (cancelled) return;
           const bundle: Bundle = typeof raw === 'string' ? JSON.parse(raw) : raw;
-          setCounts((prev) => ({ ...prev, [e.type]: bundle.total ?? 0 }));
+          setCounts((prev) => ({ ...prev, [entryKey(e)]: bundle.total ?? 0 }));
         })
         .catch(() => {
           if (cancelled) return;
-          setCounts((prev) => ({ ...prev, [e.type]: 0 }));
+          setCounts((prev) => ({ ...prev, [entryKey(e)]: 0 }));
         });
     }
 
@@ -55,7 +64,7 @@ export function RelatedResourcesPanel({
   }, [client, refValue, entries]);
 
   const populated = useMemo(
-    () => entries.filter((e) => typeof counts[e.type] === 'number' && (counts[e.type] as number) > 0),
+    () => entries.filter((e) => typeof counts[entryKey(e)] === 'number' && (counts[entryKey(e)] as number) > 0),
     [counts, entries],
   );
 
@@ -70,7 +79,7 @@ export function RelatedResourcesPanel({
         {loading &&
           populated.length === 0 &&
           entries.slice(0, 4).map((e) => (
-            <Card key={e.type} withBorder padding="sm">
+            <Card key={entryKey(e)} withBorder padding="sm">
               <Group justify="space-between">
                 <Text size="sm">{e.type}</Text>
                 <Loader size="xs" />
@@ -79,7 +88,7 @@ export function RelatedResourcesPanel({
           ))}
         {populated.map((e) => (
           <Card
-            key={e.type}
+            key={entryKey(e)}
             withBorder
             padding="sm"
             style={{ cursor: 'pointer' }}
@@ -91,7 +100,7 @@ export function RelatedResourcesPanel({
                 <Text size="sm" fw={500}>{e.type}</Text>
               </Group>
               <Badge size="sm" variant="light" color="blue">
-                {(counts[e.type] as number).toLocaleString()}
+                {(counts[entryKey(e)] as number).toLocaleString()}
               </Badge>
             </Group>
           </Card>
