@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { Resource } from '@medplum/fhirtypes';
 import { useResolvedResource } from '../../hooks/useResolvedResource';
 import { ResourcePropertyTable } from './ResourcePropertyTable';
+import { ContainedResourcesAccordion } from './ContainedResourcesAccordion';
 
 export interface HumanReadableViewProps {
   resource: Resource;
@@ -31,6 +32,7 @@ export function HumanReadableView({ resource }: HumanReadableViewProps) {
     <ScrollArea h="calc(100vh - 250px)">
       <Stack gap="md">
         <ResourcePropertyTable resource={display} />
+        <ContainedResourcesAccordion resource={display} />
         <ExtensionsSection resource={display} />
       </Stack>
     </ScrollArea>
