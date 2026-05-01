@@ -1,0 +1,484 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PatientRelatedResources > byte-identical to baseline: full DOM snapshot 1`] = `
+<div>
+  <h5
+    class="m_8a5d1357 mantine-Title-root"
+    data-order="5"
+    style="--title-fw: var(--mantine-h5-font-weight); --title-lh: var(--mantine-h5-line-height); --title-fz: var(--mantine-h5-font-size); margin-bottom: var(--mantine-spacing-sm);"
+  >
+    Related Resources
+  </h5>
+  <style
+    data-mantine-styles="inline"
+  >
+    .__m__-rbs{--sg-spacing-x:var(--mantine-spacing-md);--sg-spacing-y:var(--mantine-spacing-md);--sg-cols:2;}@media(min-width: 48em){.__m__-rbs{--sg-cols:3;}}@media(min-width: 62em){.__m__-rbs{--sg-cols:4;}}
+  </style>
+  <div
+    class="m_2415a157 mantine-SimpleGrid-root __m__-rbs"
+  >
+    <div
+      class="m_e615b15f mantine-Card-root m_1b7284a3 mantine-Paper-root"
+      data-with-border="true"
+      style="--card-padding: var(--mantine-spacing-sm); cursor: pointer;"
+    >
+      <div
+        class="m_4081bf90 mantine-Group-root"
+        style="--group-gap: var(--mantine-spacing-md); --group-align: center; --group-justify: space-between; --group-wrap: wrap;"
+      >
+        <div
+          class="m_4081bf90 mantine-Group-root"
+          style="--group-gap: var(--mantine-spacing-xs); --group-align: center; --group-justify: flex-start; --group-wrap: wrap;"
+        >
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm);"
+          >
+            🩺
+          </p>
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm); font-weight: 500;"
+          >
+            Condition
+          </p>
+        </div>
+        <div
+          class="m_347db0ec mantine-Badge-root"
+          data-size="sm"
+          data-variant="light"
+          style="--badge-height: var(--badge-height-sm); --badge-padding-x: var(--badge-padding-x-sm); --badge-fz: var(--badge-fz-sm); --badge-bg: var(--mantine-color-blue-light); --badge-color: var(--mantine-color-blue-light-color); --badge-bd: calc(0.0625rem * var(--mantine-scale)) solid transparent;"
+        >
+          <span
+            class="m_5add502a mantine-Badge-label"
+          >
+            5
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="m_e615b15f mantine-Card-root m_1b7284a3 mantine-Paper-root"
+      data-with-border="true"
+      style="--card-padding: var(--mantine-spacing-sm); cursor: pointer;"
+    >
+      <div
+        class="m_4081bf90 mantine-Group-root"
+        style="--group-gap: var(--mantine-spacing-md); --group-align: center; --group-justify: space-between; --group-wrap: wrap;"
+      >
+        <div
+          class="m_4081bf90 mantine-Group-root"
+          style="--group-gap: var(--mantine-spacing-xs); --group-align: center; --group-justify: flex-start; --group-wrap: wrap;"
+        >
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm);"
+          >
+            🔧
+          </p>
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm); font-weight: 500;"
+          >
+            Procedure
+          </p>
+        </div>
+        <div
+          class="m_347db0ec mantine-Badge-root"
+          data-size="sm"
+          data-variant="light"
+          style="--badge-height: var(--badge-height-sm); --badge-padding-x: var(--badge-padding-x-sm); --badge-fz: var(--badge-fz-sm); --badge-bg: var(--mantine-color-blue-light); --badge-color: var(--mantine-color-blue-light-color); --badge-bd: calc(0.0625rem * var(--mantine-scale)) solid transparent;"
+        >
+          <span
+            class="m_5add502a mantine-Badge-label"
+          >
+            5
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="m_e615b15f mantine-Card-root m_1b7284a3 mantine-Paper-root"
+      data-with-border="true"
+      style="--card-padding: var(--mantine-spacing-sm); cursor: pointer;"
+    >
+      <div
+        class="m_4081bf90 mantine-Group-root"
+        style="--group-gap: var(--mantine-spacing-md); --group-align: center; --group-justify: space-between; --group-wrap: wrap;"
+      >
+        <div
+          class="m_4081bf90 mantine-Group-root"
+          style="--group-gap: var(--mantine-spacing-xs); --group-align: center; --group-justify: flex-start; --group-wrap: wrap;"
+        >
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm);"
+          >
+            📊
+          </p>
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm); font-weight: 500;"
+          >
+            Observation
+          </p>
+        </div>
+        <div
+          class="m_347db0ec mantine-Badge-root"
+          data-size="sm"
+          data-variant="light"
+          style="--badge-height: var(--badge-height-sm); --badge-padding-x: var(--badge-padding-x-sm); --badge-fz: var(--badge-fz-sm); --badge-bg: var(--mantine-color-blue-light); --badge-color: var(--mantine-color-blue-light-color); --badge-bd: calc(0.0625rem * var(--mantine-scale)) solid transparent;"
+        >
+          <span
+            class="m_5add502a mantine-Badge-label"
+          >
+            5
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="m_e615b15f mantine-Card-root m_1b7284a3 mantine-Paper-root"
+      data-with-border="true"
+      style="--card-padding: var(--mantine-spacing-sm); cursor: pointer;"
+    >
+      <div
+        class="m_4081bf90 mantine-Group-root"
+        style="--group-gap: var(--mantine-spacing-md); --group-align: center; --group-justify: space-between; --group-wrap: wrap;"
+      >
+        <div
+          class="m_4081bf90 mantine-Group-root"
+          style="--group-gap: var(--mantine-spacing-xs); --group-align: center; --group-justify: flex-start; --group-wrap: wrap;"
+        >
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm);"
+          >
+            🏥
+          </p>
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm); font-weight: 500;"
+          >
+            Encounter
+          </p>
+        </div>
+        <div
+          class="m_347db0ec mantine-Badge-root"
+          data-size="sm"
+          data-variant="light"
+          style="--badge-height: var(--badge-height-sm); --badge-padding-x: var(--badge-padding-x-sm); --badge-fz: var(--badge-fz-sm); --badge-bg: var(--mantine-color-blue-light); --badge-color: var(--mantine-color-blue-light-color); --badge-bd: calc(0.0625rem * var(--mantine-scale)) solid transparent;"
+        >
+          <span
+            class="m_5add502a mantine-Badge-label"
+          >
+            5
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="m_e615b15f mantine-Card-root m_1b7284a3 mantine-Paper-root"
+      data-with-border="true"
+      style="--card-padding: var(--mantine-spacing-sm); cursor: pointer;"
+    >
+      <div
+        class="m_4081bf90 mantine-Group-root"
+        style="--group-gap: var(--mantine-spacing-md); --group-align: center; --group-justify: space-between; --group-wrap: wrap;"
+      >
+        <div
+          class="m_4081bf90 mantine-Group-root"
+          style="--group-gap: var(--mantine-spacing-xs); --group-align: center; --group-justify: flex-start; --group-wrap: wrap;"
+        >
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm);"
+          >
+            💊
+          </p>
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm); font-weight: 500;"
+          >
+            MedicationStatement
+          </p>
+        </div>
+        <div
+          class="m_347db0ec mantine-Badge-root"
+          data-size="sm"
+          data-variant="light"
+          style="--badge-height: var(--badge-height-sm); --badge-padding-x: var(--badge-padding-x-sm); --badge-fz: var(--badge-fz-sm); --badge-bg: var(--mantine-color-blue-light); --badge-color: var(--mantine-color-blue-light-color); --badge-bd: calc(0.0625rem * var(--mantine-scale)) solid transparent;"
+        >
+          <span
+            class="m_5add502a mantine-Badge-label"
+          >
+            5
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="m_e615b15f mantine-Card-root m_1b7284a3 mantine-Paper-root"
+      data-with-border="true"
+      style="--card-padding: var(--mantine-spacing-sm); cursor: pointer;"
+    >
+      <div
+        class="m_4081bf90 mantine-Group-root"
+        style="--group-gap: var(--mantine-spacing-md); --group-align: center; --group-justify: space-between; --group-wrap: wrap;"
+      >
+        <div
+          class="m_4081bf90 mantine-Group-root"
+          style="--group-gap: var(--mantine-spacing-xs); --group-align: center; --group-justify: flex-start; --group-wrap: wrap;"
+        >
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm);"
+          >
+            📋
+          </p>
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm); font-weight: 500;"
+          >
+            MedicationRequest
+          </p>
+        </div>
+        <div
+          class="m_347db0ec mantine-Badge-root"
+          data-size="sm"
+          data-variant="light"
+          style="--badge-height: var(--badge-height-sm); --badge-padding-x: var(--badge-padding-x-sm); --badge-fz: var(--badge-fz-sm); --badge-bg: var(--mantine-color-blue-light); --badge-color: var(--mantine-color-blue-light-color); --badge-bd: calc(0.0625rem * var(--mantine-scale)) solid transparent;"
+        >
+          <span
+            class="m_5add502a mantine-Badge-label"
+          >
+            5
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="m_e615b15f mantine-Card-root m_1b7284a3 mantine-Paper-root"
+      data-with-border="true"
+      style="--card-padding: var(--mantine-spacing-sm); cursor: pointer;"
+    >
+      <div
+        class="m_4081bf90 mantine-Group-root"
+        style="--group-gap: var(--mantine-spacing-md); --group-align: center; --group-justify: space-between; --group-wrap: wrap;"
+      >
+        <div
+          class="m_4081bf90 mantine-Group-root"
+          style="--group-gap: var(--mantine-spacing-xs); --group-align: center; --group-justify: flex-start; --group-wrap: wrap;"
+        >
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm);"
+          >
+            🧪
+          </p>
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm); font-weight: 500;"
+          >
+            DiagnosticReport
+          </p>
+        </div>
+        <div
+          class="m_347db0ec mantine-Badge-root"
+          data-size="sm"
+          data-variant="light"
+          style="--badge-height: var(--badge-height-sm); --badge-padding-x: var(--badge-padding-x-sm); --badge-fz: var(--badge-fz-sm); --badge-bg: var(--mantine-color-blue-light); --badge-color: var(--mantine-color-blue-light-color); --badge-bd: calc(0.0625rem * var(--mantine-scale)) solid transparent;"
+        >
+          <span
+            class="m_5add502a mantine-Badge-label"
+          >
+            5
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="m_e615b15f mantine-Card-root m_1b7284a3 mantine-Paper-root"
+      data-with-border="true"
+      style="--card-padding: var(--mantine-spacing-sm); cursor: pointer;"
+    >
+      <div
+        class="m_4081bf90 mantine-Group-root"
+        style="--group-gap: var(--mantine-spacing-md); --group-align: center; --group-justify: space-between; --group-wrap: wrap;"
+      >
+        <div
+          class="m_4081bf90 mantine-Group-root"
+          style="--group-gap: var(--mantine-spacing-xs); --group-align: center; --group-justify: flex-start; --group-wrap: wrap;"
+        >
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm);"
+          >
+            🖼
+          </p>
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm); font-weight: 500;"
+          >
+            ImagingStudy
+          </p>
+        </div>
+        <div
+          class="m_347db0ec mantine-Badge-root"
+          data-size="sm"
+          data-variant="light"
+          style="--badge-height: var(--badge-height-sm); --badge-padding-x: var(--badge-padding-x-sm); --badge-fz: var(--badge-fz-sm); --badge-bg: var(--mantine-color-blue-light); --badge-color: var(--mantine-color-blue-light-color); --badge-bd: calc(0.0625rem * var(--mantine-scale)) solid transparent;"
+        >
+          <span
+            class="m_5add502a mantine-Badge-label"
+          >
+            5
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="m_e615b15f mantine-Card-root m_1b7284a3 mantine-Paper-root"
+      data-with-border="true"
+      style="--card-padding: var(--mantine-spacing-sm); cursor: pointer;"
+    >
+      <div
+        class="m_4081bf90 mantine-Group-root"
+        style="--group-gap: var(--mantine-spacing-md); --group-align: center; --group-justify: space-between; --group-wrap: wrap;"
+      >
+        <div
+          class="m_4081bf90 mantine-Group-root"
+          style="--group-gap: var(--mantine-spacing-xs); --group-align: center; --group-justify: flex-start; --group-wrap: wrap;"
+        >
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm);"
+          >
+            ⚠
+          </p>
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm); font-weight: 500;"
+          >
+            AllergyIntolerance
+          </p>
+        </div>
+        <div
+          class="m_347db0ec mantine-Badge-root"
+          data-size="sm"
+          data-variant="light"
+          style="--badge-height: var(--badge-height-sm); --badge-padding-x: var(--badge-padding-x-sm); --badge-fz: var(--badge-fz-sm); --badge-bg: var(--mantine-color-blue-light); --badge-color: var(--mantine-color-blue-light-color); --badge-bd: calc(0.0625rem * var(--mantine-scale)) solid transparent;"
+        >
+          <span
+            class="m_5add502a mantine-Badge-label"
+          >
+            5
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="m_e615b15f mantine-Card-root m_1b7284a3 mantine-Paper-root"
+      data-with-border="true"
+      style="--card-padding: var(--mantine-spacing-sm); cursor: pointer;"
+    >
+      <div
+        class="m_4081bf90 mantine-Group-root"
+        style="--group-gap: var(--mantine-spacing-md); --group-align: center; --group-justify: space-between; --group-wrap: wrap;"
+      >
+        <div
+          class="m_4081bf90 mantine-Group-root"
+          style="--group-gap: var(--mantine-spacing-xs); --group-align: center; --group-justify: flex-start; --group-wrap: wrap;"
+        >
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm);"
+          >
+            💉
+          </p>
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm); font-weight: 500;"
+          >
+            Immunization
+          </p>
+        </div>
+        <div
+          class="m_347db0ec mantine-Badge-root"
+          data-size="sm"
+          data-variant="light"
+          style="--badge-height: var(--badge-height-sm); --badge-padding-x: var(--badge-padding-x-sm); --badge-fz: var(--badge-fz-sm); --badge-bg: var(--mantine-color-blue-light); --badge-color: var(--mantine-color-blue-light-color); --badge-bd: calc(0.0625rem * var(--mantine-scale)) solid transparent;"
+        >
+          <span
+            class="m_5add502a mantine-Badge-label"
+          >
+            5
+          </span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="m_e615b15f mantine-Card-root m_1b7284a3 mantine-Paper-root"
+      data-with-border="true"
+      style="--card-padding: var(--mantine-spacing-sm); cursor: pointer;"
+    >
+      <div
+        class="m_4081bf90 mantine-Group-root"
+        style="--group-gap: var(--mantine-spacing-md); --group-align: center; --group-justify: space-between; --group-wrap: wrap;"
+      >
+        <div
+          class="m_4081bf90 mantine-Group-root"
+          style="--group-gap: var(--mantine-spacing-xs); --group-align: center; --group-justify: flex-start; --group-wrap: wrap;"
+        >
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm);"
+          >
+            ✍
+          </p>
+          <p
+            class="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+            data-size="sm"
+            style="--text-fz: var(--mantine-font-size-sm); --text-lh: var(--mantine-line-height-sm); font-weight: 500;"
+          >
+            Consent
+          </p>
+        </div>
+        <div
+          class="m_347db0ec mantine-Badge-root"
+          data-size="sm"
+          data-variant="light"
+          style="--badge-height: var(--badge-height-sm); --badge-padding-x: var(--badge-padding-x-sm); --badge-fz: var(--badge-fz-sm); --badge-bg: var(--mantine-color-blue-light); --badge-color: var(--mantine-color-blue-light-color); --badge-bd: calc(0.0625rem * var(--mantine-scale)) solid transparent;"
+        >
+          <span
+            class="m_5add502a mantine-Badge-label"
+          >
+            5
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
