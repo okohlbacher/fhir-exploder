@@ -40,16 +40,8 @@ import type {
   DiagnosticReport,
   AllergyIntolerance,
   HumanName,
-  CodeableConcept,
 } from '@medplum/fhirtypes';
 import { getCodeDisplay, toRecord } from './fhir-helpers';
-
-// getCodeDisplay + CodeableConcept are referenced by Task 2/3 helpers below.
-// Reserve them via void to satisfy `noUnusedLocals` while stubs remain.
-void getCodeDisplay;
-type _UnusedCC = CodeableConcept | undefined;
-const _ccAnchor: _UnusedCC = undefined;
-void _ccAnchor;
 
 export interface Summary {
   primary: string;
@@ -162,27 +154,109 @@ function summarizePatient(p: Patient, now: Date): Summary {
   return { primary, secondary: p.birthDate };
 }
 
-// Stubs — Task 2 fills these. Empty primary is enough to satisfy TS strict mode.
-function summarizeObservation(_o: Observation): Summary {
-  return { primary: '' };
+/**
+ * Module-private classifier — true iff Observation has any
+ * `category[].coding[].code === 'laboratory'`. Lab observations get the
+ * `<value> <unit> · <code>` middot rendering (D-04); non-lab observations
+ * use code as primary and value/effective as secondary.
+ */
+function isLabObservation(o: Observation): boolean {
+  const cats = o.category ?? [];
+  for (const cat of cats) {
+    const codings = cat.coding ?? [];
+    for (const c of codings) {
+      if (c.code === 'laboratory') return true;
+    }
+  }
+  return false;
 }
-function summarizeCondition(_c: Condition): Summary {
-  return { primary: '' };
+
+function summarizeObservation(o: Observation): Summary {
+  const codeDisplay = getCodeDisplay(o.code);
+  const effective = o.effectiveDateTime?.slice(0, 10);
+
+  // Build value+unit fragment from valueQuantity / valueString / valueCodeableConcept
+  let valueFragment = '';
+  if (o.valueQuantity) {
+    const value = o.valueQuantity.value;
+    const unit = o.valueQuantity.unit ?? o.valueQuantity.code ?? '';
+    if (value !== undefined && unit) {
+      valueFragment = `${value} ${unit}`;
+    } else if (value !== undefined) {
+      valueFragment = String(value);
+    }
+  } else if (o.valueString) {
+    valueFragment = o.valueString;
+  } else if (o.valueCodeableConcept) {
+    valueFragment = getCodeDisplay(o.valueCodeableConcept);
+  }
+
+  if (isLabObservation(o)) {
+    // Lab: "<value> <unit> · <code display>" (middot U+00B7)
+    const primary = valueFragment && codeDisplay
+      ? `${valueFragment} · ${codeDisplay}`
+      : (valueFragment || codeDisplay || '');
+    return { primary, secondary: effective };
+  }
+
+  // Non-lab: primary = code display, secondary = value+unit if present else effectiveDateTime
+  return {
+    primary: codeDisplay,
+    secondary: valueFragment || effective,
+  };
 }
-function summarizeEncounter(_e: Encounter): Summary {
-  return { primary: '' };
+
+function summarizeCondition(c: Condition): Summary {
+  return {
+    primary: getCodeDisplay(c.code),
+    secondary: c.onsetDateTime?.slice(0, 10),
+  };
 }
-function summarizeMedicationStatement(_m: MedicationStatement): Summary {
-  return { primary: '' };
+
+function summarizeEncounter(e: Encounter): Summary {
+  // Defensive `?.` on class — schema says required Coding, but Blaze data may violate.
+  const primary = e.class?.display ?? getCodeDisplay(e.type?.[0]);
+  return {
+    primary,
+    secondary: e.period?.start?.slice(0, 10),
+  };
 }
-function summarizeProcedure(_p: Procedure): Summary {
-  return { primary: '' };
+
+function summarizeMedicationStatement(m: MedicationStatement): Summary {
+  let primary = getCodeDisplay(m.medicationCodeableConcept);
+  if (!primary && m.medicationReference?.display) {
+    primary = m.medicationReference.display;
+  }
+  if (!primary) {
+    primary = m.id ?? '';
+  }
+  return {
+    primary,
+    secondary: m.effectiveDateTime?.slice(0, 10),
+  };
 }
-function summarizeDiagnosticReport(_d: DiagnosticReport): Summary {
-  return { primary: '' };
+
+function summarizeProcedure(p: Procedure): Summary {
+  return {
+    primary: getCodeDisplay(p.code),
+    secondary: p.performedDateTime?.slice(0, 10),
+  };
 }
-function summarizeAllergyIntolerance(_a: AllergyIntolerance): Summary {
-  return { primary: '' };
+
+function summarizeDiagnosticReport(d: DiagnosticReport): Summary {
+  const dateSrc = d.issued ?? d.effectiveDateTime;
+  return {
+    primary: getCodeDisplay(d.code),
+    secondary: dateSrc?.slice(0, 10),
+  };
+}
+
+function summarizeAllergyIntolerance(a: AllergyIntolerance): Summary {
+  const secondary = a.category?.[0] ?? a.type;
+  return {
+    primary: getCodeDisplay(a.code),
+    secondary,
+  };
 }
 
 // Generic walker stub — Task 3 replaces this with the full 7-step walker.
