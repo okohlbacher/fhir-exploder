@@ -214,7 +214,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 23-30 (v1.4) | v1.4 | 35/35 | ✅ Shipped | 2026-04-23 |
 | 31-38.2 (v1.5) | v1.5 | 32/32 | ✅ Shipped | 2026-04-29 |
 | 39-45 (v1.6) | v1.6 | 14/14 (45 deferred) | ✅ Shipped | 2026-04-30 |
-| 46. Foundation summary util | v1.7 | 2/2 | Complete   | 2026-05-01 |
+| 46. Foundation summary util | v1.7 | 2/2 | Complete    | 2026-05-01 |
 | 47. HumanReadableView readability | v1.7 | TBD | Not started | - |
 | 48. Incoming-references panel | v1.7 | TBD | Not started | - |
 | 49. Reference graph view | v1.7 | TBD | Not started | - |
