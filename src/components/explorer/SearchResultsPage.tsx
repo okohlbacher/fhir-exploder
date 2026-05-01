@@ -24,50 +24,7 @@ import { PaginationControls } from './PaginationControls';
 import { resourcesToCSV, resourcesToNDJSON, downloadString } from '../../utils/export';
 import { toRecord } from '../../utils/fhir-helpers';
 import { searchByIdentifierPrefix } from '../../utils/searchByIdentifierPrefix';
-
-/**
- * Extracts a human-readable summary of a resource for table display.
- * Tries common fields: name, code, identifier, then falls back to id.
- */
-function getResourceSummary(resource: Resource): string {
-  const r = toRecord(resource);
-
-  // HumanName (Patient, Practitioner, etc.)
-  if (Array.isArray(r.name) && r.name.length > 0) {
-    const n = r.name[0] as Record<string, unknown>;
-    if (typeof n.text === 'string') return n.text;
-    const parts = [n.family, ...(Array.isArray(n.given) ? n.given : [])].filter(Boolean);
-    if (parts.length > 0) return parts.join(', ');
-  }
-  if (typeof r.name === 'string') return r.name;
-
-  // CodeableConcept fields
-  for (const field of ['code', 'type', 'category']) {
-    const cc = r[field];
-    if (cc && typeof cc === 'object') {
-      const concept = Array.isArray(cc) ? cc[0] : cc;
-      if (concept) {
-        const c = concept as Record<string, unknown>;
-        if (typeof c.text === 'string') return c.text;
-        if (Array.isArray(c.coding) && c.coding.length > 0) {
-          const coding = c.coding[0] as Record<string, unknown>;
-          return (coding.display as string) ?? (coding.code as string) ?? '';
-        }
-      }
-    }
-  }
-
-  // Identifier
-  if (Array.isArray(r.identifier) && r.identifier.length > 0) {
-    const id = r.identifier[0] as Record<string, unknown>;
-    return (id.value as string) ?? '';
-  }
-
-  // Status
-  if (typeof r.status === 'string') return r.status;
-
-  return resource.id ?? '';
-}
+import { summarizeResource } from '../../utils/summarizeResource';
 
 export function getResourceDate(resource: Resource): string {
   const r = toRecord(resource);
@@ -487,7 +444,7 @@ export function SearchResultsPage() {
                       navigate(`/explorer/${r.resourceType}/${r.id}`);
                     }}
                   >
-                    {getResourceSummary(r)}
+                    {summarizeResource(r).primary}
                   </Anchor>
                 </Table.Td>
                 <Table.Td>
