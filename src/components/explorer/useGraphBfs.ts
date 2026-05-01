@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { MedplumClient } from '@medplum/core';
 import type { Bundle, Resource, ResourceType } from '@medplum/fhirtypes';
-import {
-  reverseReferenceCatalog,
-  type ReverseReferenceEntry,
-} from '../../utils/reverseReferenceCatalog';
+import { reverseReferenceCatalog, type ReverseReferenceEntry } from '../../utils/reverseReferenceCatalog';
 
 /**
  * Phase 49 — Plan 49-02 (GRPH-02 + part of GRPH-03).
