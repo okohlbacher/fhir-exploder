@@ -86,6 +86,14 @@ const IPSPanel = lazy(() =>
     default: m.default,
   })),
 );
+// Phase 49 — Plan 49-01 (GRPH-01). Reference graph view, code-split into its
+// own chunk; only loads when the user visits /explorer/:type/:id/graph or the
+// /patients/:patientId/:resourceType/:id/graph sibling.
+const ResourceGraphView = lazy(() =>
+  retry(() => import('./components/explorer/ResourceGraphView')).then((m) => ({
+    default: m.ResourceGraphView,
+  })),
+);
 
 function AppRoutes() {
   const { settings, usingDefaults, loading } = useSettings();
@@ -136,6 +144,7 @@ function AppRoutes() {
             <Route index element={<ResourceTypeLanding />} />
             <Route path=":resourceType" element={<SearchResultsPage />} />
             <Route path=":resourceType/:id" element={<ResourceDetailPage />} />
+            <Route path=":resourceType/:id/graph" element={<ResourceGraphView />} />
           </Route>
           <Route path="/patients" element={<PatientsLayout />}>
             <Route index element={<PatientListPage />} />
@@ -143,6 +152,10 @@ function AppRoutes() {
             <Route
               path=":patientId/:resourceType/:id"
               element={<ResourceDetailPage />}
+            />
+            <Route
+              path=":patientId/:resourceType/:id/graph"
+              element={<ResourceGraphView />}
             />
           </Route>
           <Route path="/quality" element={<QualityLayout />}>
