@@ -83,6 +83,11 @@ const ONE_ENTRY: readonly ReverseReferenceEntry[] = [
   { type: 'Observation', param: 'x' },
 ];
 
+const COLLIDING_ENTRIES: readonly ReverseReferenceEntry[] = [
+  { type: 'Observation', param: 'has-member' },
+  { type: 'Observation', param: 'derived-from' },
+];
+
 beforeEach(() => {
   mockGet.mockReset();
   mockNavigate.mockReset();
@@ -215,5 +220,49 @@ describe('RelatedResourcesPanel', () => {
       ),
     );
     await waitFor(() => expect(screen.getByText('My Custom Title')).toBeTruthy());
+  });
+
+  it('duplicate-target-type entries: both render distinct cards (WR-01 regression)', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockGet.mockImplementation((url: string) =>
+      url.includes('has-member')
+        ? Promise.resolve({ resourceType: 'Bundle', total: 5 } as Bundle)
+        : url.includes('derived-from')
+          ? Promise.resolve({ resourceType: 'Bundle', total: 8 } as Bundle)
+          : Promise.resolve({ resourceType: 'Bundle', total: 0 } as Bundle),
+    );
+    const { container } = render(
+      wrap(
+        <RelatedResourcesPanel
+          title="Test"
+          entries={COLLIDING_ENTRIES}
+          refValue="Observation/o1"
+          onCardNavigate={(e) => `/explorer/${e.type}?${e.param}=Observation/o1`}
+        />,
+      ),
+    );
+    await waitFor(() => {
+      expect(screen.getAllByText('Observation').length).toBe(2);
+    });
+
+    // BOTH counts present (last-write-wins bug would show only one)
+    expect(screen.getByText('5')).toBeTruthy();
+    expect(screen.getByText('8')).toBeTruthy();
+
+    // Both URL variants were dispatched in parallel
+    expect(mockGet).toHaveBeenCalledTimes(2);
+    const urls = mockGet.mock.calls.map((c) => String(c[0]));
+    expect(urls.some((u) => u.includes('has-member'))).toBe(true);
+    expect(urls.some((u) => u.includes('derived-from'))).toBe(true);
+
+    // Two distinct Card DOM nodes
+    const cards = container.querySelectorAll('[class*=mantine-Card-root]');
+    expect(cards.length).toBe(2);
+
+    // No React duplicate-key warning emitted
+    const allErrorCalls = consoleErrorSpy.mock.calls.flat().map(String).join('\n');
+    expect(allErrorCalls).not.toMatch(/Encountered two children with the same key/);
+
+    consoleErrorSpy.mockRestore();
   });
 });
