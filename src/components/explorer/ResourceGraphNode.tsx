@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, Stack, Text, Tooltip } from '@mantine/core';
 import type { NodeProps, Node } from '@xyflow/react';
 import type { Resource } from '@medplum/fhirtypes';
@@ -34,15 +34,21 @@ export type ResourceGraphNodeType = Node<ResourceGraphNodeData, 'resource'>;
 
 export function ResourceGraphNode({ data }: NodeProps<ResourceGraphNodeType>) {
   const navigate = useNavigate();
+  const { patientId } = useParams<{ patientId?: string }>();
   const { resource, isRoot } = data;
   const summary = summarizeResource(resource);
   const type = resource.resourceType;
   const id = resource.id ?? '';
 
   const safeNavigate = () => {
-    if (FHIR_REFERENCE_PATTERN.test(type) && FHIR_ID_PATTERN.test(id)) {
-      navigate(`/explorer/${type}/${id}`);
+    if (!FHIR_REFERENCE_PATTERN.test(type) || !FHIR_ID_PATTERN.test(id)) {
+      return;
     }
+    if (patientId && FHIR_ID_PATTERN.test(patientId)) {
+      navigate(`/patients/${patientId}/${type}/${id}`);
+      return;
+    }
+    navigate(`/explorer/${type}/${id}`);
   };
 
   return (
