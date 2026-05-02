@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: -- Resource Navigation (in progress, started 2026-05-01)
-status: executing
-stopped_at: Phase 50 context gathered (defer decision)
-last_updated: "2026-05-02T05:20:41.132Z"
-last_activity: 2026-05-01
+status: phase_closed_deferred
+stopped_at: Phase 50 closed `deferred` via WAIVE-AND-DEFER (gate MIXED 2026-05-01) — STACK-01 carries to v1.8
+last_updated: "2026-05-02T08:45:00.000Z"
+last_activity: 2026-05-02 -- Phase 50 closed deferred (WAIVE-AND-DEFER); v1.7 at 5/5 phases
 progress:
   total_phases: 5
-  completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  completed_phases: 5
+  total_plans: 15
+  completed_plans: 13
   percent: 100
 ---
 
@@ -18,20 +18,20 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-30)
+See: .planning/PROJECT.md (updated 2026-05-02)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 49 — theme-d-graph-view-reference-graph
+**Current focus:** v1.7 milestone closure / v1.8 milestone-new prep — Phase 50 deferred STACK-01 to v1.8
 
 ## Current Position
 
-Phase: 50
-Plan: Not started
-Status: Executing Phase 49
-Last activity: 2026-05-01
+Phase: 50 (theme-e-stack-01-carry-over-mantine-9-react-19-gate) — CLOSED `deferred`
+Plan: 2 of 2 (both shipped pure-doc artifacts)
+Status: Phase 50 closed `deferred`; v1.7 milestone now 5/5 phases (4 complete, 1 deferred)
+Last activity: 2026-05-02 -- Phase 50 WAIVE-AND-DEFER closure shipped (7 commits)
 
-v1.7 progress: 0/5 phases (planned: 46-50 — Foundation summary util → Readability → Incoming refs → Graph → STACK-01 gate)
-Progress: [░░░░░░░░░░] 0%
+v1.7 progress: 5/5 phases reached closure (46-49 complete, 50 deferred → v1.8)
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Progress: [░░░░░░░░░░] 0%
 
 ### Roadmap Evolution
 
+- 2026-05-02: Phase 50 closed `deferred` via WAIVE-AND-DEFER (gate result MIXED 2026-05-01: Mantine 9 still pinned `^8.0.0` by `@medplum/react@5.1.10`; React 19 newly open via `^18.0.0 || ^19.0.0`). User decision D-02 keeps React/Mantine coupled, so entire upgrade defers to v1.8. v1.7 milestone reaches 5/5 phases (4 complete, 1 deferred) — same closure shape as v1.6 (Phase 45 deferred to v1.7 Phase 50).
 - 2026-05-01: v1.7 milestone roadmap created — 5 phases (46-50), 13 REQ-IDs across 5 themes (NAV/READ/REVR/GRPH/STACK), 100% coverage. Phase 50 absorbs STACK-01 carry-over from v1.6 Phase 45.
 - 2026-04-30: v1.6 shipped (7 phases, 14 active plans + Phase 45 deferred); STACK-01 carried forward to v1.7
 - 2026-04-29: v1.6 milestone defined (`genomDE → MII CDS mapping pipeline` removed from candidate scope)
@@ -73,14 +74,14 @@ Progress: [░░░░░░░░░░] 0%
 
 ### Pending Todos
 
-- Run `/gsd-discuss-phase 46` to capture design decisions for Theme A foundation, then `/gsd-plan-phase 46` to decompose into executable plans
-- Phase 50 pre-flight: run `npm view @medplum/react peerDependencies` at phase start to determine gate verdict (pass → upgrade; fail → WAIVE-AND-DEFER)
-- Phase 49 dependency pinning: record `@xyflow/react` and `@dagrejs/dagre` versions in 49-CONTEXT.md before plan-phase
+- v1.7 milestone-close audit (`/gsd-audit-milestone v1.7`) — verify Phase 46-50 closure paths before archiving
+- v1.8 milestone-new (`/gsd-new-milestone`) — STACK-01 awaits in v1.8 deferred-items list (re-attempt trigger: `npm view @medplum/react peerDependencies`)
+- Phase 49 HUMAN-UAT items carry over (7 pending) — surface in next session
 
 ### Blockers/Concerns
 
-- Phase 50 (Mantine 9 / React 19) gated on `@medplum/react` peer-dep refresh — same gate as v1.6 Phase 45; closure path (`validated` vs `deferred`) decided at phase start
-- Phase 47 + 49 carry visual UAT requirements that need live Blaze data — surface during /gsd-plan-phase as HUMAN-UAT items
+- STACK-01 (Mantine 9 / React 19) bottleneck remains `@medplum/react`'s `@mantine/core: ^8.0.0` peer pin. React 19 has independently unblocked (peer pin: `^18.0.0 || ^19.0.0`) but per user decision D-02 React/Mantine stay coupled until both gates open. Re-evaluate at v1.8 milestone start.
+- Phase 47 + 49 visual UAT items still pending live-Blaze testing
 
 ### Quick Tasks Completed
 
@@ -91,6 +92,6 @@ Progress: [░░░░░░░░░░] 0%
 
 ## Session Continuity
 
-Last session: 2026-05-02T05:20:41.130Z
-Stopped at: Phase 50 context gathered (defer decision)
-Resume file: .planning/phases/50-theme-e-stack-01-carry-over-mantine-9-react-19-gate/50-CONTEXT.md
+Last session: 2026-05-02T08:45:00.000Z
+Stopped at: Phase 50 closed `deferred` via WAIVE-AND-DEFER — v1.7 at 5/5 phases (4 complete, 1 deferred); STACK-01 carries to v1.8
+Resume file: .planning/phases/50-theme-e-stack-01-carry-over-mantine-9-react-19-gate/50-SUMMARY.md (closure record + v1.8 re-attempt trigger)
