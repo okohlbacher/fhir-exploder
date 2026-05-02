@@ -24,8 +24,8 @@ import {
 } from '@tabler/icons-react';
 import { useMedplum } from '@medplum/react-hooks';
 import type { Bundle, Resource } from '@medplum/fhirtypes';
-import { toRecord } from '../../utils/fhir-helpers';
 import { summarizeResource } from '../../utils/summarizeResource';
+import { extractDate } from '../../utils/timeline-utils';
 
 interface PatientTimelineProps {
   patientId: string;
@@ -54,23 +54,6 @@ const TIMELINE_RESOURCE_TYPES = [
   { type: 'DiagnosticReport', param: 'patient', icon: IconFileCheck, color: 'teal' },
   { type: 'AllergyIntolerance', param: 'patient', icon: IconStethoscope, color: 'pink' },
 ];
-
-/** Extract the best date from a FHIR resource */
-function extractDate(resource: Resource): string | null {
-  const r = toRecord(resource);
-  for (const field of [
-    'effectiveDateTime', 'performedDateTime', 'recordedDate', 'onsetDateTime',
-    'authoredOn', 'date', 'issued', 'started',
-  ]) {
-    if (typeof r[field] === 'string') return (r[field] as string).slice(0, 10);
-  }
-  // Period.start
-  for (const field of ['effectivePeriod', 'period', 'performedPeriod']) {
-    const period = r[field] as Record<string, unknown> | undefined;
-    if (period?.start && typeof period.start === 'string') return (period.start as string).slice(0, 10);
-  }
-  return null;
-}
 
 /**
  * Horizontal patient timeline showing clinical events grouped by date.
