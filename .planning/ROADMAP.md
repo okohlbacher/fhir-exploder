@@ -19,6 +19,10 @@ Carried beyond v1.6 (re-evaluate at milestone boundaries):
 
 - **STACK-01 (Mantine 9 / React 19 upgrade):** v1.6 Phase 45 peer-dep gate fired `WAIVE-AND-DEFER` on 2026-04-30 — `@medplum/react@5.1.9` peers Mantine `^8.0.0` only. **Now scheduled as v1.7 Phase 50.** At phase start, re-run `npm view @medplum/react peerDependencies`; if range now includes `^9.x`, reactivate from `.planning/milestones/v1.6-phases/45-*/45-CONTEXT.md` and replan. If gate still fails, close Phase 50 as `deferred` (no source diff) and push to v1.8 — both closures acceptable.
 
+**Now deferred to v1.8 (Phase 50 closed `deferred` 2026-05-02):**
+
+- **STACK-01 (Mantine 9 / React 19 upgrade — second WAIVE-AND-DEFER):** v1.7 Phase 50 re-ran the peer-dep gate on 2026-05-01 against `@medplum/react@5.1.10`. Result MIXED: Mantine 9 still pinned `^8.0.0` (gate FAILS); React 19 newly allowed via `^18.0.0 || ^19.0.0` (gate PASSES). Per user decision D-02 (`.planning/phases/50-theme-e-stack-01-carry-over-mantine-9-react-19-gate/50-CONTEXT.md`), React and Mantine stay coupled until both gates open, so the entire upgrade defers. **Re-attempt trigger at v1.8 milestone start:** re-run `npm view @medplum/react peerDependencies`; if `@mantine/core` now includes `^9.x`, open a new v1.8 phase with codemod + breaking-change sweep + visual regression UAT + bundle measurement; else re-defer to v1.9. Reactivation source: `50-SUMMARY.md` + `50-CONTEXT.md` + original v1.6 `.planning/milestones/v1.6-phases/45-mantine-9-upgrade-stack-01/45-CONTEXT.md`.
+
 **Deferred beyond v1.7 (re-evaluate at v1.8 milestone-new):**
 
 - **Reverse-reference CapabilityStatement-driven discovery** — runtime-discovered catalog from server's `CapabilityStatement.rest.resource[].searchParam`. v1.7 ships curated catalog (REVR-01); defer until curated approach reveals real-world gaps.
@@ -41,7 +45,7 @@ Carried beyond v1.6 (re-evaluate at milestone boundaries):
 - [ ] Phase 47: Theme B — Readability: HumanReadableView reference resolution + extensions + contained resources (READ-01, READ-02, READ-03)
 - [ ] Phase 48: Theme C — Reverse references: incoming-references panel + curated catalog (REVR-01, REVR-02, REVR-03)
 - [ ] Phase 49: Theme D — Graph view: lazy `/explorer/:type/:id/graph` route with React Flow + dagre (GRPH-01, GRPH-02, GRPH-03, GRPH-04)
-- [ ] Phase 50: Theme E — STACK-01 carry-over: Mantine 9 / React 19 upgrade gate (STACK-01)
+- [~] Phase 50: Theme E — STACK-01 carry-over: Mantine 9 / React 19 upgrade gate (STACK-01) — DEFERRED to v1.8 via WAIVE-AND-DEFER on 2026-05-02 (gate result MIXED 2026-05-01: `@medplum/react@5.1.10` peers `@mantine/core: ^8.0.0` only; React 19 independently unblocked but coupled-defer per user decision D-02)
 
 Full requirements: [REQUIREMENTS.md](REQUIREMENTS.md)
 
@@ -209,7 +213,9 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
   2. SUMMARY.md documents the `WAIVE-AND-DEFER` decision matching v1.6 Phase 45 precedent — no source diff applied.
   3. STACK-01 carried forward to v1.8 deferred-items list; phase closes `deferred`.
 
-**Plans**: TBD
+**Plans**: 2 plans (closure path: gate FAILED for Mantine 9 → pure-doc WAIVE-AND-DEFER)
+  - [ ] 50-01-PLAN.md — 50-SUMMARY.md (WAIVE-AND-DEFER record + frozen 2026-05-01 gate output) + 50-VERIFICATION.md (status `passed`)
+  - [ ] 50-02-PLAN.md — REQUIREMENTS.md / PROJECT.md / ROADMAP.md traceability rollover (STACK-01 → `deferred → v1.8`)
 **Effort**: large (3+ days if gate passes; small if gate fails — pure-doc closure)
 **Execution**: Mixed if gate passes (codemod + tsc sweep automatable; visual UAT requires human walkthrough across all views) / Fully automatable if gate fails (pure-doc `WAIVE-AND-DEFER`)
 **UI hint**: yes (only relevant if gate passes — visual regression UAT touches every view)
@@ -227,7 +233,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 47. HumanReadableView readability | v1.7 | 2/2 | Complete    | 2026-05-01 |
 | 48. Incoming-references panel | v1.7 | 4/4 | Complete    | 2026-05-01 |
 | 49. Reference graph view | v1.7 | 3/3 | Complete    | 2026-05-01 |
-| 50. STACK-01 gate | v1.7 | TBD | Not started | - |
+| 50. STACK-01 gate | v1.7 | 2/0 | Deferred    | 2026-05-02 |
 
 ## Backlog
 
