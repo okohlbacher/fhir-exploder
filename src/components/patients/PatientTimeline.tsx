@@ -25,6 +25,7 @@ import {
 import { useMedplum } from '@medplum/react-hooks';
 import type { Bundle, Resource } from '@medplum/fhirtypes';
 import { toRecord } from '../../utils/fhir-helpers';
+import { summarizeResource } from '../../utils/summarizeResource';
 
 interface PatientTimelineProps {
   patientId: string;
@@ -71,30 +72,6 @@ function extractDate(resource: Resource): string | null {
   return null;
 }
 
-/** Extract a short summary for display */
-function extractSummary(resource: Resource): string {
-  const r = toRecord(resource);
-  // CodeableConcept: code, type, category
-  for (const field of ['code', 'type', 'category', 'class']) {
-    const cc = r[field];
-    if (cc && typeof cc === 'object') {
-      const concept = Array.isArray(cc) ? cc[0] : cc;
-      if (concept) {
-        const c = concept as Record<string, unknown>;
-        if (typeof c.text === 'string') return c.text;
-        if (Array.isArray(c.coding) && c.coding[0]) {
-          const coding = c.coding[0] as Record<string, unknown>;
-          if (coding.display) return coding.display as string;
-          if (coding.code) return coding.code as string;
-        }
-      }
-    }
-  }
-  if (typeof r.description === 'string') return r.description;
-  if (typeof r.status === 'string') return r.status;
-  return resource.resourceType;
-}
-
 /**
  * Horizontal patient timeline showing clinical events grouped by date.
  *
@@ -132,7 +109,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
                 resourceType: resource.resourceType,
                 id: resource.id ?? '',
                 date,
-                summary: extractSummary(resource),
+                summary: summarizeResource(resource).primary,
               });
             }
           } catch {
