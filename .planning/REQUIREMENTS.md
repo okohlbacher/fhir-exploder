@@ -63,7 +63,7 @@
 | REQ-ID | Phase | Plan(s) | Status |
 |--------|-------|---------|--------|
 | NAV-01 | Phase 46 | TBD | pending |
-| NAV-02 | Phase 46 | TBD | pending |
+| NAV-02 | Phase 46 + Phase 51 (gap closure) | TBD | pending |
 | READ-01 | Phase 47 | TBD | pending |
 | READ-02 | Phase 47 | TBD | pending |
 | READ-03 | Phase 47 | TBD | pending |
@@ -72,7 +72,7 @@
 | REVR-03 | Phase 48 | TBD | pending |
 | GRPH-01 | Phase 49 | TBD | pending |
 | GRPH-02 | Phase 49 | TBD | pending |
-| GRPH-03 | Phase 49 | TBD | pending |
+| GRPH-03 | Phase 49 + Phase 51 (gap closure) | TBD | pending |
 | GRPH-04 | Phase 49 | TBD | pending |
 | STACK-01 | Phase 50 | — (no plans authored; pure-doc WAIVE-AND-DEFER) | deferred → v1.8 |
 
@@ -83,3 +83,5 @@
 *Last updated: 2026-05-01 — initial scope locked from /gsd-new-milestone discussion (4 user-confirmed answers: title "Resource Navigation"; lazy-fetch+session-cache; curated catalog; G1 only; sequential A→B→C→D→E; STACK-01 re-attempt).*
 
 *Last updated: 2026-05-02 — Phase 50 (Theme E — STACK-01 carry-over) closed `deferred` via WAIVE-AND-DEFER. Gate result MIXED (Mantine 9 closed, React 19 open as of medplum/react@5.1.10); user decision D-02 keeps React/Mantine coupled; STACK-01 carries to v1.8 deferred-items list. Closure docs: `.planning/phases/50-theme-e-stack-01-carry-over-mantine-9-react-19-gate/50-SUMMARY.md` + `50-VERIFICATION.md`.*
+
+*Last updated: 2026-05-02 — Phase 51 (v1.7 gap closure) added by `/gsd-plan-milestone-gaps`. Closes GAP-1 (NAV-02 timeline divergence in PatientTimeline + ClinicalTimeline) and GAP-2 (GRPH-03 patient-context drop on graph node click) from v1.7-MILESTONE-AUDIT.md. NAV-02 and GRPH-03 traceability updated to reflect Phase 51 gap-closure assignment.*

@@ -9,7 +9,7 @@
 - ✅ **v1.4 -- Hardening & Tech-Debt Sweep (shipped 2026-04-23)** -- [Archive](milestones/v1.4-ROADMAP.md) . [Requirements](milestones/v1.4-REQUIREMENTS.md) . [Audit](milestones/v1.4-MILESTONE-AUDIT.md)
 - ✅ **v1.5 -- Validation, Performance & MII Extensions (shipped 2026-04-29)** -- [Archive](milestones/v1.5-ROADMAP.md) . [Requirements](milestones/v1.5-REQUIREMENTS.md) . [Audit](milestones/v1.5-MILESTONE-AUDIT.md)
 - ✅ **v1.6 -- Hardening, UX Polish & Carry-Overs (shipped 2026-04-30)** -- [Archive](milestones/v1.6-ROADMAP.md) . [Requirements](milestones/v1.6-REQUIREMENTS.md)
-- 🚧 **v1.7 -- Resource Navigation (in progress, started 2026-05-01)** -- 5 phases (46-50), 13 REQ-IDs across 5 themes
+- 🚧 **v1.7 -- Resource Navigation (in progress, started 2026-05-01)** -- 6 phases (46-51), 13 REQ-IDs across 5 themes + gap closure
 
 ## Deferred Items
 
@@ -46,6 +46,7 @@ Carried beyond v1.6 (re-evaluate at milestone boundaries):
 - [ ] Phase 48: Theme C — Reverse references: incoming-references panel + curated catalog (REVR-01, REVR-02, REVR-03)
 - [ ] Phase 49: Theme D — Graph view: lazy `/explorer/:type/:id/graph` route with React Flow + dagre (GRPH-01, GRPH-02, GRPH-03, GRPH-04)
 - [~] Phase 50: Theme E — STACK-01 carry-over: Mantine 9 / React 19 upgrade gate (STACK-01) — DEFERRED to v1.8 via WAIVE-AND-DEFER on 2026-05-02 (gate result MIXED 2026-05-01: `@medplum/react@5.1.10` peers `@mantine/core: ^8.0.0` only; React 19 independently unblocked but coupled-defer per user decision D-02)
+- [ ] Phase 51: v1.7 Gap Closure — summary util coverage + graph patient-context (GAP-1 NAV-02, GAP-2 GRPH-03)
 
 Full requirements: [REQUIREMENTS.md](REQUIREMENTS.md)
 
@@ -220,6 +221,20 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 **Execution**: Mixed if gate passes (codemod + tsc sweep automatable; visual UAT requires human walkthrough across all views) / Fully automatable if gate fails (pure-doc `WAIVE-AND-DEFER`)
 **UI hint**: yes (only relevant if gate passes — visual regression UAT touches every view)
 
+### Phase 51: v1.7 Gap Closure — Summary Util Coverage + Graph Patient-Context
+**Goal**: Close two `tech_debt` integration gaps surfaced by the v1.7 milestone audit — extend `summarizeResource` adoption to the two timeline call sites that diverge from it (GAP-1), and preserve patient context on graph node click when the graph is reached via the patient-scoped route (GAP-2).
+**Depends on**: Phase 46 (`summarizeResource`), Phase 49 (`ResourceGraphNode`, `ResourceGraphView`)
+**Requirements**: NAV-02 (full closure of summary-util divergence), GRPH-03 (patient-context gap)
+**Gap Closure**: Closes GAP-1 and GAP-2 from `.planning/v1.7-MILESTONE-AUDIT.md`
+**Success Criteria** (what must be TRUE):
+  1. `PatientTimeline.tsx` no longer contains an inline `extractSummary` switch — the function is removed and replaced by calls to `summarizeResource(r).primary`. Field-priority order aligns with the canonical `summarizeResource` Encounter handler (`type[0].text → class.display`).
+  2. `timeline-utils.ts` exported `extractSummary` is removed (or replaced by a thin re-export of `summarizeResource`) — `ClinicalTimeline.tsx` imports from `summarizeResource` directly or via the updated util. Grep shows zero divergent inline summary computations at these two timeline sites.
+  3. `ResourceGraphNode.tsx:43` navigation reads `patientId` from route params (same source as `ResourceGraphView.tsx:120` `backHref`) and navigates to `/patients/:patientId/:type/:id` when `patientId` is present, falling back to `/explorer/:type/:id` otherwise. GAP-2 patient-context drop is eliminated.
+  4. Full test suite passes; `npm run build` clean; `tsc -b --noEmit` exit 0; no regressions vs. post-Phase-49 baseline.
+**Plans**: TBD
+**Effort**: small (< 1 day — 3 focused file edits)
+**Execution**: Fully automatable (pure call-site migrations + 1 conditional navigation fix; no new UI surfaces)
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -234,6 +249,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 48. Incoming-references panel | v1.7 | 4/4 | Complete    | 2026-05-01 |
 | 49. Reference graph view | v1.7 | 3/3 | Complete    | 2026-05-01 |
 | 50. STACK-01 gate | v1.7 | 2/0 | Deferred    | 2026-05-02 |
+| 51. v1.7 gap closure | v1.7 | 0/0 | Pending     | —          |
 
 ## Backlog
 
