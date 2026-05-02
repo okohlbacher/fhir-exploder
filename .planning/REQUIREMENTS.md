@@ -35,7 +35,7 @@
 
 ### Theme E — Carry-over: Mantine 9 / React 19 Gate
 
-- [ ] **STACK-01**: Re-run the `@medplum/react` peer-dependency gate (`npm view @medplum/react peerDependencies`). If `@mantine/core` peer range now includes `^9.x`, proceed with the Mantine 8 → 9 + React 18 → 19 codemod + breaking-change sweep + visual regression UAT (per the v1.6 Phase 45 SCs). If the gate still fails, defer again to v1.8 with a documented `WAIVE-AND-DEFER` SUMMARY.md and no source diff. **This requirement closes either as `validated` (gate passed, upgrade shipped) or `deferred` (gate failed, pushed to v1.8) — both are acceptable closures per the v1.6 precedent.**
+- [~] **STACK-01**: Re-run the `@medplum/react` peer-dependency gate (`npm view @medplum/react peerDependencies`). If `@mantine/core` peer range now includes `^9.x`, proceed with the Mantine 8 → 9 + React 18 → 19 codemod + breaking-change sweep + visual regression UAT (per the v1.6 Phase 45 SCs). If the gate still fails, defer again to v1.8 with a documented `WAIVE-AND-DEFER` SUMMARY.md and no source diff. **This requirement closes either as `validated` (gate passed, upgrade shipped) or `deferred` (gate failed, pushed to v1.8) — both are acceptable closures per the v1.6 precedent.** *Closure status (v1.7): `deferred` — gate result MIXED at 2026-05-01 (Mantine 9 still pinned `^8.0.0` by `@medplum/react@5.1.10`; React 19 newly open). Per user decision D-02 in 50-CONTEXT.md, React/Mantine remain coupled; entire upgrade defers to v1.8. Re-attempt trigger: re-run `npm view @medplum/react peerDependencies` at v1.8 milestone start. See `.planning/phases/50-theme-e-stack-01-carry-over-mantine-9-react-19-gate/50-SUMMARY.md`.*
 
 ---
 
@@ -74,10 +74,12 @@
 | GRPH-02 | Phase 49 | TBD | pending |
 | GRPH-03 | Phase 49 | TBD | pending |
 | GRPH-04 | Phase 49 | TBD | pending |
-| STACK-01 | Phase 50 | TBD | pending |
+| STACK-01 | Phase 50 | — (no plans authored; pure-doc WAIVE-AND-DEFER) | deferred → v1.8 |
 
 ---
 
 *Last updated: 2026-05-01 — v1.7 roadmap created (5 phases 46-50, 13 REQ-IDs mapped, 100% coverage). Phase ordering sequential A→B→C→D→E per locked decision; Phase 50 (STACK-01) independent + gate-driven.*
 
 *Last updated: 2026-05-01 — initial scope locked from /gsd-new-milestone discussion (4 user-confirmed answers: title "Resource Navigation"; lazy-fetch+session-cache; curated catalog; G1 only; sequential A→B→C→D→E; STACK-01 re-attempt).*
+
+*Last updated: 2026-05-02 — Phase 50 (Theme E — STACK-01 carry-over) closed `deferred` via WAIVE-AND-DEFER. Gate result MIXED (Mantine 9 closed, React 19 open as of medplum/react@5.1.10); user decision D-02 keeps React/Mantine coupled; STACK-01 carries to v1.8 deferred-items list. Closure docs: `.planning/phases/50-theme-e-stack-01-carry-over-mantine-9-react-19-gate/50-SUMMARY.md` + `50-VERIFICATION.md`.*
