@@ -9,9 +9,9 @@ import type {
 
 import {
   extractDate,
-  extractSummary,
   formatTimelineDate,
 } from '../utils/timeline-utils';
+import { summarizeResource } from '../utils/summarizeResource';
 
 // ---------------------------------------------------------------------------
 // extractDate
@@ -116,17 +116,18 @@ describe('extractDate', () => {
 });
 
 // ---------------------------------------------------------------------------
-// extractSummary
+// summarizeResource(timeline-context).primary
+// (Phase 51 / GAP-1: timeline call sites consume the canonical summary util.)
 // ---------------------------------------------------------------------------
 
-describe('extractSummary', () => {
+describe('summarizeResource(timeline-context).primary', () => {
   it('returns code.text for Condition', () => {
     const condition: Condition = {
       resourceType: 'Condition',
       subject: { reference: 'Patient/x' },
       code: { text: 'Diabetes mellitus Typ 2' },
     };
-    expect(extractSummary(condition)).toBe('Diabetes mellitus Typ 2');
+    expect(summarizeResource(condition).primary).toBe('Diabetes mellitus Typ 2');
   });
 
   it('falls back to code.coding[0].display for Condition', () => {
@@ -137,25 +138,25 @@ describe('extractSummary', () => {
         coding: [{ system: 'http://snomed.info/sct', code: '44054006', display: 'Diabetes type 2' }],
       },
     };
-    expect(extractSummary(condition)).toBe('Diabetes type 2');
+    expect(summarizeResource(condition).primary).toBe('Diabetes type 2');
   });
 
-  it('returns type[0].text for Encounter', () => {
+  it('returns type[0].text for Encounter (when class.display is absent)', () => {
     const encounter: Encounter = {
       resourceType: 'Encounter',
       status: 'finished',
       class: { code: 'AMB' },
       type: [{ text: 'Ambulanter Kontakt' }],
     };
-    expect(extractSummary(encounter)).toBe('Ambulanter Kontakt');
+    expect(summarizeResource(encounter).primary).toBe('Ambulanter Kontakt');
   });
 
-  it('returns resourceType as fallback when no text/display is present', () => {
+  it('returns empty string fallback when Condition has no code/text/display', () => {
     const condition: Condition = {
       resourceType: 'Condition',
       subject: { reference: 'Patient/x' },
     };
-    expect(extractSummary(condition)).toBe('Condition');
+    expect(summarizeResource(condition).primary).toBe('');
   });
 
   it('returns resource summary for Procedure', () => {
@@ -165,7 +166,7 @@ describe('extractSummary', () => {
       subject: { reference: 'Patient/x' },
       code: { text: 'Appendektomie' },
     };
-    expect(extractSummary(procedure)).toBe('Appendektomie');
+    expect(summarizeResource(procedure).primary).toBe('Appendektomie');
   });
 
   it('returns resource summary for Observation', () => {
@@ -174,14 +175,25 @@ describe('extractSummary', () => {
       status: 'final',
       code: { text: 'Hämoglobin' },
     };
-    expect(extractSummary(obs)).toBe('Hämoglobin');
+    expect(summarizeResource(obs).primary).toBe('Hämoglobin');
   });
 
-  it('returns resourceType for unknown resource types', () => {
+  it('returns id (or empty string) for unknown resource types via generic walker', () => {
     const resource = {
       resourceType: 'Consent',
+      id: 'consent-42',
     } as unknown as Resource;
-    expect(extractSummary(resource)).toBe('Consent');
+    expect(summarizeResource(resource).primary).toBe('consent-42');
+  });
+
+  it('Encounter — class.display wins over type[0].text (canonical order; GAP-1 fix)', () => {
+    const encounter: Encounter = {
+      resourceType: 'Encounter',
+      status: 'finished',
+      class: { code: 'AMB', display: 'Ambulant' },
+      type: [{ text: 'Other Type' }],
+    };
+    expect(summarizeResource(encounter).primary).toBe('Ambulant');
   });
 });
 
