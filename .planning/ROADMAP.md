@@ -231,7 +231,9 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
   2. `timeline-utils.ts` exported `extractSummary` is removed (or replaced by a thin re-export of `summarizeResource`) — `ClinicalTimeline.tsx` imports from `summarizeResource` directly or via the updated util. Grep shows zero divergent inline summary computations at these two timeline sites.
   3. `ResourceGraphNode.tsx:43` navigation reads `patientId` from route params (same source as `ResourceGraphView.tsx:120` `backHref`) and navigates to `/patients/:patientId/:type/:id` when `patientId` is present, falling back to `/explorer/:type/:id` otherwise. GAP-2 patient-context drop is eliminated.
   4. Full test suite passes; `npm run build` clean; `tsc -b --noEmit` exit 0; no regressions vs. post-Phase-49 baseline.
-**Plans**: TBD
+**Plans**: 2 plans
+  - [ ] 51-01-PLAN.md — GAP-1 closure: PatientTimeline + timeline-utils + ClinicalTimeline migrate to summarizeResource (NAV-02)
+  - [ ] 51-02-PLAN.md — GAP-2 closure: ResourceGraphNode patientId-aware navigation + RTL tests (GRPH-03)
 **Effort**: small (< 1 day — 3 focused file edits)
 **Execution**: Fully automatable (pure call-site migrations + 1 conditional navigation fix; no new UI surfaces)
 
@@ -249,11 +251,22 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 48. Incoming-references panel | v1.7 | 4/4 | Complete    | 2026-05-01 |
 | 49. Reference graph view | v1.7 | 3/3 | Complete    | 2026-05-01 |
 | 50. STACK-01 gate | v1.7 | 2/0 | Deferred    | 2026-05-02 |
-| 51. v1.7 gap closure | v1.7 | 0/0 | Pending     | —          |
+| 51. v1.7 gap closure | v1.7 | 0/2 | Pending     | —          |
 
 ## Backlog
 
-*No active backlog items — milestone v1.7 ships with all surfaced ideas accounted for.*
+*Surfaced by v1.7 code review (2026-05-02). HIGH + MEDIUM items promoted to Phase 51.*
+
+### LOW — minor correctness / polish
+
+- **NAV-01: Middle-click on ReferenceLink loses patient context** — middle-click bypasses the `handleReferenceClick` interceptor; raw href is always `/explorer/…`. Fix: build patient-aware hrefs in `ReferenceLink` using a `BasePathContext`. (F-G3-05)
+- **TYPE-01: HumanReadableView double-cast for `extension`** — `(resource as unknown as Record<string, unknown>).extension as ExtensionShape[]` bypasses `DomainResource.extension?: Extension[]`. Use typed cast directly. (F-G3-09)
+- **EDGE-01: NavigationBreadcrumbs startsWith('/patients/') misses bare '/patients'** — add `|| basePath === '/patients'` guard. (F-G3-11)
+- **EDGE-02: referenceChecker id slice skips FHIR-id validation** — `Patient/123/` yields `id = '123/'`; validate against `FHIR_ID_PATTERN` before adding to `_id` bucket. (F-G4-04)
+- **EDGE-03: structuralValidator ignores AbortSignal** — `_options?.signal` accepted but never checked; add `if (_options?.signal?.aborted) return []` guard. (F-G4-06)
+- **ERR-01: ConnectionContext throws plain object instead of Error** — `throw { status: 0, message: '...' }` not instanceof Error; change to `throw new Error(...)`. (F-G5-03)
+- **TEST-01: completenessWalker sliced-array limitation lacks regression test** — Pitfall 4 is documented but not asserted; add a test for the v1-behaviour invariant. (F-G4-05)
+- **ICON-01: IconShareplay on $everything button is semantically wrong** — replace with `IconExternalLink`. (F-G2-07)
 
 ## Resolved Backlog (archived 2026-04-30)
 

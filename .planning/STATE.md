@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.7
 milestone_name: -- Resource Navigation (in progress, started 2026-05-01)
-status: phase_closed_deferred
-stopped_at: Phase 50 closed `deferred` via WAIVE-AND-DEFER (gate MIXED 2026-05-01) — STACK-01 carries to v1.8
-last_updated: "2026-05-02T08:45:00.000Z"
-last_activity: 2026-05-02 -- Phase 50 closed deferred (WAIVE-AND-DEFER); v1.7 at 5/5 phases
+status: executing
+stopped_at: Phase 51 UI-SPEC approved
+last_updated: "2026-05-02T19:08:22.313Z"
+last_activity: 2026-05-02 -- Phase 51 planning complete
 progress:
   total_phases: 5
   completed_phases: 5
-  total_plans: 15
-  completed_plans: 13
+  total_plans: 13
+  completed_plans: 14
   percent: 100
 ---
 
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-05-02)
 
 Phase: 50 (theme-e-stack-01-carry-over-mantine-9-react-19-gate) — CLOSED `deferred`
 Plan: 2 of 2 (both shipped pure-doc artifacts)
-Status: Phase 50 closed `deferred`; v1.7 milestone now 5/5 phases (4 complete, 1 deferred)
-Last activity: 2026-05-02 -- Phase 50 WAIVE-AND-DEFER closure shipped (7 commits)
+Status: Ready to execute
+Last activity: 2026-05-02 -- Phase 51 planning complete
 
 v1.7 progress: 5/5 phases reached closure (46-49 complete, 50 deferred → v1.8)
 Progress: [██████████] 100%
@@ -92,6 +92,6 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-05-02T08:45:00.000Z
-Stopped at: Phase 50 closed `deferred` via WAIVE-AND-DEFER — v1.7 at 5/5 phases (4 complete, 1 deferred); STACK-01 carries to v1.8
-Resume file: .planning/phases/50-theme-e-stack-01-carry-over-mantine-9-react-19-gate/50-SUMMARY.md (closure record + v1.8 re-attempt trigger)
+Last session: 2026-05-02T18:53:24.280Z
+Stopped at: Phase 51 UI-SPEC approved
+Resume file: .planning/phases/51-v17-gap-closure-summary-util-graph-context/51-UI-SPEC.md
