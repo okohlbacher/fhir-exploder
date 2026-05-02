@@ -1,7 +1,8 @@
 ---
 phase: 51
 slug: v17-gap-closure-summary-util-graph-context
-status: draft
+status: approved
+reviewed_at: 2026-05-02
 shadcn_initialized: false
 preset: none
 created: 2026-05-02
