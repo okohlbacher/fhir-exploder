@@ -61,6 +61,7 @@ export function ClinicalTimeline({ patientId }: ClinicalTimelineProps) {
     let cancelled = false;
     setLoading(true);
     setError(undefined);
+    setEntries([]);
 
     const fetchAll = async () => {
       try {
