@@ -13,7 +13,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MantineProvider } from '@mantine/core';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ResourceGraphNode } from '../ResourceGraphNode';
 import type { Resource } from '@medplum/fhirtypes';
 
@@ -78,6 +78,44 @@ function renderNode(resource: Resource, isRoot: boolean) {
         <ResourceGraphNode
           {...(props as unknown as Parameters<typeof ResourceGraphNode>[0])}
         />
+      </MemoryRouter>
+    </MantineProvider>,
+  );
+}
+
+function renderNodeAtRoute(
+  resource: Resource,
+  isRoot: boolean,
+  path: string,
+  initialEntry: string,
+) {
+  const props = {
+    id: 'test',
+    type: 'resource',
+    data: { resource, isRoot },
+    selected: false,
+    zIndex: 0,
+    dragging: false,
+    selectable: true,
+    deletable: true,
+    draggable: true,
+    isConnectable: false,
+    positionAbsoluteX: 0,
+    positionAbsoluteY: 0,
+  };
+  return render(
+    <MantineProvider>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <Routes>
+          <Route
+            path={path}
+            element={
+              <ResourceGraphNode
+                {...(props as unknown as Parameters<typeof ResourceGraphNode>[0])}
+              />
+            }
+          />
+        </Routes>
       </MemoryRouter>
     </MantineProvider>,
   );
@@ -159,6 +197,42 @@ describe('ResourceGraphNode', () => {
       id: 'obs-42',
     } as Resource;
     renderNode(r, false);
+    const card = screen.getByTestId('graph-node-Observation/obs-42');
+    fireEvent.click(card);
+    expect(navigateMock).toHaveBeenCalledWith('/explorer/Observation/obs-42');
+  });
+
+  it('node click from patient-scoped graph route navigates to /patients/{patientId}/{type}/{id} (GAP-2 fix)', () => {
+    const r: Resource = {
+      resourceType: 'Observation',
+      id: 'obs-42',
+    } as Resource;
+    renderNodeAtRoute(
+      r,
+      false,
+      '/patients/:patientId/:resourceType/:id/graph',
+      '/patients/p1/Patient/p1/graph',
+    );
+    const card = screen.getByTestId('graph-node-Observation/obs-42');
+    fireEvent.click(card);
+    expect(navigateMock).toHaveBeenCalledWith('/patients/p1/Observation/obs-42');
+  });
+
+  it('FHIR_ID_PATTERN rejects malformed patientId — falls back to /explorer/{type}/{id}', () => {
+    const r: Resource = {
+      resourceType: 'Observation',
+      id: 'obs-42',
+    } as Resource;
+    // Use a patientId containing characters outside the FHIR_ID_PATTERN
+    // charset (whitespace + special). React-router accepts the value
+    // verbatim; ResourceGraphNode's safeNavigate is responsible for
+    // rejecting it.
+    renderNodeAtRoute(
+      r,
+      false,
+      '/patients/:patientId/:resourceType/:id/graph',
+      '/patients/bad%20id$$$/Patient/p1/graph',
+    );
     const card = screen.getByTestId('graph-node-Observation/obs-42');
     fireEvent.click(card);
     expect(navigateMock).toHaveBeenCalledWith('/explorer/Observation/obs-42');
