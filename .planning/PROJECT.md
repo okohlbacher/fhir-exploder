@@ -102,6 +102,8 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 ## Current State
 
+**v1.7 gap closure complete 2026-05-02** — Phase 51 (2 plans, 4 tasks) closed the two audit gaps from the v1.7 milestone: GAP-1 (NAV-02 — all timeline surfaces now consume `summarizeResource(r).primary` exclusively; `extractSummary` symbol physically removed) and GAP-2 (GRPH-03 — `ResourceGraphNode` preserves patient context via `useParams` + `FHIR_ID_PATTERN` validation). Full test suite: 1389 passing / 22 todo / 1 pre-existing Phase-40 deuteranopia failure / 0 regressions. `npm run build` and `tsc -b --noEmit` clean. See Phase 51 SUMMARY files in `.planning/phases/51-v17-gap-closure-summary-util-graph-context/`.
+
 **v1.5 shipped 2026-04-29** — 10 phases (31-38 plus inserted 38.1, 38.2), 32 plans, 79 tasks. v1.4 baseline: 836 tests passing; v1.5 final: 1064 passing / 22 todo / 0 failing. `npm run build` clean. Notable shipped: three-tier FHIR validator cascade (Phase 31), per-metric `QualityMetricsContext` split (Phase 32), 21-module MII palette + lazy-loaded bundled profiles (Phases 33–34, 36), per-type quality matrix (Phase 35), live-Blaze HUMAN-UAT smoke tests (Phase 38), `_sort=-date` Blaze 400 fix (Phase 38.1), Quantity-render dispatch reorder (Phase 38.2). See [MILESTONES.md](MILESTONES.md) and [milestones/v1.5-MILESTONE-AUDIT.md](milestones/v1.5-MILESTONE-AUDIT.md).
 
 **v1.4 shipped 2026-04-23** — 11 phases (23-30 plus 29.5; 29 superseded), 35 plans, 51 tasks, 175 commits on main. Production-code diff: src/ +7,611 / −2,360 across 108 files. Test suite: 836 passed / 22 todo / 3 skipped / 0 failed. `npm run build` clean. See [MILESTONES.md](MILESTONES.md) for the full accomplishments list.
