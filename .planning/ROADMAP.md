@@ -232,8 +232,8 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
   3. `ResourceGraphNode.tsx:43` navigation reads `patientId` from route params (same source as `ResourceGraphView.tsx:120` `backHref`) and navigates to `/patients/:patientId/:type/:id` when `patientId` is present, falling back to `/explorer/:type/:id` otherwise. GAP-2 patient-context drop is eliminated.
   4. Full test suite passes; `npm run build` clean; `tsc -b --noEmit` exit 0; no regressions vs. post-Phase-49 baseline.
 **Plans**: 2 plans
-  - [ ] 51-01-PLAN.md — GAP-1 closure: PatientTimeline + timeline-utils + ClinicalTimeline migrate to summarizeResource (NAV-02)
-  - [ ] 51-02-PLAN.md — GAP-2 closure: ResourceGraphNode patientId-aware navigation + RTL tests (GRPH-03)
+  - [x] 51-01-PLAN.md — GAP-1 closure: PatientTimeline + timeline-utils + ClinicalTimeline migrate to summarizeResource (NAV-02)
+  - [x] 51-02-PLAN.md — GAP-2 closure: ResourceGraphNode patientId-aware navigation + RTL tests (GRPH-03)
 **Effort**: small (< 1 day — 3 focused file edits)
 **Execution**: Fully automatable (pure call-site migrations + 1 conditional navigation fix; no new UI surfaces)
 
@@ -251,7 +251,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 48. Incoming-references panel | v1.7 | 4/4 | Complete    | 2026-05-01 |
 | 49. Reference graph view | v1.7 | 3/3 | Complete    | 2026-05-01 |
 | 50. STACK-01 gate | v1.7 | 2/0 | Deferred    | 2026-05-02 |
-| 51. v1.7 gap closure | v1.7 | 0/2 | Pending     | —          |
+| 51. v1.7 gap closure | v1.7 | 2/2 | Complete    | 2026-05-02 |
 
 ## Backlog
 
