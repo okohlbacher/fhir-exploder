@@ -41,6 +41,10 @@ export function ResourceGraphNode({ data }: NodeProps<ResourceGraphNodeType>) {
   const id = resource.id ?? '';
 
   const safeNavigate = () => {
+    if (!id) {
+      // Resource has no server-assigned id — cannot navigate.
+      return;
+    }
     if (!FHIR_REFERENCE_PATTERN.test(type) || !FHIR_ID_PATTERN.test(id)) {
       return;
     }
@@ -65,7 +69,7 @@ export function ResourceGraphNode({ data }: NodeProps<ResourceGraphNodeType>) {
         w={220}
         h={64}
         style={{
-          cursor: 'pointer',
+          cursor: id ? 'pointer' : 'default',
           borderColor: isRoot
             ? 'var(--mantine-color-indigo-6)'
             : 'var(--mantine-color-default-border)',
