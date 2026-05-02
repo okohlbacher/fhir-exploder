@@ -79,45 +79,6 @@ export function extractDate(resource: Resource): string | undefined {
 }
 
 /**
- * Extract a short human-readable summary from a FHIR resource.
- *
- * Prefers `code.text`, then the first `coding[0].display`, with the
- * resource type as the final fallback so entries always show *something*.
- */
-export function extractSummary(resource: Resource): string {
-  switch (resource.resourceType) {
-    case 'Condition': {
-      const c = resource as Condition;
-      return (
-        c.code?.text ??
-        c.code?.coding?.[0]?.display ??
-        c.code?.coding?.[0]?.code ??
-        'Condition'
-      );
-    }
-    case 'Encounter': {
-      const e = resource as Encounter;
-      return (
-        e.type?.[0]?.text ??
-        e.type?.[0]?.coding?.[0]?.display ??
-        e.class?.display ??
-        'Encounter'
-      );
-    }
-    case 'Procedure': {
-      const p = resource as Procedure;
-      return p.code?.text ?? p.code?.coding?.[0]?.display ?? 'Procedure';
-    }
-    case 'Observation': {
-      const o = resource as Observation;
-      return o.code?.text ?? o.code?.coding?.[0]?.display ?? 'Observation';
-    }
-    default:
-      return resource.resourceType;
-  }
-}
-
-/**
  * Format an ISO datetime string as `YYYY-MM-DD` for timeline display.
  *
  * Both full ISO datetimes ("2024-03-15T10:30:00Z") and date-only

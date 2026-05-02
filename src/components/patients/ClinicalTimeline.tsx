@@ -11,9 +11,9 @@ import { MII_MODULES, findModuleForType } from '../../utils/mii-modules';
 // resolver is imported where it's actually invoked (TimelineEntry.tsx).
 import {
   extractDate,
-  extractSummary,
   type TimelineData,
 } from '../../utils/timeline-utils';
+import { summarizeResource } from '../../utils/summarizeResource';
 import { TimelineEntry } from './TimelineEntry';
 
 interface ClinicalTimelineProps {
@@ -95,7 +95,7 @@ export function ClinicalTimeline({ patientId }: ClinicalTimelineProps) {
               resourceId: resource.id ?? '',
               date,
               typeLabel: moduleConfig?.germanLabel ?? resource.resourceType,
-              summary: extractSummary(resource),
+              summary: summarizeResource(resource).primary,
               color: moduleConfig?.badgeColor ?? 'gray',
               // Plan 34-04 MII-EXT-11: propagate module icon key so
               // TimelineEntry can render a 14px leading icon per entry.
