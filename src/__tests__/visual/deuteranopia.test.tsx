@@ -368,15 +368,13 @@ describe('Phase 40 / DEUT-01 — color-vision discriminability under deuteranopi
 
   // Snapshot drift tracker — Phase 40 CONTEXT D-13.
   //
-  // **NOTE on pair #13 (kardiologie ↔ mikrobiologie).** As of Phase 40
-  // landing (2026-04-29), this cross-family pair measures ΔE2000 = 1.406
-  // under Machado 2009 deuteranopia simulation — well below the 5.0 gate.
-  // The paper analysis (color-design-audit.md §4b) predicted PASS at MEDIUM
-  // risk; the headless empirical contradicts the prediction. Phase 40 ships
-  // the failing assertion in CI by design (the gate is doing its job). The
-  // palette fix (changing kardiologie or mikrobiologie shade-6) is scheduled
-  // for Phase 40.1. The snapshot below records the contradicted measurement
-  // verbatim so PR diffs surface any subsequent palette correction.
+  // **NOTE on pair #13 (kardiologie ↔ mikrobiologie).** Phase 40 shipped this
+  // pair failing (ΔE2000 = 1.406, well below the 5.0 gate) — the Machado
+  // deuteranopia simulation showed administration `#3b5bdb` and pathology
+  // `#6741d9` collapsing to nearly identical Lab values. Fixed in Phase 51
+  // (v1.7 gap closure): administration shade-6 changed from `#3b5bdb` to
+  // `#4c68dc` (was shade-5), shade-5 updated to `#5f7ae2` to preserve the
+  // gradient. Pair #13 now measures ΔE2000 = 5.4047 ✓ (passes the 5.0 gate).
   describe('Snapshot drift tracker', () => {
     it('records measured ΔE2000 per pair to deuteranopia-pair-deltas.json (CI drift detection)', async () => {
       // Build the snapshot object: 21 entries keyed by

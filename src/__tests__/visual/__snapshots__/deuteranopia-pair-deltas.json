@@ -54,8 +54,8 @@
     "section": "§1",
     "label": "kardiologie ↔ dokument",
     "within_family": true,
-    "hex_a": "#3b5bdb",
-    "hex_b": "#3b5bdb",
+    "hex_a": "#4c68dc",
+    "hex_b": "#4c68dc",
     "delta_e_2000": 0,
     "passes_threshold": false
   },
@@ -95,8 +95,8 @@
     "label": "biobank ↔ dokument",
     "within_family": false,
     "hex_a": "#087050",
-    "hex_b": "#3b5bdb",
-    "delta_e_2000": 37.3257,
+    "hex_b": "#4c68dc",
+    "delta_e_2000": 36.3928,
     "passes_threshold": true
   },
   "pair-11-dokument-intensivmedizin": {
@@ -104,9 +104,9 @@
     "section": "§2",
     "label": "dokument ↔ intensivmedizin",
     "within_family": false,
-    "hex_a": "#3b5bdb",
+    "hex_a": "#4c68dc",
     "hex_b": "#087050",
-    "delta_e_2000": 37.3257,
+    "delta_e_2000": 36.3928,
     "passes_threshold": true
   },
   "pair-12-intensivmedizin-kardiologie": {
@@ -115,8 +115,8 @@
     "label": "intensivmedizin ↔ kardiologie",
     "within_family": false,
     "hex_a": "#087050",
-    "hex_b": "#3b5bdb",
-    "delta_e_2000": 37.3257,
+    "hex_b": "#4c68dc",
+    "delta_e_2000": 36.3928,
     "passes_threshold": true
   },
   "pair-13-kardiologie-mikrobiologie": {
@@ -124,10 +124,10 @@
     "section": "§2",
     "label": "kardiologie ↔ mikrobiologie",
     "within_family": false,
-    "hex_a": "#3b5bdb",
+    "hex_a": "#4c68dc",
     "hex_b": "#6741d9",
-    "delta_e_2000": 1.4062,
-    "passes_threshold": false
+    "delta_e_2000": 5.4047,
+    "passes_threshold": true
   },
   "pair-14-mikrobiologie-molekulargenetik": {
     "pair_id": 14,
