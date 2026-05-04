@@ -466,18 +466,34 @@ export function SearchResultsPage() {
                   </Anchor>
                 </Table.Td>
                 <Table.Td>
-                  <Anchor
-                    size="sm"
-                    truncate="end"
-                    style={{ maxWidth: 400, display: 'block' }}
-                    href={`/explorer/${r.resourceType}/${r.id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate(`/explorer/${r.resourceType}/${r.id}`);
-                    }}
-                  >
-                    {summarizeResource(r).primary}
-                  </Anchor>
+                  {(() => {
+                    const summary = summarizeResource(r);
+                    return (
+                      <Anchor
+                        href={`/explorer/${r.resourceType}/${r.id}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigate(`/explorer/${r.resourceType}/${r.id}`);
+                        }}
+                        style={{ display: 'block', maxWidth: 400 }}
+                      >
+                        <Stack gap={4}>
+                          <Text fw={600} size="sm">{summary.primary}</Text>
+                          {summary.secondary && (
+                            <Text
+                              c="dimmed"
+                              ff="monospace"
+                              size="xs"
+                              truncate="end"
+                              style={{ maxWidth: 380 }}
+                            >
+                              {summary.secondary}
+                            </Text>
+                          )}
+                        </Stack>
+                      </Anchor>
+                    );
+                  })()}
                 </Table.Td>
                 <Table.Td>
                   <Text size="sm">{getResourceDateByType(r)}</Text>
