@@ -19,13 +19,18 @@ describe('HumanReadableView', () => {
 });
 
 describe('DeveloperJsonView', () => {
-  it('renders JsonSyntaxHighlight with the resource', () => {
+  it('renders JsonViewer with the resource', () => {
     expect(DeveloperJsonView).toBeDefined();
     expect(typeof DeveloperJsonView).toBe('function');
   });
 
   it('wraps content in ScrollArea', () => {
-    // DeveloperJsonView wraps JsonSyntaxHighlight in a ScrollArea
+    // DeveloperJsonView wraps JsonViewer in a ScrollArea
     expect(DeveloperJsonView).toBeDefined();
+  });
+
+  it('imports JsonViewer (not JsonTreeView directly)', async () => {
+    const src = await import('../components/explorer/DeveloperJsonView');
+    expect(Object.keys(src)).toContain('DeveloperJsonView');
   });
 });
