@@ -304,7 +304,47 @@ describe('JsonPeekDrawer error state (PEEK-04)', () => {
     expect(screen.getByTestId('resource-state').textContent).toBe('null');
     expect(screen.getByTestId('ref-text').textContent).toBe('Patient/abc-123');
   });
-  it.todo('renders "Reference unresolvable" (dimmed Text) as body when resource is null');
-  it.todo('hides [Open full →] button when resource is null');
-  it.todo('Enter keyboard shortcut is a no-op when drawer is in error state');
+  it('renders "Reference unresolvable" (dimmed Text) as body when resource is null', () => {
+    render(
+      <Harness>
+        <OpenerError reference="Patient/abc-123" />
+      </Harness>,
+    );
+    fireEvent.click(screen.getByText('open-error'));
+
+    // Drawer body shows the unresolvable message
+    expect(screen.getByText('Reference unresolvable')).toBeTruthy();
+    // Drawer title falls back to the raw reference text (monospace).
+    // Note: the OpenerError probe also renders 'Patient/abc-123' in a
+    // <span data-testid="ref-text">, so use getAllByText to assert at least
+    // one of the matches is the drawer title (a <p> Mantine Text element).
+    const matches = screen.getAllByText('Patient/abc-123');
+    const titleMatch = matches.find((el) => el.tagName === 'P');
+    expect(titleMatch).toBeTruthy();
+  });
+
+  it('hides [Open full →] button when resource is null', () => {
+    render(
+      <Harness>
+        <OpenerError reference="Patient/abc-123" />
+      </Harness>,
+    );
+    fireEvent.click(screen.getByText('open-error'));
+
+    expect(screen.queryByRole('button', { name: /Open full →/ })).toBeNull();
+  });
+
+  it('Enter keyboard shortcut is a no-op when drawer is in error state', () => {
+    mockNavigate.mockClear();
+    render(
+      <Harness>
+        <OpenerError reference="Patient/abc-123" />
+      </Harness>,
+    );
+    fireEvent.click(screen.getByText('open-error'));
+
+    fireEvent.keyDown(document, { key: 'Enter' });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
 });
