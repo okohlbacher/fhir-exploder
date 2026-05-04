@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.8
-milestone_name: -- (not yet defined — run /gsd-new-milestone)
-status: milestone_complete
-stopped_at: v1.7 milestone archived 2026-05-04
-last_updated: "2026-05-04T08:15:00.000Z"
+milestone_name: Navigation Redesign (in progress, started 2026-05-04)
+status: executing
+stopped_at: Phase 54 complete — advancing to Phase 55
+last_updated: "2026-05-04T19:45:00.000Z"
 last_activity: 2026-05-04
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 13
-  completed_plans: 13
-  percent: 100
+  total_phases: 7
+  completed_phases: 3
+  total_plans: 6
+  completed_plans: 6
+  percent: 43
 ---
 
 # Project State
@@ -21,17 +21,26 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.7 COMPLETE — archived 2026-05-04. Next: `/gsd-new-milestone` for v1.8.
+**Current focus:** v1.8 Navigation Redesign — Phase 54 complete, next: Phase 55 Explorer Improvements
 
 ## Current Position
 
-Phase: —
-Plan: —
-Status: Between milestones — v1.7 complete, v1.8 not yet defined
+Phase: 55
+Plan: Not started
+Status: Ready to discuss/plan
 Last activity: 2026-05-04
 
-v1.7 final: 6 phases (46-51), 13 active plans, Phase 50 deferred via WAIVE-AND-DEFER
-Progress: [██████████] 100%
+v1.8 phases (52-58):
+
+- **Phase 52: JSON Peek Drawer Foundation (PEEK-01, PEEK-02, PEEK-03, PEEK-06) — COMPLETE**
+- **Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05) — COMPLETE**
+- **Phase 54: 4-Mode Resource Shell (SHELL-01, SHELL-02, SHELL-03, SHELL-04) — COMPLETE**
+- Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03)
+- Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04)
+- Phase 57: Patients-as-Lens (LENS-01, LENS-02)
+- Phase 58: UAT Backlog Closure (UAT-01)
+
+Progress: [####      ] 43%
 
 ## Performance Metrics
 
@@ -48,24 +57,56 @@ Progress: [██████████] 100%
 
 ### Decisions (carry-forward to v1.8)
 
-- **STACK-01 (Mantine 9 / React 19 coupled-defer, D-02):** React 19 unblocked; Mantine 9 still pins `@mantine/core: ^8.0.0` in `@medplum/react@5.1.10`. Re-attempt trigger at v1.8 start: `npm view @medplum/react peerDependencies`. If `@mantine/core` includes `^9.x`, open a v1.8 phase; else re-defer to v1.9.
+- **STACK-01 deferred indefinitely (2026-05-04):** Removed from Active requirements. Bottleneck remains `@medplum/react`'s `@mantine/core: ^8.0.0` peer pin. Will resurface only if user-requested or if the peer-dep range opens to `^9.x`.
 - **Bearer tokens for VAL-06** stored in `localStorage` under `validator.bearerToken.v1` — NEVER persisted to settings.yaml on disk.
-- **Curated reverse-reference catalog** (`reverseReferenceCatalog.ts`) — CapabilityStatement-driven discovery deferred to v1.8+. Add entries as real-world navigation reveals gaps.
-- **`summarizeResource` contract: `{ primary, secondary? }` two-slot only** — no status field/pill. Extend to new resource types in v1.8 as needed.
+- **Curated reverse-reference catalog** (`reverseReferenceCatalog.ts`) — CapabilityStatement-driven discovery deferred to v1.9+. Add entries as real-world navigation reveals gaps.
+- **`summarizeResource` contract: `{ primary, secondary? }` two-slot only** — no status field/pill. Extend to new resource types in v1.8 as needed (Phase 54 key-fields registry mirrors the same 8 typed entries).
 
-### Pending Todos (carry to v1.8 milestone-new)
+### v1.8 Roadmap Locked Decisions
 
-- **Human UAT backlog** — ~20 deferred browser-only items across v1.6 + v1.7 phases. Create `.planning/UAT-BACKLOG.md` at start of v1.8 milestone. Key pending items:
+- **Drawer config:** `trapFocus={true}` + `withOverlay={false}` (a11y-safe; per RESEARCH PITFALLS #3).
+- **Mode switcher widget:** Mantine `<Tabs variant="pills">` styled to look like SegmentedControl (preserves `keepMounted` + ARIA tablist semantics; per RESEARCH PITFALLS #4).
+- **Global hotkey ownership:** Single shared `useShortcuts` / `useHotkeys` module owned by Phase 52 (foundation). Phase 54 (1/2/3/4) and Phase 56 (⌘K) extend it.
+- **Spotlight resource-type list:** Lazy population (≥ 2 chars trigger) per RESEARCH (avoids upfront 94-action cost).
+
+### Pending Todos (v1.8 milestone)
+
+- **Human UAT backlog (Phase 58 scope)** — ~24 deferred browser-only items across v1.6 + v1.7 + v1.8 phases:
+  - Phase 42: 1 item (live-Blaze MII extension count walk)
+  - Phase 43: 3 items (basic-auth URL, bearer-token URL, invalid-SNOMED near-miss)
+  - Phase 44: 2 items (live-Blaze server-picker mode + large-bundle perf)
   - Phase 46: 3 items (summarizeResource visual rendering on live Blaze)
   - Phase 47: 5 items (tooltip hover, accordion animation, extension chips, terminology in contained panels, indexed-primitive extension)
   - Phase 48: 3 items (RelatedResourcesPanel live rendering)
   - Phase 49: 5 items (graph layout, node navigation, patient-context badge, depth limit badge, empty-state)
-- **v1.8 milestone-new** — run `/gsd-new-milestone` to define scope; STACK-01 is the priority carry-over item
-- **DEFERRED.md dashboard** — create at v1.8 milestone start to track all WAIVE-AND-DEFER items with re-attempt triggers
+  - Phase 52: 3 items (drawer visual width 420px, URL stability when J pressed, focus ring visibility)
+  - Phase 53: 4 items (resolved Cmd+click live Blaze, error state visual, PatientList focus ring, RelatedResourcesPanel async fetch)
+- **DEFERRED.md dashboard** — create at v1.8 milestone start to track all WAIVE-AND-DEFER items with re-attempt triggers (low priority since STACK-01 is now indefinitely deferred).
+
+### Phase 53 Deliverables (carry-forward to Phase 54)
+
+- **`src/contexts/PeekContext.tsx`** — now includes `openPeekError(reference, originElement?)` + nullable `PeekState.resource` + `error?`/`referenceText?` fields
+- **`src/components/json/JsonPeekDrawer.tsx`** — error-state branch: monospace `referenceText` title, dimmed "Reference unresolvable" body, hidden Open-full button, Enter no-op
+- **`src/components/explorer/ReferenceLink.tsx`** — Cmd+click intercepted: resolved → `openPeek`; failed → `openPeekError(rawText)`; pending → no-op
+- **`src/components/explorer/RelatedResourcesPanel.tsx`** — Cmd+click: async first-resource fetch → `openPeek`; empty/error → `openPeekError`
+- **`src/components/patients/PatientListPage.tsx`** — J shortcut wired (4th surface); `focusedPatient` + relatedTarget blur guard + indigo focus ring
+- **Phase 52+53 Human UAT pending (Phase 58 scope)**: drawer visual width (420px), URL stability when J pressed, focus ring visibility (Phase 52); + 4 new Phase 53 items (see 53-HUMAN-UAT.md)
+
+### Phase 54 Deliverables (carry-forward to Phase 55)
+
+- **`src/utils/keyFieldsRegistry.ts`** — `getKeyFields(r): KeyFieldEntry[]` for 8 typed R4 types + generic fallback (4-6 fields per type)
+- **`src/components/explorer/KeyFieldsTable.tsx`** — 2-column Mantine Table for Summary mode
+- **`src/components/explorer/JsonModeView.tsx`** — JSON toolbar: Copy/Download/validation chip/Open-in-validator
+- **`src/components/json/JsonViewer.tsx`** — extended with `showLineNumbers?: boolean` prop (PEEK-06 invariant preserved)
+- **`src/components/explorer/ResourceDetailPage.tsx`** — full 4-mode shell: `Summary | Human | Graph | JSON`, URL-driven `?mode=`, `useShortcuts` for 1/2/3/4, lazy ResourceGraphView
+- **`src/components/explorer/ResourceGraphView.tsx`** — `compact?: boolean` prop suppresses standalone header when embedded
+- **`src/App.tsx`** — `NavigateToMode` adapter; legacy `/graph` routes → `?mode=graph` redirects
+- **`DeveloperJsonView.tsx` deleted** — merged into JsonModeView; 0 remaining importers
+- **Phase 54 Human UAT pending (Phase 58 scope)**: visual pill tabs, keyboard shortcuts, React Flow canvas, chip colors, file download, /graph redirect (6 items)
 
 ### Blockers/Concerns
 
-- STACK-01 (Mantine 9 / React 19) bottleneck remains `@medplum/react`'s `@mantine/core: ^8.0.0` peer pin. Re-evaluate at v1.8 milestone start via `npm view @medplum/react peerDependencies`.
+- None. SHELL-01..04 fully shipped (Phase 54). Phase 55 (Explorer Improvements) is unblocked.
 
 ### Quick Tasks Completed
 
@@ -76,7 +117,7 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-05-04T08:15:00.000Z
-Stopped at: v1.7 milestone complete — RETROSPECTIVE.md written, REQUIREMENTS.md archived + deleted, commit + tag pending
-Resume file: —
-Next action: `git commit` milestone artifacts + `git tag v1.7`
+Last session: 2026-05-04T19:45:00.000Z
+Stopped at: Phase 54 complete
+Resume file: .planning/phases/54-4-mode-resource-shell/54-VERIFICATION.md
+Next action: `/gsd-discuss-phase 55` or `/gsd-plan-phase 55`

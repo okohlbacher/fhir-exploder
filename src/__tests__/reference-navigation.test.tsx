@@ -66,11 +66,24 @@ vi.mock('../components/explorer/HumanReadableView', () => ({
   ),
 }));
 
-vi.mock('../components/explorer/DeveloperJsonView', () => ({
-  DeveloperJsonView: () => <div data-testid="developer-json-view" />,
+vi.mock('../components/explorer/JsonModeView', () => ({
+  JsonModeView: () => <div data-testid="json-mode-view" />,
+}));
+vi.mock('../components/explorer/KeyFieldsTable', () => ({
+  KeyFieldsTable: () => <div data-testid="key-fields-table" />,
+}));
+vi.mock('../components/explorer/IncomingReferencesPanel', () => ({
+  IncomingReferencesPanel: () => <div data-testid="incoming-references-panel" />,
+}));
+vi.mock('../components/explorer/PatientRelatedResources', () => ({
+  PatientRelatedResources: () => <div data-testid="patient-related-resources" />,
+}));
+vi.mock('../components/explorer/ResourceGraphView', () => ({
+  ResourceGraphView: () => <div data-testid="graph-flow-root" />,
 }));
 
 import { ResourceDetailPage } from '../components/explorer/ResourceDetailPage';
+import { PeekProvider } from '../contexts/PeekContext';
 
 // --- Helpers ------------------------------------------------------------
 
@@ -83,18 +96,23 @@ function renderAt(initialEntry: string) {
   return render(
     <MantineProvider>
       <MemoryRouter initialEntries={[initialEntry]}>
-        <Routes>
-          <Route
-            path="/patients/:patientId/:resourceType/:id"
-            element={<ResourceDetailPage />}
-          />
-          <Route path="/explorer/:resourceType/:id" element={<ResourceDetailPage />} />
-          <Route path="/explorer/:resourceType" element={<div data-testid="explorer-landing" />} />
-          <Route path="/explorer" element={<div data-testid="explorer-root" />} />
-          <Route path="/patients/:patientId" element={<div data-testid="patient-detail" />} />
-          <Route path="/patients" element={<div data-testid="patients-landing" />} />
-        </Routes>
-        <LocationProbe />
+        {/* Phase 53 Plan 02: ResourceDetailPage transitively renders
+            ReferenceLink + IncomingReferencesPanel which now consume
+            usePeek(). PeekProvider must wrap. */}
+        <PeekProvider>
+          <Routes>
+            <Route
+              path="/patients/:patientId/:resourceType/:id"
+              element={<ResourceDetailPage />}
+            />
+            <Route path="/explorer/:resourceType/:id" element={<ResourceDetailPage />} />
+            <Route path="/explorer/:resourceType" element={<div data-testid="explorer-landing" />} />
+            <Route path="/explorer" element={<div data-testid="explorer-root" />} />
+            <Route path="/patients/:patientId" element={<div data-testid="patient-detail" />} />
+            <Route path="/patients" element={<div data-testid="patients-landing" />} />
+          </Routes>
+          <LocationProbe />
+        </PeekProvider>
       </MemoryRouter>
     </MantineProvider>
   );
