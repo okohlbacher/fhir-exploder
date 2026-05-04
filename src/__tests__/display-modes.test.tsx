@@ -29,7 +29,7 @@ describe('DeveloperJsonView', () => {
     expect(DeveloperJsonView).toBeDefined();
   });
 
-  it('imports JsonViewer (not JsonTreeView directly)', async () => {
+  it('imports JsonViewer as its rendering component', async () => {
     const src = await import('../components/explorer/DeveloperJsonView');
     expect(Object.keys(src)).toContain('DeveloperJsonView');
   });
