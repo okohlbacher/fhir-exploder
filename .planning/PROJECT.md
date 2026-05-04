@@ -107,13 +107,16 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 - [x] **GRPH-04** — Hierarchical dagre layout; Mantine CSS-variable theme bridge (zero-remount on light↔dark); zoom/pan/minimap — Phase 49
 - [~] **STACK-01** — DEFERRED to v1.8 via Phase 50 WAIVE-AND-DEFER (second deferral; gate MIXED 2026-05-01). Acceptable closure per requirement definition.
 
-### Validated (v1.8 partial — Phases 52–54)
+### Validated (v1.8 partial — Phases 52–55)
 
 - [x] **PEEK-01..06**: JSON peek drawer (JsonViewer extraction, useShortcuts, PeekContext, JsonPeekDrawer) wired to Explorer, Patients list, IncomingReferencesPanel, Human-mode reference rows — Phase 52 (foundation) + Phase 53 (call-site expansion). *Validated in Phase 52–53: 2026-05-04*
 - [x] **SHELL-01**: ResourceDetailPage 4-mode shell — `Summary | Human | Graph | JSON` mode switcher (`<Tabs variant="pills">`), `?mode=` URL persistence via `useSearchParams`, keyboard shortcuts 1/2/3/4 via `useShortcuts` — Phase 54. *Validated in Phase 54: 2026-05-04*
 - [x] **SHELL-02**: Summary mode — `summarizeResource().primary` heading + `KeyFieldsTable` (8 typed FHIR R4 handlers + generic fallback, 4-6 fields per type) + reference panels in Summary-only slot — Phase 54. *Validated in Phase 54: 2026-05-04*
 - [x] **SHELL-03**: Graph mode inlined via `React.lazy + Suspense`; `compact` prop suppresses standalone header; `/graph` routes redirect to `?mode=graph` via `NavigateToMode` — Phase 54. *Validated in Phase 54: 2026-05-04*
 - [x] **SHELL-04**: JSON mode toolbar — Copy (clipboard), Download (`${resourceType}-${id}.json`), offline structural validation chip (`createStructuralBackend`), "Open in validator" in-app link; `JsonViewer.showLineNumbers` prop — Phase 54. *Validated in Phase 54: 2026-05-04*
+- [x] **EXPL-01**: Explorer list two-line summary — primary bold (`fw={600}` `size="sm"`) + conditional secondary dim/mono (`c="dimmed"` `ff="monospace"` `size="xs"`) via `summarizeResource()` — Phase 55. *Validated in Phase 55: 2026-05-04*
+- [x] **EXPL-02**: Density SegmentedControl (Cards/Table/Compact) with localStorage persistence (`explorer.density.v1`); Cards mode `SimpleGrid` + `Paper` with J-key focusability (`tabIndex={0}`, `onFocus/onBlur`) — Phase 55. *Validated in Phase 55: 2026-05-04*
+- [x] **EXPL-03**: J key JSON peek on Explorer rows in all density modes (implementation from Phase 52–53; test coverage added in Phase 55) — Phase 55. *Validated in Phase 55: 2026-05-04*
 
 ### Active (v1.8 candidates — pending scope)
 
