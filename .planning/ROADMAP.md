@@ -10,21 +10,35 @@
 - ✅ **v1.5 -- Validation, Performance & MII Extensions (shipped 2026-04-29)** -- [Archive](milestones/v1.5-ROADMAP.md) . [Requirements](milestones/v1.5-REQUIREMENTS.md) . [Audit](milestones/v1.5-MILESTONE-AUDIT.md)
 - ✅ **v1.6 -- Hardening, UX Polish & Carry-Overs (shipped 2026-04-30)** -- [Archive](milestones/v1.6-ROADMAP.md) . [Requirements](milestones/v1.6-REQUIREMENTS.md)
 - ✅ **v1.7 -- Resource Navigation (shipped 2026-05-04)** -- [Archive](milestones/v1.7-ROADMAP.md) . [Requirements](milestones/v1.7-REQUIREMENTS.md) . [Audit](milestones/v1.7-MILESTONE-AUDIT.md)
+- 🚧 **v1.8 -- Navigation Redesign (in progress, started 2026-05-04)** -- 7 phases (52-58), 20 requirements
 
 ## Deferred Items
 
-Carried to v1.8 (re-evaluate at milestone-new):
+Carried to v1.9+ (re-evaluate at next milestone-new):
 
-- **STACK-01 (Mantine 9 / React 19 upgrade — second WAIVE-AND-DEFER 2026-05-02):** Two consecutive gate failures (v1.6 Phase 45 + v1.7 Phase 50). Gate now MIXED — React 19 open (`^18.0.0 || ^19.0.0`), Mantine 9 still closed (`^8.0.0`) by `@medplum/react@5.1.10`. User decision D-02 keeps React/Mantine coupled until both gates open. **Re-attempt trigger:** `npm view @medplum/react peerDependencies`. Reactivation: `milestones/v1.7-phases/50-*/50-CONTEXT.md` + `50-SUMMARY.md`.
+- **STACK-01 (Mantine 9 / React 19 upgrade)** — DEFERRED INDEFINITELY per user decision 2026-05-04. Bottleneck remains `@medplum/react`'s `@mantine/core: ^8.0.0` peer pin. Removed from Active requirements; will resurface only if user-requested or if `@medplum/react` peer-dep range opens to `^9.x`.
 - **Reverse-reference CapabilityStatement-driven discovery** — curated catalog ships v1.7 (REVR-01); defer CapabilityStatement-driven until real-world gaps surface.
 - **Graph view G2 — schema graph** — interactive FHIR resource type graph (static, server-independent). Defer until G1 validated.
 - **Graph view depth > 3** — React Flow handles it but UX needs design.
 - **Reference resolution prefetch** — lazy is sufficient until observed otherwise.
+- **Hover-peek 4-line JSON preview tooltip on reference chips** — polish item; deferrable beyond v1.8.
+- **Collapsible sidebar (icon-only mode)** — not in v1.8 design handoff; defer.
+- **Global navigation shortcuts (`g d` / `g e` / `g p`)** — polish item; defer.
 - Federated cohort queries (server-side CQL), cohort versioning, multi-criteria phenotype builder — no demand surfaced.
 
 ---
 
 ## Phases
+
+### v1.8 Navigation Redesign (Phases 52-58) — IN PROGRESS
+
+- [ ] **Phase 52: JSON Peek Drawer Foundation** — Extract `JsonViewer`, mount `PeekProvider` + `JsonPeekDrawer` at `AppLayout`, wire `J` on Explorer rows (PEEK-01, PEEK-02, PEEK-03, PEEK-06)
+- [ ] **Phase 53: Peek Call-Site Expansion** — Wire `J` on Patients list, `Cmd+click` on reference chips, IncomingReferencesPanel cards, Human-mode reference rows (PEEK-04, PEEK-05)
+- [ ] **Phase 54: 4-Mode Resource Shell** — Replace `ResourceDetailPage` tabs with `Summary | Human | Graph | JSON` switcher; key-fields registry; JSON-mode improvements (SHELL-01, SHELL-02, SHELL-03, SHELL-04)
+- [ ] **Phase 55: Explorer Improvements** — Summary column, density modes (Cards / Table / Compact), JSON peek wiring on Explorer rows (EXPL-01, EXPL-02, EXPL-03)
+- [ ] **Phase 56: Sidebar v2 + Expert Toggle + ⌘K** — IA restructure (Browse / Audit), Expert toggle, Mantine Spotlight palette, Cohorts under Audit (SIDE-01, SIDE-02, SIDE-03, SIDE-04)
+- [ ] **Phase 57: Patients-as-Lens** — Chrome rewrap, breadcrumb, `PatientHeaderCard` modal removal, Patient Summary mode with MII tabs (LENS-01, LENS-02)
+- [ ] **Phase 58: UAT Backlog Closure** — Verify all deferred `HUMAN-UAT.md` items from Phases 42–49 against live Blaze (UAT-01)
 
 <details>
 <summary>✅ v1.7 Resource Navigation (Phases 46-51) — SHIPPED 2026-05-04</summary>
@@ -117,6 +131,86 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 
 ## Phase Details
 
+### Phase 52: JSON Peek Drawer Foundation
+**Goal**: Users can press `J` on any focused Explorer row to instantly inspect raw FHIR JSON in a 420px right-side drawer without leaving the list.
+**Depends on**: Nothing (first v1.8 phase; v1.7 baseline shipped)
+**Requirements**: PEEK-01, PEEK-02, PEEK-03, PEEK-06
+**Success Criteria** (what must be TRUE):
+  1. Pressing `J` on a focused row in `/explorer/:type` opens a 420px right-side drawer showing the row's full FHIR JSON without changing the URL.
+  2. `Esc` closes the drawer and returns focus to the originating row; pressing `J` on a different row swaps drawer content without unmounting (no slide-in/out flicker).
+  3. `Enter` while drawer is open (or clicking `[Open full →]`) navigates to `/explorer/:type/:id?mode=json`.
+  4. `git grep -rn "react-syntax-highlighter\|JsonTreeView" src/` returns exactly one source-of-truth implementation (the new `components/json/JsonViewer.tsx`); zero duplicate syntax-highlighter implementations.
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 53: Peek Call-Site Expansion
+**Goal**: The JSON peek drawer is reachable from every list/reference surface a user encounters in normal navigation.
+**Depends on**: Phase 52
+**Requirements**: PEEK-04, PEEK-05
+**Success Criteria** (what must be TRUE):
+  1. `Cmd/Ctrl+click` on any reference chip (Human-mode reference rows, IncomingReferencesPanel cards, Summary-mode reference chips) opens the drawer with the referenced resource resolved via the Phase 47 cache.
+  2. Failed reference resolution renders an inline "Reference unresolvable" state inside the drawer body — no toast notification.
+  3. Drawer is reachable from at least 4 distinct surfaces (Explorer table, Patients list, IncomingReferencesPanel cards, Human-mode reference rows) — each surface verified by a vitest test that opens the drawer from that surface.
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 54: 4-Mode Resource Shell
+**Goal**: Every resource detail view (non-Patient) renders through a unified 4-mode shell, replacing the current 2-tab `ResourceDetailPage` layout.
+**Depends on**: Phase 52 (drawer "Open full →" lands on mode 4 / JSON)
+**Requirements**: SHELL-01, SHELL-02, SHELL-03, SHELL-04
+**Success Criteria** (what must be TRUE):
+  1. `/explorer/:type/:id` renders a `Summary | Human | Graph | JSON` mode switcher; keyboard shortcuts `1`/`2`/`3`/`4` (with input-focus guard) swap modes; selected mode persists in the URL `?mode=` param.
+  2. Summary mode (default for non-Expert users) renders `summarizeResource(r).primary` as heading plus a key-fields property table for 8 typed R4 resource types (Patient, Observation, Condition, Encounter, MedicationStatement, Procedure, DiagnosticReport, AllergyIntolerance) with a generic fallback walker for the long tail.
+  3. Graph mode lazy-loads the existing Phase 49 `ResourceGraphView`; the legacy `/explorer/:type/:id/graph` route redirects to `?mode=graph`.
+  4. JSON mode renders a top-right validation chip, line-numbered JSON body, and toolbar actions (Copy / Download / Open in fhir-validator).
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 55: Explorer Improvements
+**Goal**: Explorer list scanning is faster and more legible — primary/secondary summaries inline, density configurable, JSON peek one keystroke away.
+**Depends on**: Phase 52 (JSON peek wiring); independent of Phase 54
+**Requirements**: EXPL-01, EXPL-02, EXPL-03
+**Success Criteria** (what must be TRUE):
+  1. Explorer list table shows a Summary column (leftmost data column) with primary line bold and secondary line dim/mono via `summarizeResource()`.
+  2. A density `SegmentedControl` (Cards / Table / Compact) is visible at the top of `/explorer/:type`; the user's selection persists across reloads via `localStorage['explorer.density.v1']`.
+  3. `J` on any focused Explorer row opens the JSON peek drawer (full integration of PEEK-01..06 across all Explorer rows).
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 56: Sidebar v2 + Expert Toggle + ⌘K
+**Goal**: Navigation IA reflects the Browse/Audit split; users have a global command palette and an Expert mode that biases defaults toward raw FHIR JSON.
+**Depends on**: Phase 54 (Expert toggle drives default mode in `ResourceShell`)
+**Requirements**: SIDE-01, SIDE-02, SIDE-03, SIDE-04
+**Success Criteria** (what must be TRUE):
+  1. Sidebar renders two sections — **Browse** (Dashboard, Explorer with Lenses sub-list: Patients, Practitioners, MII modules) and **Audit** (Quality with Cohorts/Thresholds/IPS Validator children); v1.4 active-row 2-px indigo left rail + white background styling preserved.
+  2. ⌘K (Mac) / Ctrl+K (Windows/Linux) opens a Mantine Spotlight palette with registered commands for resource types, saved cohorts, and settings shortcuts; the sidebar shows a fake-search-input trigger above the sections.
+  3. Footer Expert `Switch` persists to `localStorage['sidebar.expertView.v1']`; when ON, JSON becomes the default mode for new resource opens (verified via `ResourceShell` initial state) and raw search params become visible in Explorer.
+  4. The Cohorts entry appears under the Audit section while the underlying route `/quality/cohorts` is unchanged.
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 57: Patients-as-Lens
+**Goal**: Patients is no longer a top-level concept but a lens onto Explorer — same chrome, same shell, no bespoke Raw JSON modal.
+**Depends on**: Phase 54 (Patient detail uses unified `ResourceShell`), Phase 56 (sidebar lens highlighting + breadcrumb shape)
+**Requirements**: LENS-01, LENS-02
+**Success Criteria** (what must be TRUE):
+  1. `/patients` renders inside Explorer chrome; breadcrumb reads `Explorer › Patients lens` (and `Explorer › Patients lens › <name>` on detail); sidebar highlights the "Patients" lens entry under Browse > Explorer > Lenses with the parent Explorer row dimmed (most-specific-wins).
+  2. Patient detail renders through the unified `ResourceDetailPage` shell; the bespoke `PatientHeaderCard` "Raw JSON" modal is removed (mode 4 covers it); MII Kerndatensatz module tabs continue to render within Summary mode for Patient resources.
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 58: UAT Backlog Closure
+**Goal**: Every deferred browser-only verification item from Phases 42–49 is walked against live Blaze; the audit trail closes.
+**Depends on**: Phases 52..57 (UAT covers v1.8 surface plus v1.6 + v1.7 backlog)
+**Requirements**: UAT-01
+**Success Criteria** (what must be TRUE):
+  1. Every `HUMAN-UAT.md` item across Phases 42, 43, 44, 46, 47, 48, 49 carries a final disposition: pass / fail / known-issue-deferred / test-environment-blocked.
+  2. `nyquist_compliant` flags on the originating phases are flipped where verification supports it; remaining `false` flags carry an explicit rationale.
+  3. A consolidated UAT report is appended to the v1.8 milestone audit document; any defects discovered surface as separate phase candidates rather than silent failures.
+**Plans**: TBD
+
+---
+
 ### Phase 46: Theme A — Foundation: Summary Util
 **Goal**: Establish a single pure-function summary primitive (`summarizeResource`) used by every list/card surface in the app, dedup three current inline implementations, and provide the foundational dependency for Phases 47–49.
 **Depends on**: Nothing (foundation phase)
@@ -190,26 +284,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 **Goal**: Re-attempt the Mantine 9 / React 19 upgrade carried over from v1.6 Phase 45. Conditional execution: peer-dep gate decides whether the phase ships an upgrade or closes as `deferred`.
 **Depends on**: Nothing (independent of Phases 46–49; gate-driven)
 **Requirements**: STACK-01
-**Success Criteria** (what must be TRUE — closure path depends on gate):
-
-  **If gate PASSES (`@medplum/react` peer range now includes Mantine `^9.x`):**
-  1. Mantine 8 → 9 codemod applied; React 18 → 19 upgrade applied; all peer-dep ranges in `package.json` align with new versions.
-  2. Breaking-change sweep complete — every Mantine 9 deprecation and React 19 incompatibility surfaced by the test suite or `tsc` is fixed in source.
-  3. Visual regression UAT (per v1.6 Phase 45 SCs) walked on live Blaze data — Sidebar, Dashboard, Patients, Quality, Explorer, Patient detail, Cohorts, IPS, Graph (new in Phase 49) all render with no visible regression.
-  4. Full test suite passes; `npm run build` clean; bundle gz delta documented (target: within ±50 KB of pre-upgrade baseline).
-  5. Phase closes `validated`; STACK-01 marked `validated` in REQUIREMENTS.md traceability.
-
-  **If gate FAILS (peer range still pins Mantine `^8.0.0`):**
-  1. `npm view @medplum/react peerDependencies` output captured verbatim in 50-CONTEXT.md as evidence of gate state.
-  2. SUMMARY.md documents the `WAIVE-AND-DEFER` decision matching v1.6 Phase 45 precedent — no source diff applied.
-  3. STACK-01 carried forward to v1.8 deferred-items list; phase closes `deferred`.
-
-**Plans**: 2 plans (closure path: gate FAILED for Mantine 9 → pure-doc WAIVE-AND-DEFER)
-  - [ ] 50-01-PLAN.md — 50-SUMMARY.md (WAIVE-AND-DEFER record + frozen 2026-05-01 gate output) + 50-VERIFICATION.md (status `passed`)
-  - [ ] 50-02-PLAN.md — REQUIREMENTS.md / PROJECT.md / ROADMAP.md traceability rollover (STACK-01 → `deferred → v1.8`)
-**Effort**: large (3+ days if gate passes; small if gate fails — pure-doc closure)
-**Execution**: Mixed if gate passes (codemod + tsc sweep automatable; visual UAT requires human walkthrough across all views) / Fully automatable if gate fails (pure-doc `WAIVE-AND-DEFER`)
-**UI hint**: yes (only relevant if gate passes — visual regression UAT touches every view)
+**Status**: closed `deferred` (gate FAILED — Mantine 9 still pinned `^8.0.0` by `@medplum/react@5.1.10`); STACK-01 removed from Active per user decision 2026-05-04.
 
 ### Phase 51: v1.7 Gap Closure — Summary Util Coverage + Graph Patient-Context
 **Goal**: Close two `tech_debt` integration gaps surfaced by the v1.7 milestone audit — extend `summarizeResource` adoption to the two timeline call sites that diverge from it (GAP-1), and preserve patient context on graph node click when the graph is reached via the patient-scoped route (GAP-2).
@@ -227,6 +302,56 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 **Effort**: small (< 1 day — 3 focused file edits)
 **Execution**: Fully automatable (pure call-site migrations + 1 conditional navigation fix; no new UI surfaces)
 
+## Cross-Phase Notes (v1.8)
+
+- **Keyboard shortcut ownership** — Phase 52 ships a single shared `useShortcuts` / `useHotkeys` module that all later phases (54 mode-switch keys, 56 ⌘K) extend. Avoids the Pitfall 2 (Spotlight ⌘K vs `1`/`2`/`3`/`4` collision) and Pitfall 9 (drawer-local vs document-level handler conflict).
+- **Drawer config** — Phase 52 ships with `trapFocus={true}` + `withOverlay={false}` per RESEARCH recommendation (a11y-safe, lightweight visual). Decision logged in REQUIREMENTS.md "Design Decisions (pending)" section.
+- **Mode switcher widget** — Phase 54 ships `<Tabs variant="pills">` styled to look like SegmentedControl (preserves `keepMounted` semantics + ARIA tablist roles per Pitfall 4). Visual parity with handoff via Phase 30 design tokens.
+- **Spotlight resource-type list** — Phase 56 lazy-populates resource types via CapabilityStatement when the user types ≥ 2 characters (avoids upfront 94-action cost).
+- **PatientHeaderCard removal** — Phase 57 stages the Raw JSON modal removal in two parts: Stage 1 keeps the button as a link to mode 4 (snapshot-stable); Stage 2 removes the button with a single audit-trailed snapshot re-baseline (per Pitfall 6).
+
+## Dependency Graph (v1.8)
+
+```
+Phase 52 (PEEK foundation) ──┬──> Phase 53 (PEEK call-site expansion)
+                             ├──> Phase 54 (SHELL — drawer "Open full →" lands on mode 4)
+                             └──> Phase 55 (EXPL-03 JSON peek wiring)
+
+Phase 54 (SHELL) ──┬──> Phase 56 (SIDE-03 Expert toggle drives default mode)
+                   └──> Phase 57 (LENS — Patient detail uses ResourceShell)
+
+Phase 56 (SIDE) ──> Phase 57 (LENS — sidebar lens highlighting + breadcrumb shape)
+
+Phase 58 (UAT) ──> runs LAST, after all v1.8 features ship
+```
+
+## v1.8 Traceability
+
+| Requirement | Phase |
+|-------------|-------|
+| PEEK-01 | Phase 52 |
+| PEEK-02 | Phase 52 |
+| PEEK-03 | Phase 52 |
+| PEEK-04 | Phase 53 |
+| PEEK-05 | Phase 53 |
+| PEEK-06 | Phase 52 |
+| SHELL-01 | Phase 54 |
+| SHELL-02 | Phase 54 |
+| SHELL-03 | Phase 54 |
+| SHELL-04 | Phase 54 |
+| EXPL-01 | Phase 55 |
+| EXPL-02 | Phase 55 |
+| EXPL-03 | Phase 55 |
+| SIDE-01 | Phase 56 |
+| SIDE-02 | Phase 56 |
+| SIDE-03 | Phase 56 |
+| SIDE-04 | Phase 56 |
+| LENS-01 | Phase 57 |
+| LENS-02 | Phase 57 |
+| UAT-01 | Phase 58 |
+
+**Coverage:** 20/20 v1.8 requirements mapped — no orphans, no duplicates.
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -237,6 +362,13 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 31-38.2 (v1.5) | v1.5 | 32/32 | ✅ Shipped | 2026-04-29 |
 | 39-45 (v1.6) | v1.6 | 14/14 (45 deferred) | ✅ Shipped | 2026-04-30 |
 | 46-51 (v1.7) | v1.7 | 14/14 (50 deferred) | ✅ Shipped | 2026-05-04 |
+| 52. JSON Peek Drawer Foundation | v1.8 | 0/0 | Not started | - |
+| 53. Peek Call-Site Expansion | v1.8 | 0/0 | Not started | - |
+| 54. 4-Mode Resource Shell | v1.8 | 0/0 | Not started | - |
+| 55. Explorer Improvements | v1.8 | 0/0 | Not started | - |
+| 56. Sidebar v2 + Expert Toggle + ⌘K | v1.8 | 0/0 | Not started | - |
+| 57. Patients-as-Lens | v1.8 | 0/0 | Not started | - |
+| 58. UAT Backlog Closure | v1.8 | 0/0 | Not started | - |
 
 ## Backlog
 
@@ -259,3 +391,6 @@ Both items below were carried into v1.6 Phase 41 (Explorer + Quality UX polish) 
 
 - [x] **Former 999.1: Explorer hide-empty toggle** — promoted to **Phase 41 (EXPL-01)** on 2026-04-29; shipped via Mantine `Switch` on `/explorer` resource-type landing with localStorage persistence. Source: Phase 38 HUMAN-UAT verifier observation.
 - [x] **Former 999.2: Quality completeness non-empty-sort** — promoted to **Phase 41 (QUAL-01)** on 2026-04-29; shipped via `compareRows` N/A-to-bottom fix in `CompletenessPanel.tsx`. Source: Phase 38 HUMAN-UAT verifier observation.
+
+---
+*v1.8 milestone roadmap added: 2026-05-04*

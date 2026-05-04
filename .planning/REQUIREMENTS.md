@@ -73,32 +73,32 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PEEK-01 | — | Pending |
-| PEEK-02 | — | Pending |
-| PEEK-03 | — | Pending |
-| PEEK-04 | — | Pending |
-| PEEK-05 | — | Pending |
-| PEEK-06 | — | Pending |
-| SHELL-01 | — | Pending |
-| SHELL-02 | — | Pending |
-| SHELL-03 | — | Pending |
-| SHELL-04 | — | Pending |
-| EXPL-01 | — | Pending |
-| EXPL-02 | — | Pending |
-| EXPL-03 | — | Pending |
-| SIDE-01 | — | Pending |
-| SIDE-02 | — | Pending |
-| SIDE-03 | — | Pending |
-| SIDE-04 | — | Pending |
-| LENS-01 | — | Pending |
-| LENS-02 | — | Pending |
-| UAT-01 | — | Pending |
+| PEEK-01 | Phase 52 | Pending |
+| PEEK-02 | Phase 52 | Pending |
+| PEEK-03 | Phase 52 | Pending |
+| PEEK-04 | Phase 53 | Pending |
+| PEEK-05 | Phase 53 | Pending |
+| PEEK-06 | Phase 52 | Pending |
+| SHELL-01 | Phase 54 | Pending |
+| SHELL-02 | Phase 54 | Pending |
+| SHELL-03 | Phase 54 | Pending |
+| SHELL-04 | Phase 54 | Pending |
+| EXPL-01 | Phase 55 | Pending |
+| EXPL-02 | Phase 55 | Pending |
+| EXPL-03 | Phase 55 | Pending |
+| SIDE-01 | Phase 56 | Pending |
+| SIDE-02 | Phase 56 | Pending |
+| SIDE-03 | Phase 56 | Pending |
+| SIDE-04 | Phase 56 | Pending |
+| LENS-01 | Phase 57 | Pending |
+| LENS-02 | Phase 57 | Pending |
+| UAT-01 | Phase 58 | Pending |
 
 **Coverage:**
 - v1.8 requirements: 20 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 20 ⚠️
+- Mapped to phases: 20 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-05-04*
-*Last updated: 2026-05-04 after initial definition*
+*Last updated: 2026-05-04 — roadmap created, all 20 requirements mapped to Phases 52–58*
