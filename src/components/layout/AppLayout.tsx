@@ -5,6 +5,8 @@ import { Sidebar, type ConnectionStatus } from './Sidebar';
 import { FeedbackButton } from '../feedback/FeedbackButton';
 import { PeekProvider } from '../../contexts/PeekContext';
 import { JsonPeekDrawer } from '../json/JsonPeekDrawer';
+import { ExpertModeProvider } from '../../contexts/ExpertModeContext';
+import { AppSpotlight } from './Spotlight';
 
 interface AppLayoutProps {
   connectionStatus: ConnectionStatus;
@@ -35,22 +37,25 @@ function RouteLoadingFallback() {
 
 export function AppLayout({ connectionStatus }: AppLayoutProps) {
   return (
-    <AppShell
-      navbar={{ width: 240, breakpoint: 0 }}
-      padding="lg"
-    >
-      <AppShell.Navbar bg="gray.0">
-        <Sidebar connectionStatus={connectionStatus} />
-      </AppShell.Navbar>
-      <AppShell.Main>
-        <PeekProvider>
-          <Suspense fallback={<RouteLoadingFallback />}>
-            <Outlet />
-          </Suspense>
-          <JsonPeekDrawer />
-        </PeekProvider>
-      </AppShell.Main>
-      {import.meta.env.DEV && <FeedbackButton />}
-    </AppShell>
+    <ExpertModeProvider>
+      <AppSpotlight />
+      <AppShell
+        navbar={{ width: 240, breakpoint: 0 }}
+        padding="lg"
+      >
+        <AppShell.Navbar bg="gray.0">
+          <Sidebar connectionStatus={connectionStatus} />
+        </AppShell.Navbar>
+        <AppShell.Main>
+          <PeekProvider>
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <Outlet />
+            </Suspense>
+            <JsonPeekDrawer />
+          </PeekProvider>
+        </AppShell.Main>
+        {import.meta.env.DEV && <FeedbackButton />}
+      </AppShell>
+    </ExpertModeProvider>
   );
 }
