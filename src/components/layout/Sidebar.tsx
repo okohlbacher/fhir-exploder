@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   AppShell,
   Badge,
   Box,
   Card,
   Group,
+  Kbd,
   NavLink,
   Stack,
+  Switch,
   Text,
   UnstyledButton,
 } from '@mantine/core';
@@ -18,10 +20,16 @@ import {
   IconSettings,
 } from '@tabler/icons-react';
 import { NavLink as RouterNavLink, useMatch } from 'react-router-dom';
+import { openSpotlight } from '@mantine/spotlight';
 import { useTerminologyHealth } from '../../hooks/useTerminologyHealth';
 import { TERMINOLOGY_STATUS_CONFIG } from '../../terminology/statusConfig';
 import { FhirSettingsModal } from '../settings/FhirSettingsModal';
 import { TerminologySettingsModal } from '../settings/TerminologySettingsModal';
+import { useExpertMode } from '../../contexts/ExpertModeContext';
+import { useSettings } from '../../hooks/useSettings';
+import { useConnectionContext } from '../../contexts/ConnectionContext';
+import { useResourceCounts } from '../../hooks/useResourceCounts';
+import { parseResourceTypes } from '../../fhir/capability';
 
 export type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 
@@ -146,7 +154,7 @@ function activeStylesWhen(active: boolean) {
  * Phase 26 success criterion #3 says 'section root' (singular), which this
  * enforces (now generalised for Thresholds as well as Cohorts).
  */
-function SidebarRow({ item }: { item: NavItem }) {
+function SidebarRow({ item, rightSection }: { item: NavItem; rightSection?: React.ReactNode }) {
   const match = useMatch({ path: item.to, end: item.exact ?? false });
   // Suppress the parent when a child with suppressParent=true is active.
   // Hooks must be called unconditionally — evaluate all potential children
@@ -174,6 +182,7 @@ function SidebarRow({ item }: { item: NavItem }) {
         to={item.to}
         label={item.label}
         leftSection={<item.icon size={20} />}
+        rightSection={rightSection}
         active={active}
         styles={activeStylesWhen(active)}
       />
@@ -216,12 +225,48 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
   const [fhirModalOpen, setFhirModalOpen] = useState(false);
   const [termModalOpen, setTermModalOpen] = useState(false);
 
+  // Phase 56 SIDE-02/SIDE-03/SIDE-04 additions
+  const { isExpert, toggle } = useExpertMode();
+  const { settings } = useSettings();
+  const serverUrl = settings?.fhir?.serverUrl;
+  const { state } = useConnectionContext();
+  const client = state.status === 'connected' ? state.client : null;
+  const capability = state.status === 'connected' ? state.capability : null;
+  const parsedTypes = useMemo(() => (capability ? parseResourceTypes(capability) : []), [capability]);
+  const typeNames = useMemo(() => parsedTypes.map((t) => t.type), [parsedTypes]);
+  const counts = useResourceCounts(client, typeNames);
+  const nonZeroTypeCount = useMemo(
+    () => Object.values(counts).filter((v) => typeof v === 'number' && v > 0).length,
+    [counts],
+  );
+
   return (
     <>
       <AppShell.Section p="md">
         <Text fw={600} size="lg">
           FHIR Exploder
         </Text>
+
+        {/* Surface 1 — ⌘K hint button (SIDE-04): opens command palette */}
+        <UnstyledButton
+          onClick={() => openSpotlight()}
+          style={{ width: '100%', display: 'block' }}
+          mt="xs"
+          aria-label="Open command palette"
+          data-testid="cmd-k-hint"
+        >
+          <Group
+            justify="space-between"
+            gap="xs"
+            wrap="nowrap"
+            px="xs"
+            py={6}
+            style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: 4 }}
+          >
+            <Text size="xs" c="dimmed">Go to resource type…</Text>
+            <Kbd size="xs">⌘K</Kbd>
+          </Group>
+        </UnstyledButton>
 
         {/* Server card — consolidates the prior FHIR + Terminology status pills
             into a single surface. Clicking the FHIR row (or anywhere on the
@@ -262,6 +307,13 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
               </Group>
             </UnstyledButton>
 
+            {/* Surface 2 — conditional server URL (SIDE-03): expert mode only */}
+            {isExpert && serverUrl && (
+              <Text size="xs" c="dimmed" ff="monospace" truncate="end" data-testid="sidebar-server-url">
+                {serverUrl}
+              </Text>
+            )}
+
             <UnstyledButton onClick={() => setTermModalOpen(true)}>
               <Group gap="xs" wrap="nowrap">
                 <Box
@@ -286,9 +338,16 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
       </AppShell.Section>
 
       <AppShell.Section grow>
-        {NAV_ITEMS.map((item) => (
-          <SidebarRow key={item.to} item={item} />
-        ))}
+        {/* Surface 4 — Explorer count badge (SIDE-04) */}
+        {NAV_ITEMS.map((item) => {
+          const badge =
+            item.to === '/explorer' && nonZeroTypeCount > 0 ? (
+              <Badge variant="light" size="xs" color="gray" data-testid="explorer-count-badge">
+                {nonZeroTypeCount}
+              </Badge>
+            ) : undefined;
+          return <SidebarRow key={item.to} item={item} rightSection={badge} />;
+        })}
       </AppShell.Section>
 
       <AppShell.Section>
@@ -300,6 +359,20 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
           active={!!settingsMatch}
           styles={activeStylesWhen(!!settingsMatch)}
         />
+      </AppShell.Section>
+
+      {/* Surface 3 — Expert Toggle row (SIDE-02): after Settings section */}
+      <AppShell.Section p="sm">
+        <Group justify="space-between" align="center" wrap="nowrap">
+          <Text size="xs" c="dimmed">Expert mode</Text>
+          <Switch
+            size="xs"
+            checked={isExpert}
+            onChange={toggle}
+            aria-label="Expert mode toggle"
+            data-testid="expert-mode-switch"
+          />
+        </Group>
       </AppShell.Section>
 
       <FhirSettingsModal opened={fhirModalOpen} onClose={() => setFhirModalOpen(false)} />
