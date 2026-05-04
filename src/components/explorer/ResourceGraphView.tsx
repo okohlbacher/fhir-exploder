@@ -39,6 +39,16 @@ import { ResourceGraphNode } from './ResourceGraphNode';
 
 const NODE_TYPES = { resource: ResourceGraphNode } as const;
 
+export interface ResourceGraphViewProps {
+  /**
+   * When true, suppresses the standalone <Title>Reference graph</Title>
+   * and "Back to resource" button. Used when ResourceGraphView is inlined
+   * as Tabs.Panel value="graph" in ResourceDetailPage (Phase 54 SHELL-03).
+   * Defaults to false to preserve standalone-page behavior.
+   */
+  compact?: boolean;
+}
+
 /**
  * Phase 49 — Plan 49-03 (GRPH-01 + GRPH-04 wiring; closes GRPH-02 + GRPH-03 wiring).
  *
@@ -47,7 +57,7 @@ const NODE_TYPES = { resource: ResourceGraphNode } as const;
  * theme-switch-invariant test (Plan 49-03 Task 03 / D-20.4): the SAME DOM
  * node must exist before AND after `setColorScheme('dark')`.
  */
-export function ResourceGraphView() {
+export function ResourceGraphView({ compact = false }: ResourceGraphViewProps = {}) {
   const { resourceType, id, patientId } = useParams<{
     resourceType: string;
     id: string;
@@ -123,22 +133,24 @@ export function ResourceGraphView() {
   return (
     <div data-testid="graph-flow-root">
       <Stack gap="lg" p="lg">
-        <Group gap="md" justify="space-between">
-          <Stack gap={4}>
-            <Title order={2}>Reference graph</Title>
-            <Text size="sm" c="dimmed" ff="monospace">
-              {resourceType}/{id}
-            </Text>
-          </Stack>
-          <Button
-            variant="subtle"
-            leftSection={<IconArrowLeft size={16} />}
-            component={Link}
-            to={backHref}
-          >
-            Back to resource
-          </Button>
-        </Group>
+        {!compact && (
+          <Group gap="md" justify="space-between">
+            <Stack gap={4}>
+              <Title order={2}>Reference graph</Title>
+              <Text size="sm" c="dimmed" ff="monospace">
+                {resourceType}/{id}
+              </Text>
+            </Stack>
+            <Button
+              variant="subtle"
+              leftSection={<IconArrowLeft size={16} />}
+              component={Link}
+              to={backHref}
+            >
+              Back to resource
+            </Button>
+          </Group>
+        )}
 
         <Paper withBorder radius="lg" p="md">
           <Group gap="md" align="center">
