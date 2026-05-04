@@ -28,6 +28,7 @@ import { searchByIdentifierPrefix } from '../../utils/searchByIdentifierPrefix';
 import { summarizeResource } from '../../utils/summarizeResource';
 import { usePeek } from '../../contexts/PeekContext';
 import { useShortcuts } from '../../hooks/useShortcuts';
+import { useExpertMode } from '../../contexts/ExpertModeContext';
 
 // WR-02 fix: module-scope constant — prevents re-creation on every render and
 // avoids stale-dep risk if this ever enters a useCallback/useMemo dep array.
@@ -153,6 +154,7 @@ export function SearchResultsPage() {
   const { capability } = useOutletContext<ExplorerOutletContext>();
   const navigate = useNavigate();
   const client = useMedplum();
+  const { isExpert } = useExpertMode();
   const { searchRequest, setSearch, resourceType } = useSearchState();
 
   const [bundle, setBundle] = useState<Bundle | undefined>(undefined);
@@ -474,7 +476,13 @@ export function SearchResultsPage() {
                 }}
               >
                 <Group justify="space-between" mb={4}>
-                  <Text ff="monospace" size="xs" c="dimmed" truncate="end" style={{ maxWidth: 180 }}>
+                  <Text
+                    ff="monospace"
+                    size="xs"
+                    c="dimmed"
+                    truncate={isExpert ? undefined : 'end'}
+                    style={isExpert ? undefined : { maxWidth: 180 }}
+                  >
                     {r.id}
                   </Text>
                   {status && (
@@ -544,8 +552,8 @@ export function SearchResultsPage() {
                     <Anchor
                       size="sm"
                       ff="monospace"
-                      truncate="end"
-                      style={{ maxWidth: 200, display: 'block' }}
+                      truncate={isExpert ? undefined : 'end'}
+                      style={isExpert ? { display: 'block' } : { maxWidth: 200, display: 'block' }}
                       href={`/explorer/${r.resourceType}/${r.id}`}
                       onClick={(e) => {
                         e.preventDefault();
