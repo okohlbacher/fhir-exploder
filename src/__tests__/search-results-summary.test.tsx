@@ -59,12 +59,6 @@ const mockBundleWithDob = {
   entry: [{ resource: patientWithDob }],
 };
 
-const mockBundleNoDob = {
-  resourceType: 'Bundle',
-  total: 1,
-  entry: [{ resource: patientNoBirthDate }],
-};
-
 // ---------------------------------------------------------------------------
 // Mocks (mirror peek-srp-integration.test.tsx pattern)
 // ---------------------------------------------------------------------------
