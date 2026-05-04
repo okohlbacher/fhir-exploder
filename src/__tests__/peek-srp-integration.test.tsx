@@ -36,6 +36,11 @@ Object.defineProperty(window, 'matchMedia', {
 // Mocks
 // ---------------------------------------------------------------------------
 
+// ExpertModeContext — SearchResultsPage now requires this context
+vi.mock('../contexts/ExpertModeContext', () => ({
+  useExpertMode: () => ({ isExpert: false, toggle: vi.fn(), setExpert: vi.fn() }),
+}));
+
 const mockNavigate = vi.fn();
 
 const patA = { resourceType: 'Patient', id: 'pat-a' };

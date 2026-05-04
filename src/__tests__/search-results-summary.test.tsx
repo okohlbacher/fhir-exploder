@@ -63,6 +63,11 @@ const mockBundleWithDob = {
 // Mocks (mirror peek-srp-integration.test.tsx pattern)
 // ---------------------------------------------------------------------------
 
+// ExpertModeContext — SearchResultsPage now requires this context
+vi.mock('../contexts/ExpertModeContext', () => ({
+  useExpertMode: () => ({ isExpert: false, toggle: vi.fn(), setExpert: vi.fn() }),
+}));
+
 const mockNavigate = vi.fn();
 
 vi.mock('react-router-dom', async () => {

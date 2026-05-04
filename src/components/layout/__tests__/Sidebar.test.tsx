@@ -54,6 +54,10 @@ vi.mock('../../../contexts/ConnectionContext', () => ({
   }),
 }));
 
+vi.mock('../../../contexts/ExpertModeContext', () => ({
+  useExpertMode: () => ({ isExpert: false, toggle: vi.fn(), setExpert: vi.fn() }),
+}));
+
 import { Sidebar } from '../Sidebar';
 
 // ----- jsdom polyfills required by Mantine 8 -----

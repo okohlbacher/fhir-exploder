@@ -32,6 +32,33 @@ vi.mock('../hooks/useTerminologyHealth', () => ({
   useTerminologyHealth: vi.fn(),
 }));
 
+// Mock ExpertModeContext — Sidebar now requires ExpertModeProvider in tree.
+vi.mock('../contexts/ExpertModeContext', () => ({
+  useExpertMode: () => ({ isExpert: false, toggle: vi.fn(), setExpert: vi.fn() }),
+}));
+
+// Mock ConnectionContext so Sidebar's useResourceCounts doesn't fire requests.
+vi.mock('../contexts/ConnectionContext', () => ({
+  ConnectionProvider: ({ children }: { children: React.ReactNode }) => children,
+  useConnectionContext: () => ({ state: { status: 'idle' }, connect: vi.fn(), disconnect: vi.fn() }),
+}));
+
+// Mock SettingsContext so no async loadSettings is called.
+vi.mock('../contexts/SettingsContext', async () => {
+  const actual = await vi.importActual<typeof import('../contexts/SettingsContext')>('../contexts/SettingsContext');
+  return {
+    ...actual,
+    useSettingsContext: vi.fn().mockReturnValue({
+      settings: { fhir: { serverUrl: '', auth: { mode: 'open' } } },
+      usingDefaults: false,
+      loading: false,
+      setSettings: vi.fn(),
+    }),
+    SettingsProvider: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
+
+import type React from 'react';
 import { useTerminologyHealth } from '../hooks/useTerminologyHealth';
 import { Sidebar } from '../components/layout/Sidebar';
 import { SettingsProvider } from '../contexts/SettingsContext';
