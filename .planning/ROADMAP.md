@@ -34,7 +34,7 @@ Carried to v1.8 (re-evaluate at milestone-new):
 - [x] Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05) (2/2 plans) — completed 2026-05-04
 - [x] Phase 54: 4-Mode Resource Shell (SHELL-01, SHELL-02, SHELL-03, SHELL-04) (2/2 plans) — completed 2026-05-04
 - [ ] Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03)
-- [ ] Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04)
+- [ ] Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04) (0/2 plans)
 - [ ] Phase 57: Patients-as-Lens (LENS-01, LENS-02)
 - [ ] Phase 58: UAT Backlog Closure (UAT-01)
 
