@@ -25,6 +25,8 @@ import { resourcesToCSV, resourcesToNDJSON, downloadString } from '../../utils/e
 import { toRecord } from '../../utils/fhir-helpers';
 import { searchByIdentifierPrefix } from '../../utils/searchByIdentifierPrefix';
 import { summarizeResource } from '../../utils/summarizeResource';
+import { usePeek } from '../../contexts/PeekContext';
+import { useShortcuts } from '../../hooks/useShortcuts';
 
 export function getResourceDate(resource: Resource): string {
   const r = toRecord(resource);
@@ -140,6 +142,18 @@ export function SearchResultsPage() {
   const [bundle, setBundle] = useState<Bundle | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // PEEK-01: JSON peek drawer wiring (Phase 52 Plan 02).
+  // J on a focused table row opens the 420px right drawer (CONTEXT D-04, D-12).
+  const { openPeek } = usePeek();
+  const [focusedResource, setFocusedResource] = useState<Resource | null>(null);
+
+  const handleJ = useCallback(() => {
+    if (!focusedResource) return; // No focused row → silent no-op (UI-SPEC empty state contract)
+    openPeek(focusedResource, document.activeElement as HTMLElement | null);
+  }, [focusedResource, openPeek]);
+
+  useShortcuts({ j: handleJ });
 
   const parsedTypes = useMemo(() => parseResourceTypes(capability), [capability]);
   const allTypeNames = useMemo(() => parsedTypes.map((t) => t.type), [parsedTypes]);
@@ -415,8 +429,26 @@ export function SearchResultsPage() {
             {resources.map((r) => (
               <Table.Tr
                 key={r.id}
-                style={{ cursor: 'pointer' }}
+                tabIndex={0}
+                style={{
+                  cursor: 'pointer',
+                  outline: focusedResource?.id === r.id
+                    ? '2px solid var(--accent-ring)'
+                    : undefined,
+                  outlineOffset: focusedResource?.id === r.id ? '-1px' : undefined,
+                }}
                 onClick={() => navigate(`/explorer/${r.resourceType}/${r.id}`)}
+                onFocus={() => setFocusedResource(r)}
+                onBlur={(e) => {
+                  // Pitfall 2: keep focusedResource when focus moves within the
+                  // table tbody (e.g. another row) or into the drawer (trapFocus).
+                  // Only clear when focus leaves the tbody entirely.
+                  const next = e.relatedTarget as Node | null;
+                  const tbody = (e.currentTarget as HTMLElement).closest('tbody');
+                  if (!next || !tbody?.contains(next)) {
+                    setFocusedResource(null);
+                  }
+                }}
               >
                 <Table.Td>
                   <Anchor

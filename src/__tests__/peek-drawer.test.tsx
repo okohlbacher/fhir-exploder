@@ -1,8 +1,11 @@
 /**
- * JsonPeekDrawer tests (PEEK-01..03).
+ * JsonPeekDrawer unit tests (PEEK-01..03).
  *
  * Plan 02 replaced the Wave 0 null stub with the real Mantine Drawer
  * implementation. The previously-skipped tests are now active.
+ *
+ * SearchResultsPage J-shortcut integration tests live in a separate file:
+ * src/__tests__/peek-srp-integration.test.tsx
  */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
