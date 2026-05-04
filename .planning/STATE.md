@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.8
-milestone_name: -- (not yet defined — run /gsd-new-milestone)
-status: milestone_complete
-stopped_at: v1.7 milestone archived 2026-05-04
-last_updated: "2026-05-04T08:15:00.000Z"
+milestone_name: Navigation Redesign
+status: defining_requirements
+stopped_at: Milestone v1.8 started — requirements in progress
+last_updated: "2026-05-04T00:00:00.000Z"
 last_activity: 2026-05-04
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 13
-  completed_plans: 13
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.7 COMPLETE — archived 2026-05-04. Next: `/gsd-new-milestone` for v1.8.
+**Current focus:** v1.8 Navigation Redesign — defining requirements
 
 ## Current Position
 
-Phase: —
+Phase: Not started (defining requirements)
 Plan: —
-Status: Between milestones — v1.7 complete, v1.8 not yet defined
-Last activity: 2026-05-04
+Status: Defining requirements
+Last activity: 2026-05-04 — Milestone v1.8 started
 
 v1.7 final: 6 phases (46-51), 13 active plans, Phase 50 deferred via WAIVE-AND-DEFER
 Progress: [██████████] 100%
