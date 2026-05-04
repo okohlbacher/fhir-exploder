@@ -272,3 +272,25 @@ describe('Tabs cleanup (UAT-FU-03)', () => {
     });
   });
 });
+
+// --- 4-mode shell stubs (SHELL-01) -------------------------------------
+// Wave 0 stubs: describe.skip so they show as skipped, not failed.
+// Plan 02 replaces .skip with live implementations.
+
+describe.skip('ResourceDetailPage 4-mode shell (SHELL-01)', () => {
+  it('renders 4 mode tabs', () => {
+    expect(true).toBe(true); // PLACEHOLDER — Plan 02 replaces with real assertions
+  });
+
+  it('keyboard 1 activates Summary', () => {
+    expect(true).toBe(true); // PLACEHOLDER — Plan 02 replaces with real assertions
+  });
+
+  it('URL mode persists', () => {
+    expect(true).toBe(true); // PLACEHOLDER — Plan 02 replaces with real assertions
+  });
+
+  it('mode change replaces URL', () => {
+    expect(true).toBe(true); // PLACEHOLDER — Plan 02 replaces with real assertions
+  });
+});
