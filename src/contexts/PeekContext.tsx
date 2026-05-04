@@ -10,14 +10,37 @@ import { useDisclosure } from '@mantine/hooks';
 import type { Resource } from '@medplum/fhirtypes';
 
 export interface PeekState {
-  resource: Resource;
+  resource: Resource | null;
   originElement: HTMLElement | null;
+  /**
+   * When `resource` is `null`, this is the unresolvable reason — the literal
+   * UI-SPEC string `'Reference unresolvable'` (PEEK-04, D-03/D-04). The
+   * drawer body branches on `resource === null` to render this state.
+   */
+  error?: string;
+  /**
+   * When `resource` is `null`, this is the raw FHIR reference text the user
+   * tried to open (e.g. `'Patient/abc-123'`). Drawer title falls back to
+   * this string in monospace when there is no real resource to title with.
+   */
+  referenceText?: string;
 }
 
 export interface PeekContextValue {
   peekState: PeekState | null;
   opened: boolean;
   openPeek: (resource: Resource, originElement?: HTMLElement | null) => void;
+  /**
+   * Opens the peek drawer in the failed-reference error state. Called from
+   * Plan 02 call sites (ReferenceLink Cmd+click on failed status,
+   * RelatedResourcesPanel empty/rejected fetch). Sets
+   * `{ resource: null, error: 'Reference unresolvable', referenceText }`
+   * atomically and opens the drawer (PEEK-04, threat T-53-02).
+   */
+  openPeekError: (
+    reference: string,
+    originElement?: HTMLElement | null,
+  ) => void;
   closePeek: () => void;
 }
 
@@ -45,6 +68,22 @@ export function PeekProvider({ children }: { children: ReactNode }) {
     [open],
   );
 
+  const openPeekError = useCallback(
+    (reference: string, originElement?: HTMLElement | null) => {
+      // Atomic transition: resource set to null AND error/referenceText set
+      // together (T-53-02 — no partial state where a stale non-null resource
+      // could be read while error is set).
+      setPeekState({
+        resource: null,
+        originElement: originElement ?? null,
+        error: 'Reference unresolvable',
+        referenceText: reference,
+      });
+      open();
+    },
+    [open],
+  );
+
   const closePeek = useCallback(() => {
     close();
     // Note: focus restore is performed in JsonPeekDrawer.onClose using
@@ -53,8 +92,8 @@ export function PeekProvider({ children }: { children: ReactNode }) {
   }, [close]);
 
   const value = useMemo<PeekContextValue>(
-    () => ({ peekState, opened, openPeek, closePeek }),
-    [peekState, opened, openPeek, closePeek],
+    () => ({ peekState, opened, openPeek, openPeekError, closePeek }),
+    [peekState, opened, openPeek, openPeekError, closePeek],
   );
 
   return <PeekContext.Provider value={value}>{children}</PeekContext.Provider>;

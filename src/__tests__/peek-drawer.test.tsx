@@ -83,6 +83,27 @@ function Opener({ resource }: { resource: any }) {
   );
 }
 
+function OpenerError({ reference }: { reference: string }) {
+  const { openPeekError, peekState } = usePeek();
+  return (
+    <>
+      <button
+        onClick={() =>
+          openPeekError(reference, document.activeElement as HTMLElement)
+        }
+      >
+        open-error
+      </button>
+      <span data-testid="resource-state">
+        {peekState?.resource === null
+          ? 'null'
+          : peekState?.resource?.id ?? 'unset'}
+      </span>
+      <span data-testid="ref-text">{peekState?.referenceText ?? 'no-ref'}</span>
+    </>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -255,7 +276,34 @@ describe('JsonPeekDrawer (PEEK-01..03)', () => {
 });
 
 describe('JsonPeekDrawer error state (PEEK-04)', () => {
-  it.todo('opens drawer with resource=null when openPeekError is called');
+  it('opens drawer with resource=null when openPeekError is called', () => {
+    // Probe-only test: asserts directly on usePeek().peekState via the probe
+    // component WITHOUT mounting the drawer. The drawer's resource=null
+    // render branch is exercised by the next three tests using <Harness>.
+    function ProbeHarness({ children }: { children: React.ReactNode }) {
+      return (
+        <MantineProvider env="test">
+          <MemoryRouter>
+            <PeekProvider>{children}</PeekProvider>
+          </MemoryRouter>
+        </MantineProvider>
+      );
+    }
+    render(
+      <ProbeHarness>
+        <OpenerError reference="Patient/abc-123" />
+      </ProbeHarness>,
+    );
+    // Before click: peekState is null, probe reads 'unset' / 'no-ref'
+    expect(screen.getByTestId('resource-state').textContent).toBe('unset');
+    expect(screen.getByTestId('ref-text').textContent).toBe('no-ref');
+
+    fireEvent.click(screen.getByText('open-error'));
+
+    // After click: peekState.resource === null and referenceText === 'Patient/abc-123'
+    expect(screen.getByTestId('resource-state').textContent).toBe('null');
+    expect(screen.getByTestId('ref-text').textContent).toBe('Patient/abc-123');
+  });
   it.todo('renders "Reference unresolvable" (dimmed Text) as body when resource is null');
   it.todo('hides [Open full →] button when resource is null');
   it.todo('Enter keyboard shortcut is a no-op when drawer is in error state');
