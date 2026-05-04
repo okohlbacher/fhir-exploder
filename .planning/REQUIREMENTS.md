@@ -7,9 +7,9 @@
 
 ### JSON Peek Drawer
 
-- [ ] **PEEK-01**: User can press `J` on a focused list row to open a 420px right-side drawer with full FHIR JSON, without navigating away or changing the URL
-- [ ] **PEEK-02**: `Esc` closes the drawer and returns focus to the originating row; pressing `J` on a different row swaps drawer content without unmounting the drawer
-- [ ] **PEEK-03**: `Enter` while drawer is open (and `[Open full →]` button) navigates to full resource detail at JSON mode (`/explorer/:type/:id?mode=json`)
+- [x] **PEEK-01**: User can press `J` on a focused list row to open a 420px right-side drawer with full FHIR JSON, without navigating away or changing the URL
+- [x] **PEEK-02**: `Esc` closes the drawer and returns focus to the originating row; pressing `J` on a different row swaps drawer content without unmounting the drawer
+- [x] **PEEK-03**: `Enter` while drawer is open (and `[Open full →]` button) navigates to full resource detail at JSON mode (`/explorer/:type/:id?mode=json`)
 - [ ] **PEEK-04**: `Cmd/Ctrl+click` on any reference chip opens the drawer with the referenced resource (resolved via Phase 47 cache); failed resolution shows inline "Reference unresolvable" state — no toast
 - [ ] **PEEK-05**: Drawer is reachable from at least 4 surfaces by milestone close: Explorer table, Patients list, IncomingReferencesPanel cards, Human-mode reference rows
 - [x] **PEEK-06**: `JsonViewer` component is extracted from `DeveloperJsonView` and shared between peek drawer and mode 4 — zero duplicate syntax-highlighter implementations (grep-provable)
@@ -73,9 +73,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PEEK-01 | Phase 52 | Pending |
-| PEEK-02 | Phase 52 | Pending |
-| PEEK-03 | Phase 52 | Pending |
+| PEEK-01 | Phase 52 | Complete |
+| PEEK-02 | Phase 52 | Complete |
+| PEEK-03 | Phase 52 | Complete |
 | PEEK-04 | Phase 53 | Pending |
 | PEEK-05 | Phase 53 | Pending |
 | PEEK-06 | Phase 52 | Complete |

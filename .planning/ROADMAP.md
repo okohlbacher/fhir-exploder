@@ -142,7 +142,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
   4. `git grep -rn "react-syntax-highlighter\|JsonTreeView" src/` returns exactly one source-of-truth implementation (the new `components/json/JsonViewer.tsx`); zero duplicate syntax-highlighter implementations.
 **Plans**: 2 plans
   - [x] 52-01-PLAN.md — Foundations: JsonViewer extraction + useShortcuts hook + PeekContext + Wave 0 test scaffolds (PEEK-06)
-  - [ ] 52-02-PLAN.md — JsonPeekDrawer + AppLayout mount + SearchResultsPage J-on-focused-row wiring (PEEK-01, PEEK-02, PEEK-03)
+  - [x] 52-02-PLAN.md — JsonPeekDrawer + AppLayout mount + SearchResultsPage J-on-focused-row wiring (PEEK-01, PEEK-02, PEEK-03)
 **UI hint**: yes
 
 ### Phase 53: Peek Call-Site Expansion
@@ -364,7 +364,7 @@ Phase 58 (UAT) ──> runs LAST, after all v1.8 features ship
 | 31-38.2 (v1.5) | v1.5 | 32/32 | ✅ Shipped | 2026-04-29 |
 | 39-45 (v1.6) | v1.6 | 14/14 (45 deferred) | ✅ Shipped | 2026-04-30 |
 | 46-51 (v1.7) | v1.7 | 14/14 (50 deferred) | ✅ Shipped | 2026-05-04 |
-| 52. JSON Peek Drawer Foundation | v1.8 | 1/2 | In Progress|  |
+| 52. JSON Peek Drawer Foundation | v1.8 | 2/2 | Complete   | 2026-05-04 |
 | 53. Peek Call-Site Expansion | v1.8 | 0/0 | Not started | - |
 | 54. 4-Mode Resource Shell | v1.8 | 0/0 | Not started | - |
 | 55. Explorer Improvements | v1.8 | 0/0 | Not started | - |
