@@ -29,6 +29,21 @@ import { summarizeResource } from '../../utils/summarizeResource';
 import { usePeek } from '../../contexts/PeekContext';
 import { useShortcuts } from '../../hooks/useShortcuts';
 
+// WR-02 fix: module-scope constant — prevents re-creation on every render and
+// avoids stale-dep risk if this ever enters a useCallback/useMemo dep array.
+const REFERENCE_PARAMS: Record<string, string> = {
+  patient: 'Patient',
+  subject: 'Patient',
+  encounter: 'Encounter',
+  performer: 'Practitioner',
+  author: 'Practitioner',
+  requester: 'Practitioner',
+  recorder: 'Practitioner',
+  asserter: 'Practitioner',
+  practitioner: 'Practitioner',
+  organization: 'Organization',
+};
+
 export function getResourceDate(resource: Resource): string {
   const r = toRecord(resource);
   for (const field of [
@@ -172,19 +187,7 @@ export function SearchResultsPage() {
     [parsedTypes, resourceType]
   );
 
-  // Reference-type search params that expect Patient/id, not bare id
-  const REFERENCE_PARAMS: Record<string, string> = {
-    patient: 'Patient',
-    subject: 'Patient',
-    encounter: 'Encounter',
-    performer: 'Practitioner',
-    author: 'Practitioner',
-    requester: 'Practitioner',
-    recorder: 'Practitioner',
-    asserter: 'Practitioner',
-    practitioner: 'Practitioner',
-    organization: 'Organization',
-  };
+  // (REFERENCE_PARAMS moved to module scope — see below component definition)
 
   // Build search URL from searchRequest and execute it
   useEffect(() => {
@@ -343,6 +346,17 @@ export function SearchResultsPage() {
     [searchRequest, setSearch]
   );
 
+  // CR-01 fix: hoisted from inline JSX prop — useMemo must be called at top level,
+  // not inside a JSX expression (Rules of Hooks).
+  const activeFilters = useMemo(
+    () => Object.fromEntries(
+      (searchRequest.filters ?? [])
+        .filter((f) => f.value)
+        .map((f) => [f.code, f.value])
+    ),
+    [searchRequest.filters]
+  );
+
   return (
     <Stack gap="lg" p="md">
       <Breadcrumbs>
@@ -366,14 +380,7 @@ export function SearchResultsPage() {
       <SearchFilterPanel
         resourceType={resourceType}
         allSearchParams={currentTypeData?.searchParams ?? []}
-        activeFilters={useMemo(
-          () => Object.fromEntries(
-            (searchRequest.filters ?? [])
-              .filter((f) => f.value)
-              .map((f) => [f.code, f.value])
-          ),
-          [searchRequest.filters]
-        )}
+        activeFilters={activeFilters}
         onSearch={handleSearch}
       />
 
