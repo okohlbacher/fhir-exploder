@@ -1,5 +1,23 @@
 # Milestones
 
+## v1.7 Resource Navigation (Shipped: 2026-05-04)
+
+**Phases completed:** 6 phases (46-51), 14 plans, 124 commits
+**Files changed:** 327 files, +27,852/−432 LOC since v1.6
+**Tests:** 1240 → 1412 passing; `npm run build` clean
+**Requirements:** 12/13 satisfied; 1 deferred-acceptable (STACK-01)
+
+**Key accomplishments:**
+
+- **`summarizeResource` foundation (Phase 46)** — Pure-function `summarizeResource(r) → { primary, secondary? }` registry over 8 typed R4 resource types (Patient, Observation, Condition, Encounter, MedicationStatement, Procedure, DiagnosticReport, AllergyIntolerance) + generic 7-step walker; 52 vitest cases; bundle SHRANK −22.59 KB gz by replacing 3 inline copies across SearchResultsPage, FhirResourcesView, MiiModuleTab. NAV-01, NAV-02.
+- **HumanReadableView self-sufficient (Phase 47)** — References auto-resolve via lazy fetch + per-session `Map<type/id, Resource|null>` cache; `ExtensionChip` surfaces property-level extensions inline; `ContainedResourcesAccordion` renders `Resource.contained[]` in-place. READ-01, READ-02, READ-03.
+- **Incoming references panel (Phase 48)** — Curated `reverseReferenceCatalog.ts` (9 source-type keys); `IncomingReferencesPanel` at the bottom of every non-Patient resource detail; `PatientRelatedResources` (107 LOC) generalized into shared `RelatedResourcesPanel` (28 LOC delegate); byte-identical Patient UAT snapshot proven. REVR-01, REVR-02, REVR-03.
+- **G1 reference graph (Phase 49)** — Lazy `/explorer/:type/:id/graph` route powered by React Flow 12 (`@xyflow/react@12.10.2`) + `@dagrejs/dagre@3.0.0`; depth 1–3; click-to-navigate; Mantine CSS-variable theme bridge (zero-remount on light↔dark switch); bundle main delta −4.88 KB gz (lazy chunk 71.2 KB gz). GRPH-01, GRPH-02, GRPH-03, GRPH-04.
+- **STACK-01 second WAIVE-AND-DEFER (Phase 50)** — Peer-dep gate MIXED: React 19 newly open (`^18.0.0 || ^19.0.0`) but Mantine 9 still pinned `^8.0.0` by `@medplum/react@5.1.10`; user decision D-02 keeps React/Mantine coupled; deferred to v1.8 with documented re-attempt trigger. STACK-01.
+- **Phase 51 gap closure** — All timeline surfaces (PatientTimeline, ClinicalTimeline) now consume `summarizeResource(r).primary` exclusively; `extractSummary` symbol physically removed; `ResourceGraphNode` preserves patient context via `useParams` + `FHIR_ID_PATTERN` validation; 22 test stubs implemented; deuteranopia palette pair #13 fixed (administration shade-6 `#3b5bdb` → `#4c68dc`, ΔE2000 1.406 → 5.405). NAV-02, GRPH-03.
+
+---
+
 ## v1.6 Hardening, UX Polish & Carry-Overs (Shipped: 2026-04-30)
 
 **Phases completed:** 20 phases, 48 plans, 78 tasks

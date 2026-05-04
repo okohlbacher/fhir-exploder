@@ -89,9 +89,23 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 - [x] **IPS-01** — IPS Compositions support: `hl7.fhir.uv.ips@2.0.0` bundled (32 trimmed StructureDefinitions); URL-keyed lazy-load `IPS_REGISTRY` mirroring Phase 36; pure-function `validateIpsBundle` walker (16-section LOINC catalogue, 3 severity levels per D-09); new `IPSPanel.tsx` at `/quality/ips` (paste + server picker tabs); LICENSE/ATTRIBUTION compliance — Phase 44
 - [~] **STACK-01** — Mantine 9 / React 19 upgrade — DEFERRED to v1.7 (peer-dep gate: `@medplum/react@5.1.9` peers Mantine `^8.0.0` only) — Phase 45 closed `deferred` with no source diff
 
-### Active (v1.7 candidates — pending scope)
+### Validated (v1.7 — shipped 2026-05-04)
 
-- [~] **STACK-01** (carried from v1.6): Mantine 9 / React 19 upgrade — DEFERRED to v1.8 via Phase 50 WAIVE-AND-DEFER on 2026-05-02. Gate result MIXED at 2026-05-01: `@medplum/react@5.1.10` peers `@mantine/core: ^8.0.0` (Mantine 9 still closed) but `react: ^18.0.0 || ^19.0.0` (React 19 newly open). User decision D-02 keeps React/Mantine coupled, so the entire upgrade defers. See `.planning/phases/50-theme-e-stack-01-carry-over-mantine-9-react-19-gate/50-SUMMARY.md`.
+6 phases (46-51), 14 plans, 124 commits. v1.6 baseline: 1240 tests; v1.7 final: 1412 passing / 0 failing. `npm run build` clean. See [milestones/v1.7-ROADMAP.md](milestones/v1.7-ROADMAP.md) for full details.
+
+- [x] **NAV-01** — `summarizeResource(r) → { primary, secondary? }` pure-function registry (8 typed R4 entries + generic walker); bundle −22.59 KB gz by deduping 3 inline copies — Phase 46
+- [x] **NAV-02** — All 5 call sites (SearchResultsPage, FhirResourcesView, MiiModuleTab, PatientTimeline, ClinicalTimeline) migrated to `summarizeResource`; `extractSummary` symbol removed — Phase 46 + Phase 51
+- [x] **READ-01** — References auto-resolve in HumanReadableView via lazy fetch + session-level `Map<type/id, Resource|null>` cache; silent 404 fallback — Phase 47
+- [x] **READ-02** — Property-level extensions surfaced via `ExtensionChip` inline reveal — Phase 47
+- [x] **READ-03** — Contained resources (`Resource.contained[]`) render inline via `ContainedResourcesAccordion` — Phase 47
+- [x] **REVR-01** — Curated `reverseReferenceCatalog.ts` (9 source-type keys, typed `as const satisfies`) — Phase 48
+- [x] **REVR-02** — `IncomingReferencesPanel` at bottom of every non-Patient resource detail; parallel `_summary=count` queries — Phase 48
+- [x] **REVR-03** — `PatientRelatedResources` (107 → 28 LOC) + shared `RelatedResourcesPanel`; byte-identical Patient UAT snapshot — Phase 48
+- [x] **GRPH-01** — Lazy `/explorer/:type/:id/graph` route (Graph button on ResourceDetailPage); initial-load delta −4.88 KB gz; lazy chunk 71.2 KB gz — Phase 49
+- [x] **GRPH-02** — G1 graph: outgoing + incoming refs at depth 1–3; hard cap; `@xyflow/react@12.10.2` + `@dagrejs/dagre@3.0.0` — Phase 49
+- [x] **GRPH-03** — Nodes clickable → `/explorer/{type}/{id}`; labels `summarizeResource(r).primary`; edge labels show FHIR field names; hover Tooltip with `.secondary`; patient-context preserved via `useParams` — Phase 49 + Phase 51
+- [x] **GRPH-04** — Hierarchical dagre layout; Mantine CSS-variable theme bridge (zero-remount on light↔dark); zoom/pan/minimap — Phase 49
+- [~] **STACK-01** — DEFERRED to v1.8 via Phase 50 WAIVE-AND-DEFER (second deferral; gate MIXED 2026-05-01). Acceptable closure per requirement definition.
 
 ### Active (v1.8 candidates — pending scope)
 

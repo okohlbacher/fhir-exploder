@@ -108,6 +108,61 @@
 
 ---
 
+## Milestone: v1.7 — Resource Navigation
+
+**Shipped:** 2026-05-04
+**Phases:** 6 (46-51, Phase 50 deferred) | **Plans:** 13 active + 1 deferred | **Timeline:** 2026-05-01 → 2026-05-04 (4 calendar days)
+
+### What Was Built
+
+- **`summarizeResource` foundation (Phase 46):** Pure-function `summarizeResource(r, now?) → { primary, secondary? }` covering 8 R4 resource types (Patient, Observation, Condition, Encounter, MedicationStatement, Procedure, DiagnosticReport, AllergyIntolerance). Deduped three divergent inline implementations. 328-line module with typed helpers; `getSummary` legacy shim preserved for non-covered types.
+- **HumanReadableView readability layer (Phase 47):** `useResolvedResource` hook for lazy reference resolution + session cache; `ContainedResourcesAccordion` for inline contained resource expansion; `ExtensionChip` + `useMiiExtensionCounts` for MII primitive/complex extension display with [+N] chip; reference URLs in Tooltip on hover.
+- **RelatedResourcesPanel — incoming references (Phase 48):** `reverseReferenceCatalog.ts` with 11 curated R4 reverse-reference entries; lazy per-catalog-entry fetch; `RelatedResourcesPanel` mounts below Tabs on all resource detail pages; state-key bug (WR-01 type-collision) caught in re-verification.
+- **Reference graph view (Phase 49):** `/explorer/:type/:id/graph` lazy route; React Flow + dagre layout; `useResourceGraph` hook with depth-limited BFS (max depth 3); lazy import of `@xyflow/react` (~73 KB gz) with zero initial-load bundle delta; `ResourceGraphNode` custom node with patient-context awareness.
+- **STACK-01 gate (Phase 50):** Second WAIVE-AND-DEFER — `@medplum/react@5.1.10` peers `@mantine/core: ^8.0.0` only; Mantine 9 blocked; React 19 independently unblocked but deferred coupled per user decision D-02. Zero source diff; phase closed cleanly.
+- **Gap closure (Phase 51):** GAP-1 — reconciled `ClinicalTimeline` divergence from `summarizeResource` (re-pointed tests + removed duplicated `extractDate`); GAP-2 — `ResourceGraphNode` guard for missing resource `id` preventing silent non-navigation; `entries` state reset on `patientId` change in `PatientTimeline`.
+
+### What Worked
+
+- **Theme-A-first sequential ordering.** Phase 46's `summarizeResource` was consumed by Phases 47, 48, and 49 without back-porting or duplication. The registry-first decision (D-01 in v1.7 milestone notes) paid off immediately: each downstream phase had a stable, typed import.
+- **Curated reverse-reference catalog.** Shipping a static 11-entry catalog (`reverseReferenceCatalog.ts`) was the right pragmatic call. CapabilityStatement-driven discovery is theoretically complete but requires parsing the server's capability on every navigation. The curated approach is deterministic, fast, and covers the MII Kerndatensatz core types that matter.
+- **React Flow lazy-chunk isolation.** Splitting `@xyflow/react` into its own lazy route chunk achieved the stated goal: zero initial-load bundle delta. The `/graph` route loads ~73 KB gz on first access and nothing on every other route. Pattern is replicable for other heavy visualization dependencies.
+- **WAIVE-AND-DEFER pattern maturing.** Phase 50 closed in minutes — gate check, result recorded, no source diff, `deferred` status set. The pattern now has three precedents (v1.6 Phase 45, v1.7 Phase 50 pre-plan, v1.7 Phase 50 execution). Repeating it a third time confirmed it is the correct response to an external blocker, not a process failure.
+- **Code review re-verification catching WR-01 state-key collision.** Phase 48's first VERIFICATION pass returned `gaps_found` (4/5) on the `RelatedResourcesPanel` state key bug. The re-verification gate (not a new phase) closed the gap and returned a clean `human_needed` 5/5. Gap-within-phase recovery is cheaper than a gap-closure phase.
+
+### What Was Inefficient
+
+- **Gap closure Phase 51 was still needed.** Despite Phase 46 scoring 4/5 on first verification, the `ClinicalTimeline` divergence wasn't surfaced until Phase 51's dedicated gap-analysis pass. Root cause: the gap was in a call-site (`ClinicalTimeline`) that was not in Phase 46's change set — a valid cross-phase blind spot, but one that a broader "consuming files" scan in VERIFICATION.md could have caught earlier.
+- **Three separate `summarizeResource` implementations at v1.7 start.** The refactoring problem existed from v1.5 (when `extractSummary` was introduced) but wasn't diagnosed until Phase 46's RESEARCH pass. Longitudinal code review after each milestone would surface cross-cutting duplication earlier.
+- **Human UAT backlog is now 20+ items across v1.6 + v1.7.** Phases 46, 47, 48, and 49 each added 3-5 human UAT items requiring live Blaze + browser. No top-level UAT backlog registry exists. These items currently live only in per-phase `HUMAN-UAT.md` files and aren't surfaced in the next-session STATE.md reminders.
+- **`summary-extract` accomplishments extraction still broken.** Third milestone where MILESTONES.md required hand-curation after CLI generated partial/garbage phrases from SUMMARY.md one-liner fields. The `one_liner` regex mismatches SUMMARY.md heading patterns — upstream fix still pending since v1.3.
+
+### Patterns Established
+
+- **`summarizeResource(r, now?) → { primary, secondary? }` as the canonical resource display primitive.** Any list surface, card header, or graph node that needs a display string calls this. No inline implementations. Non-covered types fall through to `getSummary` shim.
+- **`useResolvedResource(ref)` lazy session-cache hook.** Fetches a FHIR Reference once per session via MedplumClient; returns `{ resource, loading, error }`. Use for any "show what this reference points to" surface.
+- **Curated reverse-reference catalog as the incremental approach to incoming-reference discovery.** Static map of `(sourceType, fieldPath) → targetType` pairs. Add entries as real-world navigation reveals gaps. CapabilityStatement-driven is the eventual target.
+- **Lazy route chunk for heavy visualization dependencies.** `const LazyGraphView = lazy(() => import('./components/ResourceGraphView'))` — zero initial-load cost, downloaded on demand. Use for any dependency ≥ 50 KB gz that is only needed on a specific route.
+- **WAIVE-AND-DEFER for external blockers.** If the phase gate is an external peer-dep check and the gate fails, close the phase with `deferred` status and zero source diff. Document the re-attempt trigger (npm view command + condition). Don't force a workaround that creates future debt.
+
+### Key Lessons
+
+1. **Cross-phase call-site verification.** When Phase N introduces a new utility, VERIFICATION.md should scan not just files changed in Phase N but all files that previously implemented the old pattern. A grep for the old function name in post-Phase-46 verification would have caught `ClinicalTimeline`'s divergence and avoided Phase 51.
+2. **Human UAT needs a top-level registry before v1.8.** `.planning/UAT-BACKLOG.md` should be created at the start of v1.8, pre-populated with all outstanding v1.7 items, and updated as each new phase adds browser-only UAT. A single file surfaced in STATE.md "Pending Todos" is far more visible than 6 separate `HUMAN-UAT.md` files.
+3. **Curated catalogs need a versioning signal.** The `reverseReferenceCatalog.ts` catalog has no metadata about when entries were added or which MII profiles they cover. Adding a comment `// MII Kerndatensatz v2025 — Condition.subject` would make future maintenance and CapabilityStatement-driven migration easier.
+4. **Two-slot summary is the right scope for v1.7.** The `{ primary, secondary? }` contract was proposed and held for all 6 phases. Adding a `status` field (rejected in v1.7 milestone decisions) would have required re-touching 8 resource-type helpers and all downstream consumers mid-milestone. Scope discipline on the type contract kept the phase count tractable.
+5. **The WAIVE-AND-DEFER pattern needs a status dashboard.** STACK-01 has now deferred three consecutive milestones (v1.6 Phase 45, v1.7 Phase 50 pre-plan, v1.7 Phase 50 execution). There is no single file that lists all currently-deferred items with their re-attempt dates. `.planning/DEFERRED.md` or a ROADMAP Deferred section updated at each milestone would make the accumulation visible.
+
+### Cost Observations
+
+- **Pace:** 13 active plans across 4 calendar days — fastest feature-heavy milestone (v1.2 was 7 phases / 22 plans / 2 days but was mostly refactor work).
+- **Bundle:** 27,815 insertions / 428 deletions across 327 files. +`@xyflow/react` (lazy route only; zero initial-load delta). All other dependencies unchanged.
+- **Test count:** 1,412 tests green (up from ~1,200 at v1.6 end). 151 test files. No test regressions across 124 commits.
+- **Human UAT debt:** ~20 items accumulated across v1.6 + v1.7 without a top-level registry. Most items require live Blaze with MII seed data — the surface area of browser-only testing is growing faster than the cadence allows.
+- **Code review findings:** 3 code review findings in Phase 51 (WR-01/02/03), all fixed same session. Lowest finding count in a gap-closure phase across milestones.
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -118,6 +173,7 @@
 | v1.1 | — | — | Dev feedback loop + 8 user-feedback UI improvements |
 | v1.2 | 7 (incl. 1 gap-closure) | 22 | First full DQ stack; `NormalizedIssue` pattern; retrospective VERIFICATION.md recovery mechanism |
 | v1.3 | 2 (0 gap-closure) | 9 | First milestone without a gap-closure phase; worktree-isolated parallel execution; discriminated-union extension pattern |
+| v1.7 | 6 (1 gap-closure, 1 deferred) | 13 active | Resource navigation layer; `summarizeResource` canonical util; incoming-reference panel; graph view (React Flow lazy chunk) |
 
 ### Cumulative Quality
 
@@ -127,10 +183,12 @@
 | v1.1 | — | ✓ Clean | User-feedback-driven improvements |
 | v1.2 | ~28,400 | ✓ Clean (`tsc -b` + `npm run build` exit 0) | 9-tab quality dashboard; 16/16 requirements satisfied |
 | v1.3 | ~35,000 | ✓ Clean | Cohort layer (interactive + FHIRPath + FDPG); 7/7 requirements satisfied (code); 0 regressions; 0/2 phases Nyquist-flipped (sign-off gate vestigial) |
+| v1.7 | ~63,000 | ✓ Clean | Navigation layer (summarize, readability, refs, graph); 12/13 requirements satisfied (STACK-01 deferred); 1,412 tests green; zero bundle regressions |
 
 ### Top Lessons (Verified Across Milestones)
 
-1. **Gap-closure phases were the norm until v1.3.** v1.0 had 3, v1.2 had 1, v1.3 had 0 — first milestone to ship without. Attributable to better upfront research (RESEARCH.md threat modeling for Phase 22), pre-designed cache contracts (D-10), and the `NormalizedIssue` / discriminated-union patterns that make extensions type-safe by default.
-2. **Shared primitives pay compound interest.** v1.0 shipped MII module tabs as a shared pattern; v1.2 built `NormalizedIssue` + `ResourceIssueTable`; v1.3 extended `CohortCriterion` as a discriminated union with `assertNever`. Each milestone has added one cross-cutting primitive.
-3. **Build hygiene must be a per-phase gate.** v1.0 deferred 17 code review findings (fixed in v1.2 Phase 14); v1.2 Phase 16 re-introduced TS errors Phase 14 just fixed (caught in v1.2 Phase 20); v1.3 shipped clean. Each milestone has eventually paid for skipped build gates, or avoided the bill by running `tsc -b --noEmit` at each phase tip.
-4. **Human UAT accumulates across milestones.** v1.0 had 3 deferrals, v1.2 had 0, v1.3 added 8. Browser-only surfaces (downloads, live-server, file pickers) are the dominant source. A top-level UAT backlog would make cross-milestone debt visible before it calcifies.
+1. **Gap-closure phases were the norm until v1.3, returned in v1.7.** v1.0 had 3, v1.2 had 1, v1.3 had 0, v1.7 had 1 (Phase 51). The v1.7 gap was cross-phase (Phase 46 util not fully propagated), not an implementation bug — suggests the cross-phase call-site scan is the missing verification step.
+2. **Shared primitives pay compound interest.** v1.0 shipped MII module tabs; v1.2 built `NormalizedIssue`; v1.3 extended `CohortCriterion` with `assertNever`; v1.7 established `summarizeResource` + `useResolvedResource`. Each milestone's key primitive is consumed by the next milestone's features.
+3. **Build hygiene must be a per-phase gate.** v1.0 deferred 17 code review findings (fixed in v1.2 Phase 14); v1.2 Phase 16 re-introduced TS errors Phase 14 just fixed (caught in v1.2 Phase 20); v1.3 and v1.7 shipped clean. Each milestone that ran `tsc -b --noEmit` at every phase tip avoided a gap-closure phase for TS errors.
+4. **Human UAT accumulates across milestones.** v1.0: 3, v1.2: 0, v1.3: 8, v1.7: ~20 cumulative. Browser-only surfaces (live server rendering, CSS layout, hover interactions) are the dominant source. A top-level `.planning/UAT-BACKLOG.md` is now overdue.
+5. **WAIVE-AND-DEFER is a healthy pattern when applied consistently.** Three consecutive deferral cycles for STACK-01 without any source-diff workaround means the codebase stays clean and the unblock happens atomically when the peer dep finally opens. The pattern is correct; the missing piece is a DEFERRED.md dashboard so accumulation stays visible.
