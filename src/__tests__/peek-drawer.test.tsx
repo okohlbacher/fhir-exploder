@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import { PeekProvider, usePeek } from '../contexts/PeekContext';
+// @ts-expect-error — JsonPeekDrawer does not exist yet (Wave 0 RED — Plan 02 will create it)
 import { JsonPeekDrawer } from '../components/json/JsonPeekDrawer';
 
 // Polyfill ResizeObserver for jsdom (required by Mantine ScrollArea / Drawer)
@@ -70,7 +71,7 @@ describe('JsonPeekDrawer (PEEK-01..03)', () => {
       </Harness>,
     );
     fireEvent.click(screen.getByText('open'));
-    expect(screen.getByText('Patient/pat-1')).toBeInTheDocument();
+    expect(screen.getByText('Patient/pat-1')).toBeTruthy();
   });
 
   it('Esc closes the drawer (PEEK-02)', () => {
@@ -92,7 +93,7 @@ describe('JsonPeekDrawer (PEEK-01..03)', () => {
       </Harness>,
     );
     fireEvent.click(screen.getByText('open'));
-    expect(screen.getByRole('button', { name: /Open full →/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Open full →/ })).toBeTruthy();
   });
 
   it('content swaps without unmounting when openPeek is called with a different resource (PEEK-02)', () => {
@@ -111,9 +112,9 @@ describe('JsonPeekDrawer (PEEK-01..03)', () => {
       </Harness>,
     );
     fireEvent.click(screen.getByText('a'));
-    expect(screen.getByText('Patient/a')).toBeInTheDocument();
+    expect(screen.getByText('Patient/a')).toBeTruthy();
     fireEvent.click(screen.getByText('b'));
-    expect(screen.getByText('Patient/b')).toBeInTheDocument();
+    expect(screen.getByText('Patient/b')).toBeTruthy();
     expect(screen.queryByText('Patient/a')).toBeNull();
   });
 });
