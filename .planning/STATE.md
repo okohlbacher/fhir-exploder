@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.8
-milestone_name: -- Navigation Redesign (in progress, started 2026-05-04)
+milestone_name: Navigation Redesign (in progress, started 2026-05-04)
 status: executing
-stopped_at: Completed 52-02-PLAN.md
-last_updated: "2026-05-04T11:29:08.145Z"
-last_activity: 2026-05-04 -- Phase 52 planning complete
+stopped_at: Phase 52 complete
+last_updated: "2026-05-04T11:38:25.000Z"
+last_activity: 2026-05-04 -- Phase 52 complete (JSON Peek Drawer Foundation)
 progress:
-  total_phases: 12
+  total_phases: 7
   completed_phases: 1
   total_plans: 2
   completed_plans: 2
-  percent: 100
+  percent: 14
 ---
 
 # Project State
@@ -21,18 +21,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.8 Navigation Redesign — roadmap created, ready for `/gsd-plan-phase 52`
+**Current focus:** v1.8 Navigation Redesign — Phase 52 complete, next: Phase 53 Peek Call-Site Expansion
 
 ## Current Position
 
-Phase: Not started (roadmap created — 7 phases mapped)
-Plan: —
-Status: Ready to execute
-Last activity: 2026-05-04 -- Phase 52 planning complete
+Phase: 52 complete
+Plan: Both plans complete (52-01, 52-02)
+Status: Ready for Phase 53
+Last activity: 2026-05-04 -- Phase 52 complete (JSON Peek Drawer Foundation)
 
 v1.8 phases (52-58):
 
-- Phase 52: JSON Peek Drawer Foundation (PEEK-01, PEEK-02, PEEK-03, PEEK-06)
+- **Phase 52: JSON Peek Drawer Foundation (PEEK-01, PEEK-02, PEEK-03, PEEK-06) — COMPLETE**
 - Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05)
 - Phase 54: 4-Mode Resource Shell (SHELL-01, SHELL-02, SHELL-03, SHELL-04)
 - Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03)
@@ -40,7 +40,7 @@ v1.8 phases (52-58):
 - Phase 57: Patients-as-Lens (LENS-01, LENS-02)
 - Phase 58: UAT Backlog Closure (UAT-01)
 
-Progress: [          ] 0%
+Progress: [##        ] 14%
 
 ## Performance Metrics
 
@@ -81,9 +81,17 @@ Progress: [          ] 0%
   - Phase 49: 5 items (graph layout, node navigation, patient-context badge, depth limit badge, empty-state)
 - **DEFERRED.md dashboard** — create at v1.8 milestone start to track all WAIVE-AND-DEFER items with re-attempt triggers (low priority since STACK-01 is now indefinitely deferred).
 
+### Phase 52 Deliverables (carry-forward to Phase 53)
+
+- **`src/hooks/useShortcuts.ts`** — shared keyboard hook; Phase 54 (1/2/3/4 keys) and Phase 56 (⌘K) extend it
+- **`src/contexts/PeekContext.tsx`** — `openPeek(resource, originElement?)` / `closePeek()` / `usePeek()` — Phase 53 call sites use this directly
+- **`src/components/json/JsonViewer.tsx`** — single source-of-truth JSON renderer; PEEK-06 grep gate locked
+- **`src/components/json/JsonPeekDrawer.tsx`** — 420px right drawer, app-wide via AppLayout PeekProvider
+- **Phase 52 Human UAT pending (Phase 58 scope)**: drawer visual width (420px), URL stability when J pressed, focus ring visibility
+
 ### Blockers/Concerns
 
-- None at roadmap-creation time. Phase 52 is unblocked and ready for `/gsd-plan-phase 52`.
+- None. Phase 53 is unblocked — `usePeek().openPeek(resource)` can be called from PatientListPage, IncomingReferencesPanel, and reference chips with no further infrastructure work.
 
 ### Quick Tasks Completed
 
@@ -91,11 +99,10 @@ Progress: [          ] 0%
 |---|-------------|------|--------|-----------|
 | 260429-kqa | Align /quality Tier-1 filter inputs by moving Sample size description into a Tooltip | 2026-04-29 | aa80da4 | [260429-kqa-align-quality-tier-1-filter-inputs-by-mo](./quick/260429-kqa-align-quality-tier-1-filter-inputs-by-mo/) |
 | 260429-kva | Fix FHIR server-switch bug + editable Settings page with Test Connection (dev-side dynamic proxy via Vite plugin + localStorage persistence) | 2026-04-29 | ba43422 | [260429-kva-fix-the-fhir-server-switch-bug](./quick/260429-kva-fix-the-fhir-server-switch-bug/) |
-| Phase 52 P01 | 20 | 3 tasks | 8 files |
 
 ## Session Continuity
 
-Last session: 2026-05-04T11:29:08.143Z
-Stopped at: Completed 52-02-PLAN.md
+Last session: 2026-05-04T11:38:25.000Z
+Stopped at: Phase 52 complete
 Resume file: None
-Next action: `/gsd-plan-phase 52` (JSON Peek Drawer Foundation)
+Next action: `/gsd-next --auto` → Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05)
