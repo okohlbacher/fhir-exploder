@@ -253,3 +253,10 @@ describe('JsonPeekDrawer (PEEK-01..03)', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/explorer/Patient/pat-1?mode=json');
   });
 });
+
+describe('JsonPeekDrawer error state (PEEK-04)', () => {
+  it.todo('opens drawer with resource=null when openPeekError is called');
+  it.todo('renders "Reference unresolvable" (dimmed Text) as body when resource is null');
+  it.todo('hides [Open full →] button when resource is null');
+  it.todo('Enter keyboard shortcut is a no-op when drawer is in error state');
+});
