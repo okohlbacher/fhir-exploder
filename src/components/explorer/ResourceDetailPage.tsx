@@ -1,15 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMedplum } from '@medplum/react-hooks';
-import { Tabs, Stack, Title, Alert, Skeleton, Button, Group, Tooltip } from '@mantine/core';
-import { IconArrowLeft, IconAffiliate } from '@tabler/icons-react';
+import { Tabs, Stack, Title, Alert, Skeleton, Button, Group } from '@mantine/core';
+import { IconArrowLeft } from '@tabler/icons-react';
 import type { Resource, ResourceType } from '@medplum/fhirtypes';
 import { useBreadcrumbTrail } from '../../hooks/useBreadcrumbTrail';
+import { useShortcuts } from '../../hooks/useShortcuts';
 import { NavigationBreadcrumbs } from './NavigationBreadcrumbs';
 import { HumanReadableView } from './HumanReadableView';
-import { DeveloperJsonView } from './DeveloperJsonView';
+import { JsonModeView } from './JsonModeView';
+import { KeyFieldsTable } from './KeyFieldsTable';
 import { PatientRelatedResources } from './PatientRelatedResources';
 import { IncomingReferencesPanel } from './IncomingReferencesPanel';
+import { summarizeResource } from '../../utils/summarizeResource';
+import { retry } from '../../utils/lazyRetry';
 
 /**
  * Validate that an extracted reference matches the FHIR resource pattern.
@@ -24,11 +28,26 @@ function isValidFhirReference(resourceType: string, id: string): boolean {
   return FHIR_REFERENCE_PATTERN.test(resourceType) && FHIR_ID_PATTERN.test(id);
 }
 
+// D-02: URL-driven mode constants
+const VALID_MODES = new Set<string>(['summary', 'human', 'graph', 'json']);
+type Mode = 'summary' | 'human' | 'graph' | 'json';
+const DEFAULT_MODE: Mode = 'summary';
+
+// D-04: lazy-load ResourceGraphView — moves the import here so App.tsx /graph routes
+// can redirect to ?mode=graph without keeping the lazy declaration in App.tsx (SHELL-03).
+const ResourceGraphView = lazy(() =>
+  retry(() => import('./ResourceGraphView')).then((m) => ({ default: m.ResourceGraphView })),
+);
+
 /**
- * Resource detail page with two display modes and reference navigation.
+ * Resource detail page — 4-mode shell (Phase 54 SHELL-01..04).
  *
- * Tabs: Human-readable (ResourceTable) and JSON (syntax-highlighted JSON).
+ * Modes: Summary | Human | Graph | JSON
+ * URL-driven: ?mode= param drives active tab; replace:true so no history
+ * entry per mode swap. Default: 'summary'. ?mode=json honored on initial load
+ * (Phase 52 drawer Enter key emits this).
  *
+ * Keyboard: 1/2/3/4 via useShortcuts (replaces raw document.addEventListener).
  * Reference click interception: Captures clicks on anchor tags pointing
  * to FHIR server URLs and navigates within the Explorer instead.
  * This avoids Pitfall 5 (ReferenceDisplay links leaving the app).
@@ -47,16 +66,37 @@ export function ResourceDetailPage() {
   const [resource, setResource] = useState<Resource | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState<string | null>('human-readable');
+
+  // D-02: URL-driven mode (mirrors QualityOverviewPage:131-141 pattern)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const modeParam = searchParams.get('mode');
+  const activeMode: Mode =
+    modeParam && VALID_MODES.has(modeParam) ? (modeParam as Mode) : DEFAULT_MODE;
+
+  const handleModeChange = useCallback(
+    (value: string | null) => {
+      if (!value || !VALID_MODES.has(value)) return;
+      const next = new URLSearchParams(searchParams);
+      next.set('mode', value);
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  // D-03: Replace raw document.addEventListener with shared useShortcuts
+  useShortcuts({
+    '1': () => handleModeChange('summary'),
+    '2': () => handleModeChange('human'),
+    '3': () => handleModeChange('graph'),
+    '4': () => handleModeChange('json'),
+  });
 
   // Fetch the resource when resourceType or id changes
   useEffect(() => {
     if (!resourceType || !id) return;
-
     setLoading(true);
     setError(undefined);
     setResource(undefined);
-
     client
       .readResource(resourceType as ResourceType, id)
       .then((res: Resource) => {
@@ -73,26 +113,6 @@ export function ResourceDetailPage() {
       });
   }, [client, resourceType, id]);
 
-  // Keyboard shortcuts: 1/2 switch tabs when no input is focused
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      const tag = document.activeElement?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-
-      switch (e.key) {
-        case '1':
-          setActiveTab('human-readable');
-          break;
-        case '2':
-          setActiveTab('developer');
-          break;
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   /**
    * Intercept clicks on FHIR reference anchor tags rendered by Medplum components.
    *
@@ -107,7 +127,6 @@ export function ResourceDetailPage() {
       const target = e.target as HTMLElement;
       const anchor = target.closest('a[href]') as HTMLAnchorElement | null;
       if (!anchor) return;
-
       const href = anchor.getAttribute('href') || '';
       // Match FHIR reference pattern: /ResourceType/id at end of URL
       const match = href.match(/\/([A-Z][a-zA-Z]+)\/([A-Za-z0-9][A-Za-z0-9\-.]{0,63})$/);
@@ -120,7 +139,7 @@ export function ResourceDetailPage() {
         }
       }
     },
-    [breadcrumbs]
+    [breadcrumbs],
   );
 
   if (!resourceType || !id) {
@@ -141,6 +160,7 @@ export function ResourceDetailPage() {
         basePath={basePath}
       />
 
+      {/* D-08: header now contains ONLY Back button + Title; standalone Graph button + Tooltip removed */}
       <Group>
         <Button
           variant="subtle"
@@ -151,23 +171,6 @@ export function ResourceDetailPage() {
         >
           Back to results
         </Button>
-        <Tooltip label="Open the reference graph for this resource" withArrow>
-          <Button
-            variant="light"
-            color="indigo"
-            size="sm"
-            leftSection={<IconAffiliate size={16} />}
-            onClick={() =>
-              navigate(
-                patientId
-                  ? `/patients/${patientId}/${resourceType}/${id}/graph`
-                  : `/explorer/${resourceType}/${id}/graph`,
-              )
-            }
-          >
-            Graph
-          </Button>
-        </Tooltip>
         <Title order={2}>
           {resourceType}/{id}
         </Title>
@@ -188,30 +191,49 @@ export function ResourceDetailPage() {
       )}
 
       {resource && (
-        <Tabs value={activeTab} onChange={setActiveTab}>
+        // D-01: Tabs variant=pills; keepMounted UNSET everywhere (defaults to true on root → all 4 panels stay mounted; per RESEARCH Pitfall 1)
+        <Tabs value={activeMode} onChange={handleModeChange} variant="pills">
           <Tabs.List>
-            <Tabs.Tab value="human-readable">Human-readable</Tabs.Tab>
-            <Tabs.Tab value="developer">JSON</Tabs.Tab>
+            <Tabs.Tab value="summary">Summary</Tabs.Tab>
+            <Tabs.Tab value="human">Human</Tabs.Tab>
+            <Tabs.Tab value="graph">Graph</Tabs.Tab>
+            <Tabs.Tab value="json">JSON</Tabs.Tab>
           </Tabs.List>
 
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
           <div onClick={handleReferenceClick}>
-            <Tabs.Panel value="human-readable" pt="md">
+            {/* D-05 + D-09: Summary mode = title + KeyFieldsTable + reverse-references panel (only mount in Summary) */}
+            <Tabs.Panel value="summary" pt="md">
+              <Stack gap="lg">
+                <Title order={3}>{summarizeResource(resource).primary}</Title>
+                <KeyFieldsTable resource={resource} />
+                {resource.resourceType === 'Patient' && id ? (
+                  <PatientRelatedResources patientId={id} />
+                ) : (
+                  <IncomingReferencesPanel resource={resource} />
+                )}
+              </Stack>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="human" pt="md">
               <HumanReadableView resource={resource} />
             </Tabs.Panel>
 
-            <Tabs.Panel value="developer" pt="md">
-              <DeveloperJsonView resource={resource} />
+            {/* D-04: lazy graph view, compact prop suppresses doubled header (RESEARCH Pitfall 2) */}
+            <Tabs.Panel value="graph" pt="md">
+              <Suspense fallback={<Skeleton h={600} />}>
+                <ResourceGraphView compact />
+              </Suspense>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="json" pt="md">
+              <JsonModeView resource={resource} />
             </Tabs.Panel>
           </div>
         </Tabs>
       )}
-
-      {resource && (
-        resource.resourceType === 'Patient' && id
-          ? <PatientRelatedResources patientId={id} />
-          : <IncomingReferencesPanel resource={resource} />
-      )}
+      {/* D-09 critical: the legacy bottom-mount of PatientRelatedResources/IncomingReferencesPanel (was lines 210-214) is REMOVED.
+          Both panels now live ONLY inside the Summary Tabs.Panel above. */}
     </Stack>
   );
 }
