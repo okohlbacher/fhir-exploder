@@ -107,7 +107,7 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 - [x] **GRPH-04** — Hierarchical dagre layout; Mantine CSS-variable theme bridge (zero-remount on light↔dark); zoom/pan/minimap — Phase 49
 - [~] **STACK-01** — DEFERRED to v1.8 via Phase 50 WAIVE-AND-DEFER (second deferral; gate MIXED 2026-05-01). Acceptable closure per requirement definition.
 
-### Validated (v1.8 partial — Phases 52–55)
+### Validated (v1.8 partial — Phases 52–56)
 
 - [x] **PEEK-01..06**: JSON peek drawer (JsonViewer extraction, useShortcuts, PeekContext, JsonPeekDrawer) wired to Explorer, Patients list, IncomingReferencesPanel, Human-mode reference rows — Phase 52 (foundation) + Phase 53 (call-site expansion). *Validated in Phase 52–53: 2026-05-04*
 - [x] **SHELL-01**: ResourceDetailPage 4-mode shell — `Summary | Human | Graph | JSON` mode switcher (`<Tabs variant="pills">`), `?mode=` URL persistence via `useSearchParams`, keyboard shortcuts 1/2/3/4 via `useShortcuts` — Phase 54. *Validated in Phase 54: 2026-05-04*
@@ -117,6 +117,10 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 - [x] **EXPL-01**: Explorer list two-line summary — primary bold (`fw={600}` `size="sm"`) + conditional secondary dim/mono (`c="dimmed"` `ff="monospace"` `size="xs"`) via `summarizeResource()` — Phase 55. *Validated in Phase 55: 2026-05-04*
 - [x] **EXPL-02**: Density SegmentedControl (Cards/Table/Compact) with localStorage persistence (`explorer.density.v1`); Cards mode `SimpleGrid` + `Paper` with J-key focusability (`tabIndex={0}`, `onFocus/onBlur`) — Phase 55. *Validated in Phase 55: 2026-05-04*
 - [x] **EXPL-03**: J key JSON peek on Explorer rows in all density modes (implementation from Phase 52–53; test coverage added in Phase 55) — Phase 55. *Validated in Phase 55: 2026-05-04*
+- [x] **SIDE-01**: ⌘K command palette (`<Spotlight shortcut="mod+K">`) — lazy actions (0 until ≥2 chars), resource types from `CapabilityStatement` via `parseResourceTypes()`, grouped by `CATEGORY_ORDER`, action navigates to `/explorer/{type}` — Phase 56. *Validated in Phase 56: 2026-05-04*
+- [x] **SIDE-02**: Expert Toggle — compact Switch row in sidebar footer; state persisted via `useLocalStorage({ key: 'app.expertMode.v1', defaultValue: false })` in `ExpertModeProvider`; default off — Phase 56. *Validated in Phase 56: 2026-05-04*
+- [x] **SIDE-03**: Expert-mode effects — Explorer ID cells drop `truncate="end"` + `maxWidth` cap when `isExpert` (both Cards-mode Text + Table-mode Anchor); sidebar Server card shows monospace server base URL when `isExpert && serverUrl` — Phase 56. *Validated in Phase 56: 2026-05-04*
+- [x] **SIDE-04**: Sidebar v2 polish — `⌘K` `UnstyledButton` hint above Server card (calls `openSpotlight()`); Explorer nav row `Badge` showing count of resource types with data > 0; `@mantine/spotlight/styles.css` imported — Phase 56. *Validated in Phase 56: 2026-05-04*
 
 ### Active (v1.8 candidates — pending scope)
 
