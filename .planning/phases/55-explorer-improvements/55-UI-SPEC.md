@@ -1,7 +1,7 @@
 ---
 phase: 55
 slug: explorer-improvements
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-05-04
@@ -35,8 +35,7 @@ Mantine's built-in spacing scale maps to the 8-point grid. These are the values 
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| 2px (gap={2}) | 2px | Stack gap between summary primary and secondary lines (D-01) |
-| xs | 4px | Card mb={4} above date line; Badge size="sm" internal padding |
+| xs | 4px | Stack gap={4} between summary primary and secondary lines (D-01); Card mb={4} above date line; Badge size="sm" internal padding |
 | sm | 8px | SimpleGrid spacing="sm" in Cards mode (D-05); Card p="sm" |
 | md | 16px | Default Stack/Group padding (existing `p="md"` on outer Stack) |
 | lg | 24px | Outer Stack gap="lg" (existing; unchanged) |
@@ -100,7 +99,7 @@ No new semantic colors introduced in Phase 55. Badge colors (`green` / `gray`) a
 
 ### EXPL-01: Two-line Summary Cell (source: D-01)
 
-Replace the single `<Anchor>` in the Summary `Table.Td` with an `<Anchor>` wrapping a `<Stack gap={2}>`:
+Replace the single `<Anchor>` in the Summary `Table.Td` with an `<Anchor>` wrapping a `<Stack gap={4}>` (xs token, 4px — on-grid minimum):
 
 ```
 <Anchor
@@ -108,7 +107,7 @@ Replace the single `<Anchor>` in the Summary `Table.Td` with an `<Anchor>` wrapp
   onClick={(e) => { e.preventDefault(); navigate(...); }}
   style={{ display: 'block', maxWidth: 400 }}
 >
-  <Stack gap={2}>
+  <Stack gap={4}>
     <Text fw={600} size="sm">{primary}</Text>
     {secondary && (
       <Text
