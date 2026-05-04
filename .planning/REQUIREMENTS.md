@@ -12,7 +12,7 @@
 - [ ] **PEEK-03**: `Enter` while drawer is open (and `[Open full →]` button) navigates to full resource detail at JSON mode (`/explorer/:type/:id?mode=json`)
 - [ ] **PEEK-04**: `Cmd/Ctrl+click` on any reference chip opens the drawer with the referenced resource (resolved via Phase 47 cache); failed resolution shows inline "Reference unresolvable" state — no toast
 - [ ] **PEEK-05**: Drawer is reachable from at least 4 surfaces by milestone close: Explorer table, Patients list, IncomingReferencesPanel cards, Human-mode reference rows
-- [ ] **PEEK-06**: `JsonViewer` component is extracted from `DeveloperJsonView` and shared between peek drawer and mode 4 — zero duplicate syntax-highlighter implementations (grep-provable)
+- [x] **PEEK-06**: `JsonViewer` component is extracted from `DeveloperJsonView` and shared between peek drawer and mode 4 — zero duplicate syntax-highlighter implementations (grep-provable)
 
 ### 4-Mode Resource Shell
 
@@ -78,7 +78,7 @@
 | PEEK-03 | Phase 52 | Pending |
 | PEEK-04 | Phase 53 | Pending |
 | PEEK-05 | Phase 53 | Pending |
-| PEEK-06 | Phase 52 | Pending |
+| PEEK-06 | Phase 52 | Complete |
 | SHELL-01 | Phase 54 | Pending |
 | SHELL-02 | Phase 54 | Pending |
 | SHELL-03 | Phase 54 | Pending |
