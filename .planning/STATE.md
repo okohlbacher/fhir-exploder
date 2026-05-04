@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: -- Navigation Redesign (in progress, started 2026-05-04)
 status: Ready to discuss/plan
-stopped_at: Phase 54 complete
-last_updated: "2026-05-04T21:01:42.647Z"
+stopped_at: Phase 55 complete
+last_updated: "2026-05-04T22:00:00.000Z"
 last_activity: 2026-05-04
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 15
-  completed_plans: 16
-  percent: 100
+  total_phases: 7
+  completed_phases: 4
+  total_plans: 17
+  completed_plans: 18
+  percent: 57
 ---
 
 # Project State
@@ -21,11 +21,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.8 Navigation Redesign — Phase 54 complete, next: Phase 55 Explorer Improvements
+**Current focus:** v1.8 Navigation Redesign — Phase 55 complete, next: Phase 56 Sidebar v2 + Expert Toggle + ⌘K
 
 ## Current Position
 
-Phase: 55
+Phase: 56
 Plan: Not started
 Status: Ready to discuss/plan
 Last activity: 2026-05-04
@@ -35,12 +35,12 @@ v1.8 phases (52-58):
 - **Phase 52: JSON Peek Drawer Foundation (PEEK-01, PEEK-02, PEEK-03, PEEK-06) — COMPLETE**
 - **Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05) — COMPLETE**
 - **Phase 54: 4-Mode Resource Shell (SHELL-01, SHELL-02, SHELL-03, SHELL-04) — COMPLETE**
-- Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03)
+- **Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03) — COMPLETE**
 - Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04)
 - Phase 57: Patients-as-Lens (LENS-01, LENS-02)
 - Phase 58: UAT Backlog Closure (UAT-01)
 
-Progress: [####      ] 43%
+Progress: [####      ] 57%
 
 ## Performance Metrics
 
@@ -106,7 +106,7 @@ Progress: [####      ] 43%
 
 ### Blockers/Concerns
 
-- None. SHELL-01..04 fully shipped (Phase 54). Phase 55 (Explorer Improvements) is unblocked.
+- None. EXPL-01/02/03 fully shipped (Phase 55). Phase 56 (Sidebar v2 + Expert Toggle + ⌘K) is unblocked.
 
 ### Quick Tasks Completed
 
@@ -117,7 +117,7 @@ Progress: [####      ] 43%
 
 ## Session Continuity
 
-Last session: 2026-05-04T19:45:00.000Z
-Stopped at: Phase 54 complete
-Resume file: .planning/phases/54-4-mode-resource-shell/54-VERIFICATION.md
-Next action: `/gsd-discuss-phase 55` or `/gsd-plan-phase 55`
+Last session: 2026-05-04T22:00:00.000Z
+Stopped at: Phase 55 complete
+Resume file: .planning/phases/55-explorer-improvements/55-VERIFICATION.md
+Next action: `/gsd-discuss-phase 56` or `/gsd-plan-phase 56`
