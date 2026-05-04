@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: -- Navigation Redesign (in progress, started 2026-05-04)
-status: Ready for Phase 53
-stopped_at: Phase 53 context gathered
-last_updated: "2026-05-04T15:59:54.025Z"
+status: Ready to plan Phase 54
+stopped_at: Phase 53 complete
+last_updated: "2026-05-04T17:30:00.000Z"
 last_activity: 2026-05-04
 progress:
-  total_phases: 12
-  completed_phases: 7
-  total_plans: 17
-  completed_plans: 18
-  percent: 100
+  total_phases: 7
+  completed_phases: 2
+  total_plans: 20
+  completed_plans: 4
+  percent: 29
 ---
 
 # Project State
@@ -21,26 +21,26 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.8 Navigation Redesign — Phase 52 complete, next: Phase 53 Peek Call-Site Expansion
+**Current focus:** v1.8 Navigation Redesign — Phase 53 complete, next: Phase 54 4-Mode Resource Shell
 
 ## Current Position
 
 Phase: 54
 Plan: Not started
-Status: Ready for Phase 53
+Status: Ready to plan
 Last activity: 2026-05-04
 
 v1.8 phases (52-58):
 
 - **Phase 52: JSON Peek Drawer Foundation (PEEK-01, PEEK-02, PEEK-03, PEEK-06) — COMPLETE**
-- Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05)
+- **Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05) — COMPLETE**
 - Phase 54: 4-Mode Resource Shell (SHELL-01, SHELL-02, SHELL-03, SHELL-04)
 - Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03)
 - Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04)
 - Phase 57: Patients-as-Lens (LENS-01, LENS-02)
 - Phase 58: UAT Backlog Closure (UAT-01)
 
-Progress: [##        ] 14%
+Progress: [###       ] 29%
 
 ## Performance Metrics
 
@@ -71,7 +71,7 @@ Progress: [##        ] 14%
 
 ### Pending Todos (v1.8 milestone)
 
-- **Human UAT backlog (Phase 58 scope)** — ~20 deferred browser-only items across v1.6 + v1.7 phases:
+- **Human UAT backlog (Phase 58 scope)** — ~24 deferred browser-only items across v1.6 + v1.7 + v1.8 phases:
   - Phase 42: 1 item (live-Blaze MII extension count walk)
   - Phase 43: 3 items (basic-auth URL, bearer-token URL, invalid-SNOMED near-miss)
   - Phase 44: 2 items (live-Blaze server-picker mode + large-bundle perf)
@@ -79,19 +79,22 @@ Progress: [##        ] 14%
   - Phase 47: 5 items (tooltip hover, accordion animation, extension chips, terminology in contained panels, indexed-primitive extension)
   - Phase 48: 3 items (RelatedResourcesPanel live rendering)
   - Phase 49: 5 items (graph layout, node navigation, patient-context badge, depth limit badge, empty-state)
+  - Phase 52: 3 items (drawer visual width 420px, URL stability when J pressed, focus ring visibility)
+  - Phase 53: 4 items (resolved Cmd+click live Blaze, error state visual, PatientList focus ring, RelatedResourcesPanel async fetch)
 - **DEFERRED.md dashboard** — create at v1.8 milestone start to track all WAIVE-AND-DEFER items with re-attempt triggers (low priority since STACK-01 is now indefinitely deferred).
 
-### Phase 52 Deliverables (carry-forward to Phase 53)
+### Phase 53 Deliverables (carry-forward to Phase 54)
 
-- **`src/hooks/useShortcuts.ts`** — shared keyboard hook; Phase 54 (1/2/3/4 keys) and Phase 56 (⌘K) extend it
-- **`src/contexts/PeekContext.tsx`** — `openPeek(resource, originElement?)` / `closePeek()` / `usePeek()` — Phase 53 call sites use this directly
-- **`src/components/json/JsonViewer.tsx`** — single source-of-truth JSON renderer; PEEK-06 grep gate locked
-- **`src/components/json/JsonPeekDrawer.tsx`** — 420px right drawer, app-wide via AppLayout PeekProvider
-- **Phase 52 Human UAT pending (Phase 58 scope)**: drawer visual width (420px), URL stability when J pressed, focus ring visibility
+- **`src/contexts/PeekContext.tsx`** — now includes `openPeekError(reference, originElement?)` + nullable `PeekState.resource` + `error?`/`referenceText?` fields
+- **`src/components/json/JsonPeekDrawer.tsx`** — error-state branch: monospace `referenceText` title, dimmed "Reference unresolvable" body, hidden Open-full button, Enter no-op
+- **`src/components/explorer/ReferenceLink.tsx`** — Cmd+click intercepted: resolved → `openPeek`; failed → `openPeekError(rawText)`; pending → no-op
+- **`src/components/explorer/RelatedResourcesPanel.tsx`** — Cmd+click: async first-resource fetch → `openPeek`; empty/error → `openPeekError`
+- **`src/components/patients/PatientListPage.tsx`** — J shortcut wired (4th surface); `focusedPatient` + relatedTarget blur guard + indigo focus ring
+- **Phase 52+53 Human UAT pending (Phase 58 scope)**: drawer visual width (420px), URL stability when J pressed, focus ring visibility (Phase 52); + 4 new Phase 53 items (see 53-HUMAN-UAT.md)
 
 ### Blockers/Concerns
 
-- None. Phase 53 is unblocked — `usePeek().openPeek(resource)` can be called from PatientListPage, IncomingReferencesPanel, and reference chips with no further infrastructure work.
+- None. PEEK-01..06 fully shipped (Phase 52 + 53). Phase 54 (4-Mode Resource Shell) is unblocked — `useShortcuts` ready, mode switcher design locked to `<Tabs variant="pills">` styled as SegmentedControl.
 
 ### Quick Tasks Completed
 
@@ -102,7 +105,7 @@ Progress: [##        ] 14%
 
 ## Session Continuity
 
-Last session: 2026-05-04T14:30:12.146Z
-Stopped at: Phase 53 context gathered
-Resume file: .planning/phases/53-peek-call-site-expansion/53-CONTEXT.md
-Next action: `/gsd-next --auto` → Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05)
+Last session: 2026-05-04T17:30:00.000Z
+Stopped at: Phase 53 complete, ready to plan Phase 54
+Resume file: None
+Next action: `/gsd-discuss-phase 54` or `/gsd-plan-phase 54`

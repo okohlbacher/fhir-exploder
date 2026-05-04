@@ -107,9 +107,12 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 - [x] **GRPH-04** — Hierarchical dagre layout; Mantine CSS-variable theme bridge (zero-remount on light↔dark); zoom/pan/minimap — Phase 49
 - [~] **STACK-01** — DEFERRED to v1.8 via Phase 50 WAIVE-AND-DEFER (second deferral; gate MIXED 2026-05-01). Acceptable closure per requirement definition.
 
+### Validated (v1.8 partial — Phases 52–53)
+
+- [x] **PEEK-01..06**: JSON peek drawer — `J` on any list row opens a 420px right-side drawer with full FHIR JSON without navigating away; shared `JsonViewer`; `Cmd+click` on reference chips; wired to Explorer, Patients list, IncomingReferencesPanel, Human-mode reference rows — Phase 52 (foundation) + Phase 53 (call-site expansion)
+
 ### Active (v1.8)
 
-- [ ] **PEEK-01..06**: JSON peek drawer — `J` on any list row opens a 420px right-side drawer with full FHIR JSON without navigating away; shared `JsonViewer`; `Cmd+click` on reference chips; wired to Explorer, Patients list, IncomingReferencesPanel, Human-mode reference rows
 - [ ] **SHELL-01..04**: 4-mode resource shell — replace `ResourceDetailPage` tabs with `Summary | Human | Graph | JSON` segmented control; Summary mode with key-fields registry per resource type; JSON mode with line numbers, copy/download, validation chip; keyboard shortcuts `1`/`2`/`3`/`4`
 - [ ] **EXPL-01..03**: Explorer improvements — Summary column (primary/secondary via `summarizeResource()`); list density modes (Cards / Table / Compact via SegmentedControl); JSON peek wired to all Explorer rows
 - [ ] **SIDE-01..04**: Sidebar v2 — Browse / Audit section structure; Expert toggle (JSON as default mode, raw search params visible); ⌘K command palette via Mantine Spotlight; Cohorts moved under Quality
