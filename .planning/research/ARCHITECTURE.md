@@ -1,634 +1,491 @@
-# v1.5 ARCHITECTURE Research — FHIR Exploder
+# Architecture: v1.8 Navigation Redesign Integration
 
-**Domain:** Subsequent milestone integration — mature React 18 + Mantine 8 + Medplum 5 FHIR Exploder
-**Researched:** 2026-04-23
-**Confidence:** HIGH (every integration claim is file:line-verified against the v1.4-shipped codebase)
+**Domain:** FHIR Exploder — adding navigation redesign features (PEEK / SHELL / EXPL / SIDE / LENS) to an existing v1.7 codebase.
+**Researched:** 2026-05-04
+**Mode:** Subsequent-milestone integration analysis. Existing code is the ground truth; this doc maps the design handoff onto it.
+**Confidence:** HIGH — all integration points verified against `src/` HEAD (commit `26efb93`).
 
----
+This is an integration-architecture document for an established codebase, not a greenfield study. It answers: *where exactly does each new piece bolt on, what existing code does it touch, and in what order should phases land?*
 
-## Scope
+## Component Map
 
-This architecture research answers seven concrete integration questions for v1.5's four scope groups:
-
-1. **UX-01** external FHIR validator cascade (execute `29-02-PLAN.md` verbatim)
-2. **EFF-R14** `QualityMetricsContext` per-metric split (Option A: 7 context providers)
-3. **Phase-30 UAT follow-ups (6)** — Explorer Date/Status extractor, HumanReadableView extension cleanup, ResourceDetailPage view-mode cleanup, empty per-patient panels, Dashboard MII scoping, per-type quality matrix card
-4. **14 MII extension modules** + `category` + multi-type schema + collapsible section + per-module search param + color strategy
-
-The v1.4 research at `.planning/milestones/v1.4-research/ARCHITECTURE.md` established the layer map, hook-per-metric pattern, and `<ConnectionGatedOutlet>` shape — that baseline is **input**, not re-researched. This document focuses only on what's new in v1.5.
-
----
-
-## Q1 — MII_MODULES Schema Change: Multi-Type + Category
-
-### Current consumers (exhaustive grep-verified)
-
-| Consumer | file:line | Current assumption about `fhirResourceType` | Breakage on `string \| string[]` |
-|----------|-----------|----------------------------------------------|-----------------------------------|
-| `MiiModuleTab` fetch URL | `src/components/patients/MiiModuleTab.tsx:63` | String literal interpolated into `${module.fhirResourceType}?${module.patientSearchParam}=...` | **BREAKS** — `Array.toString()` gives `"Condition,Procedure"` which is not a valid FHIR resource type. Must fan out to N queries per tab. |
-| `MiiModuleTab` effect dep | `src/components/patients/MiiModuleTab.tsx:81` | Used as stable scalar in `useEffect` deps | **BREAKS** — array identity changes every render unless memoized at source. |
-| `MiiModuleTabs` tab subtitle | `src/components/patients/MiiModuleTabs.tsx:71` | Rendered as subtitle text under German label | **STRING RENDER BREAKAGE** — would display `"Condition,Procedure"`. Needs formatter (join with `·`? show count? show first?). |
-| `ClinicalTimeline` badge lookup | `src/components/patients/ClinicalTimeline.tsx:85-86` | `MII_MODULES.find(m => m.fhirResourceType === resource.resourceType)` — **equality comparison against scalar** | **BREAKS** — `"Condition" === ["Condition", "Procedure"]` is always false, so timeline entries lose badge color + German label. Needs `.includes()` check on array. |
-| `DashboardPage` MII tile count | `src/components/dashboard/DashboardPage.tsx:346` | `counts[module.fhirResourceType]` — object index with string key | **BREAKS** — indexing with array produces `undefined`. Needs sum across all types in the array. |
-| `DashboardPage` subtitle | `src/components/dashboard/DashboardPage.tsx:374` | Rendered verbatim in mono text | **STRING RENDER BREAKAGE** — same as MiiModuleTabs. |
-| `mii-modules.test.ts` shape test | `src/__tests__/mii-modules.test.ts:28-29` | `expect(mod.fhirResourceType).toBeTypeOf('string')` — **hard type assertion** | **BREAKS** — test needs update to allow array. |
-| `mii-modules.test.ts` exact-match tests | `src/__tests__/mii-modules.test.ts:38-86` | `expect(diagnose?.fhirResourceType).toBe('Condition')` etc. | **BREAKS** — same. |
-
-### Recommended migration strategy: normalize at the consumer boundary
-
-Add a **single utility** in `src/utils/mii-modules.ts`:
-
-```typescript
-// NEW — added to src/utils/mii-modules.ts
-export function fhirResourceTypesOf(mod: MiiModule): string[] {
-  return Array.isArray(mod.fhirResourceType) ? mod.fhirResourceType : [mod.fhirResourceType];
-}
-```
-
-This keeps the schema flexible (strings for the 7 base modules, arrays for multi-type extensions like Bildgebung: `['ImagingStudy', 'Media', 'DiagnosticReport']`) while giving consumers a single idiom.
-
-| Consumer | Migration |
-|----------|-----------|
-| `MiiModuleTab.tsx:63` | Loop `fhirResourceTypesOf(module)`, `Promise.all` the fetches, concat entries. Becomes the primary per-module fetch shape. |
-| `MiiModuleTab.tsx:81` | Use `module.key` (stable scalar) in deps instead of `module.fhirResourceType`. |
-| `MiiModuleTabs.tsx:71` | Formatter: if 1 type, show as today; if >1, show `"N types"` or `types.join(' · ')`. Spec decision deferred to design. |
-| `ClinicalTimeline.tsx:85-86` | `MII_MODULES.find(m => fhirResourceTypesOf(m).includes(resource.resourceType))`. |
-| `DashboardPage.tsx:346` | `fhirResourceTypesOf(module).reduce((sum, t) => sum + (typeof counts[t] === 'number' ? counts[t] : 0), 0)`. Emits a sum for multi-type tiles. |
-| `DashboardPage.tsx:374` | Same formatter as MiiModuleTabs. |
-| `mii-modules.test.ts:28-86` | Loosen to `expect(typeof t === 'string' \|\| Array.isArray(t)).toBe(true)`; keep exact-match tests for base modules unchanged. |
-
-### `category` field addition
-
-New field: `category: 'base' | 'extension'`. All 7 existing base modules must get `category: 'base'` explicitly (no default — TypeScript discriminated union forces the decision). Extension modules added later carry `category: 'extension'`.
-
-**Consumers that need to partition by category:**
-
-- `MiiModuleTabs.tsx:67,85` — base tabs at top, extensions in `<Collapse>` section below.
-- `DashboardPage.tsx:345` — base-only tile grid OR two sections. Decision: MII tile grid already renders 7 tiles at 4-col; extensions would add 14 more tiles → 21 total across ~5 rows. Recommend **partition by category** here too, or gate extensions behind a "Show extension modules" toggle since Phase-30 UAT already flagged the tile counts as confusing.
-- `ClinicalTimeline.tsx:85` — no partition needed; `.find()` scan handles both transparently.
-
-**Files new/modified:**
-
-| New | Modified |
-|-----|----------|
-| — | `src/utils/mii-modules.ts:15-41` (interface) + `:48-103` (data) — add `category` to all 7; append 14 extensions |
-| — | `src/utils/mii-modules.ts` — add `fhirResourceTypesOf()` helper |
-| — | `src/components/patients/MiiModuleTab.tsx:63-81` — fan out per-type fetches |
-| — | `src/components/patients/MiiModuleTabs.tsx:65-94` — partition base vs extension, wrap extensions in Collapse |
-| — | `src/components/patients/ClinicalTimeline.tsx:85-86` — `.includes()` check |
-| — | `src/components/dashboard/DashboardPage.tsx:345-384` — count sum for multi-type, category partition |
-| — | `src/__tests__/mii-modules.test.ts:28-94` — relax type assertions, add coverage for extension modules |
-
-### Confidence: HIGH
-All 6 consumer sites verified by grep at file:line granularity.
-
----
-
-## Q2 — QualityMetricsContext Split (EFF-R14)
-
-### Current state (file:line-verified)
-
-`src/quality/QualityMetricsContext.tsx:107-173` holds a single context with 8 values (`overallCompleteness`, `overallCoverage`, `overallValidation`, `overallPlausibility`, `overallLabRanges`, `overallDuplicates` (derived), `overallReferences`, `duplicatesBreakdown`) + 7 setters. The provider memos the value (`:142-171`) with **every metric in the deps array** (`:160-170`), so any single metric change creates a new value object → every consumer re-renders.
-
-### Producer sites (where setters are called)
-
-| Metric | Producer | file:line |
-|--------|----------|-----------|
-| `overallCompleteness` | `useCompletenessReport` rollup `useEffect` | `src/hooks/useCompletenessReport.ts:42,51-53` |
-| `overallCoverage` | `useCodingCoverage` rollup `useEffect` | `src/hooks/useCodingCoverage.ts:41,51-55` |
-| `overallValidation` | `ValidationPanel` terminal-gate effect | `src/components/quality/ValidationPanel.tsx:200-205` |
-| `overallPlausibility` | `PlausibilityPanel` terminal-gate effect | `src/components/quality/PlausibilityPanel.tsx:109,113-114` |
-| `overallLabRanges` | `LabRangesPanel` terminal-gate effect | `src/components/quality/LabRangesPanel.tsx:51,58-62` |
-| `overallReferences` | `ReferencesPanel` terminal-gate effect | `src/components/quality/ReferencesPanel.tsx:69,73-74` |
-| `overallDuplicates` (derived) | `DuplicatesPanel` via `setDuplicatesContribution` | `src/components/quality/DuplicatesPanel.tsx:102,108-121` |
-
-### Multi-metric consumers (must preserve facade)
-
-| Consumer | file:line | Reads |
-|----------|-----------|-------|
-| `OverviewStrip` | `src/components/quality/OverviewStrip.tsx:67,82-98` | **All 7** overall* fields (through `metricValueOf` switch) |
-| `QualityOverviewPage` tab labels | `src/components/quality/QualityOverviewPage.tsx:204,444-462` | 7 overall* fields (one per metric tab label) |
-| `QualityOverviewPage` PDF export | `src/components/quality/QualityOverviewPage.tsx:279-285` | 7 overall* fields (snapshot payload) |
-| `QualityOverviewPage` capture snapshot | `src/components/quality/QualityOverviewPage.tsx:230-231` (via `metrics` arg) | Full context snapshot |
-| `PdfReportLayout` | `src/components/quality/PdfReportLayout.tsx:270-286` | Consumes `summary.totals[k]` — **already shape-isolated**, no context read |
-
-`PdfReportLayout` is the good news: it takes `totals: Record<MetricKey, number | undefined>` as a prop (`PdfReportLayoutProps.totals` at `PdfReportLayout.tsx:82`), so the **caller** (`QualityOverviewPage.tsx:278-286`) assembles the multi-metric object. The split does not touch `PdfReportLayout`.
-
-### Recommended structure (Option A — aligns with v1.4 research recommendation)
+The existing tree, with v1.8 additions marked. Read this top-down.
 
 ```
-src/quality/metrics/
-  CompletenessContext.tsx    # { value, set }
-  CoverageContext.tsx
-  ValidationContext.tsx
-  PlausibilityContext.tsx
-  LabRangesContext.tsx
-  ReferencesContext.tsx
-  DuplicatesContext.tsx      # holds breakdown + derived overall
-  index.tsx                  # <QualityMetricsProviders> composite + facade hook
+src/
+├── App.tsx                                           — MODIFY (route shape unchanged; add ⌘K Spotlight provider)
+├── components/
+│   ├── layout/
+│   │   ├── AppLayout.tsx                             — MODIFY  (mount <JsonPeekDrawer/> + register global hotkeys)
+│   │   ├── Sidebar.tsx                               — REWRITE (Browse/Audit sections + Expert toggle + ⌘K trigger)
+│   │   └── ConnectionGatedOutlet.tsx                 — UNCHANGED
+│   ├── peek/                                         — NEW directory
+│   │   ├── JsonPeekDrawer.tsx                        — NEW (Mantine Drawer + header strip + footer)
+│   │   ├── PeekProvider.tsx                          — NEW (context for { peekTarget, open, close })
+│   │   ├── usePeekTarget.ts                          — NEW (hook + register/release focus key)
+│   │   └── registerGlobalHotkeys.tsx                 — NEW (J / Esc / Cmd+click bindings)
+│   ├── json/                                         — NEW directory (extracted shared viewer)
+│   │   ├── JsonViewer.tsx                            — NEW (extracted from JsonTreeView; line numbers + search outline)
+│   │   └── JsonViewerActions.tsx                     — NEW (Copy / Download / "Open in fhir-validator")
+│   ├── shell/                                        — NEW directory (resource shell)
+│   │   ├── ResourceShell.tsx                         — NEW (4-mode SegmentedControl host)
+│   │   ├── SummaryMode.tsx                           — NEW (uses keyFieldsRegistry)
+│   │   ├── HumanMode.tsx                             — THIN WRAPPER around HumanReadableView
+│   │   ├── GraphMode.tsx                             — THIN WRAPPER around lazy ResourceGraphView
+│   │   ├── JsonMode.tsx                              — NEW (JsonViewer + JsonViewerActions + outline panel)
+│   │   ├── keyFieldsRegistry.ts                      — NEW (parallel to summarizeResource registry)
+│   │   └── ValidationChip.tsx                        — NEW (small chip; reads cascadingValidator state)
+│   ├── command/                                      — NEW directory
+│   │   └── CommandPalette.tsx                        — NEW (Mantine Spotlight wrapper)
+│   ├── explorer/
+│   │   ├── ResourceDetailPage.tsx                    — REWRITE (delegates entirely to <ResourceShell/>)
+│   │   ├── SearchResultsPage.tsx                     — MODIFY (Summary column already present; add density toggle + J binding + JSON peek action; row-focus state)
+│   │   ├── DeveloperJsonView.tsx                     — DELETE-CANDIDATE (post-extraction; or keep as 3-line wrapper)
+│   │   ├── JsonTreeView.tsx                          — MOVE/RENAME to components/json/JsonViewer.tsx (single source — drawer + JSON mode share)
+│   │   ├── HumanReadableView.tsx                     — UNCHANGED (mounted by HumanMode)
+│   │   ├── IncomingReferencesPanel.tsx               — UNCHANGED (mounted by ResourceShell as persistent footer)
+│   │   ├── PatientRelatedResources.tsx               — UNCHANGED (mounted by ResourceShell when type === Patient)
+│   │   ├── ReferenceLink.tsx                         — MODIFY (add Cmd+click handler → open peek)
+│   │   ├── ExplorerLayout.tsx                        — UNCHANGED (already provides MedplumProvider + 240px rail)
+│   │   ├── ResourceGraphView.tsx                     — UNCHANGED (still lazy; mounted by GraphMode)
+│   │   └── (rest)                                    — UNCHANGED
+│   ├── patients/
+│   │   ├── PatientsLayout.tsx                        — MODIFY  (drop separate MedplumProvider once ExplorerLayout becomes the chrome; or keep wrapping if route stays nested)
+│   │   ├── PatientDetailPage.tsx                     — REWRITE LIGHT (delegate detail body to <ResourceShell/>; keep MII/FHIR view toggle as Summary-mode key-fields content for Patient)
+│   │   ├── PatientHeaderCard.tsx                     — MODIFY (drop PatientHeaderActions; card layout becomes the Patient keyFieldsRegistry render output)
+│   │   ├── PatientListPage.tsx                       — MODIFY (Summary column + density toggle + J binding; remove RawPatientButton modal — peek covers it)
+│   │   └── (rest)                                    — UNCHANGED
+│   └── quality/
+│       ├── QualityLayout.tsx                         — UNCHANGED (sidebar v2 reorders sub-nav, layout is unaffected)
+│       └── ResourceIssueTable.tsx                    — MODIFY (drill-down rows gain "Peek JSON" overflow item — already lists resource id+type)
+├── contexts/
+│   ├── ConnectionContext.tsx                         — UNCHANGED
+│   ├── SettingsContext.tsx                           — UNCHANGED  (Expert toggle persists in localStorage, not settings.yaml)
+│   └── ExpertContext.tsx                             — NEW (boolean + setter; localStorage `ui.expert.v1`)
+├── hooks/
+│   ├── useReferenceResolver.ts                       — UNCHANGED (drawer reuses for Cmd+click target)
+│   └── useResolvedResource.ts                        — UNCHANGED
+└── utils/
+    ├── summarizeResource.ts                          — UNCHANGED (already at all 5 needed call sites)
+    └── reverseReferenceCatalog.ts                    — UNCHANGED
 ```
 
-### Facade preservation (non-negotiable per quality gate)
+Verified counts: 8 source-type entries in `summarizeResource.ts` (Patient, Observation, Condition, Encounter, MedicationStatement, Procedure, DiagnosticReport, AllergyIntolerance) — `keyFieldsRegistry.ts` should mirror those plus a generic fallback walker so coverage parity is automatic.
 
-Keep `src/quality/QualityMetricsContext.tsx` exporting `useQualityMetrics()` but reimplement it as a composition of the 7 per-metric hooks:
+## Integration Points
 
-```typescript
-// NEW implementation — src/quality/QualityMetricsContext.tsx (rewrite, but API stable)
-export function useQualityMetrics(): QualityMetricsContextValue {
-  const completeness = useCompletenessRollup();
-  const coverage = useCoverageRollup();
-  const validation = useValidationRollup();
-  const plausibility = usePlausibilityRollup();
-  const labRanges = useLabRangesRollup();
-  const references = useReferencesRollup();
-  const duplicates = useDuplicatesRollup();
-  return {
-    overallCompleteness: completeness.value,
-    overallCoverage: coverage.value,
-    overallValidation: validation.value,
-    overallPlausibility: plausibility.value,
-    overallLabRanges: labRanges.value,
-    overallReferences: references.value,
-    overallDuplicates: duplicates.overall,
-    duplicatesBreakdown: duplicates.breakdown,
-    setCompleteness: completeness.set,
-    setCoverage: coverage.set,
-    setOverallValidation: validation.set,
-    setOverallPlausibility: plausibility.set,
-    setOverallLabRanges: labRanges.set,
-    setOverallReferences: references.set,
-    setDuplicatesContribution: duplicates.contribute,
-  };
-}
-```
+### IP-1 — JsonPeekDrawer mount: AppLayout (single instance)
 
-**Trade-off honest disclosure:** Consumers using the facade (`OverviewStrip`, the 3 consumer spots in `QualityOverviewPage`) re-render on **any** metric change, same as today. The perf win only materializes when consumers migrate to `useCompletenessRollup()` etc. directly. In practice:
+**Decision: Mount `<JsonPeekDrawer/>` and `<PeekProvider>` once at `AppLayout.tsx`.**
 
-- `OverviewStrip.tsx:67-98` — **must migrate** — it displays 7 independent tiles; per-metric subscription means each tile re-renders only when its own metric updates.
-- `QualityOverviewPage.tsx:444-462` (tab labels) — **must migrate** — same rationale.
-- `QualityOverviewPage.tsx:220-245` (capture snapshot) + `:247-328` (PDF export) — **keep using facade** — these fire on user action (one-shot), not re-render-sensitive.
-
-### Producer-side migration
-
-Each producer file needs a one-line change from `useQualityMetrics()` destructure to the specific hook:
-
-| Producer | Change |
-|----------|--------|
-| `useCompletenessReport.ts:42` | `const { setCompleteness } = useQualityMetricsContext()` → `const { set: setCompleteness } = useCompletenessRollup()` |
-| `useCodingCoverage.ts:41` | Same shape with `useCoverageRollup` |
-| `ValidationPanel.tsx:200` | Same shape with `useValidationRollup` |
-| `PlausibilityPanel.tsx:109` | Same shape with `usePlausibilityRollup` |
-| `LabRangesPanel.tsx:51` | Same shape with `useLabRangesRollup` |
-| `ReferencesPanel.tsx:69` | Same shape with `useReferencesRollup` |
-| `DuplicatesPanel.tsx:102` | `useDuplicatesRollup().contribute` |
-
-### Provider composition
-
-`src/components/quality/QualityLayout.tsx:28` currently renders `<QualityMetricsProvider>`. Replace with `<QualityMetricsProviders>` (composite from the new `src/quality/metrics/index.tsx`). **Test impact:** all 6 test files that import `QualityMetricsProvider` (`completeness-hook.test.tsx:24`, `coding-coverage-panel.test.tsx:56`, `duplicates-panel.test.tsx:188`, `plausibility-panel.test.tsx:59`, `references-panel.test.tsx:52`, `lab-ranges-panel.test.tsx:66`, `quality-overview.test.tsx:173`) must migrate to `QualityMetricsProviders`. Keep `QualityMetricsProvider` as a deprecated alias for one cycle.
-
-### Files new/modified
-
-| New | Modified |
-|-----|----------|
-| `src/quality/metrics/CompletenessContext.tsx` | `src/quality/QualityMetricsContext.tsx` (reimplement `useQualityMetrics` as facade composition) |
-| `src/quality/metrics/CoverageContext.tsx` | `src/components/quality/QualityLayout.tsx:28` (composite provider) |
-| `src/quality/metrics/ValidationContext.tsx` | `src/hooks/useCompletenessReport.ts:42`, `useCodingCoverage.ts:41` |
-| `src/quality/metrics/PlausibilityContext.tsx` | `src/components/quality/ValidationPanel.tsx:200`, `PlausibilityPanel.tsx:109`, `LabRangesPanel.tsx:51`, `DuplicatesPanel.tsx:102`, `ReferencesPanel.tsx:69` |
-| `src/quality/metrics/LabRangesContext.tsx` | `src/components/quality/OverviewStrip.tsx:67-98` (switch to per-metric hooks) |
-| `src/quality/metrics/ReferencesContext.tsx` | `src/components/quality/QualityOverviewPage.tsx:204` (mixed: tab labels → per-metric; capture/export → keep facade) |
-| `src/quality/metrics/DuplicatesContext.tsx` | 6 test wrapper files + `quality-overview.test.tsx` |
-| `src/quality/metrics/index.tsx` (composite + re-exports) | — |
-
-### Confidence: HIGH on the split; MEDIUM on perf-win magnitude
-Producers update ≤1× per terminal run. OverviewStrip's tile-by-tile re-render win is real but bounded. The main architectural benefit is the per-type quality matrix card (Phase-30 follow-up #6) can push per-type data into a dedicated context without contention.
-
----
-
-## Q3 — External Validator Cascade (UX-01)
-
-### Integration targets (file:line-verified per 29-02-PLAN.md)
-
-`29-02-PLAN.md` is the execute-verbatim plan. The architecture question here is **where** each new piece attaches.
-
-| Concern | Current location | v1.5 landing spot |
-|---------|------------------|-------------------|
-| PHI gate key builder + predicate | Inline in `ValidationPanel.tsx:72, 100-107` | NEW `src/quality/phiGate.ts` (per 29-02-PLAN Task 1) |
-| PHI gate Alert + acknowledge button | `ValidationPanel.tsx:270-294` | Kept in `ValidationPanel.tsx`; helpers imported from `phiGate.ts` |
-| `normalizeOperationOutcomeIssue` mapper | Inline `.map()` in `ValidationPanel.tsx:167-178` | NEW `src/quality/normalizers.ts` |
-| `validateWithCascade()` orchestrator | Does not exist | NEW `src/quality/cascadingValidator.ts` |
-| Cascade invocation | `useConformanceRun.ts:159,183-188` runs `resolveBackends` + `Promise.all(backends.map(b => b.validate(r)))` on legacy path | REPLACE `backends.map(...)` call at `useConformanceRun.ts:184-186` with `validateWithCascade(r, cascadeOptions)` |
-| Probe cache | Does not exist | NEW — lives inside `useConformanceRun` as `const probeCacheRef = useRef(new Map<string, ActiveStrategy>())` alongside `valueSetCacheRef` at `useConformanceRun.ts:104` |
-| "Active strategy: {tier}" status line | Does not exist | NEW render in `ValidationPanel.tsx` between `Paper` (line 296-358) backend-badge row and the progress section |
-| Settings schema for `externalValidator.url/enabled/timeoutMs` | Does not exist | MODIFY `src/config/types.ts` + `src/config/settings.ts` (per 29-02-PLAN Task 4) |
-| Settings YAML template | Existing `validation:` block in `public/settings.yaml` | MODIFY with commented `externalValidator:` example (per 29-02-PLAN Task 4) |
-| Mantine timeout toast | Does not exist | NEW `notifications.show({ color: 'blue', ... })` inside `cascadingValidator.ts` timeout catch |
-
-### Probe cache lifetime decision
-
-**Recommendation: per-session `useRef<Map>` inside `useConformanceRun`**, NOT a module-scoped `Map<serverUrl, Map>` à la v1.4's `metricsCache.ts`.
-
-Rationale:
-1. Probe state is **coupled to the run coordinator**. Module scope would require an explicit invalidation hook on server-URL change (matching the `clearAllQualityMetrics()` pattern at `metricsCache.ts:163`) — extra surface for questionable value.
-2. The hook already uses `useRef` for `valueSetCacheRef` at `useConformanceRun.ts:104` — identical idiom.
-3. A fresh probe per session is cheap (one HEAD/`$version` call per resource type per user session).
-4. The status line at `ValidationPanel.tsx` reads `run.activeStrategy` — that field is added to `ConformanceRunState` at `useConformanceRun.ts:42-52`, surfacing the current probe hit.
-
-Module-scoped per-serverUrl map would be a premature optimization and break the 29-02-PLAN key_links contract at lines 95-98.
-
-### Cascade control flow (new file `src/quality/cascadingValidator.ts`)
-
-Per 29-02-PLAN interfaces (lines 200-219), the flow is:
-
-```
-validateWithCascade(resource, opts):
-  key = `${opts.serverUrl}::${opts.resourceType}`
-  hit = opts.probe.get(key)
-
-  if opts.externalValidator?.enabled && isPhiAcknowledged(opts.serverUrl, opts.externalValidator.url):
-    if hit !== 'server' && hit !== 'local':
-      try AbortController + setTimeout(opts.externalValidator.timeoutMs ?? 15000):
-        call external → normalize via normalizeOperationOutcomeIssue
-        opts.probe.set(key, 'external') → return normalized
-      on timeout:
-        notifications.show({ color: 'blue', autoClose: 5000, ... })
-        opts.probe.set(key, 'server') → fall through
-      on other error:
-        opts.probe.set(key, 'server') → fall through
-
-  if opts.settings?.validation?.validatorUrl && hit !== 'local':
-    try createRemoteBackend(...).validate(resource):
-      opts.probe.set(key, 'server') → return via normalizer
-    on error:
-      opts.probe.set(key, 'local') → fall through
-
-  // local tier (always succeeds)
-  validateStructural(resource, opts.profile)
-  opts.probe.set(key, 'local') → return normalized
-```
-
-### PHI gate integration point
-
-The PHI gate has **two call sites** after extraction:
-
-1. **UI Alert** at `ValidationPanel.tsx:270-294` — imports `isPhiAcknowledged` + `phiAckKey` from `phiGate.ts`. No behavior change.
-2. **Cascade external-tier guard** — `cascadingValidator.ts` calls `isPhiAcknowledged(opts.serverUrl, opts.externalValidator.url)` **before** `new AbortController()`. Per 29-02-PLAN D-09, this is the regression-test-locked invariant (zero fetches before consent).
-
-### Files new/modified
-
-| New | Modified |
-|-----|----------|
-| `src/quality/phiGate.ts` | `src/components/quality/ValidationPanel.tsx:72,100-107,167-178,270-294` (import extraction, status line add) |
-| `src/quality/normalizers.ts` | `src/hooks/useConformanceRun.ts:104,159,183-188,237-246` (cascade call + probe cache + activeStrategy surfacing) |
-| `src/quality/cascadingValidator.ts` | `src/config/types.ts:14-24` (`externalValidator` block) |
-| `src/quality/__tests__/phiGate.test.ts` | `src/config/settings.ts` (deepMerge for `externalValidator`) |
-| `src/quality/__tests__/normalizers.test.ts` | `public/settings.yaml` (commented example) |
-| `src/quality/__tests__/cascadingValidator.test.ts` | — |
-
-### Confidence: HIGH — 29-02-PLAN.md is pre-litigated and preserved verbatim with all file:line references intact.
-
----
-
-## Q4 — Extension-Modules Collapse Interaction with `keepMounted` + `activeTab`
-
-### Current MiiModuleTabs shape (`src/components/patients/MiiModuleTabs.tsx:64-94`)
+The handoff explicitly says so (line 172: "Mount `<JsonPeekDrawer />` once at `AppLayout` level"), and the existing layout structure supports it cleanly:
 
 ```tsx
-<Tabs value={activeTab} onChange={setActiveTab} keepMounted variant="pills">
-  <Tabs.List>
-    {MII_MODULES.map(mod => <Tabs.Tab key={mod.key} value={mod.key}>...</Tabs.Tab>)}
-    <Tabs.Tab value="timeline">...</Tabs.Tab>
-  </Tabs.List>
-  {MII_MODULES.map(mod => <Tabs.Panel key={mod.key} value={mod.key} keepMounted>...</Tabs.Panel>)}
-  <Tabs.Panel value="timeline" keepMounted>...</Tabs.Panel>
-</Tabs>
+// src/components/layout/AppLayout.tsx (post-modification)
+export function AppLayout({ connectionStatus }: AppLayoutProps) {
+  return (
+    <PeekProvider>
+      <ExpertProvider>
+        <AppShell navbar={{ width: 240, breakpoint: 0 }} padding="lg">
+          <AppShell.Navbar bg="gray.0">
+            <Sidebar connectionStatus={connectionStatus} />
+          </AppShell.Navbar>
+          <AppShell.Main>
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <Outlet />
+            </Suspense>
+          </AppShell.Main>
+          <CommandPalette />        {/* Mantine Spotlight, listens for ⌘K */}
+          <JsonPeekDrawer />         {/* single global instance */}
+          {import.meta.env.DEV && <FeedbackButton />}
+        </AppShell>
+      </ExpertProvider>
+    </PeekProvider>
+  );
+}
 ```
 
-Two `keepMounted`: one on `<Tabs>` (parent, default `true` anyway) and one on each `<Tabs.Panel>`. Per the Phase 25 research at `.planning/milestones/v1.4-research/ARCHITECTURE.md` (Q1 investigations), Mantine's `TabsPanel` OR-combines these — the parent default `true` forces every panel to stay rendered unless the parent is explicitly `false`. Current component `keepMounted` at line 65 plus per-panel `keepMounted` at lines 86, 90 means **every tab content is mounted on first render**.
+**Why AppLayout, not App.tsx:**
+- AppLayout is rendered *inside* `MedplumProvider`-bearing route layouts only when needed (per-section ExplorerLayout / PatientsLayout / QualityLayout each mount their own `MedplumProvider`). The drawer needs `useMedplum()` to fetch unresolved references, so its consumers must run inside one of those route subtrees.
+- Solution: `JsonPeekDrawer` itself does *not* call `useMedplum()` directly. The `peekTarget` state lives in `PeekProvider` (above all route layouts). When the drawer needs to fetch, it relies on the **already-warm `useReferenceResolver` cache** (Phase 47, `referenceCache: Map<\`${type}/${id}\`, Resource | null>`). On a cache miss, the drawer body is rendered by a small inner component that runs `useMedplum()` — this inner component only renders inside `<AppShell.Main>`'s `<Outlet/>` subtree, *but the drawer host (Mantine Drawer) does not need a client to merely toggle visibility*. The inner body is conditionally rendered only when a route subtree has supplied a client via outlet context, otherwise it shows skeleton.
+- Mantine Drawer itself works at any tree level; it portals to `document.body` regardless of tree position.
 
-### Collapse interaction
+**State management pattern: Context API + `useReducer`. NOT zustand.**
 
-`<Mantine Collapse>` is a CSS-height animator — it does NOT unmount children. This means:
+The codebase already uses three identical patterns for app-wide state:
+- `ConnectionContext` (provider + hook)
+- `SettingsContext` (provider + hook)
+- `TerminologyContext` (provider + hook)
+- Module-scoped Maps for cross-component caches: `referenceCache` in `useReferenceResolver.ts`, `extensionProfileCache` in `quality/profiles/extensions/index.ts`.
 
-- Wrapping extension `<Tabs.Tab>` entries inside a `<Collapse>` in `<Tabs.List>` keeps tabs clickable even when visually collapsed (Mantine allows list items outside alphabetical flow).
-- Wrapping extension `<Tabs.Panel>` entries in a `<Collapse>` is unnecessary — the tab panel is already display:none when not active.
+Adding zustand would be the only state library in the repo (rejected per `STACK.md`: "Adding react-query would create two competing cache layers" — same logic). React context with a `useReducer` (`(prev, action) => next`) reducer is the established idiom and is sufficient for `{ peekTarget: { type, id } | null }`.
 
-**Recommended structure:**
+```ts
+// src/components/peek/PeekProvider.tsx
+type PeekTarget = { type: string; id: string };
+type PeekContext = { target: PeekTarget | null; open: (t: PeekTarget) => void; close: () => void };
+const Ctx = createContext<PeekContext | null>(null);
+export function PeekProvider({ children }: { children: React.ReactNode }) { ... }
+export function usePeekTarget(): PeekContext { ... }
+```
+
+**No URL mutation when peeking.** Confirmed in handoff line 160: "URL is **not** mutated when peeking (that's the whole point — keeps it lightweight)." The "Open full →" footer action is the only place `navigate()` fires.
+
+### IP-2 — 4-mode shell vs. PatientHeaderCard
+
+**The PatientHeaderCard layout should be absorbed into the Patient SummaryMode key-fields registry entry.** Handoff is explicit (line 68: "Remove the bespoke `PatientHeaderCard` 'Raw JSON' modal — JSON mode already covers it"). The component itself can survive as the registry entry's render output to minimise test churn; only its `PatientHeaderActions` sub-component is dropped.
+
+Mechanics that avoid breakage:
+
+1. **`ResourceDetailPage.tsx` becomes a 25-line component** that fetches the resource (existing `useEffect` + `client.readResource`) and delegates rendering to `<ResourceShell resource={resource} />`. The fetch logic, error handling, breadcrumbs, and reference-click interception (`handleReferenceClick`) all stay. Keyboard shortcut listener (currently `1`/`2`) extends to `1`/`2`/`3`/`4`.
+
+2. **`ResourceShell.tsx`** owns the SegmentedControl + 4 mode panels:
+   - `SummaryMode` — looks up `keyFieldsRegistry[resource.resourceType]`. For `Patient`, the registry entry returns the 3-column avatar/demographics/actions layout currently in `PatientHeaderCard`. For other types, it returns a generic "key fields" property table built from a small spec (4–6 most-asked fields per type, parallel to the `summarizeResource` registry).
+   - `HumanMode` — `<HumanReadableView resource={resource} />`. Unchanged.
+   - `GraphMode` — lazy-loads `ResourceGraphView` (already code-split). Reuses the `/graph` route's component, just embedded.
+   - `JsonMode` — `<JsonViewer data={resource} showLineNumbers showOutline />` + `<JsonViewerActions />` (Copy / Download / Open in fhir-validator).
+
+3. **`PatientDetailPage.tsx`** (existing) currently renders `PatientHeaderCard + PatientTimeline + SegmentedControl(MII|FHIR) + (MiiModuleTabs|FhirResourcesView)`. The redesign shifts this:
+   - The Patient resource fetch stays in `PatientDetailPage`.
+   - The body becomes `<ResourceShell resource={patient} />`.
+   - SummaryMode for Patient returns: `<PatientHeaderCard/>` (without Actions) + `<PatientTimeline/>` + the existing `MII Modules / FHIR Resources` SegmentedControl + (`MiiModuleTabs` | `FhirResourcesView`). All those blocks already exist; only the wrapper structure changes. **PatientHeaderCard.tsx survives, just shorn of its Raw JSON / $everything actions** (those migrate to `JsonViewerActions`).
+
+4. **Backwards compatibility:** existing tests reference `PatientHeaderCard` by name. Keeping `PatientHeaderCard.tsx` as a thin component used by the registry entry minimises test churn — only `PatientHeaderActions` test cases need to be deleted.
+
+5. **Keyboard contract extension** (existing handler in `ResourceDetailPage.tsx:77-94`):
+   ```ts
+   case '1': setActiveTab('human-readable'); break;
+   case '2': setActiveTab('developer'); break;
+   ```
+   Extends mechanically to `'1'..'4'` mapping to `summary | human | graph | json`. Input-focus guard (lines 79-80) stays as-is.
+
+**Risk:** the existing test suite includes `Sidebar.test.tsx`, `ResourceDetailPage.test.tsx`, `PatientHeaderCard.test.tsx` — each must be updated when the corresponding component changes shape. None of them are pinned by snapshot to PatientHeaderCard's exact DOM (verified by grepping `__snapshots__/PatientRelatedResources.test.tsx.snap` only), so byte-identical preservation is not required.
+
+### IP-3 — Shared JsonViewer extraction
+
+The current state:
+- `DeveloperJsonView.tsx` (22 lines) wraps `<ScrollArea h="calc(100vh - 250px)"><JsonTreeView data={resource} /></ScrollArea>`.
+- `JsonTreeView.tsx` (135 lines) is the actual recursive renderer — collapsible nodes, color-coded leaves.
+- `PatientHeaderCard.tsx`'s "Raw JSON" Modal uses a plain `<Code block fz="xs">{JSON.stringify(patient, null, 2)}</Code>` — *different* renderer (no collapse, no syntax highlight).
+- `PatientListPage.tsx` `RawPatientButton` does the same `<Code block>` pattern.
+- `HumanReadableView.tsx`'s `ExtensionsSection` Modal also uses `<Code block fz="xs">{JSON.stringify(opened, null, 2)}</Code>`.
+
+**Path forward:**
+1. Move `JsonTreeView.tsx` → `components/json/JsonViewer.tsx`. Add optional props: `showLineNumbers?: boolean`, `outlinePanel?: boolean`. The collapsible-tree behaviour stays; line numbers and outline are layered as additional render passes.
+2. `DeveloperJsonView.tsx` becomes a 5-line wrapper: `<JsonViewer data={resource} showLineNumbers />` (or just inline at call sites and delete the file).
+3. `JsonPeekDrawer.tsx` body uses `<JsonViewer data={resource} />` — same component.
+4. The two `<Code block>` raw-JSON modals (`PatientHeaderCard.PatientHeaderActions` + `PatientListPage.RawPatientButton`) are *deleted* — peek/JSON-mode covers the use cases.
+5. `HumanReadableView.tsx`'s `ExtensionsSection` Modal migrates to `<JsonViewer/>` for consistency.
+
+**Acceptance criterion already specified in handoff (SC#4):** "grep proves zero duplicate syntax-highlighter implementations." The existing JsonTreeView is the one source; `<Code block>` callsites are not real syntax highlighters and just go away.
+
+**Verification:** `grep -rn "JSON.stringify(.*null, 2)" src/components/` should drop from ~3 hits to 0 after the cleanup.
+
+### IP-4 — Patients-as-lens routing
+
+**The `/patients` URL prefix is preserved per handoff** (line 67: "keep the route `/patients` and the existing component, but render it through the Explorer chrome").
+
+Three concrete changes, each minimal:
+
+1. **Sidebar** (`Sidebar.tsx`): The `Patients` top-level entry moves *under* `Explorer > Lenses` as a sub-nav child. New nav structure:
+   ```
+   Browse
+     Dashboard       → /
+     Explorer        → /explorer
+       Patients      → /patients  (rendered under Explorer's expanded children)
+       Practitioners → /explorer/Practitioner
+       MII modules   → /explorer/Patient (or a tag-only landing)
+   Audit
+     Quality         → /quality
+       Overview      → /quality
+       Cohorts       → /quality/cohorts
+       Thresholds    → /quality/thresholds
+       IPS Validator → /quality/ips
+   ```
+   The existing `useMatch` + suppress-parent logic in `SidebarRow`/`SidebarChildRow` already supports this — just register `Patients` as a child of `Explorer`'s `children` array, mirroring how Cohorts/Thresholds work under Quality today. Note: the current suppress logic (lines 153-160) is `Quality`-specific by hard-coded path; it must be generalised into a per-row data field instead of an in-function switch.
+
+2. **Breadcrumbs** (`PatientListPage.tsx`, `PatientDetailPage.tsx`): The breadcrumbs currently read `Patients > {name}`. Update root anchor:
+   ```tsx
+   <Breadcrumbs>
+     <Anchor onClick={() => navigate('/explorer')} size="sm">Explorer</Anchor>
+     <Anchor onClick={() => navigate('/patients')} size="sm">Patients</Anchor>
+     <Text size="sm" fw={600}>{displayName}</Text>
+   </Breadcrumbs>
+   ```
+
+3. **Routing structure** (`App.tsx`): **No route changes required.** `/patients`, `/patients/:patientId`, `/patients/:patientId/:resourceType/:id`, `/patients/:patientId/:resourceType/:id/graph` all stay. The `<PatientsLayout>` outlet remains (it provides MedplumProvider). Optional follow-up: if `<ExplorerLayout>` and `<PatientsLayout>` end up identical except for the rail content, refactor both to share a single `<DataRouteLayout>` — but this is a SHELL-only cleanup, not required for v1.8 SCs.
+
+**Sidebar highlight:** when on `/patients/*`, the active row should be the `Patients` child under `Explorer`, with the `Explorer` parent row dimmed (`suppressParent: true`) — same idiom as Cohorts under Quality today.
+
+### IP-5 — Sidebar v2 + Expert toggle + ⌘K
+
+Three sub-points:
+
+**5a. Browse / Audit section labels** — small visual change. Wrap existing `NAV_ITEMS` in two arrays:
+```ts
+const BROWSE_ITEMS: NavItem[] = [Dashboard, Explorer (with Patients/Practitioners as children)];
+const AUDIT_ITEMS:  NavItem[] = [Quality (with Overview/Cohorts/Thresholds/IPS as children)];
+```
+Render each section with a small `<Text c="dimmed" tt="uppercase" fz="xs">Browse</Text>` header above. The existing `SidebarRow` component is reused unchanged.
+
+**5b. Expert toggle (footer Switch)** — a new `ExpertContext` provider in `AppLayout`:
+- Persists to `localStorage['ui.expert.v1']` (matches existing `quality.thresholds.v1` naming pattern).
+- When ON, **default mode for `<ResourceShell>` becomes `'json'`** (read in `ResourceShell.tsx`'s initial `useState`).
+- Optional Phase 4 of v1.8: when ON, `<SearchFilterPanel>` exposes a "raw search params" textarea — already deferred per handoff line 87 ("Add (2) when expert audiences ship feedback").
+
+**5c. ⌘K command palette via Mantine Spotlight** — Spotlight is **already a dep** (`package.json:26 — @mantine/spotlight: ^8.3.18`). Currently unused (grep returns no hits). Wiring:
 
 ```tsx
-<Tabs value={activeTab} onChange={setActiveTab} keepMounted variant="pills">
-  <Stack gap="xs">
-    <Tabs.List>
-      {baseModules.map(...)}
-      <Tabs.Tab value="timeline">...</Tabs.Tab>
-    </Tabs.List>
-    <UnstyledButton onClick={toggleExtensions}>
-      <Group gap="xs">
-        {extensionsOpen ? <IconChevronDown/> : <IconChevronRight/>}
-        <Text size="sm" c="dimmed">Extension modules ({extensionModules.length})</Text>
-      </Group>
-    </UnstyledButton>
-    <Collapse in={extensionsOpen}>
-      <Tabs.List>
-        {extensionModules.map(...)}
-      </Tabs.List>
-    </Collapse>
-  </Stack>
-  {/* Panels stay outside Collapse — Mantine Tabs controls visibility */}
-  {MII_MODULES.map(mod => <Tabs.Panel key={mod.key} value={mod.key} keepMounted>...</Tabs.Panel>)}
-  <Tabs.Panel value="timeline" keepMounted>...</Tabs.Panel>
-</Tabs>
-```
+// src/components/command/CommandPalette.tsx
+import { Spotlight } from '@mantine/spotlight';
+import '@mantine/spotlight/styles.css';
 
-Two `Tabs.List`s inside a single `<Tabs>` context are safe — Mantine's `TabsContext` uses its parent-of-Tabs context, not structural proximity to `Tabs.List`. This is how vertical tab groupings work in other Mantine patterns.
-
-### `activeTab` when a hidden extension is selected
-
-If a user deep-links to `/patients/:id?moduleTab=onkologie` while Extensions are collapsed:
-- `activeTab === 'onkologie'` → Mantine highlights that tab's pill
-- Pill is inside `<Collapse in={false}>` → invisible to user
-- **Recommended fix:** initial `extensionsOpen` state → `isExtensionKey(activeTab, MII_MODULES)` to auto-expand when the selected tab is an extension.
-
-### Empty-state UX (per PROJECT.md v1.5 scope)
-
-`MiiModuleTab.tsx:93-99` currently renders `"No {module.germanLabel} data found for this patient."` centered + dimmed. For extension modules where empty is **expected** (most patients won't have MTB or Biobank data), this appears 14 times below the collapse when expanded. Options:
-1. **Hide empty extension tabs in tab list** (conditional tab rendering based on a per-module count — requires a new `useResourceCountsPerPatient` hook)
-2. **Keep tabs visible but with dimmed opacity** (matches existing DashboardPage MII tile empty treatment at `DashboardPage.tsx:357`)
-
-Option 2 is lighter-touch and consistent. Defer Option 1 to a follow-up.
-
-### Files new/modified
-
-| New | Modified |
-|-----|----------|
-| — | `src/components/patients/MiiModuleTabs.tsx:62-94` (partition, Collapse, auto-expand logic) |
-| — | `src/components/patients/MiiModuleTab.tsx:93-99` (optional empty-state dim) |
-
-### Confidence: HIGH on the structural pattern; MEDIUM on the auto-expand and empty-state decisions — both are UX calls that should be confirmed during requirements phase.
-
----
-
-## Q5 — Multi-type Modules × Per-module patientSearchParam
-
-### The tension
-
-Current schema: `patientSearchParam: string` is a module-level scalar. Example: `laborbefund` uses `patient=Patient/{id}` (line 89), `person` uses `_id=Patient/{id}` (line 54). But extension modules may span multiple types with different expected params:
-
-- Bildgebung: `ImagingStudy?patient=...` AND `Media?subject=...` AND `DiagnosticReport?subject=...`
-- MTB (Molekulares Tumorboard): `Observation?subject=...` AND `ServiceRequest?subject=...`
-
-A single `patientSearchParam: 'subject'` per module fails for types like `ImagingStudy` (uses `patient`). A single `'patient'` fails for `Observation` category=molecular-pathology variants that use `subject`.
-
-### Recommended schema extension
-
-**Option A — Per-type search param overrides:**
-
-```typescript
-interface MiiModule {
-  // ... existing fields
-  fhirResourceType: string | string[];
-  patientSearchParam: string;  // default
-  patientSearchParamOverrides?: Record<string, string>;  // per-type override
+export function CommandPalette() {
+  const navigate = useNavigate();
+  const actions: SpotlightActionData[] = [
+    { id: 'patients', label: 'Patients', onClick: () => navigate('/patients') },
+    { id: 'quality',  label: 'Quality',  onClick: () => navigate('/quality') },
+    // resource-type quick-jumps from CapabilityStatement
+    ...resourceTypes.map(t => ({ id: `type-${t}`, label: `Browse ${t}`, onClick: () => navigate(`/explorer/${t}`) })),
+  ];
+  return <Spotlight actions={actions} shortcut={['mod+K', 'mod+P']} />;
 }
 ```
+Mount once in `AppLayout` (see IP-1 snippet). The `mod+K` shortcut is intercepted globally; no extra hotkey wiring needed.
 
-Example for Bildgebung:
-```typescript
-{
-  key: 'bildgebung',
-  category: 'extension',
-  fhirResourceType: ['ImagingStudy', 'Media', 'DiagnosticReport'],
-  patientSearchParam: 'subject',  // default for module
-  patientSearchParamOverrides: { 'ImagingStudy': 'patient' },
-}
-```
+## Data Flow
 
-`MiiModuleTab.tsx:63` becomes:
-```typescript
-const param = module.patientSearchParamOverrides?.[type] ?? module.patientSearchParam;
-const url = `${type}?${param}=Patient/${patientId}&_count=50&_sort=-date`;
-```
-
-**Option B — Per-type tuples:**
-
-Replace `fhirResourceType: string[]` with `fhirResourceTypes: Array<{ type: string; searchParam?: string }>`. More verbose but self-contained. Rejected because:
-- Breaks the `fhirResourceType` identifier used across 8 sites (test grep evidence).
-- `ClinicalTimeline.tsx:85-86` needs to match only on resource type, not on search param.
-- The override map is cleaner in JSON serialization (if we ever persist module configs).
-
-**Recommendation: Option A** — minimal surface, per-type overrides as sparse map.
-
-### Files modified
-
-| Modified |
-|----------|
-| `src/utils/mii-modules.ts:15-41` (add `patientSearchParamOverrides?: Record<string, string>`) |
-| `src/components/patients/MiiModuleTab.tsx:63` (override lookup per type) |
-
-### Confidence: HIGH on the data model; MEDIUM on which specific extension modules need which overrides — requires per-module profile research (happening in parallel per PROJECT.md).
-
----
-
-## Q6 — Color Strategy: 14 Mantine Colors vs 21 Modules
-
-### Current state
-
-`src/theme.ts:19` sets `primaryColor: 'indigo'` with custom warm-neutral gray ramp override at `:26-37`. Base Mantine colors available (not overridden): `red, pink, grape, violet, indigo, blue, cyan, teal, green, lime, yellow, orange` (12 distinct non-gray colors, plus the neutral gray override).
-
-### Existing usage
-
-| Site | file:line | Uses |
-|------|-----------|------|
-| Base module `badgeColor` field | `src/utils/mii-modules.ts:53,60,67,74,81,88,100` | 7 colors: blue, indigo, teal, violet, pink, cyan, orange |
-| `TimelineEntry` left border + badge | `src/components/patients/TimelineEntry.tsx:28,35` | Reads `entry.color` from `MII_MODULES` lookup in `ClinicalTimeline.tsx:94` |
-| `DashboardPage` MII tile | `src/components/dashboard/DashboardPage.tsx:345-384` | Does NOT currently use `badgeColor` — tiles are neutral. **Opportunity** to surface module color as a 2-4px indicator rail (consistent with Phase-30 Sidebar indigo rail pattern). |
-| Category colors | `src/components/dashboard/DashboardPage.tsx:47-59` | 11-color table for FHIR categories (Individuals → blue, Clinical → red, etc.) — **separate palette** from MII module colors |
-
-### The 14 remaining colors
-
-After claiming 7 for base modules: red, grape, green, lime, yellow + 2 from already-used but differentiable shades (dark+light variants of the same base hue, e.g., `blue.5` vs `blue.8`). Mantine supports shade suffixes in color tokens (`blue.6` default, `blue.3` light).
-
-### Recommended approach
-
-**Keep `badgeColor: string` as a Mantine color key** (not refactor to `{light, dark, text}` palette object). Reasons:
-
-1. All existing consumers (`TimelineEntry.tsx:28,35`, the future `DashboardPage` rail) use Mantine's CSS variable system via the color key: `var(--mantine-color-${color}-6)`. Refactoring to explicit palettes breaks this idiom and duplicates Mantine's generated ramp.
-
-2. The `ClinicalTimeline` dot color consumer at `ClinicalTimeline.tsx:94` fallbacks to `'gray'` when no match — a string fallback, not a palette fallback. Object palette would break the fallback.
-
-3. Mantine theme (`theme.ts`) is the right place to add custom colors if 14 is insufficient. `createTheme({ colors: { mtb: ['...10 shades'], biobank: ['...10 shades'] }})` defines new first-class color keys reusable everywhere. **Defer this decision to the per-module research.**
-
-**Color allocation strategy (preliminary, subject to revision):**
-
-| Approach | Description | Pro | Con |
-|----------|-------------|-----|-----|
-| **Tier 1 — Unique per base + shared within extension subgroups** | 7 unique for base; 14 extensions share 6 colors by category (oncology=red, imaging=cyan, genetics=grape, pathology=violet, etc.) | Meaningful grouping; fits in 13 colors | Some modules share a color — risk of confusion in timeline legend |
-| **Tier 2 — Unique per module via custom theme colors** | Add 7-10 custom colors to theme.colors; every module gets unique | Visual uniqueness; no confusion | Theme file bloat; palette saturation (21 swatches become hard to distinguish visually) |
-| **Tier 3 — Color + shape/icon differentiator** | Colors shared by category; each module has an icon from `@tabler/icons-react` | Semantically rich; accessible (color-blind friendly) | Icon strategy not yet in MII_MODULES; needs schema field |
-
-Recommendation: **Tier 1 for v1.5 first cut**, with optional follow-up to add icons (Tier 3) if UAT reveals confusion. Tier 2 only if Tier 1 fails UAT — adding theme colors mid-milestone is low-risk but pollutes the color palette.
-
-### `DashboardPage` MII tile swatch
-
-Currently `DashboardPage.tsx:345-384` renders MII tiles without a colored swatch. Adding a 2-4px indicator rail (`borderLeft: 2px solid var(--mantine-color-${module.badgeColor}-6)`) mirrors the Phase-30 sidebar active-rail pattern and the category-swatch pattern at `DashboardPage.tsx:282-289`.
-
-### Files modified
-
-| Modified |
-|----------|
-| `src/utils/mii-modules.ts` — add `badgeColor` for 14 extension modules |
-| `src/components/dashboard/DashboardPage.tsx:345-384` — optional swatch/rail for module tiles (Phase-30 UAT follow-up #5 may subsume this) |
-| `src/theme.ts` (optional, Tier 2) — custom color additions |
-
-### Confidence: MEDIUM — the schema (keep string color key) is HIGH confidence; the palette strategy (Tier 1 vs 3) is a design decision that needs UAT confirmation.
-
----
-
-## Q7 — Build Order & Risk Analysis
-
-### Dependency graph
+### Peek flow (cache-hit case — most common)
 
 ```
-┌── UX-01 validator cascade ──────────────────┐
-│   Independent. Touches ValidationPanel +    │
-│   new files in src/quality/*. Parallel-safe │
-│   with everything else.                     │
-└─────────────────────────────────────────────┘
-
-┌── EFF-R14 context split ──────────────┐
-│   Internal refactor, API-preserving.  │──┬──▶ Phase-30 follow-up #6 (per-type
-│   Blocks follow-up #6.                │  │    quality matrix card)
-│   Parallel-safe with MII schema.      │  │    needs per-metric contexts.
-└───────────────────────────────────────┘  │
-
-┌── MII_MODULES schema change ──────────┐
-│   `string | string[]` + `category` +  │
-│   `patientSearchParamOverrides?`.     │
-│   Blocks Extension-modules section.   │
-│   Blocks 14 extension modules.        │
-└────────────┬──────────────────────────┘
-             │
-             ▼
-┌── Extension-modules Collapse UI ──────┐
-│   MiiModuleTabs.tsx + dashboard tile  │
-│   partition. Blocks 14-module adds    │
-│   (so they have somewhere to render). │
-└────────────┬──────────────────────────┘
-             │
-             ▼
-┌── 14 extension module additions ──────┐
-│   Data-only (module defs + profiles). │
-│   Per-module research dictates        │
-│   search params + colors.             │
-└───────────────────────────────────────┘
-
-Phase-30 UAT follow-ups (6): mostly independent except #6.
-  #1 Explorer date/status extractor      → standalone
-  #2 HumanReadableView extension cleanup → standalone
-  #3 ResourceDetailPage rename           → standalone
-  #4 Empty per-patient panel probe       → standalone (investigation)
-  #5 Dashboard MII count scoping         → depends on MII schema (for extension tiles)
-  #6 Per-type quality matrix card        → depends on EFF-R14 per-metric split
+User on /explorer/Observation  (SearchResultsPage already fetched 20 resources)
+  │
+  └─ press J on focused row #5
+       │
+       └─ usePeekTarget().open({ type: 'Observation', id: 'obs-abc' })
+            │
+            └─ PeekProvider state: { peekTarget: { type, id } }
+                 │
+                 └─ JsonPeekDrawer renders Drawer position="right" size={420}
+                      │
+                      ├─ Header: summarizeResource(resource).primary  ← from resource (cache hit)
+                      ├─ Body:   <JsonViewer data={resource} />
+                      └─ Footer: [Copy] [Download] [Open Human] [Open Graph] [Open full →]
 ```
 
-### Recommended phase order
+### Peek flow (cache-miss — Cmd+click on reference chip)
 
-**Phase 31 (parallel-safe group A):**
-- UX-01 validator cascade (execute `29-02-PLAN.md` verbatim — all files scoped to `src/quality/cascadingValidator.ts`, `phiGate.ts`, `normalizers.ts`, `ValidationPanel.tsx`, `useConformanceRun.ts`, `config/*`)
-- Phase-30 UAT #1 (Explorer date/status extractor — `SearchResultsPage.tsx` only)
-- Phase-30 UAT #3 (ResourceDetailPage rename — `ResourceDetailPage.tsx`, drop `ClinicalRawView.tsx`)
+```
+User Cmd+clicks "Observation/lab-42" chip in HumanReadableView
+  │
+  └─ ReferenceLink intercepts: usePeekTarget().open({ type: 'Observation', id: 'lab-42' })
+       │
+       └─ JsonPeekDrawer mounts; resource lookup via useReferenceResolver('Observation/lab-42')
+            │
+            ├─ referenceCache.has('Observation/lab-42')?
+            │    │
+            │    ├─ YES (Phase 47 already resolved it): instant render
+            │    │
+            │    └─ NO: drawer shows Skeleton + "Resolving…"
+            │            │
+            │            └─ fetchReference() fires; on resolve → forceUpdate → drawer body populates
+            │                  │
+            │                  └─ on 404/error → drawer shows "Reference unresolvable" inline state (NO toast — D-02)
+```
 
-These three have zero file overlap.
+The Phase 47 negative cache (failed lookups stored as `null`) means a second Cmd+click on the same broken reference returns the unresolvable state instantly — no retry, no spinner.
 
-**Phase 32 (internal refactor):**
-- EFF-R14 QualityMetricsContext split (~20 files modified, but API-preserving)
-- Phase-30 UAT #4 empty per-patient panel investigation (may ship as a fix, or just a debug report)
+### 4-mode shell flow
 
-Can start same day as Phase 31 (no file overlap with validator cascade).
+```
+User navigates /explorer/Patient/abc-123
+  │
+  └─ ResourceDetailPage useEffect: client.readResource('Patient', 'abc-123')
+       │
+       └─ <ResourceShell resource={patient}>
+            │
+            ├─ SegmentedControl: [Summary | Human | Graph | JSON]
+            │     activeMode = 'summary' (default)  OR 'json' if Expert mode is ON
+            │     │
+            │     └─ Keyboard 1/2/3/4 swap activeMode (existing handler)
+            │
+            ├─ activeMode === 'summary' → SummaryMode
+            │     │
+            │     └─ keyFieldsRegistry['Patient'](patient) → React node
+            │           │
+            │           └─ Returns: <PatientHeaderCard/> + <PatientTimeline/> + <ViewToggle/> + (MII|FHIR)
+            │                       (the existing PatientDetailPage body, refactored into a registry entry)
+            │
+            ├─ activeMode === 'human'  → HumanMode → <HumanReadableView resource={patient}/>
+            ├─ activeMode === 'graph'  → GraphMode → <Suspense><ResourceGraphView/></Suspense>
+            └─ activeMode === 'json'   → JsonMode  → <JsonViewer data={patient} showLineNumbers showOutline/>
+                                                     <JsonViewerActions resource={patient}/>
 
-**Phase 33 (MII foundation):**
-- MII_MODULES schema change (`category`, `string | string[]`, `patientSearchParamOverrides?`)
-- Extension-modules Collapse UI (base vs extension partition in `MiiModuleTabs.tsx`, `DashboardPage.tsx`)
-- Phase-30 UAT #5 (Dashboard MII count scoping — touches same `DashboardPage.tsx:345-384` block)
+       └─ Below all modes (except 'graph'):
+            │
+            ├─ if Patient → <PatientRelatedResources patientId={patient.id}/>   (existing)
+            └─ else      → <IncomingReferencesPanel resource={resource}/>        (existing)
+```
 
-**Phase 34 (MII extensions):**
-- Add 14 extension modules data
-- Bundled profiles per extension module (`src/quality/profiles/`)
-- Per-module color strategy execution (Tier 1 palette decision from Q6)
+### Sidebar v2 IA flow
 
-**Phase 35 (final Phase-30 polish):**
-- Phase-30 UAT #2 HumanReadableView extension cleanup (`HumanReadableView.tsx`, `ResourcePropertyTable.tsx`)
-- Phase-30 UAT #6 per-type quality matrix card (depends on EFF-R14 landed in Phase 32)
+```
+NAV_ITEMS reorganised:
+  Browse
+    Dashboard         (exact match /)
+    Explorer          (matches /explorer*)
+      Patients        (matches /patients*)            ← NEW location (was top-level)
+      Practitioners   (matches /explorer/Practitioner)
+  Audit
+    Quality           (matches /quality*)
+      Overview        (exact /quality)
+      Cohorts         (matches /quality/cohorts)
+      Thresholds      (matches /quality/thresholds)
+      IPS Validator   (matches /quality/ips)
 
-### Risk analysis — what could break existing tests?
+Footer
+  [Switch] Expert view   ← reads/writes ExpertContext
+  Settings              (existing)
+```
 
-| Change | Risk | Affected tests |
-|--------|------|----------------|
-| MII_MODULES schema (`string \| string[]` + `category`) | MEDIUM | `src/__tests__/mii-modules.test.ts:6,10,23,28-87` (type asserts + exact-match) |
-| QualityMetricsContext split | MEDIUM | 6 producer/consumer test wrappers + `quality-overview.test.tsx:351-363` (direct context-setter calls) |
-| `MiiModuleTab` multi-type fan-out | LOW | `src/__tests__/` — search for MiiModuleTab tests; none found in grep, but component is integrated in `/patients/:id` tests if any |
-| `ClinicalTimeline.find(...)` → `.includes()` migration | LOW | Timeline tests if any (none in explicit grep result) |
-| Validator cascade in `useConformanceRun` | MEDIUM | `ValidationPanel` tests that mock `resolveBackends`; cascading shifts the mock surface |
-| `setOverallValidation` etc. hook migration | LOW | Per-panel tests already wrap with `QualityMetricsProvider`, which becomes `QualityMetricsProviders` (composite) — mechanical |
+## New Components
 
-### Risk analysis — what could break user behavior?
+| File | Purpose | Reuses | LOC est. |
+|------|---------|--------|---------:|
+| `components/peek/JsonPeekDrawer.tsx` | Mantine Drawer host; header strip; footer actions; key handlers | `JsonViewer`, `summarizeResource`, `useReferenceResolver` | 120 |
+| `components/peek/PeekProvider.tsx` | React context + reducer for `peekTarget` | — | 40 |
+| `components/peek/usePeekTarget.ts` | Hook wrapping context | — | 10 |
+| `components/peek/registerGlobalHotkeys.tsx` | `J`/`Esc` document listeners with input-focus guard | (mirrors `ResourceDetailPage:77-94`) | 30 |
+| `components/json/JsonViewer.tsx` | Single source for FHIR JSON rendering (extracted from `JsonTreeView`) | (move + extend) | 180 |
+| `components/json/JsonViewerActions.tsx` | Copy / Download / Validator-link toolbar | — | 50 |
+| `components/shell/ResourceShell.tsx` | 4-mode SegmentedControl + key-listener; mounts active mode | `keyFieldsRegistry`, `summarizeResource` | 100 |
+| `components/shell/SummaryMode.tsx` | Renders registry entry for resource type | `keyFieldsRegistry` | 30 |
+| `components/shell/HumanMode.tsx` | Thin wrapper; click-interceptor preserved | `HumanReadableView` | 30 |
+| `components/shell/GraphMode.tsx` | Suspense + lazy `ResourceGraphView` | (existing lazy ref) | 20 |
+| `components/shell/JsonMode.tsx` | `JsonViewer` + outline + actions | `JsonViewer`, `JsonViewerActions` | 60 |
+| `components/shell/keyFieldsRegistry.ts` | Type-keyed map: `(resource) => ReactNode` for 8 known types + generic | `summarizeResource` | 200 |
+| `components/shell/ValidationChip.tsx` | Status pill (valid / warnings / errors / unknown); reads cached validation state if present | `useConformanceRun` (read-only) | 40 |
+| `components/command/CommandPalette.tsx` | Mantine Spotlight wrapper; resource-type + section actions | (capability statement) | 60 |
+| `contexts/ExpertContext.tsx` | Boolean + setter; `localStorage['ui.expert.v1']` | (mirrors `useThresholds` persistence) | 50 |
 
-| Change | Risk | Mitigation |
-|--------|------|-----------|
-| `MiiModuleTab` fan-out to N queries | MEDIUM | Queries run in `Promise.all`; failure of one type falls to empty for that type (preserve `.catch()` pattern at `MiiModuleTab.tsx:74-77`) |
-| External validator cascade in production | HIGH | PHI gate blocks by default; `externalValidator.enabled: false` default; AbortController + timeout + toast on failure |
-| Dashboard MII tile count changes (multi-type sum) | LOW | Sum across types matches user expectation better than indexing with array (which returned undefined) |
-| Extension modules visible in Collapse | LOW | Collapse starts closed by default; no change to existing tab flow |
-| Color palette changes for existing modules | MEDIUM | KEEP the 7 base module colors unchanged — only add new colors for extensions |
-| QualityMetricsContext split re-render behavior | LOW | Facade preserves `useQualityMetrics()`; consumer-side migration is opt-in |
+Total new code: ~1000 LOC (estimate). New `node_modules` deps: **none** — Spotlight is already installed.
 
-### Confidence: HIGH on the graph and phase order; HIGH on test-risk identification (grep-verified).
+## Modified Components
+
+| File | Change | Risk |
+|------|--------|------|
+| `App.tsx` | None to routes. Optional: lift `<MedplumProvider>` if peek drawer needs client at root (rejected: provider stays per-section). | LOW |
+| `components/layout/AppLayout.tsx` | Wrap with `<PeekProvider>` + `<ExpertProvider>`; mount `<JsonPeekDrawer/>` + `<CommandPalette/>` siblings to `<AppShell.Main>` | LOW — additive, no existing render path changed |
+| `components/layout/Sidebar.tsx` | Reorganise `NAV_ITEMS` into Browse/Audit groups; add Expert Switch in footer; Patients moves under Explorer.children; generalise `suppressParent` so it stops being Quality-specific | MEDIUM — existing `Sidebar.test.tsx` asserts `data-active="true"` contract on parent rows; suppression logic generalisation must hold for the new Patients-under-Explorer case |
+| `components/explorer/ResourceDetailPage.tsx` | Reduce to fetch + `<ResourceShell/>`. Keyboard handler extends to `1`/`2`/`3`/`4`. `handleReferenceClick` migrates into `HumanMode` wrapper | MEDIUM — existing tests reference Tabs by `value="human-readable"`/`value="developer"`; need rewrite for SegmentedControl |
+| `components/explorer/SearchResultsPage.tsx` | Add row-focus state (track focused row index for `J` binding); add density `<SegmentedControl Cards/Table/Compact>`; add row overflow menu with "Peek JSON" action | MEDIUM — Summary column already wired (line 446); density modes are new |
+| `components/explorer/ReferenceLink.tsx` | Add `e.metaKey || e.ctrlKey` branch → `usePeekTarget().open(target)` instead of navigate | LOW — additive |
+| `components/explorer/JsonTreeView.tsx` | MOVE to `components/json/JsonViewer.tsx`; add optional `showLineNumbers`, `outlinePanel` props | LOW — internal moves; all callers updated in same PR |
+| `components/explorer/DeveloperJsonView.tsx` | DELETE or reduce to one-line wrapper `<JsonViewer data={resource} showLineNumbers/>` | LOW |
+| `components/patients/PatientDetailPage.tsx` | Body becomes `<ResourceShell resource={patient}/>`; existing 60-line conditional collapses to ~20 LOC | MEDIUM — patient-detail tests must update SegmentedControl assertions |
+| `components/patients/PatientListPage.tsx` | Add Summary column matching SearchResultsPage; add density toggle; add `J`-focus binding; **delete `RawPatientButton` Modal** (peek replaces it) | LOW |
+| `components/patients/PatientHeaderCard.tsx` | Drop `PatientHeaderActions` (Raw JSON button) — drawer/JSON mode covers it. Card layout becomes the Patient `keyFieldsRegistry` render output. | LOW |
+| `components/patients/PatientsLayout.tsx` | Unchanged structurally. Future: deduplicate with ExplorerLayout if desired | LOW |
+| `components/quality/ResourceIssueTable.tsx` | Add overflow-menu "Peek JSON" item per row (rows already carry resource type+id) | LOW |
+| `components/explorer/HumanReadableView.tsx` | `ExtensionsSection` Modal migrates from `<Code block>` to `<JsonViewer/>` for visual consistency | LOW |
+
+## Build Order
+
+The handoff itself proposes an order (lines 192-199). Below is the **codebase-grounded refinement** — same intent, with v1.7 already shipped (so handoff Phases 46/47/48/49 are already done in the repo).
+
+**Each phase below is one milestone-internal phase, not a milestone.** Sequential.
+
+### Phase A — Foundation: shared JsonViewer + PeekProvider (smallest, unblocks everything)
+- Move `JsonTreeView.tsx` → `components/json/JsonViewer.tsx` with optional props.
+- Convert `DeveloperJsonView.tsx` into a 5-line wrapper or delete it.
+- Add `components/peek/PeekProvider.tsx` + `usePeekTarget.ts` + `JsonPeekDrawer.tsx` (basic — header, body, close).
+- Mount provider + drawer in `AppLayout.tsx`.
+- Wire `J` hotkey on `SearchResultsPage` rows. Esc closes.
+- Tests: peek-open, peek-close, drawer-swap (J on different row), focus-return on close.
+- **Ship value:** users get a JSON peek on Explorer rows. Standalone PR.
+- **No risk to existing flows.** Drawer is additive. Existing routes unchanged.
+
+### Phase B — JSON peek expansion (call-site coverage)
+- Wire `J` on `PatientListPage` rows.
+- Wire Cmd/Ctrl+click on `ReferenceLink.tsx` → opens drawer using `useReferenceResolver` cache.
+- Wire "Peek JSON" overflow item in `ResourceIssueTable.tsx`.
+- Wire `J` on Graph nodes (`ResourceGraphNode.tsx` — onKeyDown when focused).
+- Tests: each call site triggers drawer; Cmd+click cache-hit vs miss path; broken-ref state.
+- **Ships:** drawer reaches all 5 call sites mandated by handoff SC#5.
+
+### Phase C — 4-mode resource shell
+- Create `components/shell/ResourceShell.tsx` + `SummaryMode/HumanMode/GraphMode/JsonMode` panels.
+- Build `keyFieldsRegistry.ts` for 8 known types + generic walker (parallel to `summarizeResource` 8 entries — reuse field-extraction helpers from `SearchResultsPage:65-82`).
+- Rewrite `ResourceDetailPage.tsx` → fetch + `<ResourceShell/>`.
+- Extend keyboard handler to `1`/`2`/`3`/`4`.
+- Drawer footer "Open full →" → `navigate(/explorer/${type}/${id})` lands on Mode 4 (JSON) when Expert is ON, else Mode 1 (Summary).
+- Tests: 4-mode switch via segmented control AND keyboard; PatientHeaderCard absorbed into Patient registry; existing `IncomingReferencesPanel`/`PatientRelatedResources` mount logic preserved.
+- **Ships:** unified detail experience for all non-Patient resource types.
+
+### Phase D — Patient detail integration into shell
+- Move `PatientDetailPage.tsx`'s `<PatientHeaderCard/>` + `<PatientTimeline/>` + `<SegmentedControl(MII|FHIR)>` + `(MiiModuleTabs|FhirResourcesView)` into the Patient `keyFieldsRegistry` entry as Summary mode content.
+- `PatientDetailPage.tsx` collapses to: fetch + `<ResourceShell resource={patient}/>`.
+- Drop `PatientHeaderCard.PatientHeaderActions` (Raw JSON button + $everything ActionIcon migrate to `JsonViewerActions`).
+- Drop `PatientListPage.tsx`'s `RawPatientButton` Modal (peek replaces).
+- Tests: patient detail still renders MII tabs by default; SegmentedControl(MII|FHIR) still works inside SummaryMode.
+- **Ships:** Patient is no longer special-cased. Same shell everywhere.
+
+### Phase E — Explorer list improvements (EXPL-01..03)
+- Density modes (`Cards | Table | Compact`) via `<SegmentedControl>` in `SearchResultsPage` + `PatientListPage`. Persist selection to localStorage.
+- Summary column already exists in `SearchResultsPage` (verified line 446); add to `PatientListPage`.
+- Tests: density selection persists; Summary column shows `summarizeResource(r).primary` and `.secondary`.
+
+### Phase F — Sidebar v2 + ⌘K + Expert toggle (SIDE-01..04 + LENS-01..02)
+- Reorganise `NAV_ITEMS` into Browse/Audit. Patients moves under Explorer (Lenses).
+- Generalise `suppressParent` logic in `Sidebar.tsx` (currently Quality-specific) to a per-row data field.
+- Add `ExpertContext` provider; mount in `AppLayout`. Footer Switch in `Sidebar`.
+- Wire `<CommandPalette/>` (Spotlight, already a dep).
+- Update `PatientListPage`/`PatientDetailPage` breadcrumbs to start from `Explorer › Patients`.
+- Tests: command palette opens on `mod+K`; Expert toggle persists; sidebar most-specific-wins on `/patients/*`.
+- **Ships:** LENS-01..02 + SIDE-01..04 in one phase (cohesive IA change).
+
+### Phase G — UAT closure (UAT-01)
+- Walk the deferred items from v1.6 + v1.7 phase HUMAN-UAT.md files.
+- Stand-alone phase per existing project pattern.
 
 ---
 
-## Summary Table — Integration Surface
+### Build-order rationale
 
-| Scope group | New files | Modified files | Tests touched |
-|-------------|-----------|----------------|---------------|
-| UX-01 cascade | 6 (3 src + 3 tests) | 6 (ValidationPanel, useConformanceRun, config/types, config/settings, settings.yaml, phiGate alert extraction) | 3 new test files + ValidationPanel tests |
-| EFF-R14 split | 8 (7 per-metric contexts + 1 composite) | ~12 (QualityMetricsContext.tsx facade, QualityLayout.tsx, 7 producer sites, OverviewStrip, QualityOverviewPage partial) | 7 test wrappers + quality-overview test |
-| Phase-30 UAT follow-ups | 0 | 6-8 (SearchResultsPage, ResourceDetailPage, ClinicalRawView deletion, HumanReadableView, ResourcePropertyTable, DashboardPage, new per-type matrix) | moderate |
-| MII schema + extensions | 14+ (bundled profiles + possibly icon modules) | 4 (mii-modules.ts, MiiModuleTab, MiiModuleTabs, DashboardPage, ClinicalTimeline, test file) | mii-modules.test.ts + new extension-module tests |
+| # | Why this position |
+|---|---|
+| A | Smallest scope; pure refactor + additive drawer; no other phase blocks on this not landing |
+| B | All peek call-sites wired before shell lands so testing surface is broad |
+| C | Shell is high-blast-radius; ship after drawer (so Mode 4's "Open full" works) |
+| D | Patient is most-special; isolate its migration from Phase C's shell-skeleton work |
+| E | EXPL pieces are nearly orthogonal; deferred so Phase A-D test churn settles |
+| F | IA changes touch routing/breadcrumbs; ship last among the structural work |
+| G | UAT closure is always a phase of its own per repo convention |
 
----
+**Dependencies enforce A → B/C in parallel-impossible: no.** Phase B can technically run in parallel with C since their files barely overlap (`ReferenceLink.tsx` is the only shared touch). But a single-track sequence keeps test-baseline drift manageable for a small team.
 
-## Open Questions for Requirements Phase
+### Breaking-change risks (flagged for roadmap)
 
-1. **Auto-expand extension Collapse on deep-link.** Should `/patients/:id?moduleTab=onkologie` automatically open the Extension-modules Collapse? Recommend YES based on UX principle of not hiding selected state.
-2. **Empty extension-module tab visibility.** Hide tabs with 0 resources per patient, or show dimmed? Current approach in `DashboardPage.tsx:357` is dimmed opacity — propose matching that idiom.
-3. **Dashboard MII tile: partition or toggle?** With 14 extensions, the current 4-col grid becomes 21 tiles across 5-6 rows. Partition by category (same pattern as MiiModuleTabs) or gate extensions behind a toggle?
-4. **Color palette decision — Tier 1, 2, or 3.** Needs design/UAT input before Phase 34.
-5. **Probe cache module scope vs useRef.** Confirmed: `useRef` per v1.5 architecture review (diverges from v1.4 `metricsCache` pattern deliberately).
-6. **Facade deprecation timeline.** Keep `useQualityMetrics()` forever, or deprecate in v1.6? Recommend keep — it's useful for PDF export and snapshot capture (bulk reads).
-7. **Dashboard MII count: per-patient or server-wide?** (Phase-30 UAT #5). If per-patient, requires a new `useResourceCountsPerPatient` hook; if labelled server-wide, single-word text addition. Simpler option favored for v1.5.
-
----
+- **R1 (Phase C)**: `ResourceDetailPage.test.tsx` and any test that asserts `Tabs.Tab[value="human-readable"]` will break. Mitigation: rewrite assertions in same PR.
+- **R2 (Phase D)**: `PatientHeaderCard.test.tsx` mocks ID/age/gender rendering. The component survives but its actions go away — update test.
+- **R3 (Phase F)**: `Sidebar.test.tsx` asserts `data-active="true"` on `Patients` row when on `/patients/*`. New: that row is now an `Explorer` child. The contract still holds for the *child* row; the parent `Explorer` row should be dimmed. Mitigation: extend the existing `suppressParent` test to cover Patients-under-Explorer.
+- **R4 (Phase A)**: deleting `DeveloperJsonView.tsx` would break any external referrer. Grep `DeveloperJsonView` → only `ResourceDetailPage.tsx` imports it. Safe to delete in same PR.
+- **R5 (Phase B)**: `ReferenceLink.tsx` Cmd+click handler must not break the existing `handleReferenceClick` interception in `ResourceDetailPage.tsx:105-124`. The two run on different events (Cmd+click vs plain click). Mitigation: explicit `if (e.metaKey || e.ctrlKey)` branch in ReferenceLink; ResourceDetailPage's handler remains for plain clicks.
+- **R6 (cross-cut)**: `JsonViewer` move requires updating all imports. `git grep -l "from .*JsonTreeView\|DeveloperJsonView"` returns ~3 files — small blast radius.
+- **R7 (Phase A)**: `Sidebar.test.tsx`'s suppression generalisation test must be added at Phase F time, not Phase A — keep them separate to avoid cross-phase test churn.
 
 ## Sources
 
-**Repo evidence (HIGH confidence — all line-verified 2026-04-23):**
-
-- `src/utils/mii-modules.ts:15-103` — MiiModule interface + 7 base module definitions
-- `src/components/patients/MiiModuleTab.tsx:53-99` — per-module fetch + empty state
-- `src/components/patients/MiiModuleTabs.tsx:61-94` — tab bar with keepMounted
-- `src/components/patients/ClinicalTimeline.tsx:85-94` — module lookup for badge color
-- `src/components/patients/TimelineEntry.tsx:20-45` — color CSS variable consumption
-- `src/components/dashboard/DashboardPage.tsx:30,345-384` — MII tile grid
-- `src/quality/QualityMetricsContext.tsx:107-201` — monolithic context
-- `src/components/quality/OverviewStrip.tsx:67-98` — 7-metric facade consumer
-- `src/components/quality/QualityOverviewPage.tsx:204,279-286,444-462` — multi-metric facade consumer
-- `src/components/quality/PdfReportLayout.tsx:82,270-286` — prop-shaped multi-metric consumer
-- `src/components/quality/ValidationPanel.tsx:72,100-107,167-178,200-205,270-294` — PHI gate + normalizer inline
-- `src/hooks/useConformanceRun.ts:104,159,183-188` — cascade integration target
-- `src/quality/validationBackends.ts:32-48,53-70,83-98` — current 2-backend resolve pattern
-- `src/components/quality/QualityLayout.tsx:17-35` — provider composition site
-- `src/App.tsx:142-152` — lazy drill-down routes (v1.4 Phase 27 baseline)
-- `src/theme.ts:16-45` — indigo primary + warm neutral ramp
-- `.planning/milestones/v1.4-research/ARCHITECTURE.md` — v1.4 architecture baseline (Q4/R14 deferral, provider shim pattern)
-- `.planning/phases/29-backlog-ux/29-02-PLAN.md:7-103` — cascade plan preserved verbatim
-- `.planning/phases/30-layout-redesign/30-UAT.md:245-308` — 6 off-phase follow-up gaps with file paths
-- `.planning/PROJECT.md:76-122` — v1.5 scope groups
+- `.planning/PROJECT.md` — v1.8 active requirements (PEEK/SHELL/EXPL/SIDE/LENS/UAT)
+- `design_handoff_v1.7_navigation/README.md` — design intent, mount/state directives, suggested order
+- `src/App.tsx` — current routing tree, lazy-route wiring (verified)
+- `src/components/layout/AppLayout.tsx` — current shell structure (verified)
+- `src/components/layout/Sidebar.tsx` — current NAV_ITEMS shape, suppress-parent logic (verified lines 153-160)
+- `src/components/explorer/ResourceDetailPage.tsx` — current Tabs structure, key handlers, click interception (verified lines 77-94, 105-124)
+- `src/components/explorer/SearchResultsPage.tsx` — confirmed Summary column already wired via `summarizeResource` (line 446)
+- `src/components/explorer/JsonTreeView.tsx` + `DeveloperJsonView.tsx` — extraction-target shape (verified)
+- `src/components/explorer/IncomingReferencesPanel.tsx` + `PatientRelatedResources.tsx` — mount-below-modes preservation
+- `src/components/patients/{PatientsLayout,PatientDetailPage,PatientListPage,PatientHeaderCard}.tsx` — Patients-as-lens migration footprint (verified)
+- `src/hooks/useReferenceResolver.ts` — drawer Cmd+click cache pathway (verified — `referenceCache` Map exists)
+- `src/utils/summarizeResource.ts` — registry parity for `keyFieldsRegistry` (8 typed entries verified)
+- `package.json` — confirmed `@mantine/spotlight: ^8.3.18` already installed; no zustand
