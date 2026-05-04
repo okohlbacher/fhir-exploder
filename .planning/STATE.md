@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.7
-milestone_name: Gap Closure — Summary Util Coverage + Graph Patient-Context
-status: planning
-stopped_at: Phase 54 context gathered
-last_updated: "2026-05-04T17:42:07.961Z"
+milestone: v1.8
+milestone_name: Navigation Redesign (in progress, started 2026-05-04)
+status: executing
+stopped_at: Phase 54 complete — advancing to Phase 55
+last_updated: "2026-05-04T19:45:00.000Z"
 last_activity: 2026-05-04
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 15
-  completed_plans: 16
-  percent: 100
+  total_phases: 7
+  completed_phases: 3
+  total_plans: 6
+  completed_plans: 6
+  percent: 43
 ---
 
 # Project State
@@ -21,26 +21,26 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.8 Navigation Redesign — Phase 53 complete, next: Phase 54 4-Mode Resource Shell
+**Current focus:** v1.8 Navigation Redesign — Phase 54 complete, next: Phase 55 Explorer Improvements
 
 ## Current Position
 
-Phase: 54
+Phase: 55
 Plan: Not started
-Status: Ready to plan
+Status: Ready to discuss/plan
 Last activity: 2026-05-04
 
 v1.8 phases (52-58):
 
 - **Phase 52: JSON Peek Drawer Foundation (PEEK-01, PEEK-02, PEEK-03, PEEK-06) — COMPLETE**
 - **Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05) — COMPLETE**
-- Phase 54: 4-Mode Resource Shell (SHELL-01, SHELL-02, SHELL-03, SHELL-04)
+- **Phase 54: 4-Mode Resource Shell (SHELL-01, SHELL-02, SHELL-03, SHELL-04) — COMPLETE**
 - Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03)
 - Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04)
 - Phase 57: Patients-as-Lens (LENS-01, LENS-02)
 - Phase 58: UAT Backlog Closure (UAT-01)
 
-Progress: [###       ] 29%
+Progress: [####      ] 43%
 
 ## Performance Metrics
 
@@ -92,9 +92,21 @@ Progress: [###       ] 29%
 - **`src/components/patients/PatientListPage.tsx`** — J shortcut wired (4th surface); `focusedPatient` + relatedTarget blur guard + indigo focus ring
 - **Phase 52+53 Human UAT pending (Phase 58 scope)**: drawer visual width (420px), URL stability when J pressed, focus ring visibility (Phase 52); + 4 new Phase 53 items (see 53-HUMAN-UAT.md)
 
+### Phase 54 Deliverables (carry-forward to Phase 55)
+
+- **`src/utils/keyFieldsRegistry.ts`** — `getKeyFields(r): KeyFieldEntry[]` for 8 typed R4 types + generic fallback (4-6 fields per type)
+- **`src/components/explorer/KeyFieldsTable.tsx`** — 2-column Mantine Table for Summary mode
+- **`src/components/explorer/JsonModeView.tsx`** — JSON toolbar: Copy/Download/validation chip/Open-in-validator
+- **`src/components/json/JsonViewer.tsx`** — extended with `showLineNumbers?: boolean` prop (PEEK-06 invariant preserved)
+- **`src/components/explorer/ResourceDetailPage.tsx`** — full 4-mode shell: `Summary | Human | Graph | JSON`, URL-driven `?mode=`, `useShortcuts` for 1/2/3/4, lazy ResourceGraphView
+- **`src/components/explorer/ResourceGraphView.tsx`** — `compact?: boolean` prop suppresses standalone header when embedded
+- **`src/App.tsx`** — `NavigateToMode` adapter; legacy `/graph` routes → `?mode=graph` redirects
+- **`DeveloperJsonView.tsx` deleted** — merged into JsonModeView; 0 remaining importers
+- **Phase 54 Human UAT pending (Phase 58 scope)**: visual pill tabs, keyboard shortcuts, React Flow canvas, chip colors, file download, /graph redirect (6 items)
+
 ### Blockers/Concerns
 
-- None. PEEK-01..06 fully shipped (Phase 52 + 53). Phase 54 (4-Mode Resource Shell) is unblocked — `useShortcuts` ready, mode switcher design locked to `<Tabs variant="pills">` styled as SegmentedControl.
+- None. SHELL-01..04 fully shipped (Phase 54). Phase 55 (Explorer Improvements) is unblocked.
 
 ### Quick Tasks Completed
 
@@ -105,7 +117,7 @@ Progress: [###       ] 29%
 
 ## Session Continuity
 
-Last session: 2026-05-04T16:12:22.121Z
-Stopped at: Phase 54 context gathered
-Resume file: .planning/phases/54-4-mode-resource-shell/54-CONTEXT.md
-Next action: `/gsd-discuss-phase 54` or `/gsd-plan-phase 54`
+Last session: 2026-05-04T19:45:00.000Z
+Stopped at: Phase 54 complete
+Resume file: .planning/phases/54-4-mode-resource-shell/54-VERIFICATION.md
+Next action: `/gsd-discuss-phase 55` or `/gsd-plan-phase 55`
