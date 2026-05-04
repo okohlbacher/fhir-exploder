@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
+import { PeekProvider } from '../contexts/PeekContext';
 
 // Polyfill ResizeObserver for jsdom (required by Mantine components)
 class MockResizeObserver {
@@ -48,11 +50,17 @@ const mockOutletContext = {
 };
 const mockSearchParams = new URLSearchParams();
 const mockSetSearchParams = vi.fn();
-vi.mock('react-router-dom', () => ({
-  useOutletContext: () => mockOutletContext,
-  useNavigate: () => mockNavigate,
-  useSearchParams: () => [mockSearchParams, mockSetSearchParams],
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>(
+    'react-router-dom',
+  );
+  return {
+    ...actual,
+    useOutletContext: () => mockOutletContext,
+    useNavigate: () => mockNavigate,
+    useSearchParams: () => [mockSearchParams, mockSetSearchParams],
+  };
+});
 
 // Mock Medplum React: SearchControl is heavy — stub it out so the page renders.
 vi.mock('@medplum/react', () => ({
@@ -72,10 +80,17 @@ vi.mock('@medplum/react-hooks', () => ({
 
 import { PatientListPage } from '../components/patients/PatientListPage';
 
+// Phase 53 Plan 02 Task 3: PatientListPage now consumes usePeek() for the
+// J-shortcut PEEK-05 affordance. Wrap in PeekProvider; add MemoryRouter
+// because the page also wires useNavigate via the J → openPeek path.
 function renderPage() {
   return render(
     <MantineProvider>
-      <PatientListPage />
+      <MemoryRouter>
+        <PeekProvider>
+          <PatientListPage />
+        </PeekProvider>
+      </MemoryRouter>
     </MantineProvider>
   );
 }

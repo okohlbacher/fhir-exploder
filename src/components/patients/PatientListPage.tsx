@@ -30,6 +30,8 @@ import type { PatientsOutletContext } from './PatientsLayout';
 import { PaginationControls } from '../explorer/PaginationControls';
 import { searchByIdentifierPrefix } from '../../utils/searchByIdentifierPrefix';
 import { toRecord } from '../../utils/fhir-helpers';
+import { usePeek } from '../../contexts/PeekContext';
+import { useShortcuts } from '../../hooks/useShortcuts';
 
 // ---------------------------------------------------------------------------
 // extractDate — pull the most relevant clinical date from any FHIR resource
@@ -246,17 +248,31 @@ function PatientRow({
   patient,
   client,
   onNavigate,
+  isFocused = false,
+  onFocus,
+  onBlur,
 }: {
   rowIndex: number;
   patient: Patient;
   client: MedplumClient;
   onNavigate: (id: string) => void;
+  /** PEEK-05 surface 2 (D-08/D-10): visual focus ring + parent state hook. */
+  isFocused?: boolean;
+  onFocus?: () => void;
+  onBlur?: (e: React.FocusEvent<HTMLTableRowElement>) => void;
 }) {
   const summary = usePatientResourceSummary(patient.id ?? '', client);
   return (
     <Table.Tr
-      style={{ cursor: 'pointer' }}
+      tabIndex={0}
+      style={{
+        cursor: 'pointer',
+        outline: isFocused ? '2px solid var(--accent-ring)' : undefined,
+        outlineOffset: isFocused ? '-1px' : undefined,
+      }}
       onClick={() => patient.id && onNavigate(patient.id)}
+      onFocus={onFocus}
+      onBlur={onBlur}
     >
       <Table.Td
         style={{
@@ -347,6 +363,20 @@ export function PatientListPage() {
   // Active search = what's actually been submitted (not live typing)
   const [activeSearch, setActiveSearch] = useState<PatientSearchParams>(computeInitialFromUrl);
   const [searchVersion, setSearchVersion] = useState(0);
+
+  // PEEK-05 surface 2 (D-07..D-10): J-shortcut wiring. Mirrors
+  // SearchResultsPage.tsx:148-156 byte-for-byte (Phase 52 reference impl)
+  // substituting Patient for Resource. PatientRow blurs to a sibling row
+  // are absorbed by the relatedTarget/tbody.contains guard wired below.
+  const { openPeek } = usePeek();
+  const [focusedPatient, setFocusedPatient] = useState<Patient | null>(null);
+
+  const handleJ = useCallback(() => {
+    if (!focusedPatient) return; // No focused row → silent no-op (UI-SPEC empty state)
+    openPeek(focusedPatient as Resource, document.activeElement as HTMLElement | null);
+  }, [focusedPatient, openPeek]);
+
+  useShortcuts({ j: handleJ });
 
   // Execute search whenever activeSearch or count changes
   useEffect(() => {
@@ -685,6 +715,19 @@ export function PatientListPage() {
                 patient={p}
                 client={client}
                 onNavigate={(id) => navigate(`/patients/${id}`)}
+                isFocused={focusedPatient?.id === p.id}
+                onFocus={() => setFocusedPatient(p)}
+                onBlur={(e) => {
+                  // Mirrors SearchResultsPage:442-451 — keep focusedPatient
+                  // when focus moves to a sibling row within the same tbody
+                  // (or into the drawer via trapFocus). Only clear when
+                  // focus leaves the tbody entirely, preventing flicker.
+                  const next = e.relatedTarget as Node | null;
+                  const tbody = (e.currentTarget as HTMLElement).closest('tbody');
+                  if (!next || !tbody?.contains(next)) {
+                    setFocusedPatient(null);
+                  }
+                }}
               />
             ))}
           </Table.Tbody>

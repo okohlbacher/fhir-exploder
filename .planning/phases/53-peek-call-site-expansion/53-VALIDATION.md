@@ -2,7 +2,7 @@
 phase: 53
 slug: peek-call-site-expansion
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: true
 created: 2026-05-04
 ---
