@@ -1,7 +1,8 @@
 ---
 phase: 54
 slug: 4-mode-resource-shell
-status: draft
+status: approved
+reviewed_at: 2026-05-04
 shadcn_initialized: false
 preset: not applicable (Mantine 8 is the project design system; shadcn forbidden by CLAUDE.md "Tailwind is forbidden")
 created: 2026-05-04
