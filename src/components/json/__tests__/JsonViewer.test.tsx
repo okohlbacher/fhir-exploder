@@ -1,4 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { MantineProvider } from '@mantine/core';
+import type { Resource } from '@medplum/fhirtypes';
 
 // Polyfill ResizeObserver for jsdom (required by Mantine components)
 class MockResizeObserver {
@@ -24,12 +27,40 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
-describe.skip('JsonViewer (PEEK-06 + SHELL-04)', () => {
+import { JsonViewer } from '../JsonViewer';
+
+// Small fixture to produce known JSON with a predictable number of lines:
+// { "resourceType": "Patient", "id": "p1", "active": true }
+// → 4 lines when pretty-printed (open brace, 3 fields, close brace)
+const fixture: Resource = {
+  resourceType: 'Patient',
+  id: 'p1',
+  active: true,
+};
+
+function renderJsonViewer(props: { resource: Resource; showLineNumbers?: boolean }) {
+  return render(
+    <MantineProvider>
+      <JsonViewer {...props} />
+    </MantineProvider>,
+  );
+}
+
+describe('JsonViewer (PEEK-06 + SHELL-04)', () => {
   it('tree mode renders without showLineNumbers', () => {
-    expect(true).toBe(true); // PLACEHOLDER — Task 4 replaces with real assertions
+    const { container } = renderJsonViewer({ resource: fixture });
+    // Default tree mode must NOT render a <pre> element (that's the line-numbers branch)
+    expect(container.querySelector('pre')).toBeNull();
   });
 
   it('showLineNumbers renders flat <pre> with numbered gutter', () => {
-    expect(true).toBe(true); // PLACEHOLDER — Task 4 replaces with real assertions
+    const { container } = renderJsonViewer({ resource: fixture, showLineNumbers: true });
+    // Must render a <pre> element
+    const pre = container.querySelector('pre');
+    expect(pre).not.toBeNull();
+    // Line numbers 1, 2, 3 must be visible (fixture has at least 4 lines)
+    expect(screen.getByText('1')).toBeDefined();
+    expect(screen.getByText('2')).toBeDefined();
+    expect(screen.getByText('3')).toBeDefined();
   });
 });
