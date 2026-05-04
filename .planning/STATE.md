@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.8
-milestone_name: -- Navigation Redesign (in progress, started 2026-05-04)
+milestone: v1.7
+milestone_name: Gap Closure — Summary Util Coverage + Graph Patient-Context
 status: planning
 stopped_at: Phase 54 context gathered
-last_updated: "2026-05-04T16:12:22.127Z"
+last_updated: "2026-05-04T17:42:07.961Z"
 last_activity: 2026-05-04
 progress:
-  total_phases: 12
-  completed_phases: 7
-  total_plans: 17
-  completed_plans: 18
+  total_phases: 6
+  completed_phases: 6
+  total_plans: 15
+  completed_plans: 16
   percent: 100
 ---
 
