@@ -3,6 +3,8 @@ import { AppShell, Center, Loader } from '@mantine/core';
 import { Outlet } from 'react-router-dom';
 import { Sidebar, type ConnectionStatus } from './Sidebar';
 import { FeedbackButton } from '../feedback/FeedbackButton';
+import { PeekProvider } from '../../contexts/PeekContext';
+import { JsonPeekDrawer } from '../json/JsonPeekDrawer';
 
 interface AppLayoutProps {
   connectionStatus: ConnectionStatus;
@@ -41,9 +43,12 @@ export function AppLayout({ connectionStatus }: AppLayoutProps) {
         <Sidebar connectionStatus={connectionStatus} />
       </AppShell.Navbar>
       <AppShell.Main>
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <Outlet />
-        </Suspense>
+        <PeekProvider>
+          <Suspense fallback={<RouteLoadingFallback />}>
+            <Outlet />
+          </Suspense>
+          <JsonPeekDrawer />
+        </PeekProvider>
       </AppShell.Main>
       {import.meta.env.DEV && <FeedbackButton />}
     </AppShell>

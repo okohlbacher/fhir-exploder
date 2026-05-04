@@ -1,20 +1,19 @@
 /**
- * Wave 0 test scaffolds for JsonPeekDrawer (PEEK-01..03).
+ * JsonPeekDrawer tests (PEEK-01..03).
  *
- * JsonPeekDrawer currently renders null (Wave 0 stub in Plan 01).
- * Most of these tests are intentionally RED until Plan 02 implements
- * the real drawer. The first test ("renders nothing...") passes because
- * the stub returns null, which is the correct initial state.
- *
- * Plan 02 replaces src/components/json/JsonPeekDrawer.tsx with the full
- * Mantine Drawer implementation, turning the remaining RED tests GREEN.
+ * Plan 02 replaced the Wave 0 null stub with the real Mantine Drawer
+ * implementation. The previously-skipped tests are now active.
  */
-import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import { PeekProvider, usePeek } from '../contexts/PeekContext';
 import { JsonPeekDrawer } from '../components/json/JsonPeekDrawer';
+
+// ---------------------------------------------------------------------------
+// Mantine / jsdom polyfills
+// ---------------------------------------------------------------------------
 
 // Polyfill ResizeObserver for jsdom (required by Mantine ScrollArea / Drawer)
 class MockResizeObserver {
@@ -40,9 +39,28 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
+// ---------------------------------------------------------------------------
+// Mock react-router-dom useNavigate
+// ---------------------------------------------------------------------------
+
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+// ---------------------------------------------------------------------------
+// Test harness
+// ---------------------------------------------------------------------------
+
 function Harness({ children }: { children: React.ReactNode }) {
   return (
-    <MantineProvider>
+    // env="test" disables Mantine Transition animations so drawers mount/unmount
+    // synchronously in jsdom — no transitionend required (see Transition.mjs).
+    <MantineProvider env="test">
       <MemoryRouter>
         <PeekProvider>
           {children}
@@ -62,6 +80,10 @@ function Opener({ resource }: { resource: any }) {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
 describe('JsonPeekDrawer (PEEK-01..03)', () => {
   const sample = { resourceType: 'Patient', id: 'pat-1' };
 
@@ -71,12 +93,11 @@ describe('JsonPeekDrawer (PEEK-01..03)', () => {
         <Opener resource={sample} />
       </Harness>,
     );
-    // Wave 0 stub renders null — title is correctly absent before openPeek is called
+    // Before openPeek is called the drawer does not exist in the DOM
     expect(screen.queryByText('Patient/pat-1')).toBeNull();
   });
 
-  // RED until Plan 02 wires real JsonPeekDrawer (stub renders null)
-  it.skip('opens drawer with resourceType/id title when openPeek is called (PEEK-01)', () => {
+  it('opens drawer with resourceType/id title when openPeek is called (PEEK-01)', () => {
     render(
       <Harness>
         <Opener resource={sample} />
@@ -86,21 +107,27 @@ describe('JsonPeekDrawer (PEEK-01..03)', () => {
     expect(screen.getByText('Patient/pat-1')).toBeTruthy();
   });
 
-  it('Esc closes the drawer (PEEK-02)', () => {
+  it('Esc closes the drawer (PEEK-02)', async () => {
     render(
       <Harness>
         <Opener resource={sample} />
       </Harness>,
     );
     fireEvent.click(screen.getByText('open'));
-    fireEvent.keyDown(document, { key: 'Escape' });
-    // RED until Plan 02 — stub renders nothing so this passes vacuously;
-    // real test: drawer title disappears after Esc
+    // Drawer title visible after open
+    expect(screen.getByText('Patient/pat-1')).toBeTruthy();
+    // Fire keydown on document.body (an Element) so event.target has getAttribute
+    // Mantine's useWindowEvent listener (capture:true) should receive this
+    await act(async () => {
+      fireEvent.keyDown(document.body, { key: 'Escape' });
+    });
+    // After Esc: closePeek() sets opened=false. The Mantine Drawer's
+    // Transition removes the content from DOM (keepMounted=false default).
+    // The title Text element should be gone.
     expect(screen.queryByText('Patient/pat-1')).toBeNull();
   });
 
-  // RED until Plan 02 wires real JsonPeekDrawer (stub renders null)
-  it.skip('shows Open full → button when drawer is open (PEEK-03)', () => {
+  it('shows Open full → button when drawer is open (PEEK-03)', () => {
     render(
       <Harness>
         <Opener resource={sample} />
@@ -110,8 +137,7 @@ describe('JsonPeekDrawer (PEEK-01..03)', () => {
     expect(screen.getByRole('button', { name: /Open full →/ })).toBeTruthy();
   });
 
-  // RED until Plan 02 wires real JsonPeekDrawer (stub renders null)
-  it.skip('content swaps without unmounting when openPeek is called with a different resource (PEEK-02)', () => {
+  it('content swaps without unmounting when openPeek is called with a different resource (PEEK-02)', () => {
     function TwoOpeners() {
       const { openPeek } = usePeek();
       return (
@@ -127,10 +153,100 @@ describe('JsonPeekDrawer (PEEK-01..03)', () => {
       </Harness>,
     );
     fireEvent.click(screen.getByText('a'));
-    // RED until Plan 02: stub renders null — title not visible
     expect(screen.getByText('Patient/a')).toBeTruthy();
     fireEvent.click(screen.getByText('b'));
     expect(screen.getByText('Patient/b')).toBeTruthy();
     expect(screen.queryByText('Patient/a')).toBeNull();
+  });
+
+  it('focuses the originElement after Esc closes the drawer (PEEK-02)', async () => {
+    // Create an element that can receive focus
+    const opener = document.createElement('button');
+    opener.textContent = 'origin-btn';
+    document.body.appendChild(opener);
+
+    function OpenerWithOrigin({ resource }: { resource: any }) {
+      const { openPeek } = usePeek();
+      return (
+        <button
+          id="origin-btn"
+          onClick={() => openPeek(resource, opener)}
+        >
+          open-with-origin
+        </button>
+      );
+    }
+
+    render(
+      <Harness>
+        <OpenerWithOrigin resource={sample} />
+      </Harness>,
+    );
+
+    fireEvent.click(screen.getByText('open-with-origin'));
+    expect(screen.getByText('Patient/pat-1')).toBeTruthy();
+
+    // Fire keydown on document.body (an Element) so event.target has getAttribute
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+
+    // queueMicrotask fires after current microtask queue flushes
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(document.activeElement).toBe(opener);
+
+    document.body.removeChild(opener);
+  });
+
+  it('Enter while drawer open navigates to ?mode=json (PEEK-03)', () => {
+    mockNavigate.mockClear();
+    render(
+      <Harness>
+        <Opener resource={sample} />
+      </Harness>,
+    );
+    fireEvent.click(screen.getByText('open'));
+    expect(screen.getByText('Patient/pat-1')).toBeTruthy();
+
+    // Press Enter with body focused (not on a BUTTON or A)
+    // body.tagName === 'BODY' — the BUTTON/A guard should not fire
+    fireEvent.keyDown(document, { key: 'Enter' });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/explorer/Patient/pat-1?mode=json');
+  });
+
+  it('Enter does NOT navigate when focus is on a BUTTON (Pitfall 5)', () => {
+    mockNavigate.mockClear();
+    render(
+      <Harness>
+        <Opener resource={sample} />
+      </Harness>,
+    );
+    fireEvent.click(screen.getByText('open'));
+
+    // Focus the "Open full →" button so activeElement.tagName === 'BUTTON'
+    const btn = screen.getByRole('button', { name: /Open full →/ });
+    btn.focus();
+
+    fireEvent.keyDown(document, { key: 'Enter' });
+
+    // The Enter shortcut should be suppressed — only the button's own onClick fires
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('clicking [Open full →] navigates to ?mode=json (PEEK-03)', () => {
+    mockNavigate.mockClear();
+    render(
+      <Harness>
+        <Opener resource={sample} />
+      </Harness>,
+    );
+    fireEvent.click(screen.getByText('open'));
+
+    const btn = screen.getByRole('button', { name: /Open full →/ });
+    fireEvent.click(btn);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/explorer/Patient/pat-1?mode=json');
   });
 });
