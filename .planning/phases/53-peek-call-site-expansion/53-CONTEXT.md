@@ -28,7 +28,7 @@ Surfaces after Phase 53:
 ### Reference Chip Intercept (PEEK-04)
 - **D-01:** Intercept Cmd/Ctrl+click in `ReferenceLink.tsx` via an `onClick` handler on the Anchor elements in both the `resolved` and `failed` render paths (NOT in `ResourceDetailPage.handleReferenceClick` — that interceptor handles plain clicks for in-app navigation; Cmd+click is a distinct action). When `e.metaKey || e.ctrlKey`:
   - `status === 'resolved'`: call `openPeek(resource, document.activeElement as HTMLElement | null)` + `e.preventDefault()` + `e.stopPropagation()`. `e.stopPropagation()` prevents the event from bubbling to the parent div's `handleReferenceClick` (which handles ONLY plain navigation — stopping it is correct).
-  - `status === 'failed'`: call `openPeekError('Reference unresolvable', document.activeElement)` + `e.preventDefault()`
+  - `status === 'failed'`: call `openPeekError(rawText, document.activeElement)` + `e.preventDefault()` + `e.stopPropagation()`. `rawText` is the raw reference string from the anchor's `href` or the Reference `reference` field (e.g., `"Patient/123"`), used as the drawer title per D-04. `e.stopPropagation()` is required here too — same bubbling concern as the resolved path.
   - `status === 'pending'`: no-op — let the anchor behave normally (resource not yet available)
 - **D-02:** `ReferenceLink` calls `usePeek()` to get `openPeek` and `openPeekError`. `ReferenceLink` is rendered inside `ResourceDetailPage` which is inside `AppLayout → PeekProvider`, so the context is available.
 
@@ -50,7 +50,7 @@ Surfaces after Phase 53:
   2. Check `counts[entryKey(e)]`: if still loading or 0, no-op (nothing to peek)
   3. Fetch first resource: `client.searchResources(entry.type as ResourceType, { [entry.param]: refValue, _count: '1' })[0]`
   4. If result: `openPeek(result, document.activeElement as HTMLElement | null)`
-  5. If no result or error: `openPeekError('Reference unresolvable', document.activeElement)`
+  5. If no result or error: `openPeekError('${entry.type}?${entry.param}=${refValue}', document.activeElement)` — the reference string becomes the drawer title per D-04.
 - **D-12:** `RelatedResourcesPanel` calls `usePeek()` and `useMedplum()` (already uses `useMedplum` for count fetches). `client.searchResources()` returns `Resource[]` directly.
 - **D-13:** The Cmd+click fetch is a one-shot async call — no loading spinner in the card. If the user Cmd+clicks and the drawer opens with a brief delay, that is acceptable (local Blaze is fast). No additional loading state needed.
 - **D-14:** Both `IncomingReferencesPanel` (non-Patient reverse refs) and `PatientRelatedResources` (Patient forward refs) use `RelatedResourcesPanel`, so Cmd+click peek is free on BOTH surfaces. `PatientRelatedResources` cards count as PEEK-05 surface 4.
