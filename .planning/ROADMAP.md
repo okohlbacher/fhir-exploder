@@ -365,7 +365,7 @@ Phase 58 (UAT) ──> runs LAST, after all v1.8 features ship
 | 39-45 (v1.6) | v1.6 | 14/14 (45 deferred) | ✅ Shipped | 2026-04-30 |
 | 46-51 (v1.7) | v1.7 | 14/14 (50 deferred) | ✅ Shipped | 2026-05-04 |
 | 52. JSON Peek Drawer Foundation | v1.8 | 2/2 | Complete   | 2026-05-04 |
-| 53. Peek Call-Site Expansion | v1.8 | 0/0 | Not started | - |
+| 53. Peek Call-Site Expansion | v1.8 | 2/2 | Complete    | 2026-05-04 |
 | 54. 4-Mode Resource Shell | v1.8 | 0/0 | Not started | - |
 | 55. Explorer Improvements | v1.8 | 0/0 | Not started | - |
 | 56. Sidebar v2 + Expert Toggle + ⌘K | v1.8 | 0/0 | Not started | - |
