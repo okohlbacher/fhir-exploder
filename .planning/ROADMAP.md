@@ -10,7 +10,6 @@
 - ✅ **v1.5 -- Validation, Performance & MII Extensions (shipped 2026-04-29)** -- [Archive](milestones/v1.5-ROADMAP.md) . [Requirements](milestones/v1.5-REQUIREMENTS.md) . [Audit](milestones/v1.5-MILESTONE-AUDIT.md)
 - ✅ **v1.6 -- Hardening, UX Polish & Carry-Overs (shipped 2026-04-30)** -- [Archive](milestones/v1.6-ROADMAP.md) . [Requirements](milestones/v1.6-REQUIREMENTS.md)
 - ✅ **v1.7 -- Resource Navigation (shipped 2026-05-04)** -- [Archive](milestones/v1.7-ROADMAP.md) . [Requirements](milestones/v1.7-REQUIREMENTS.md) . [Audit](milestones/v1.7-MILESTONE-AUDIT.md)
-- 🚧 **v1.8 -- Navigation Redesign (in progress, started 2026-05-04)**
 
 ## Deferred Items
 
@@ -26,19 +25,6 @@ Carried to v1.8 (re-evaluate at milestone-new):
 ---
 
 ## Phases
-
-<details open>
-<summary>🚧 v1.8 Navigation Redesign (Phases 52-58) — IN PROGRESS</summary>
-
-- [x] Phase 52: JSON Peek Drawer Foundation (PEEK-01, PEEK-02, PEEK-03, PEEK-06) (2/2 plans) — completed 2026-05-04
-- [x] Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05) (2/2 plans) — completed 2026-05-04
-- [x] Phase 54: 4-Mode Resource Shell (SHELL-01, SHELL-02, SHELL-03, SHELL-04) (2/2 plans) — completed 2026-05-04
-- [ ] Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03)
-- [ ] Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04)
-- [ ] Phase 57: Patients-as-Lens (LENS-01, LENS-02)
-- [ ] Phase 58: UAT Backlog Closure (UAT-01)
-
-</details>
 
 <details>
 <summary>✅ v1.7 Resource Navigation (Phases 46-51) — SHIPPED 2026-05-04</summary>
@@ -251,10 +237,6 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 31-38.2 (v1.5) | v1.5 | 32/32 | ✅ Shipped | 2026-04-29 |
 | 39-45 (v1.6) | v1.6 | 14/14 (45 deferred) | ✅ Shipped | 2026-04-30 |
 | 46-51 (v1.7) | v1.7 | 14/14 (50 deferred) | ✅ Shipped | 2026-05-04 |
-| 52 (v1.8) | v1.8 | 2/2 | ✅ Complete | 2026-05-04 |
-| 53 (v1.8) | v1.8 | 2/2 | ✅ Complete | 2026-05-04 |
-| 54 (v1.8) | v1.8 | 2/2 | ✅ Complete | 2026-05-04 |
-| 55-58 (v1.8) | v1.8 | 0/? | 🚧 In Progress | — |
 
 ## Backlog
 

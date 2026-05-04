@@ -56,8 +56,7 @@ describe('parseResourceTypes', () => {
     const cs = makeCapabilityStatement([
       { type: 'Patient' },
       { type: 'Observation' },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { type: 'UnknownType' as any },
+      { type: 'UnknownType' },
     ]);
     const result = parseResourceTypes(cs);
     expect(result.find((r) => r.type === 'Patient')?.category).toBe('Individuals');

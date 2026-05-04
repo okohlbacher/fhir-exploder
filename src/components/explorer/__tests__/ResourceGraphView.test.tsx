@@ -22,7 +22,6 @@ import { MantineProvider, useMantineColorScheme } from '@mantine/core';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ResourceDetailPage } from '../ResourceDetailPage';
 import { ResourceGraphView } from '../ResourceGraphView';
-import { PeekProvider } from '../../../contexts/PeekContext';
 import { applyDagreLayout, NODE_WIDTH, NODE_HEIGHT } from '../applyDagreLayout';
 import type { Edge, Node } from '@xyflow/react';
 
@@ -100,24 +99,6 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => navigateMock };
 });
 
-// Phase 54: ResourceDetailPage now imports these components. Stub them so
-// the "Graph tab visible" test only cares about tab presence, not component internals.
-vi.mock('../HumanReadableView', () => ({
-  HumanReadableView: () => <div data-testid="human-readable-view" />,
-}));
-vi.mock('../JsonModeView', () => ({
-  JsonModeView: () => <div data-testid="json-mode-view" />,
-}));
-vi.mock('../KeyFieldsTable', () => ({
-  KeyFieldsTable: () => <div data-testid="key-fields-table" />,
-}));
-vi.mock('../IncomingReferencesPanel', () => ({
-  IncomingReferencesPanel: () => <div data-testid="incoming-references-panel" />,
-}));
-vi.mock('../PatientRelatedResources', () => ({
-  PatientRelatedResources: () => <div data-testid="patient-related-resources" />,
-}));
-
 beforeEach(() => {
   mockReadResource.mockReset();
   mockGet.mockReset();
@@ -131,41 +112,32 @@ beforeEach(() => {
 });
 
 describe('ResourceGraphView mount', () => {
-  it('Graph tab visible on ResourceDetailPage (Phase 54 SHELL-01 — replaces standalone Graph button)', async () => {
-    // Phase 54: The standalone Graph button (IconAffiliate) was removed per D-08.
-    // ResourceDetailPage now has a 4-mode Tabs shell with a "Graph" tab value.
-    // This test verifies the Graph tab is rendered and can be clicked.
+  it('Graph button mount — button visible on ResourceDetailPage with IconAffiliate icon and label "Graph"', async () => {
     render(
       <MantineProvider>
         <MemoryRouter initialEntries={['/explorer/Patient/abc']}>
-          {/* Phase 53 Plan 02: ResourceDetailPage transitively renders
-              ReferenceLink + IncomingReferencesPanel which now consume
-              usePeek(); PeekProvider must wrap. */}
-          <PeekProvider>
-            <Routes>
-              <Route
-                path="/explorer/:resourceType/:id"
-                element={<ResourceDetailPage />}
-              />
-              <Route
-                path="/explorer/:resourceType/:id/graph"
-                element={<div data-testid="graph-page">graph</div>}
-              />
-            </Routes>
-          </PeekProvider>
+          <Routes>
+            <Route
+              path="/explorer/:resourceType/:id"
+              element={<ResourceDetailPage />}
+            />
+            <Route
+              path="/explorer/:resourceType/:id/graph"
+              element={<div data-testid="graph-page">graph</div>}
+            />
+          </Routes>
         </MemoryRouter>
       </MantineProvider>,
     );
 
-    // Wait for tabs to render after resource load
-    const graphTab = await screen.findByRole('tab', { name: /^Graph$/i });
-    expect(graphTab).toBeTruthy();
-    // The Graph tab is a tab button (not a link), so clicking it updates URL mode
-    fireEvent.click(graphTab);
-    // Tab should now be selected
-    await waitFor(() => {
-      expect(graphTab.getAttribute('aria-selected')).toBe('true');
-    });
+    const graphButton = await screen.findByRole('button', { name: /^Graph$/i });
+    expect(graphButton).toBeTruthy();
+    // Click and verify navigate was invoked targeting the graph route.
+    // (useNavigate is mocked at module-scope to navigateMock — see vi.mock
+    // block above; the resulting navigate(...) call is the contract under
+    // test, not jsdom URL-update side-effects.)
+    fireEvent.click(graphButton);
+    expect(navigateMock).toHaveBeenCalledWith('/explorer/Patient/abc/graph');
   });
 
   it('renders depth-1 graph for a Resource with outgoing references — both root + outgoing target nodes mount', async () => {

@@ -22,7 +22,6 @@ import type { Bundle } from '@medplum/fhirtypes';
 import type { ReactNode } from 'react';
 import { PatientRelatedResources } from '../PatientRelatedResources';
 import { reverseReferenceCatalog } from '../../../utils/reverseReferenceCatalog';
-import { PeekProvider } from '../../../contexts/PeekContext';
 
 // Polyfill ResizeObserver + matchMedia for jsdom (Pitfall 5)
 class MockResizeObserver {
@@ -66,16 +65,9 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-// Phase 53 Plan 02 Task 2: RelatedResourcesPanel (rendered transitively via
-// PatientRelatedResources) now consumes usePeek(), so PeekProvider is required.
-// The byte-identical-DOM snapshot remains intact because PeekProvider only
-// adds a React Context wrapper — no DOM nodes — so the snapshot of the
-// panel <div> at index 0 is unchanged.
 const wrap = (ui: ReactNode) => (
   <MantineProvider>
-    <MemoryRouter>
-      <PeekProvider>{ui}</PeekProvider>
-    </MemoryRouter>
+    <MemoryRouter>{ui}</MemoryRouter>
   </MantineProvider>
 );
 

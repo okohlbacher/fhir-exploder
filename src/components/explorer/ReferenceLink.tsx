@@ -18,13 +18,11 @@
  * a matching contained[] entry, render that resource's summary inline (no fetch).
  * Otherwise, fall through to status='failed'.
  */
-import { useCallback, type MouseEvent as ReactMouseEvent } from 'react';
 import { Anchor, Group, Skeleton, Text, Tooltip } from '@mantine/core';
 import type { Resource } from '@medplum/fhirtypes';
 import { useReferenceResolver } from '../../hooks/useReferenceResolver';
 import { summarizeResource } from '../../utils/summarizeResource';
 import { normalizeReference, buildExplorerHref } from '../../utils/referenceUrl';
-import { usePeek } from '../../contexts/PeekContext';
 
 export interface ReferenceLinkProps {
   /** The raw FHIR Reference.reference string (relative, absolute, or fragment). */
@@ -61,37 +59,6 @@ export function ReferenceLink({
     isFragment ? undefined : reference,
   );
 
-  // PEEK-04 (D-01/D-02): Cmd/Ctrl+click on the Anchor opens the JSON peek
-  // drawer. Plain click falls through to existing in-app navigation handled
-  // by ResourceDetailPage.handleReferenceClick (Phase 47). The handler
-  // factory is parameterized by the specific render-path target so the same
-  // logic serves resolved / failed / fragment-resolved branches.
-  //   - target = Resource → openPeek(target, ...)
-  //   - target = null     → openPeekError(rawRef, ...)
-  // pending branch renders <Text>, no Anchor, so no handler attached.
-  const { openPeek, openPeekError } = usePeek();
-  const handleAnchorClick = useCallback(
-    (
-      target: Resource | null,
-      rawRef: string,
-    ): ((e: ReactMouseEvent<HTMLAnchorElement>) => void) =>
-      (e: ReactMouseEvent<HTMLAnchorElement>) => {
-        if (!(e.metaKey || e.ctrlKey)) return; // plain click → fall through
-        // Both required: stopPropagation prevents bubble to ResourceDetailPage
-        // wrapper handler (would push breadcrumb + open drawer); preventDefault
-        // prevents browser native navigation to anchor href.
-        e.preventDefault();
-        e.stopPropagation();
-        const origin = document.activeElement as HTMLElement | null;
-        if (target) {
-          openPeek(target, origin);
-        } else {
-          openPeekError(rawRef, origin);
-        }
-      },
-    [openPeek, openPeekError],
-  );
-
   // Fragment refs: render from parentResource.contained[] without a fetch.
   if (isFragment) {
     const contained = findContained(parentResource, reference);
@@ -106,7 +73,6 @@ export function ReferenceLink({
             size="sm"
             href={href}
             aria-label={`${reference} (${summary})`}
-            onClick={handleAnchorClick(contained, reference)}
           >
             {summary}
           </Anchor>
@@ -150,12 +116,7 @@ export function ReferenceLink({
     const summary = summarizeResource(resource).primary;
     return (
       <Tooltip label={reference} withArrow position="top" openDelay={400}>
-        <Anchor
-          size="sm"
-          href={href}
-          aria-label={`${rawText} (${summary})`}
-          onClick={handleAnchorClick(resource, rawText)}
-        >
+        <Anchor size="sm" href={href} aria-label={`${rawText} (${summary})`}>
           {summary}
         </Anchor>
       </Tooltip>
@@ -166,12 +127,7 @@ export function ReferenceLink({
   return (
     <Tooltip label={reference} withArrow position="top" openDelay={400}>
       <Group gap="xs" wrap="nowrap">
-        <Anchor
-          size="sm"
-          href={href}
-          aria-label={rawText}
-          onClick={handleAnchorClick(null, rawText)}
-        >
+        <Anchor size="sm" href={href} aria-label={rawText}>
           {rawText}
         </Anchor>
         {display && (

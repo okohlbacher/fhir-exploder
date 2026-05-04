@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { Alert, Anchor, Breadcrumbs, Button, Group, Menu, Skeleton, Stack, Table, Text, Badge } from '@mantine/core';
+import { Alert, Anchor, Breadcrumbs, Button, Group, Menu, Paper, SegmentedControl, SimpleGrid, Skeleton, Stack, Table, Text, Badge } from '@mantine/core';
+import { useLocalStorage } from '@mantine/hooks';
 import { IconDownload, IconFileTypeCsv, IconFileCode } from '@tabler/icons-react';
 import { useMedplum } from '@medplum/react-hooks';
 import type {
@@ -154,6 +155,15 @@ export function SearchResultsPage() {
   }, [focusedResource, openPeek]);
 
   useShortcuts({ j: handleJ });
+
+  // EXPL-02 / D-02 / D-10: density mode persists to localStorage under explorer.density.v1
+  // Default 'table' → no visible change on first load. getInitialValueInEffect: false matches
+  // ResourceTypeLanding pattern (no flicker on hydration).
+  const [density, setDensity] = useLocalStorage<'cards' | 'table' | 'compact'>({
+    key: 'explorer.density.v1',
+    defaultValue: 'table',
+    getInitialValueInEffect: false,
+  });
 
   const parsedTypes = useMemo(() => parseResourceTypes(capability), [capability]);
   const allTypeNames = useMemo(() => parsedTypes.map((t) => t.type), [parsedTypes]);
@@ -384,7 +394,17 @@ export function SearchResultsPage() {
       )}
 
       {!loading && resources.length > 0 && (
-        <Group justify="flex-end">
+        <Group justify="space-between" align="center">
+          <SegmentedControl
+            value={density}
+            onChange={(v) => setDensity(v as 'cards' | 'table' | 'compact')}
+            data={[
+              { value: 'cards', label: 'Cards' },
+              { value: 'table', label: 'Table' },
+              { value: 'compact', label: 'Compact' },
+            ]}
+            size="xs"
+          />
           <Menu shadow="md" width={200}>
             <Menu.Target>
               <Button variant="light" size="xs" leftSection={<IconDownload size={14} />}>
@@ -415,20 +435,19 @@ export function SearchResultsPage() {
         </Group>
       )}
 
-      {!loading && resources.length > 0 && (
-        <Table striped highlightOnHover withTableBorder>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>ID</Table.Th>
-              <Table.Th>Summary</Table.Th>
-              <Table.Th>Date</Table.Th>
-              <Table.Th>Status</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {resources.map((r) => (
-              <Table.Tr
+      {!loading && resources.length > 0 && density === 'cards' && (
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="sm">
+          {resources.map((r) => {
+            const summary = summarizeResource(r);
+            const date = getResourceDateByType(r);
+            const status = getResourceStatusByType(r);
+            const statusColor = status === 'active' || status === 'completed' ? 'green' : 'gray';
+            return (
+              <Paper
                 key={r.id}
+                withBorder
+                p="sm"
+                radius="sm"
                 tabIndex={0}
                 style={{
                   cursor: 'pointer',
@@ -440,81 +459,141 @@ export function SearchResultsPage() {
                 onClick={() => navigate(`/explorer/${r.resourceType}/${r.id}`)}
                 onFocus={() => setFocusedResource(r)}
                 onBlur={(e) => {
-                  // Pitfall 2: keep focusedResource when focus moves within the
-                  // table tbody (e.g. another row) or into the drawer (trapFocus).
-                  // Only clear when focus leaves the tbody entirely.
                   const next = e.relatedTarget as Node | null;
-                  const tbody = (e.currentTarget as HTMLElement).closest('tbody');
-                  if (!next || !tbody?.contains(next)) {
+                  const grid = (e.currentTarget as HTMLElement).closest('.mantine-SimpleGrid-root');
+                  if (!next || !grid?.contains(next)) {
                     setFocusedResource(null);
                   }
                 }}
               >
-                <Table.Td>
-                  <Anchor
-                    size="sm"
-                    ff="monospace"
-                    truncate="end"
-                    style={{ maxWidth: 200, display: 'block' }}
-                    href={`/explorer/${r.resourceType}/${r.id}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate(`/explorer/${r.resourceType}/${r.id}`);
-                    }}
-                  >
+                <Group justify="space-between" mb={4}>
+                  <Text ff="monospace" size="xs" c="dimmed" truncate="end" style={{ maxWidth: 180 }}>
                     {r.id}
-                  </Anchor>
-                </Table.Td>
-                <Table.Td>
-                  {(() => {
-                    const summary = summarizeResource(r);
-                    return (
-                      <Anchor
-                        href={`/explorer/${r.resourceType}/${r.id}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          navigate(`/explorer/${r.resourceType}/${r.id}`);
-                        }}
-                        style={{ display: 'block', maxWidth: 400 }}
-                      >
-                        <Stack gap={4}>
-                          <Text fw={600} size="sm">{summary.primary}</Text>
-                          {summary.secondary && (
-                            <Text
-                              c="dimmed"
-                              ff="monospace"
-                              size="xs"
-                              truncate="end"
-                              style={{ maxWidth: 380 }}
-                            >
-                              {summary.secondary}
-                            </Text>
-                          )}
-                        </Stack>
-                      </Anchor>
-                    );
-                  })()}
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm">{getResourceDateByType(r)}</Text>
-                </Table.Td>
-                <Table.Td>
-                  {(() => {
-                    const status = getResourceStatusByType(r);
-                    if (!status) return null;
-                    const color =
-                      status === 'active' || status === 'completed'
-                        ? 'green'
-                        : 'gray';
-                    return (
-                      <Badge size="sm" variant="light" color={color}>
-                        {status}
-                      </Badge>
-                    );
-                  })()}
-                </Table.Td>
-              </Table.Tr>
-            ))}
+                  </Text>
+                  {status && (
+                    <Badge size="sm" variant="light" color={statusColor}>
+                      {status}
+                    </Badge>
+                  )}
+                </Group>
+                <Text fw={600} size="sm" lineClamp={2}>{summary.primary}</Text>
+                {summary.secondary && (
+                  <Text c="dimmed" ff="monospace" size="xs" lineClamp={1}>
+                    {summary.secondary}
+                  </Text>
+                )}
+                {date && <Text size="xs" c="dimmed" mt={4}>{date}</Text>}
+              </Paper>
+            );
+          })}
+        </SimpleGrid>
+      )}
+
+      {!loading && resources.length > 0 && (density === 'table' || density === 'compact') && (
+        <Table
+          striped
+          highlightOnHover
+          withTableBorder
+          verticalSpacing={density === 'compact' ? 'xs' : undefined}
+        >
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>ID</Table.Th>
+              <Table.Th>Summary</Table.Th>
+              <Table.Th>Date</Table.Th>
+              <Table.Th>Status</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {resources.map((r) => {
+              const summary = summarizeResource(r);
+              const primarySize = density === 'compact' ? 'xs' : 'sm';
+              const secondaryMaxWidth = density === 'compact' ? 300 : 380;
+              const dateSize = density === 'compact' ? 'xs' : 'sm';
+              return (
+                <Table.Tr
+                  key={r.id}
+                  tabIndex={0}
+                  style={{
+                    cursor: 'pointer',
+                    outline: focusedResource?.id === r.id
+                      ? '2px solid var(--accent-ring)'
+                      : undefined,
+                    outlineOffset: focusedResource?.id === r.id ? '-1px' : undefined,
+                  }}
+                  onClick={() => navigate(`/explorer/${r.resourceType}/${r.id}`)}
+                  onFocus={() => setFocusedResource(r)}
+                  onBlur={(e) => {
+                    // Keep focusedResource when focus moves within tbody or into the drawer.
+                    // Only clear when focus leaves the tbody entirely.
+                    const next = e.relatedTarget as Node | null;
+                    const tbody = (e.currentTarget as HTMLElement).closest('tbody');
+                    if (!next || !tbody?.contains(next)) {
+                      setFocusedResource(null);
+                    }
+                  }}
+                >
+                  <Table.Td>
+                    <Anchor
+                      size="sm"
+                      ff="monospace"
+                      truncate="end"
+                      style={{ maxWidth: 200, display: 'block' }}
+                      href={`/explorer/${r.resourceType}/${r.id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(`/explorer/${r.resourceType}/${r.id}`);
+                      }}
+                    >
+                      {r.id}
+                    </Anchor>
+                  </Table.Td>
+                  <Table.Td>
+                    <Anchor
+                      href={`/explorer/${r.resourceType}/${r.id}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(`/explorer/${r.resourceType}/${r.id}`);
+                      }}
+                      style={{ display: 'block', maxWidth: 400 }}
+                    >
+                      <Stack gap={4}>
+                        <Text fw={600} size={primarySize}>{summary.primary}</Text>
+                        {summary.secondary && (
+                          <Text
+                            c="dimmed"
+                            ff="monospace"
+                            size="xs"
+                            truncate="end"
+                            style={{ maxWidth: secondaryMaxWidth }}
+                          >
+                            {summary.secondary}
+                          </Text>
+                        )}
+                      </Stack>
+                    </Anchor>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size={dateSize}>{getResourceDateByType(r)}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    {(() => {
+                      const status = getResourceStatusByType(r);
+                      if (!status) return null;
+                      const color =
+                        status === 'active' || status === 'completed'
+                          ? 'green'
+                          : 'gray';
+                      return (
+                        <Badge size="sm" variant="light" color={color}>
+                          {status}
+                        </Badge>
+                      );
+                    })()}
+                  </Table.Td>
+                </Table.Tr>
+              );
+            })}
           </Table.Tbody>
         </Table>
       )}

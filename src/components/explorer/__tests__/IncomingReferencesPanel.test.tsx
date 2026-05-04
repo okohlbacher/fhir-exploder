@@ -18,7 +18,6 @@ import type { ReactNode } from 'react';
 import { IncomingReferencesPanel } from '../IncomingReferencesPanel';
 import { RelatedResourcesPanel } from '../RelatedResourcesPanel';
 import { reverseReferenceCatalog } from '../../../utils/reverseReferenceCatalog';
-import { PeekProvider } from '../../../contexts/PeekContext';
 
 // Polyfill ResizeObserver + matchMedia for jsdom (Pitfall 5)
 class MockResizeObserver {
@@ -60,13 +59,9 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-// Phase 53 Plan 02 Task 2: RelatedResourcesPanel (rendered transitively via
-// IncomingReferencesPanel) now consumes usePeek(), so PeekProvider is required.
 const wrap = (ui: ReactNode) => (
   <MantineProvider>
-    <MemoryRouter>
-      <PeekProvider>{ui}</PeekProvider>
-    </MemoryRouter>
+    <MemoryRouter>{ui}</MemoryRouter>
   </MantineProvider>
 );
 

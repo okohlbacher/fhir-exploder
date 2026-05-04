@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
-import { MemoryRouter, Routes, Route, useLocation, useSearchParams } from 'react-router-dom';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
-import { PeekProvider } from '../contexts/PeekContext';
 
 // Polyfill ResizeObserver for jsdom (required by Mantine components)
 class MockResizeObserver {
@@ -31,7 +30,7 @@ Object.defineProperty(window, 'matchMedia', {
 // --- Mocks --------------------------------------------------------------
 
 const mockReadResource = vi.fn();
-// ResourceDetailPage now mounts IncomingReferencesPanel inside the Summary tab
+// Phase 48-03: ResourceDetailPage now mounts IncomingReferencesPanel below the Tabs
 // for non-Patient resources. The panel calls client.fhirUrl(...) + client.get(...)
 // to fetch reverse-reference counts. Stub both so the mount doesn't crash.
 const mockGet = vi.fn().mockResolvedValue({ resourceType: 'Bundle', total: 0 });
@@ -55,21 +54,8 @@ vi.mock('@medplum/react', () => ({
 vi.mock('../components/explorer/HumanReadableView', () => ({
   HumanReadableView: () => <div data-testid="human-readable-view" />,
 }));
-vi.mock('../components/explorer/JsonModeView', () => ({
-  JsonModeView: () => <div data-testid="json-mode-view" />,
-}));
-vi.mock('../components/explorer/KeyFieldsTable', () => ({
-  KeyFieldsTable: () => <div data-testid="key-fields-table" />,
-}));
-vi.mock('../components/explorer/IncomingReferencesPanel', () => ({
-  IncomingReferencesPanel: () => <div data-testid="incoming-references-panel" />,
-}));
-vi.mock('../components/explorer/PatientRelatedResources', () => ({
-  PatientRelatedResources: () => <div data-testid="patient-related-resources" />,
-}));
-// Stub ResourceGraphView so React Flow doesn't try to render SVG in jsdom
-vi.mock('../components/explorer/ResourceGraphView', () => ({
-  ResourceGraphView: () => <div data-testid="graph-flow-root" />,
+vi.mock('../components/explorer/DeveloperJsonView', () => ({
+  DeveloperJsonView: () => <div data-testid="developer-json-view" />,
 }));
 
 import { ResourceDetailPage } from '../components/explorer/ResourceDetailPage';
@@ -81,30 +67,22 @@ function LocationProbe() {
   return <div data-testid="location-pathname">{location.pathname}</div>;
 }
 
-function SearchParamsProbe() {
-  const [params] = useSearchParams();
-  return <div data-testid="search-params">{params.toString()}</div>;
-}
-
 function renderAt(initialEntry: string) {
   return render(
     <MantineProvider>
       <MemoryRouter initialEntries={[initialEntry]}>
-        <PeekProvider>
-          <Routes>
-            <Route
-              path="/patients/:patientId/:resourceType/:id"
-              element={<ResourceDetailPage />}
-            />
-            <Route path="/explorer/:resourceType/:id" element={<ResourceDetailPage />} />
-            <Route path="/explorer/:resourceType" element={<div data-testid="explorer-type-landing" />} />
-            <Route path="/explorer" element={<div data-testid="explorer-root" />} />
-            <Route path="/patients/:patientId" element={<div data-testid="patient-detail" />} />
-            <Route path="/patients" element={<div data-testid="patients-landing" />} />
-          </Routes>
-          <LocationProbe />
-          <SearchParamsProbe />
-        </PeekProvider>
+        <Routes>
+          <Route
+            path="/patients/:patientId/:resourceType/:id"
+            element={<ResourceDetailPage />}
+          />
+          <Route path="/explorer/:resourceType/:id" element={<ResourceDetailPage />} />
+          <Route path="/explorer/:resourceType" element={<div data-testid="explorer-type-landing" />} />
+          <Route path="/explorer" element={<div data-testid="explorer-root" />} />
+          <Route path="/patients/:patientId" element={<div data-testid="patient-detail" />} />
+          <Route path="/patients" element={<div data-testid="patients-landing" />} />
+        </Routes>
+        <LocationProbe />
       </MemoryRouter>
     </MantineProvider>
   );
@@ -162,22 +140,22 @@ describe('ResourceDetailPage — Back to results (patient-aware)', () => {
   });
 });
 
-// --- Legacy scaffold tests (updated for 4-mode shell) ------------------
+// --- Legacy scaffold tests (unchanged) ---------------------------------
 
 describe('ResourceDetailPage', () => {
-  it('renders four tab buttons: Summary, Human, Graph, JSON', () => {
-    // ResourceDetailPage renders Mantine Tabs with four tabs (Phase 54 SHELL-01)
+  it('renders two tab buttons: Human-readable, JSON', () => {
+    // ResourceDetailPage renders Mantine Tabs with two tabs (UAT-FU-03)
     expect(ResourceDetailPage).toBeDefined();
     expect(typeof ResourceDetailPage).toBe('function');
   });
 
-  it('defaults to Summary tab', () => {
-    // Initial activeMode from URL is 'summary'
+  it('defaults to Human-readable tab', () => {
+    // Initial activeTab state is 'human-readable'
     expect(ResourceDetailPage).toBeDefined();
   });
 
   it('switches tab when clicked', () => {
-    // Tabs onChange calls handleModeChange → setSearchParams
+    // Tabs onChange updates activeTab state
     expect(ResourceDetailPage).toBeDefined();
   });
 
@@ -207,13 +185,19 @@ describe('ResourceDetailPage', () => {
   });
 });
 
-// --- UAT-FU-03 Tabs cleanup (updated for 4-mode shell) -----------------
+// --- UAT-FU-03 Tabs cleanup ---------------------------------------------
 //
-// Originally tested 2-tab cleanup; now updated for Phase 54 4-mode shell.
-// The 4 tab values are: summary | human | graph | json
+// These tests codify the post-cleanup contract for Phase 35-01:
+//   * Tabs reduce from 3 → 2 (drop "Clinical + Raw").
+//   * "Developer" tab is renamed to "JSON" (value attribute UNCHANGED).
+//   * Keyboard shortcut "2" remaps from clinical-raw → developer (JSON).
+//   * Default active tab is still "Human-readable" (D-12).
+//
+// Initially these tests FAIL (RED). Task 2 deletes the middle tab + renames
+// the JSON label + remaps the keyboard handler, flipping the suite GREEN.
 
 describe('Tabs cleanup (UAT-FU-03)', () => {
-  it('renders exactly 4 Tabs.Tab elements', async () => {
+  it('renders exactly 2 Tabs.Tab elements', async () => {
     await act(async () => {
       renderAt('/explorer/Condition/cond-1');
     });
@@ -222,7 +206,7 @@ describe('Tabs cleanup (UAT-FU-03)', () => {
       expect(screen.getAllByRole('tab').length).toBeGreaterThan(0);
     });
 
-    expect(screen.getAllByRole('tab')).toHaveLength(4);
+    expect(screen.getAllByRole('tab')).toHaveLength(2);
   });
 
   it('does NOT render a tab labelled "Clinical + Raw"', async () => {
@@ -237,7 +221,7 @@ describe('Tabs cleanup (UAT-FU-03)', () => {
     expect(screen.queryByRole('tab', { name: /Clinical \+ Raw/ })).toBeNull();
   });
 
-  it('renders a tab labelled "JSON"', async () => {
+  it('renders a tab labelled "JSON" (renamed from "Developer")', async () => {
     await act(async () => {
       renderAt('/explorer/Condition/cond-1');
     });
@@ -250,7 +234,7 @@ describe('Tabs cleanup (UAT-FU-03)', () => {
     expect(screen.queryByRole('tab', { name: /^Developer$/ })).toBeNull();
   });
 
-  it('default active tab is Summary', async () => {
+  it('default active tab is Human-readable', async () => {
     await act(async () => {
       renderAt('/explorer/Condition/cond-1');
     });
@@ -259,11 +243,11 @@ describe('Tabs cleanup (UAT-FU-03)', () => {
       expect(screen.getAllByRole('tab').length).toBeGreaterThan(0);
     });
 
-    const summaryTab = screen.getByRole('tab', { name: /^Summary$/ });
-    expect(summaryTab.getAttribute('aria-selected')).toBe('true');
+    const humanReadableTab = screen.getByRole('tab', { name: /Human-readable/ });
+    expect(humanReadableTab.getAttribute('aria-selected')).toBe('true');
   });
 
-  it('keyboard "2" activates the Human tab', async () => {
+  it('keyboard "2" activates the JSON tab (remapped from clinical-raw)', async () => {
     await act(async () => {
       renderAt('/explorer/Condition/cond-1');
     });
@@ -277,94 +261,8 @@ describe('Tabs cleanup (UAT-FU-03)', () => {
     });
 
     await waitFor(() => {
-      const humanTab = screen.getByRole('tab', { name: /^Human$/ });
-      expect(humanTab.getAttribute('aria-selected')).toBe('true');
-    });
-  });
-});
-
-// --- 4-mode shell live tests (SHELL-01) --------------------------------
-
-describe('ResourceDetailPage 4-mode shell (SHELL-01)', () => {
-  it('renders 4 mode tabs', async () => {
-    await act(async () => {
-      renderAt('/explorer/Patient/p1');
-    });
-
-    await waitFor(() => {
-      expect(screen.getAllByRole('tab').length).toBe(4);
-    });
-
-    expect(screen.getByRole('tab', { name: 'Summary' })).toBeDefined();
-    expect(screen.getByRole('tab', { name: 'Human' })).toBeDefined();
-    expect(screen.getByRole('tab', { name: 'Graph' })).toBeDefined();
-    expect(screen.getByRole('tab', { name: 'JSON' })).toBeDefined();
-  });
-
-  it('keyboard 1 activates Summary', async () => {
-    await act(async () => {
-      renderAt('/explorer/Patient/p1?mode=human');
-    });
-
-    await waitFor(() => {
-      const humanTab = screen.getByRole('tab', { name: 'Human' });
-      expect(humanTab.getAttribute('aria-selected')).toBe('true');
-    });
-
-    await act(async () => {
-      fireEvent.keyDown(document.body, { key: '1' });
-    });
-
-    await waitFor(() => {
-      const summaryTab = screen.getByRole('tab', { name: 'Summary' });
-      expect(summaryTab.getAttribute('aria-selected')).toBe('true');
-    });
-  });
-
-  it('URL mode persists', async () => {
-    await act(async () => {
-      renderAt('/explorer/Patient/p1?mode=human');
-    });
-
-    await waitFor(() => {
-      expect(screen.getAllByRole('tab').length).toBe(4);
-    });
-
-    // Human tab should be selected on first paint — no flicker through Summary
-    const humanTab = screen.getByRole('tab', { name: 'Human' });
-    expect(humanTab.getAttribute('aria-selected')).toBe('true');
-  });
-
-  it('mode change replaces URL', async () => {
-    await act(async () => {
-      renderAt('/explorer/Patient/p1');
-    });
-
-    await waitFor(() => {
-      expect(screen.getAllByRole('tab').length).toBe(4);
-    });
-
-    // Click the Human tab
-    await act(async () => {
-      screen.getByRole('tab', { name: 'Human' }).click();
-    });
-
-    await waitFor(() => {
-      const params = screen.getByTestId('search-params').textContent;
-      expect(params).toBe('mode=human');
-    });
-
-    // Verify pathname didn't change
-    expect(screen.getByTestId('location-pathname').textContent).toBe('/explorer/Patient/p1');
-
-    // Click JSON tab — check URL updates with replace (not push)
-    await act(async () => {
-      screen.getByRole('tab', { name: 'JSON' }).click();
-    });
-
-    await waitFor(() => {
-      const params = screen.getByTestId('search-params').textContent;
-      expect(params).toBe('mode=json');
+      const jsonTab = screen.getByRole('tab', { name: /^JSON$/ });
+      expect(jsonTab.getAttribute('aria-selected')).toBe('true');
     });
   });
 });

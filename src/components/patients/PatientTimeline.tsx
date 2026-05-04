@@ -23,7 +23,7 @@ import {
   IconCalendar,
 } from '@tabler/icons-react';
 import { useMedplum } from '@medplum/react-hooks';
-import type { Bundle } from '@medplum/fhirtypes';
+import type { Bundle, Resource } from '@medplum/fhirtypes';
 import { summarizeResource } from '../../utils/summarizeResource';
 import { extractDate } from '../../utils/timeline-utils';
 

@@ -17,7 +17,6 @@ import type { Bundle } from '@medplum/fhirtypes';
 import type { ReactNode } from 'react';
 import { RelatedResourcesPanel } from '../RelatedResourcesPanel';
 import type { ReverseReferenceEntry } from '../../../utils/reverseReferenceCatalog';
-import { PeekProvider } from '../../../contexts/PeekContext';
 
 // Polyfill ResizeObserver for jsdom (Pitfall 5)
 class MockResizeObserver {
@@ -59,13 +58,9 @@ vi.mock('react-router-dom', async () => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-// Phase 53 Plan 02 Task 2: RelatedResourcesPanel now consumes usePeek() for
-// the Cmd+click PEEK-05 affordance, so tests must wrap in PeekProvider.
 const wrap = (ui: ReactNode) => (
   <MantineProvider>
-    <MemoryRouter>
-      <PeekProvider>{ui}</PeekProvider>
-    </MemoryRouter>
+    <MemoryRouter>{ui}</MemoryRouter>
   </MantineProvider>
 );
 

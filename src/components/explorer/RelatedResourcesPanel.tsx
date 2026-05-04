@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge, Card, Group, Loader, SimpleGrid, Text, Title } from '@mantine/core';
 import { useMedplum } from '@medplum/react-hooks';
-import type { Bundle, ResourceType } from '@medplum/fhirtypes';
+import type { Bundle } from '@medplum/fhirtypes';
 import type { ReverseReferenceEntry } from '../../utils/reverseReferenceCatalog';
-import { usePeek } from '../../contexts/PeekContext';
 
 export interface RelatedResourcesPanelProps {
   title: string;
@@ -38,49 +37,7 @@ export function RelatedResourcesPanel({
 }: RelatedResourcesPanelProps) {
   const client = useMedplum();
   const navigate = useNavigate();
-  const { openPeek, openPeekError } = usePeek();
   const [counts, setCounts] = useState<Record<string, number | 'loading'>>({});
-
-  // PEEK-05 (D-11..D-14): Cmd/Ctrl+click on a populated Card fires a one-shot
-  // searchResources(type, {param: refValue, _count: '1'}) and opens the JSON
-  // peek drawer with the first result. Empty/rejected fetch → openPeekError
-  // with the search URL as the drawer title (no toast per PEEK-04 contract).
-  // Plain click preserves the existing navigate(onCardNavigate(e)) regression.
-  //
-  // Inlined as a simple async arrow inside the Card onClick rather than
-  // useCallback because the JSX closure `(evt) => handleCardClick(evt, e)`
-  // is recreated each render anyway; useCallback would be cosmetic here and
-  // would need an eslint-disable for the `onCardNavigate` prop reference.
-  // Documented per Plan §Action note "Alternative (simpler) approach".
-  const handleCardClick = async (
-    evt: ReactMouseEvent,
-    e: ReverseReferenceEntry,
-  ): Promise<void> => {
-    if (evt.metaKey || evt.ctrlKey) {
-      evt.stopPropagation();
-      const c = counts[entryKey(e)];
-      if (c === 'loading' || c === 0 || c === undefined) return;
-      const origin = document.activeElement as HTMLElement | null;
-      const refUrl = `${e.type}?${e.param}=${refValue}`;
-      try {
-        const results = await client.searchResources(e.type as ResourceType, {
-          [e.param]: refValue,
-          _count: '1',
-        });
-        const first = results[0];
-        if (first) {
-          openPeek(first, origin);
-        } else {
-          openPeekError(refUrl, origin);
-        }
-      } catch {
-        openPeekError(refUrl, origin);
-      }
-      return;
-    }
-    // Plain click: existing in-app navigation.
-    navigate(onCardNavigate(e));
-  };
 
   useEffect(() => {
     let cancelled = false;
@@ -135,9 +92,7 @@ export function RelatedResourcesPanel({
             withBorder
             padding="sm"
             style={{ cursor: 'pointer' }}
-            onClick={(evt) => {
-              void handleCardClick(evt, e);
-            }}
+            onClick={() => navigate(onCardNavigate(e))}
           >
             <Group justify="space-between">
               <Group gap="xs">

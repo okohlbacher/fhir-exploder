@@ -6,7 +6,6 @@ import type { Observation, Patient, Resource } from '@medplum/fhirtypes';
 import type { ReactNode } from 'react';
 import { HumanReadableView } from '../HumanReadableView';
 import { __resetReferenceCache } from '../../../hooks/useReferenceResolver';
-import { PeekProvider } from '../../../contexts/PeekContext';
 
 class MockResizeObserver {
   observe = vi.fn();
@@ -39,13 +38,9 @@ vi.mock('@medplum/react-hooks', () => ({
   useMedplum: () => ({ readResource: mockReadResource }),
 }));
 
-// Phase 53 Plan 02: HumanReadableView renders ReferenceLink which now consumes
-// usePeek(); wrap in PeekProvider so the hook resolves.
 const wrap = (ui: ReactNode) => (
   <MantineProvider>
-    <MemoryRouter>
-      <PeekProvider>{ui}</PeekProvider>
-    </MemoryRouter>
+    <MemoryRouter>{ui}</MemoryRouter>
   </MantineProvider>
 );
 

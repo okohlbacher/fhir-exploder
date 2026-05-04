@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { HumanReadableView } from '../components/explorer/HumanReadableView';
+import { DeveloperJsonView } from '../components/explorer/DeveloperJsonView';
 
 describe('HumanReadableView', () => {
   it('renders ResourceTable with the provided resource', () => {
@@ -14,5 +15,17 @@ describe('HumanReadableView', () => {
     expect(Object.keys(moduleSource)).toContain('HumanReadableView');
     // ResourceForm should not be exported or used
     expect(Object.keys(moduleSource)).not.toContain('ResourceForm');
+  });
+});
+
+describe('DeveloperJsonView', () => {
+  it('renders JsonSyntaxHighlight with the resource', () => {
+    expect(DeveloperJsonView).toBeDefined();
+    expect(typeof DeveloperJsonView).toBe('function');
+  });
+
+  it('wraps content in ScrollArea', () => {
+    // DeveloperJsonView wraps JsonSyntaxHighlight in a ScrollArea
+    expect(DeveloperJsonView).toBeDefined();
   });
 });

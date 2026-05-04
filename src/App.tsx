@@ -1,5 +1,5 @@
 import { lazy, useCallback, useEffect, useRef } from 'react';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout';
 import { DashboardPage } from './components/dashboard/DashboardPage';
 import { SettingsPage } from './components/settings/SettingsPage';
@@ -86,22 +86,14 @@ const IPSPanel = lazy(() =>
     default: m.default,
   })),
 );
-/**
- * Phase 54 (SHELL-03 / D-04): redirects legacy /graph routes to the
- * parent resource detail page with `?mode=graph`. ResourceDetailPage
- * owns the lazy graph view import internally now.
- */
-export function NavigateToMode({ mode }: { mode: string }) {
-  const { resourceType, id, patientId } = useParams<{
-    resourceType: string;
-    id: string;
-    patientId?: string;
-  }>();
-  const target = patientId
-    ? `/patients/${patientId}/${resourceType}/${id}?mode=${mode}`
-    : `/explorer/${resourceType}/${id}?mode=${mode}`;
-  return <Navigate to={target} replace />;
-}
+// Phase 49 — Plan 49-01 (GRPH-01). Reference graph view, code-split into its
+// own chunk; only loads when the user visits /explorer/:type/:id/graph or the
+// /patients/:patientId/:resourceType/:id/graph sibling.
+const ResourceGraphView = lazy(() =>
+  retry(() => import('./components/explorer/ResourceGraphView')).then((m) => ({
+    default: m.ResourceGraphView,
+  })),
+);
 
 function AppRoutes() {
   const { settings, usingDefaults, loading } = useSettings();
@@ -152,7 +144,7 @@ function AppRoutes() {
             <Route index element={<ResourceTypeLanding />} />
             <Route path=":resourceType" element={<SearchResultsPage />} />
             <Route path=":resourceType/:id" element={<ResourceDetailPage />} />
-            <Route path=":resourceType/:id/graph" element={<NavigateToMode mode="graph" />} />
+            <Route path=":resourceType/:id/graph" element={<ResourceGraphView />} />
           </Route>
           <Route path="/patients" element={<PatientsLayout />}>
             <Route index element={<PatientListPage />} />
@@ -163,7 +155,7 @@ function AppRoutes() {
             />
             <Route
               path=":patientId/:resourceType/:id/graph"
-              element={<NavigateToMode mode="graph" />}
+              element={<ResourceGraphView />}
             />
           </Route>
           <Route path="/quality" element={<QualityLayout />}>

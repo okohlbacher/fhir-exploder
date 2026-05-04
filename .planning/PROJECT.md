@@ -107,14 +107,6 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 - [x] **GRPH-04** — Hierarchical dagre layout; Mantine CSS-variable theme bridge (zero-remount on light↔dark); zoom/pan/minimap — Phase 49
 - [~] **STACK-01** — DEFERRED to v1.8 via Phase 50 WAIVE-AND-DEFER (second deferral; gate MIXED 2026-05-01). Acceptable closure per requirement definition.
 
-### Validated (v1.8 partial — Phases 52–54)
-
-- [x] **PEEK-01..06**: JSON peek drawer (JsonViewer extraction, useShortcuts, PeekContext, JsonPeekDrawer) wired to Explorer, Patients list, IncomingReferencesPanel, Human-mode reference rows — Phase 52 (foundation) + Phase 53 (call-site expansion). *Validated in Phase 52–53: 2026-05-04*
-- [x] **SHELL-01**: ResourceDetailPage 4-mode shell — `Summary | Human | Graph | JSON` mode switcher (`<Tabs variant="pills">`), `?mode=` URL persistence via `useSearchParams`, keyboard shortcuts 1/2/3/4 via `useShortcuts` — Phase 54. *Validated in Phase 54: 2026-05-04*
-- [x] **SHELL-02**: Summary mode — `summarizeResource().primary` heading + `KeyFieldsTable` (8 typed FHIR R4 handlers + generic fallback, 4-6 fields per type) + reference panels in Summary-only slot — Phase 54. *Validated in Phase 54: 2026-05-04*
-- [x] **SHELL-03**: Graph mode inlined via `React.lazy + Suspense`; `compact` prop suppresses standalone header; `/graph` routes redirect to `?mode=graph` via `NavigateToMode` — Phase 54. *Validated in Phase 54: 2026-05-04*
-- [x] **SHELL-04**: JSON mode toolbar — Copy (clipboard), Download (`${resourceType}-${id}.json`), offline structural validation chip (`createStructuralBackend`), "Open in validator" in-app link; `JsonViewer.showLineNumbers` prop — Phase 54. *Validated in Phase 54: 2026-05-04*
-
 ### Active (v1.8 candidates — pending scope)
 
 - [ ] **STACK-01** (carried from v1.6 → v1.7): Mantine 9 / React 19 upgrade — re-run peer-dep gate at v1.8 milestone start. **Mantine 9 watch:** the bottleneck remains `@medplum/react`'s `@mantine/core: ^8.0.0` peer pin. React 19 has independently unblocked since v1.6 close (current peer pin: `^18.0.0 || ^19.0.0`), but per user decision D-02 (50-CONTEXT.md) React and Mantine stay coupled until both gates open.
