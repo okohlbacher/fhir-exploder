@@ -7,8 +7,8 @@ export interface JsonViewerProps {
   resource: Resource;
   /**
    * ScrollArea height. Defaults to '100%' for drawer context (PEEK-06).
-   * Use `'calc(100vh - 250px)'` for the legacy DeveloperJsonView call site
-   * to preserve the v1.7 ResourceDetailPage layout (Pitfall 7).
+   * Use `'calc(100vh - 320px)'` for JsonModeView call site (SHELL-04)
+   * to preserve the ResourceDetailPage layout (Pitfall 7).
    */
   h?: string | number;
   /**
@@ -28,13 +28,13 @@ export interface JsonViewerProps {
  * Single source-of-truth FHIR JSON renderer (PEEK-06). Wraps the collapsible
  * tree viewer (color-coded leaves, expand/collapse) in a Mantine ScrollArea.
  * After this extraction:
- *   - DeveloperJsonView (legacy detail-page tab) consumes JsonViewer
+ *   - JsonModeView (Phase 54 SHELL-04 detail-page JSON tab) consumes JsonViewer with showLineNumbers
  *   - JsonPeekDrawer (Phase 52 Plan 02) consumes JsonViewer with h='100%'
  *   - The underlying tree implementation is an internal detail and is NOT
  *     re-exported through this wrapper.
  *
  * PEEK-06 grep gate: this is the only non-definition file that imports the
- * underlying tree implementation. DeveloperJsonView must NOT import it directly.
+ * underlying tree implementation. JsonModeView must NOT import it directly.
  *
  * Phase 54: showLineNumbers={true} adds a flat <pre> with numbered gutter;
  * the tree mode (default false) is unchanged so drawer call sites are unaffected.

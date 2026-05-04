@@ -66,8 +66,20 @@ vi.mock('../components/explorer/HumanReadableView', () => ({
   ),
 }));
 
-vi.mock('../components/explorer/DeveloperJsonView', () => ({
-  DeveloperJsonView: () => <div data-testid="developer-json-view" />,
+vi.mock('../components/explorer/JsonModeView', () => ({
+  JsonModeView: () => <div data-testid="json-mode-view" />,
+}));
+vi.mock('../components/explorer/KeyFieldsTable', () => ({
+  KeyFieldsTable: () => <div data-testid="key-fields-table" />,
+}));
+vi.mock('../components/explorer/IncomingReferencesPanel', () => ({
+  IncomingReferencesPanel: () => <div data-testid="incoming-references-panel" />,
+}));
+vi.mock('../components/explorer/PatientRelatedResources', () => ({
+  PatientRelatedResources: () => <div data-testid="patient-related-resources" />,
+}));
+vi.mock('../components/explorer/ResourceGraphView', () => ({
+  ResourceGraphView: () => <div data-testid="graph-flow-root" />,
 }));
 
 import { ResourceDetailPage } from '../components/explorer/ResourceDetailPage';

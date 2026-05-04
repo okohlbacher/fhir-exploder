@@ -1,4 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter, Routes, Route, useLocation, useSearchParams } from 'react-router-dom';
+import { NavigateToMode } from '../App';
 
 // Polyfill ResizeObserver for jsdom (required by Mantine components)
 class MockResizeObserver {
@@ -29,12 +32,72 @@ Element.prototype.getBoundingClientRect = vi.fn(() => ({
   width: 800, height: 600, top: 0, left: 0, right: 800, bottom: 600, x: 0, y: 0, toJSON: () => ({}),
 }));
 
-describe.skip('NavigateToMode redirect (SHELL-03)', () => {
+vi.mock('../components/explorer/ResourceDetailPage', () => ({
+  ResourceDetailPage: () => <div data-testid="resource-detail-page" />,
+}));
+
+function LocationProbe() {
+  const loc = useLocation();
+  return (
+    <>
+      <div data-testid="pathname">{loc.pathname}</div>
+      <div data-testid="search">{loc.search}</div>
+    </>
+  );
+}
+
+function SearchParamsProbe() {
+  const [params] = useSearchParams();
+  return <div data-testid="mode-param">{params.get('mode')}</div>;
+}
+
+function renderAt(initialEntry: string) {
+  return render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Routes>
+        <Route
+          path="/explorer/:resourceType/:id"
+          element={
+            <>
+              <div data-testid="resource-detail-page" />
+              <LocationProbe />
+              <SearchParamsProbe />
+            </>
+          }
+        />
+        <Route
+          path="/explorer/:resourceType/:id/graph"
+          element={<NavigateToMode mode="graph" />}
+        />
+        <Route
+          path="/patients/:patientId/:resourceType/:id"
+          element={
+            <>
+              <div data-testid="resource-detail-page" />
+              <LocationProbe />
+              <SearchParamsProbe />
+            </>
+          }
+        />
+        <Route
+          path="/patients/:patientId/:resourceType/:id/graph"
+          element={<NavigateToMode mode="graph" />}
+        />
+      </Routes>
+    </MemoryRouter>
+  );
+}
+
+describe('NavigateToMode redirect (SHELL-03)', () => {
   it('redirects /explorer/Patient/p1/graph to ?mode=graph', () => {
-    expect(true).toBe(true); // PLACEHOLDER — Plan 02 replaces with real assertions
+    renderAt('/explorer/Patient/p1/graph');
+    expect(screen.getByTestId('pathname').textContent).toBe('/explorer/Patient/p1');
+    expect(screen.getByTestId('search').textContent).toBe('?mode=graph');
   });
 
   it('patient graph redirect', () => {
-    expect(true).toBe(true); // PLACEHOLDER — Plan 02 replaces with real assertions
+    renderAt('/patients/p1/Encounter/e1/graph');
+    expect(screen.getByTestId('pathname').textContent).toBe('/patients/p1/Encounter/e1');
+    expect(screen.getByTestId('search').textContent).toBe('?mode=graph');
   });
 });
