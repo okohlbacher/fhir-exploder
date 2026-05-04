@@ -7,10 +7,12 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import type { Resource } from '@medplum/fhirtypes';
 import { ReferenceLink } from '../ReferenceLink';
 import { __resetReferenceCache } from '../../../hooks/useReferenceResolver';
+import { PeekProvider } from '../../../contexts/PeekContext';
 
 // Polyfill ResizeObserver for jsdom
 class MockResizeObserver {
@@ -45,7 +47,17 @@ vi.mock('../../../hooks/useReferenceResolver', async () => {
   };
 });
 
-const wrap = (ui: React.ReactNode) => <MantineProvider>{ui}</MantineProvider>;
+// Phase 53 Plan 02 Task 1: ReferenceLink now consumes usePeek() for the
+// Cmd+click PEEK-04 affordance, so tests must wrap in PeekProvider. Adding
+// MemoryRouter too because PeekProvider's drawer (rendered by consumer) and
+// any anchor href interactions assume a router is in scope (defensive).
+const wrap = (ui: React.ReactNode) => (
+  <MantineProvider>
+    <MemoryRouter>
+      <PeekProvider>{ui}</PeekProvider>
+    </MemoryRouter>
+  </MantineProvider>
+);
 
 beforeEach(() => {
   __resetReferenceCache();
