@@ -22,6 +22,7 @@ import { MantineProvider, useMantineColorScheme } from '@mantine/core';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { ResourceDetailPage } from '../ResourceDetailPage';
 import { ResourceGraphView } from '../ResourceGraphView';
+import { PeekProvider } from '../../../contexts/PeekContext';
 import { applyDagreLayout, NODE_WIDTH, NODE_HEIGHT } from '../applyDagreLayout';
 import type { Edge, Node } from '@xyflow/react';
 
@@ -116,16 +117,21 @@ describe('ResourceGraphView mount', () => {
     render(
       <MantineProvider>
         <MemoryRouter initialEntries={['/explorer/Patient/abc']}>
-          <Routes>
-            <Route
-              path="/explorer/:resourceType/:id"
-              element={<ResourceDetailPage />}
-            />
-            <Route
-              path="/explorer/:resourceType/:id/graph"
-              element={<div data-testid="graph-page">graph</div>}
-            />
-          </Routes>
+          {/* Phase 53 Plan 02: ResourceDetailPage transitively renders
+              ReferenceLink + IncomingReferencesPanel which now consume
+              usePeek(); PeekProvider must wrap. */}
+          <PeekProvider>
+            <Routes>
+              <Route
+                path="/explorer/:resourceType/:id"
+                element={<ResourceDetailPage />}
+              />
+              <Route
+                path="/explorer/:resourceType/:id/graph"
+                element={<div data-testid="graph-page">graph</div>}
+              />
+            </Routes>
+          </PeekProvider>
         </MemoryRouter>
       </MantineProvider>,
     );

@@ -59,6 +59,7 @@ vi.mock('../components/explorer/DeveloperJsonView', () => ({
 }));
 
 import { ResourceDetailPage } from '../components/explorer/ResourceDetailPage';
+import { PeekProvider } from '../contexts/PeekContext';
 
 // --- Helpers ------------------------------------------------------------
 
@@ -71,18 +72,23 @@ function renderAt(initialEntry: string) {
   return render(
     <MantineProvider>
       <MemoryRouter initialEntries={[initialEntry]}>
-        <Routes>
-          <Route
-            path="/patients/:patientId/:resourceType/:id"
-            element={<ResourceDetailPage />}
-          />
-          <Route path="/explorer/:resourceType/:id" element={<ResourceDetailPage />} />
-          <Route path="/explorer/:resourceType" element={<div data-testid="explorer-type-landing" />} />
-          <Route path="/explorer" element={<div data-testid="explorer-root" />} />
-          <Route path="/patients/:patientId" element={<div data-testid="patient-detail" />} />
-          <Route path="/patients" element={<div data-testid="patients-landing" />} />
-        </Routes>
-        <LocationProbe />
+        {/* Phase 53 Plan 02: ResourceDetailPage transitively renders
+            ReferenceLink + IncomingReferencesPanel which now consume
+            usePeek(). PeekProvider must wrap. */}
+        <PeekProvider>
+          <Routes>
+            <Route
+              path="/patients/:patientId/:resourceType/:id"
+              element={<ResourceDetailPage />}
+            />
+            <Route path="/explorer/:resourceType/:id" element={<ResourceDetailPage />} />
+            <Route path="/explorer/:resourceType" element={<div data-testid="explorer-type-landing" />} />
+            <Route path="/explorer" element={<div data-testid="explorer-root" />} />
+            <Route path="/patients/:patientId" element={<div data-testid="patient-detail" />} />
+            <Route path="/patients" element={<div data-testid="patients-landing" />} />
+          </Routes>
+          <LocationProbe />
+        </PeekProvider>
       </MemoryRouter>
     </MantineProvider>
   );
