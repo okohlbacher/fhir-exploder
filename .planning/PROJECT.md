@@ -107,7 +107,7 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 - [x] **GRPH-04** — Hierarchical dagre layout; Mantine CSS-variable theme bridge (zero-remount on light↔dark); zoom/pan/minimap — Phase 49
 - [~] **STACK-01** — DEFERRED to v1.8 via Phase 50 WAIVE-AND-DEFER (second deferral; gate MIXED 2026-05-01). Acceptable closure per requirement definition.
 
-### Validated (v1.8 partial — Phases 52–56)
+### Validated (v1.8 partial — Phases 52–57)
 
 - [x] **PEEK-01..06**: JSON peek drawer (JsonViewer extraction, useShortcuts, PeekContext, JsonPeekDrawer) wired to Explorer, Patients list, IncomingReferencesPanel, Human-mode reference rows — Phase 52 (foundation) + Phase 53 (call-site expansion). *Validated in Phase 52–53: 2026-05-04*
 - [x] **SHELL-01**: ResourceDetailPage 4-mode shell — `Summary | Human | Graph | JSON` mode switcher (`<Tabs variant="pills">`), `?mode=` URL persistence via `useSearchParams`, keyboard shortcuts 1/2/3/4 via `useShortcuts` — Phase 54. *Validated in Phase 54: 2026-05-04*
@@ -121,6 +121,8 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 - [x] **SIDE-02**: Expert Toggle — compact Switch row in sidebar footer; state persisted via `useLocalStorage({ key: 'app.expertMode.v1', defaultValue: false })` in `ExpertModeProvider`; default off — Phase 56. *Validated in Phase 56: 2026-05-04*
 - [x] **SIDE-03**: Expert-mode effects — Explorer ID cells drop `truncate="end"` + `maxWidth` cap when `isExpert` (both Cards-mode Text + Table-mode Anchor); sidebar Server card shows monospace server base URL when `isExpert && serverUrl` — Phase 56. *Validated in Phase 56: 2026-05-04*
 - [x] **SIDE-04**: Sidebar v2 polish — `⌘K` `UnstyledButton` hint above Server card (calls `openSpotlight()`); Explorer nav row `Badge` showing count of resource types with data > 0; `@mantine/spotlight/styles.css` imported — Phase 56. *Validated in Phase 56: 2026-05-04*
+
+- [x] **LENS-02**: Outgoing References panel — `extractOutgoingReferences()` pure walker + `OutgoingReferencesPanel` (no Card chrome, monospace path label, Phase-47 ReferenceLink per entry); mounted in Summary mode for non-Patient resources after `IncomingReferencesPanel`; returns null when empty — Phase 57. *Validated in Phase 57: 2026-05-05*
 
 ### Active (v1.8 candidates — pending scope)
 
