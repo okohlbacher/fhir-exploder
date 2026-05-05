@@ -232,9 +232,10 @@ export function Sidebar({ connectionStatus }: SidebarProps) {
   const { state } = useConnectionContext();
   const client = state.status === 'connected' ? state.client : null;
   const capability = state.status === 'connected' ? state.capability : null;
+  const explorerMatch = useMatch({ path: '/explorer', end: false });
   const parsedTypes = useMemo(() => (capability ? parseResourceTypes(capability) : []), [capability]);
   const typeNames = useMemo(() => parsedTypes.map((t) => t.type), [parsedTypes]);
-  const counts = useResourceCounts(client, typeNames);
+  const counts = useResourceCounts(explorerMatch ? client : null, explorerMatch ? typeNames : []);
   const nonZeroTypeCount = useMemo(
     () => Object.values(counts).filter((v) => typeof v === 'number' && v > 0).length,
     [counts],
