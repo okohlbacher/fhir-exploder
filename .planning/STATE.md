@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: -- Navigation Redesign (in progress, started 2026-05-04)
 status: executing
-stopped_at: Phase 57 UI-SPEC approved
-last_updated: "2026-05-05T06:10:49.039Z"
+stopped_at: Phase 58 context complete
+last_updated: "2026-05-05T10:00:00.000Z"
 last_activity: 2026-05-05
 progress:
   total_phases: 7
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 56 — sidebar-v2-expert-toggle-cmd-k
+**Current focus:** Phase 58 — UAT Backlog Closure (human-only verification pass)
 
 ## Current Position
 
-Phase: 57
-Plan: Not started
-Status: Ready to execute
+Phase: 58
+Plan: No plans (human-only phase)
+Status: Context complete — awaiting human UAT walkthrough
 Last activity: 2026-05-05
 
 v1.8 phases (52-58):
@@ -36,11 +36,11 @@ v1.8 phases (52-58):
 - **Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05) — COMPLETE**
 - **Phase 54: 4-Mode Resource Shell (SHELL-01, SHELL-02, SHELL-03, SHELL-04) — COMPLETE**
 - **Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03) — COMPLETE**
-- Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04)
-- Phase 57: Patients-as-Lens (LENS-01, LENS-02)
-- Phase 58: UAT Backlog Closure (UAT-01)
+- **Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04) — COMPLETE**
+- **Phase 57: References-Out Card (LENS-01, LENS-02) — COMPLETE**
+- Phase 58: UAT Backlog Closure (UAT-01) — context complete, awaiting human
 
-Progress: [####      ] 57%
+Progress: [##########] 100% (all code phases shipped; Phase 58 is human-only)
 
 ## Performance Metrics
 
@@ -71,16 +71,15 @@ Progress: [####      ] 57%
 
 ### Pending Todos (v1.8 milestone)
 
-- **Human UAT backlog (Phase 58 scope)** — ~24 deferred browser-only items across v1.6 + v1.7 + v1.8 phases:
-  - Phase 42: 1 item (live-Blaze MII extension count walk)
-  - Phase 43: 3 items (basic-auth URL, bearer-token URL, invalid-SNOMED near-miss)
-  - Phase 44: 2 items (live-Blaze server-picker mode + large-bundle perf)
-  - Phase 46: 3 items (summarizeResource visual rendering on live Blaze)
-  - Phase 47: 5 items (tooltip hover, accordion animation, extension chips, terminology in contained panels, indexed-primitive extension)
-  - Phase 48: 3 items (RelatedResourcesPanel live rendering)
-  - Phase 49: 5 items (graph layout, node navigation, patient-context badge, depth limit badge, empty-state)
-  - Phase 52: 3 items (drawer visual width 420px, URL stability when J pressed, focus ring visibility)
-  - Phase 53: 4 items (resolved Cmd+click live Blaze, error state visual, PatientList focus ring, RelatedResourcesPanel async fetch)
+- **Human UAT backlog (Phase 58 scope)** — deferred browser-only items. Full inventory in `.planning/phases/58-uat-backlog-closure/58-CONTEXT.md`. Summary:
+  - **Group A** (no HUMAN-UAT files): Phase 42 (1), Phase 43 (3), Phase 44 (2)
+  - **Group B** Phase 47 (4 items — BLOCKED-NO-DATA, need seed fixtures in Blaze)
+  - **Group C** Phase 48 UAT-3 (1 item — Slow-3G skeleton, needs Chrome DevTools)
+  - **Group D** Phase 49 UAT-1/2/3/4 (3–4 items — pan/zoom, minimap, dark-mode contrast, Slow-3G, need real browser)
+  - **Group E** Phase 52 (3 items — drawer width, URL stability, focus ring)
+  - **Group F** Phase 53 (4 items — Cmd+click resolve, error state, PatientList focus ring, async fetch)
+  - **Group G** Phase 54 (6 items — pill tabs, keyboard shortcuts, graph canvas, chip colors, download, /graph redirect)
+  - Phases 46, 48 UAT-1/2, 49 UAT-3/5/6/7, 55, 56, 57 — fully closed, nothing deferred
 - **DEFERRED.md dashboard** — create at v1.8 milestone start to track all WAIVE-AND-DEFER items with re-attempt triggers (low priority since STACK-01 is now indefinitely deferred).
 
 ### Phase 53 Deliverables (carry-forward to Phase 54)
@@ -119,7 +118,7 @@ Progress: [####      ] 57%
 
 ## Session Continuity
 
-Last session: 2026-05-05T04:24:40.684Z
-Stopped at: Phase 57 UI-SPEC approved
-Resume file: .planning/phases/57-references-out-card/57-UI-SPEC.md
-Next action: `/gsd-discuss-phase 56` or `/gsd-plan-phase 56`
+Last session: 2026-05-05T10:00:00.000Z
+Stopped at: Phase 58 context complete (auto discuss-phase)
+Resume file: .planning/phases/58-uat-backlog-closure/58-CONTEXT.md
+Next action: Human UAT walkthrough against live Blaze — see 58-CONTEXT.md Groups A–G
