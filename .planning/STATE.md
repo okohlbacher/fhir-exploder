@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.8
-milestone_name: -- Navigation Redesign (in progress, started 2026-05-04)
-status: executing
-stopped_at: Phase 58 context complete
-last_updated: "2026-05-05T10:00:00.000Z"
+milestone_name: Navigation Redesign (shipped 2026-05-05)
+status: archived
+stopped_at: v1.8 milestone complete — archived to milestones/v1.8-ROADMAP.md
+last_updated: "2026-05-05T11:00:00.000Z"
 last_activity: 2026-05-05
 progress:
   total_phases: 7
@@ -21,7 +21,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-04)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** Phase 58 — UAT Backlog Closure (human-only verification pass)
+**Current focus:** v1.8 archived — run `/gsd-new-milestone` to start v1.9
 
 ## Current Position
 
@@ -118,7 +118,6 @@ Progress: [##########] 100% (all code phases shipped; Phase 58 is human-only)
 
 ## Session Continuity
 
-Last session: 2026-05-05T10:00:00.000Z
-Stopped at: Phase 58 context complete (auto discuss-phase)
-Resume file: .planning/phases/58-uat-backlog-closure/58-CONTEXT.md
-Next action: Human UAT walkthrough against live Blaze — see 58-CONTEXT.md Groups A–G
+Last session: 2026-05-05T11:00:00.000Z
+Stopped at: v1.8 milestone archived — tag v1.8 created
+Next action: `/gsd-new-milestone` to start v1.9 planning (or run Phase 58 UAT manually — see 58-CONTEXT.md)

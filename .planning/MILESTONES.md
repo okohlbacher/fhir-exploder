@@ -1,5 +1,25 @@
 # Milestones
 
+## v1.8 Navigation Redesign (Shipped: 2026-05-05)
+
+**Phases completed:** 7 phases (52-58), 12 code plans + 1 human-UAT phase
+**Git range:** `26efb93` → `4507116` (108 commits; src/ +5,296/−315 across 57 files)
+**Timeline:** 2026-05-04 → 2026-05-05 (2 days)
+**Tests:** 1412 → 1525 passing; `npm run build` + `tsc -b --noEmit` clean
+**Requirements:** 12/12 satisfied; STACK-01 re-deferred to v1.9 (peer-dep gate still closed)
+
+**Key accomplishments:**
+
+- **JSON Peek Drawer foundation (Phase 52)** — `JsonViewer` extracted as standalone component; `PeekContext` + `useShortcuts` hook; `JsonPeekDrawer` (420px right-side, `trapFocus={true}`, `withOverlay={false}`) wired to Explorer rows via `J` shortcut and PatientList; PEEK-01..03, PEEK-06.
+- **Peek call-site expansion (Phase 53)** — Cmd+click on `ReferenceLink` resolves resource into Peek drawer; unresolvable references show error-state branch (monospace title, dimmed body, hidden Open-full button); `RelatedResourcesPanel` Cmd+click async fetches; PatientList `J` shortcut (4th surface); PEEK-04, PEEK-05.
+- **4-Mode Resource Shell (Phase 54)** — `ResourceDetailPage` refactored from 2-tab legacy to URL-driven `Summary | Human | Graph | JSON` shell; `<Tabs variant="pills">` with `?mode=` URL persistence; 1/2/3/4 keyboard shortcuts; lazy `ResourceGraphView` in Graph mode with `compact` prop; `DeveloperJsonView.tsx` deleted; SHELL-01..04.
+- **Explorer UX improvements (Phase 55)** — Two-line Summary cell (bold primary + dim/mono secondary via `summarizeResource()`); density `SegmentedControl` with Cards/Table/Compact modes persisted to `explorer.density.v1`; Cards mode preserves J-key peek via shared `focusedResource` state; EXPL-01, EXPL-02, EXPL-03.
+- **Sidebar v2 + Expert Toggle + ⌘K (Phase 56)** — `AppSpotlight` (`<Spotlight shortcut="mod+K">`) with lazy CapabilityStatement-driven resource-type actions; `ExpertModeContext` with `useLocalStorage`; expert mode gates ID cell truncation in Explorer + shows monospace server URL in sidebar; `⌘K` hint + resource-type count badge; SIDE-01..04.
+- **Outgoing References Panel (Phase 57)** — `extractOutgoingReferences(resource): OutgoingRef[]` pure recursive walker (reuses Phase-47 `normalizeReference`/`isValidFhirReference`, skips top-level meta/contained/text); `OutgoingReferencesPanel` (no Card chrome, monospace path label, Phase-47 `ReferenceLink` per entry) mounted in Summary mode for non-Patient resources after `IncomingReferencesPanel`; LENS-02.
+- **UAT Backlog Closure (Phase 58)** — Human-only phase: 58-CONTEXT.md documents all ~35 deferred browser-only UAT items organized into Groups A–G across Phases 42–54; no code changes; pending human walkthrough against live Blaze.
+
+---
+
 ## v1.7 Resource Navigation (Shipped: 2026-05-04)
 
 **Phases completed:** 6 phases (46-51), 14 plans, 124 commits

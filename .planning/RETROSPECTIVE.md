@@ -2,6 +2,49 @@
 
 *A living document updated after each milestone. Lessons feed forward into future planning.*
 
+## Milestone: v1.8 — Navigation Redesign
+
+**Shipped:** 2026-05-05
+**Phases:** 7 (52–58) | **Code plans:** 12 | **Timeline:** 2026-05-04 → 2026-05-05 (2 calendar days)
+
+### What Was Built
+
+- **JSON Peek Drawer (Phases 52–53):** Right-side 420px drawer with `PeekContext`, `useShortcuts`, `JsonPeekDrawer` — `J` shortcut on Explorer/PatientList rows; Cmd+click on `ReferenceLink` (resolved → peek, failed → error-state); RelatedResourcesPanel Cmd+click async fetch. 4 surfaces wired. PEEK-01..06.
+- **4-Mode Resource Shell (Phase 54):** `ResourceDetailPage` refactored from 2-tab legacy to URL-driven `Summary | Human | Graph | JSON` pill tabs with `?mode=`, keyboard shortcuts 1/2/3/4, lazy Graph with compact prop, `DeveloperJsonView.tsx` deleted. SHELL-01..04.
+- **Explorer UX (Phase 55):** Two-line summary cells (bold primary + dim/mono secondary), 3-density SegmentedControl (Table/Cards/Compact) persisted to `explorer.density.v1`, J-key peek across all density modes. EXPL-01..03.
+- **Sidebar v2 + ⌘K + Expert Toggle (Phase 56):** `AppSpotlight` with lazy CapabilityStatement-driven resource types; `ExpertModeContext` with localStorage toggle gating ID truncation and monospace server URL; ⌘K hint button + resource-type count badge. SIDE-01..04.
+- **Outgoing References Panel (Phase 57):** `extractOutgoingReferences()` pure walker reusing Phase-47 validators; `OutgoingReferencesPanel` in Summary mode for non-Patient resources. LENS-02.
+- **Phase 58 UAT context (human-only):** 58-CONTEXT.md documents ~35 deferred browser-only items in Groups A–G; no code changes.
+
+### What Worked
+
+- **Wave-based parallel execution with worktrees.** Phases 54–57 used 2-plan waves with independent worktrees. When worktrees were clean, execution was fast and zero-merge-conflict. Proved the pattern scales to 4+ consecutive phases.
+- **Phase 47 utility reuse paid dividends in Phase 57.** `normalizeReference` + `isValidFhirReference` from `referenceUrl.ts` meant the walker had no inline regex. Planned reuse from Phase 47 context decisions reduced Phase 57 scope by ~30 LOC.
+- **UI-SPEC contracts eliminated design ambiguity.** Phase 57's UI-SPEC (no Card chrome, monospace path label, null guards) meant the executor produced the correct component on first pass with zero visual iteration.
+- **`--auto` mode via `/gsd-next` allowed uninterrupted pipeline execution** across discuss → plan → execute → code-review → verify → complete. The session ran 7 consecutive calls.
+
+### What Was Inefficient
+
+- **Worktree pollution caused two consecutive data-loss incidents.** Old locked worktrees from previous sessions had accumulated dirty state (uncommitted deletions of Phase 54–56 source files). When continuation agents committed from these worktrees, they included thousands of deletions alongside new code. Recovery required `git reset --hard` + extracting individual files via `git show {commit}:{file}`. Root cause: worktrees must be cleaned up between sessions; stale locked worktrees are dangerous.
+- **`summary-extract` CLI extracted garbage one-liners for v1.8 MILESTONES.md** — pulled content from v1.7 phase summaries still on disk instead of the current milestone's phases. Hand-curated replacement required. The CLI needs milestone-scoped filtering.
+- **Phases 52 and 53 directories missing on disk.** They were completed in a previous session but their planning directories were lost (either cleaned up or never created on main). ROADMAP.md confirms completion but no SUMMARY.md files exist locally. Phases 54–57 are fine.
+- **Phase 58 UAT is inherently unautomatable** — the pipeline correctly detected this and stopped before spawning executors, but the /gsd-next routing to `/gsd-complete-milestone` required understanding that a human-only phase shouldn't block milestone completion.
+
+### Patterns Established
+
+- **Worktree cleanup is mandatory between sessions.** Before spawning executor agents, verify no stale locked worktrees exist: `git worktree list`. Any worktree in an unexpected state should be pruned before new execution begins.
+- **UI-SPEC → pure render component → mount** as the three-step pattern for new panels. Phase 57's OutgoingReferencesPanel followed this exactly: UI-SPEC defines invariants (no chrome, null guards), executor produces pure component, wiring is a 4-line mount.
+- **SKIP_TOP_LEVEL pattern for FHIR walkers.** `new Set(['resourceType', 'id', 'meta', 'text', 'contained'])` applied at depth=0 only — skip the non-clinical envelope, recurse into clinical payload. Established in Phase 57 walker; reuse for future FHIR traversal utilities.
+- **Phase context notes as the source of truth for UAT backlog.** Deferred UAT items captured in HUMAN-UAT.md files and STATE.md carry-forwards accumulate into a dedicated closure phase (Phase 58) with 58-CONTEXT.md as the definitive inventory.
+
+### Key Lessons
+
+1. **Lock down worktrees between sessions.** The two data-loss incidents cost ~45 minutes of recovery. A pre-execution check (`git worktree list`, prune stale) should be part of the execute-phase startup.
+2. **MILESTONES.md accomplishments need milestone-scoped extraction.** The `summary-extract` CLI looks at all phases on disk, not just the current milestone's phases. Until fixed: hand-curate immediately after CLI runs rather than discovering garbage later.
+3. **Human-only phases (UAT) should be represented in the roadmap with a clear `human-only` marker** so the routing logic knows to advance to milestone completion rather than trying to plan/execute them.
+
+---
+
 ## Milestone: v1.3 — Cohort Definition & Storage
 
 **Shipped:** 2026-04-16

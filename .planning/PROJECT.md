@@ -107,7 +107,7 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 - [x] **GRPH-04** — Hierarchical dagre layout; Mantine CSS-variable theme bridge (zero-remount on light↔dark); zoom/pan/minimap — Phase 49
 - [~] **STACK-01** — DEFERRED to v1.8 via Phase 50 WAIVE-AND-DEFER (second deferral; gate MIXED 2026-05-01). Acceptable closure per requirement definition.
 
-### Validated (v1.8 partial — Phases 52–57)
+### Validated (v1.8 — shipped 2026-05-05, Phases 52–57)
 
 - [x] **PEEK-01..06**: JSON peek drawer (JsonViewer extraction, useShortcuts, PeekContext, JsonPeekDrawer) wired to Explorer, Patients list, IncomingReferencesPanel, Human-mode reference rows — Phase 52 (foundation) + Phase 53 (call-site expansion). *Validated in Phase 52–53: 2026-05-04*
 - [x] **SHELL-01**: ResourceDetailPage 4-mode shell — `Summary | Human | Graph | JSON` mode switcher (`<Tabs variant="pills">`), `?mode=` URL persistence via `useSearchParams`, keyboard shortcuts 1/2/3/4 via `useShortcuts` — Phase 54. *Validated in Phase 54: 2026-05-04*
@@ -124,16 +124,27 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 - [x] **LENS-02**: Outgoing References panel — `extractOutgoingReferences()` pure walker + `OutgoingReferencesPanel` (no Card chrome, monospace path label, Phase-47 ReferenceLink per entry); mounted in Summary mode for non-Patient resources after `IncomingReferencesPanel`; returns null when empty — Phase 57. *Validated in Phase 57: 2026-05-05*
 
-### Active (v1.8 candidates — pending scope)
+### Active (v1.9 candidates)
 
-- [ ] **STACK-01** (carried from v1.6 → v1.7): Mantine 9 / React 19 upgrade — re-run peer-dep gate at v1.8 milestone start. **Mantine 9 watch:** the bottleneck remains `@medplum/react`'s `@mantine/core: ^8.0.0` peer pin. React 19 has independently unblocked since v1.6 close (current peer pin: `^18.0.0 || ^19.0.0`), but per user decision D-02 (50-CONTEXT.md) React and Mantine stay coupled until both gates open.
-  - **Re-attempt trigger:** `npm view @medplum/react peerDependencies` — if `@mantine/core` peer range now includes `^9.x`, open a new phase (working name "Theme X — STACK-01 Mantine 9 / React 19 upgrade") in v1.8 with codemod + breaking-change sweep + visual regression UAT + bundle measurement scope per the original Phase 50 gate-PASS branch. If still pinned to `^8.0.0`, re-defer to v1.9 with another WAIVE-AND-DEFER.
-  - **Reactivation source:** `.planning/phases/50-theme-e-stack-01-carry-over-mantine-9-react-19-gate/50-CONTEXT.md` + `50-SUMMARY.md`; original v1.6 context still valid at `.planning/milestones/v1.6-phases/45-mantine-9-upgrade-stack-01/45-CONTEXT.md`.
-  - **Out of scope (rejected workarounds — do NOT revisit without re-discussing D-05/D-06/D-07):** React-19-only upgrade (D-05), `--legacy-peer-deps` workaround (D-06), Mantine 9 codemod preview against scratch branch (D-07).
+- [ ] **STACK-01** (carried from v1.6 → v1.7 → v1.8): Mantine 9 / React 19 upgrade — re-run peer-dep gate at v1.9 milestone start. **Mantine 9 watch:** bottleneck remains `@medplum/react`'s `@mantine/core: ^8.0.0` peer pin. React 19 independently unblocked (`^18.0.0 || ^19.0.0`) but D-02 keeps them coupled.
+  - **Re-attempt trigger:** `npm view @medplum/react peerDependencies` — if `@mantine/core` peer includes `^9.x`, open new phase with codemod + breaking-change sweep + visual regression UAT.
+  - **Reactivation source:** `.planning/phases/50-theme-e-stack-01-carry-over-mantine-9-react-19-gate/50-CONTEXT.md` + `50-SUMMARY.md`.
+  - **Out of scope (rejected workarounds — do NOT revisit without re-discussing D-05/D-06/D-07):** React-19-only upgrade (D-05), `--legacy-peer-deps` (D-06), Mantine 9 codemod preview (D-07).
+- [ ] **UAT-01** — Phase 58 UAT backlog closure: ~35 deferred browser-only items across Phases 42–54. Full inventory in `.planning/phases/58-uat-backlog-closure/58-CONTEXT.md`. Requires live Blaze + real browser (4 items additionally data-blocked, need seed fixtures).
 
 ## Current State
 
-**v1.7 gap closure complete 2026-05-02** — Phase 51 (2 plans, 4 tasks) closed the two audit gaps from the v1.7 milestone: GAP-1 (NAV-02 — all timeline surfaces now consume `summarizeResource(r).primary` exclusively; `extractSummary` symbol physically removed) and GAP-2 (GRPH-03 — `ResourceGraphNode` preserves patient context via `useParams` + `FHIR_ID_PATTERN` validation). Full test suite: 1389 passing / 22 todo / 1 pre-existing Phase-40 deuteranopia failure / 0 regressions. `npm run build` and `tsc -b --noEmit` clean. See Phase 51 SUMMARY files in `.planning/phases/51-v17-gap-closure-summary-util-graph-context/`.
+**v1.8 shipped 2026-05-05** — 6 code phases (52–57), 12 plans. v1.7 baseline: 1412 tests; v1.8 final: 1525 passing / 0 failing. `npm run build` + `tsc -b --noEmit` clean. src/ +5,296/−315 across 57 files. Key additions: JSON Peek Drawer (4 surfaces), 4-Mode Resource Shell, Explorer density modes, ⌘K Spotlight, Expert Toggle, Outgoing References Panel. Phase 58 UAT backlog documented — pending human walkthrough. See [MILESTONES.md](MILESTONES.md) and [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md).
+
+**App shape after v1.8:**
+
+- **Explorer resource detail.** `ResourceDetailPage` now has 4 URL-driven modes via pill tabs: Summary (key fields table + incoming/outgoing reference panels), Human (HumanReadableView), Graph (lazy React Flow), JSON (copy/download toolbar + structural validation chip). Keyboard shortcuts 1/2/3/4 switch modes; `?mode=` param persists across navigation.
+- **Explorer list.** Two-line summary cells (bold primary + dim/mono secondary). Three density modes via SegmentedControl: Table / Cards / Compact; persisted to `explorer.density.v1`. J key opens JSON peek in all modes.
+- **JSON Peek Drawer.** Right-side 420px drawer opened by `J` on Explorer/PatientList rows or `⌘`+click on any `ReferenceLink`. Error-state branch for unresolvable references. 4 wired surfaces.
+- **Sidebar.** `⌘K` opens AppSpotlight with lazy resource-type actions from CapabilityStatement. Expert Toggle (localStorage-persisted) reveals monospace IDs in Explorer and server URL in sidebar. Resource-type count badge on Explorer nav entry.
+- **localStorage keys added in v1.8:** `explorer.density.v1`, `app.expertMode.v1`.
+
+**v1.7 gap closure complete 2026-05-02** — Phase 51 closed GAP-1 (NAV-02 `extractSummary` removed) and GAP-2 (GRPH-03 patient context via `useParams`). See [milestones/v1.7-ROADMAP.md](milestones/v1.7-ROADMAP.md).
 
 **v1.5 shipped 2026-04-29** — 10 phases (31-38 plus inserted 38.1, 38.2), 32 plans, 79 tasks. v1.4 baseline: 836 tests passing; v1.5 final: 1064 passing / 22 todo / 0 failing. `npm run build` clean. Notable shipped: three-tier FHIR validator cascade (Phase 31), per-metric `QualityMetricsContext` split (Phase 32), 21-module MII palette + lazy-loaded bundled profiles (Phases 33–34, 36), per-type quality matrix (Phase 35), live-Blaze HUMAN-UAT smoke tests (Phase 38), `_sort=-date` Blaze 400 fix (Phase 38.1), Quantity-render dispatch reorder (Phase 38.2). See [MILESTONES.md](MILESTONES.md) and [milestones/v1.5-MILESTONE-AUDIT.md](milestones/v1.5-MILESTONE-AUDIT.md).
 
@@ -153,35 +164,32 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 **localStorage keys** unchanged from v1.3: `quality.thresholds.v1`, `quality.trends.v1`, `quality.cohorts.v1`, `quality.activeCohortId.v1`, `quality.resourceTypes.v1`.
 
-## Current Milestone: v1.7 Resource Navigation
+## Next Milestone: v1.9 (not yet scoped)
+
+**Carry-forwards from v1.8:**
+- STACK-01 — Mantine 9 / React 19 upgrade (third deferral; re-run peer-dep gate first)
+- Phase 58 UAT backlog — ~35 browser-only items pending human walkthrough
+
+**Likely v1.9 themes (to be confirmed at `/gsd-new-milestone`):**
+- UAT backlog closure (once Phase 58 walkthrough surfaces any code fixes needed)
+- Graph view G2 — schema graph (static, server-independent resource type graph)
+- Performance/UX improvements surfaced during real-world Blaze usage
+
+<details>
+<summary>Archived: v1.8 milestone goals (shipped 2026-05-05)</summary>
+
+**Goal:** Make the resource detail experience production-quality — a JSON peek drawer accessible from any list, a 4-mode resource shell replacing the legacy 2-tab layout, Explorer UX improvements, a ⌘K command palette, an expert toggle, and an outgoing references panel completing the incoming/outgoing reference pair.
+
+**Phases:** 52 (JSON Peek Drawer) → 53 (Peek call-sites) → 54 (4-mode shell) → 55 (Explorer UX) → 56 (Sidebar v2 + ⌘K + Expert Toggle) → 57 (Outgoing References) → 58 (UAT backlog, human-only)
+
+</details>
+
+<details>
+<summary>Archived: v1.7 milestone goals (shipped 2026-05-04)</summary>
 
 **Goal:** Make resources navigable. Improve the human-readable view, add a compact summary util used everywhere a resource appears in a list, surface incoming references at the bottom of resource details, and ship a graphical reference graph for the resource at hand.
 
-**Target features (5 themes):**
-
-**Theme A — Foundation (shared util):**
-- Per-resource-type summary util `summarizeResource(r) → { primary, secondary? }` with a registry covering Patient, Observation, Condition, Encounter, MedicationStatement, Procedure, DiagnosticReport, AllergyIntolerance (rest fall back to generic). No status field — primary + optional secondary only.
-- Dedupe summary logic across SearchResultsPage, FhirResourcesView, MiiModuleTab.
-
-**Theme B — Readability (HumanReadableView):**
-- References auto-resolve via lazy fetch + session cache; render as `summarizeResource(ref).primary` inline, hover tooltip with full ref.
-- Property-level extensions (currently filtered by `_`-prefix check) surfaced in a controlled way.
-- Contained resources rendered (currently fall through to JSON modal).
-
-**Theme C — Reverse references ("Used by" panel):**
-- Curated catalog of reverse-reference search params per resource type (8–12 types covered, mirrors PatientRelatedResources scope).
-- New `IncomingReferencesPanel` at bottom of `ResourceDetailPage` for non-Patient resources; generalize the existing PatientRelatedResources idiom.
-- Click-through to a filtered explorer view, just like PatientRelatedResources today.
-
-**Theme D — Graph view (G1: this resource's reference graph):**
-- New lazy route `/explorer/:type/:id/graph` rendering the current resource's outgoing + incoming reference graph.
-- `@xyflow/react` (React Flow 12) + `@dagrejs/dagre` for hierarchical layout. Nodes are React components rendering `summarizeResource(r).primary` so Theme A is a hard prereq.
-- Click-to-navigate. Mantine 8 dark-mode integration via CSS variables. Default depth = 1.
-
-**Theme E — Carry-over from v1.6:**
-- STACK-01: Re-run `npm view @medplum/react peerDependencies` gate. If `@mantine/core` peer range now includes `^9.x`, proceed with Mantine 9 + React 19 upgrade. If not, defer again to v1.8 with the same WAIVE-AND-DEFER pattern.
-
-**Phase ordering:** Sequential A → B → C → D → E. Theme A is the foundation that B/C/D all consume; sequential ordering avoids cross-phase merge friction.
+</details>
 
 **Bundle budget:** Initial-load delta target 0 KB gz (graph route is lazy-loaded; ~73 KB gz lands only when route is visited). Theme A util adds ~2–4 KB gz to initial chunk.
 
