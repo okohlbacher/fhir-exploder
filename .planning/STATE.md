@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.8
 milestone_name: -- Navigation Redesign (in progress, started 2026-05-04)
 status: verifying
-stopped_at: Phase 57 context gathered
-last_updated: "2026-05-05T04:14:05.318Z"
+stopped_at: Phase 57 UI-SPEC approved
+last_updated: "2026-05-05T04:24:40.689Z"
 last_activity: 2026-05-04
 progress:
   total_phases: 7
@@ -119,7 +119,7 @@ Progress: [####      ] 57%
 
 ## Session Continuity
 
-Last session: 2026-05-05T04:14:05.316Z
-Stopped at: Phase 57 context gathered
-Resume file: .planning/phases/57-references-out-card/57-CONTEXT.md
+Last session: 2026-05-05T04:24:40.684Z
+Stopped at: Phase 57 UI-SPEC approved
+Resume file: .planning/phases/57-references-out-card/57-UI-SPEC.md
 Next action: `/gsd-discuss-phase 56` or `/gsd-plan-phase 56`
