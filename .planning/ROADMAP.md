@@ -35,7 +35,7 @@ Carried to v1.8 (re-evaluate at milestone-new):
 - [x] Phase 54: 4-Mode Resource Shell (SHELL-01, SHELL-02, SHELL-03, SHELL-04) (2/2 plans) — completed 2026-05-04
 - [ ] Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03)
 - [ ] Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04) (0/2 plans)
-- [ ] Phase 57: Patients-as-Lens (LENS-01, LENS-02)
+- [ ] Phase 57: References-Out Card (LENS-02)
 - [ ] Phase 58: UAT Backlog Closure (UAT-01)
 
 </details>
@@ -224,6 +224,20 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 **Effort**: large (3+ days if gate passes; small if gate fails — pure-doc closure)
 **Execution**: Mixed if gate passes (codemod + tsc sweep automatable; visual UAT requires human walkthrough across all views) / Fully automatable if gate fails (pure-doc `WAIVE-AND-DEFER`)
 **UI hint**: yes (only relevant if gate passes — visual regression UAT touches every view)
+
+### Phase 57: References-Out Card
+**Goal**: Add a "References Out" panel to the Summary mode of `ResourceDetailPage` — showing all resources that the current resource references (outgoing refs), complementing the existing `IncomingReferencesPanel` (reverse refs). Deferred from Phase 54 / LENS-02.
+**Depends on**: Phase 54 (`ResourceDetailPage` 4-mode shell, `KeyFieldsTable`, `IncomingReferencesPanel`)
+**Requirements**: LENS-02
+**Success Criteria** (what must be TRUE):
+  1. Summary mode shows a "References" panel listing every direct FHIR reference field on the current resource (e.g. `Encounter.subject`, `Encounter.participant[].individual`). Clicking a reference navigates to that resource's detail page, preserving patient context when available.
+  2. The panel is rendered only when the resource has at least one reference field that resolves to a non-null value — otherwise it is hidden (no empty card).
+  3. For Patient resources the panel is not shown (PatientRelatedResources already covers that surface).
+  4. Full test suite passes; `npm run build` clean; `tsc -b --noEmit` exit 0; no regressions vs. post-Phase-56 baseline.
+**Plans**: TBD (1-2 plans)
+**Effort**: small-medium (1 day — new component + integration into Summary panel)
+**Execution**: Fully automatable (new component + call-site wiring; no UAT beyond test gate)
+**UI hint**: yes
 
 ### Phase 51: v1.7 Gap Closure — Summary Util Coverage + Graph Patient-Context
 **Goal**: Close two `tech_debt` integration gaps surfaced by the v1.7 milestone audit — extend `summarizeResource` adoption to the two timeline call sites that diverge from it (GAP-1), and preserve patient context on graph node click when the graph is reached via the patient-scoped route (GAP-2).
