@@ -12,6 +12,7 @@ import { JsonModeView } from './JsonModeView';
 import { KeyFieldsTable } from './KeyFieldsTable';
 import { PatientRelatedResources } from './PatientRelatedResources';
 import { IncomingReferencesPanel } from './IncomingReferencesPanel';
+import { OutgoingReferencesPanel } from './OutgoingReferencesPanel';
 import { summarizeResource } from '../../utils/summarizeResource';
 import { retry } from '../../utils/lazyRetry';
 
@@ -211,6 +212,9 @@ export function ResourceDetailPage() {
                   <PatientRelatedResources patientId={id} />
                 ) : (
                   <IncomingReferencesPanel resource={resource} />
+                )}
+                {resource.resourceType !== 'Patient' && (
+                  <OutgoingReferencesPanel resource={resource} />
                 )}
               </Stack>
             </Tabs.Panel>
