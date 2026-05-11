@@ -52,10 +52,17 @@
 
 ## Traceability
 
-_Filled by roadmapper._
-
 | REQ-ID | Phase | Plans |
 |--------|-------|-------|
-| FIX-01..08 | — | — |
-| REVR-04 | — | — |
-| UAT-01 | — | — |
+| FIX-01 | Phase 59 | 59-01 |
+| FIX-02 | Phase 59 | 59-01 |
+| FIX-03 | Phase 59 | 59-01 |
+| FIX-04 | Phase 59 | 59-01 |
+| FIX-05 | Phase 59 | 59-01 |
+| FIX-06 | Phase 59 | 59-01 |
+| FIX-07 | Phase 59 | 59-01 |
+| FIX-08 | Phase 59 | 59-01 |
+| REVR-04 | Phase 60 | 60-01, 60-02 |
+| UAT-01 | Phase 61 | — (human-only, no plans) |
+
+**Coverage:** 10 / 10 v1.9 requirements mapped to phases.

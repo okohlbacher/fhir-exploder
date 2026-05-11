@@ -6,9 +6,9 @@ status: active
 last_updated: "2026-05-11T00:00:00.000Z"
 last_activity: 2026-05-11
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
-  total_plans: 0
+  total_plans: 3
   completed_plans: 0
   percent: 0
 ---
@@ -17,22 +17,33 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-04)
+See: .planning/PROJECT.md (updated 2026-05-11)
 
 **Core value:** Connect to a Blaze FHIR server and make its contents human-readable and navigable without requiring deep FHIR expertise.
-**Current focus:** v1.8 archived — run `/gsd-new-milestone` to start v1.9
+**Current focus:** v1.9 roadmap defined — 3 phases (59, 60, 61). Next action: `/gsd-plan-phase 59`.
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 59 (Code Quality Sweep) — not started
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-11 — Milestone v1.9 started
+Status: Roadmap drafted, awaiting phase planning
+Last activity: 2026-05-11 — Milestone v1.9 roadmap created (3 phases, 10 requirements mapped)
+
+## v1.9 Phase Inventory
+
+| Phase | Goal | Requirements | Plans | Execution |
+|-------|------|--------------|-------|-----------|
+| 59 — Code Quality Sweep | 8 backlog fixes in a single batched sweep | FIX-01..08 | 1 (planned) | Fully automatable |
+| 60 — CapabilityStatement-Driven Rev-Ref Discovery | Dynamic catalog from server CapabilityStatement, curated fallback | REVR-04 | 2 (planned) | Mixed (live-Blaze smoke check needed) |
+| 61 — UAT Backlog Closure | Walk Phase 58 deferred UAT items (Groups A, C–G); WAIVE Group B | UAT-01 | 0 (human-only) | Human-only |
+
+**Coverage:** 10 / 10 v1.9 requirements mapped. No orphans.
 
 ## Performance Metrics
 
 **Velocity:**
 
+- Total plans completed (v1.8): 12 across 6 phases (52–57; Phase 58 re-scoped to v1.9 Phase 61)
 - Total plans completed (v1.7): 13 across 6 phases (46-51; Phase 50 closed `deferred` via WAIVE-AND-DEFER)
 - Total plans completed (v1.6): 14 across 7 phases (39-45; Phase 45 closed `deferred` via WAIVE-AND-DEFER)
 - Total plans completed (v1.5): 32 (79 tasks across 10 phases including inserted 38.1 + 38.2)
@@ -42,57 +53,43 @@ Last activity: 2026-05-11 — Milestone v1.9 started
 
 ## Accumulated Context
 
-### Decisions (carry-forward to v1.8)
+### Decisions (carry-forward to v1.9)
 
 - **STACK-01 deferred indefinitely (2026-05-04):** Removed from Active requirements. Bottleneck remains `@medplum/react`'s `@mantine/core: ^8.0.0` peer pin. Will resurface only if user-requested or if the peer-dep range opens to `^9.x`.
 - **Bearer tokens for VAL-06** stored in `localStorage` under `validator.bearerToken.v1` — NEVER persisted to settings.yaml on disk.
-- **Curated reverse-reference catalog** (`reverseReferenceCatalog.ts`) — CapabilityStatement-driven discovery deferred to v1.9+. Add entries as real-world navigation reveals gaps.
-- **`summarizeResource` contract: `{ primary, secondary? }` two-slot only** — no status field/pill. Extend to new resource types in v1.8 as needed (Phase 54 key-fields registry mirrors the same 8 typed entries).
+- **Curated reverse-reference catalog** (`reverseReferenceCatalog.ts`) — replaced by dynamic CapabilityStatement-driven discovery in v1.9 Phase 60 with the curated catalog kept as a transparent fallback.
+- **`summarizeResource` contract: `{ primary, secondary? }` two-slot only** — no status field/pill. Extend to new resource types as needed (Phase 54 key-fields registry mirrors the same 8 typed entries).
 
-### v1.8 Roadmap Locked Decisions
+### v1.9 Roadmap Locked Decisions
 
-- **Drawer config:** `trapFocus={true}` + `withOverlay={false}` (a11y-safe; per RESEARCH PITFALLS #3).
-- **Mode switcher widget:** Mantine `<Tabs variant="pills">` styled to look like SegmentedControl (preserves `keepMounted` + ARIA tablist semantics; per RESEARCH PITFALLS #4).
-- **Global hotkey ownership:** Single shared `useShortcuts` / `useHotkeys` module owned by Phase 52 (foundation). Phase 54 (1/2/3/4) and Phase 56 (⌘K) extend it.
-- **Spotlight resource-type list:** Lazy population (≥ 2 chars trigger) per RESEARCH (avoids upfront 94-action cost).
+- **Phase 59 (Code Quality Sweep)** — all 8 FIX items batched into a single plan; they touch independent surfaces with no shared dependency.
+- **Phase 60 (REVR-04)** — split into 2 plans: 60-01 parser/catalog/cache, 60-02 panel integration + fallback + tests. CapabilityStatement parser must filter on `type: 'reference'` and use `CapabilityStatement.rest[0].resource[*].searchParam` per REVR-04 contract.
+- **Phase 61 (UAT-01)** — human-only, no plans (mirrors Phase 58 structure). Closes only when every Group-A/C/D/E/F/G item is PASS or WAIVE. Group B WAIVEd en bloc.
 
-### Pending Todos (v1.9 scope — in progress)
+### Pending Todos (v1.9 scope)
 
-- **Human UAT backlog (Phase 58 scope)** — deferred browser-only items. Full inventory in `.planning/phases/58-uat-backlog-closure/58-CONTEXT.md`. Summary:
+- **Phase 58 UAT Inventory (now Phase 61 scope)** — `.planning/phases/58-uat-backlog-closure/58-CONTEXT.md` lists the full deferred set. Summary:
   - **Group A** (no HUMAN-UAT files): Phase 42 (1), Phase 43 (3), Phase 44 (2)
-  - **Group B** Phase 47 (4 items — BLOCKED-NO-DATA, need seed fixtures in Blaze)
-  - **Group C** Phase 48 UAT-3 (1 item — Slow-3G skeleton, needs Chrome DevTools)
-  - **Group D** Phase 49 UAT-1/2/3/4 (3–4 items — pan/zoom, minimap, dark-mode contrast, Slow-3G, need real browser)
+  - **Group B** Phase 47 (4 items — BLOCKED-NO-DATA, WAIVE en bloc in Phase 61)
+  - **Group C** Phase 48 UAT-3 (1 item — Slow-3G skeleton)
+  - **Group D** Phase 49 UAT-1/2/3/4 (3–4 items — pan/zoom, minimap, dark-mode contrast, Slow-3G)
   - **Group E** Phase 52 (3 items — drawer width, URL stability, focus ring)
   - **Group F** Phase 53 (4 items — Cmd+click resolve, error state, PatientList focus ring, async fetch)
   - **Group G** Phase 54 (6 items — pill tabs, keyboard shortcuts, graph canvas, chip colors, download, /graph redirect)
-  - Phases 46, 48 UAT-1/2, 49 UAT-3/5/6/7, 55, 56, 57 — fully closed, nothing deferred
-- **DEFERRED.md dashboard** — create at v1.8 milestone start to track all WAIVE-AND-DEFER items with re-attempt triggers (low priority since STACK-01 is now indefinitely deferred).
+- **DEFERRED.md dashboard** — optional; STACK-01 and the v1.9 deferred list (GRPH-G2, GRPH-DEPTH, REVR-DYN-EXT, FEDCQL-01, COHORT-VERSION-01) are tracked in ROADMAP.md §Deferred Items.
 
-### Phase 53 Deliverables (carry-forward to Phase 54)
+### v1.8 Carry-Forward Deliverables (unchanged — for reference)
 
-- **`src/contexts/PeekContext.tsx`** — now includes `openPeekError(reference, originElement?)` + nullable `PeekState.resource` + `error?`/`referenceText?` fields
-- **`src/components/json/JsonPeekDrawer.tsx`** — error-state branch: monospace `referenceText` title, dimmed "Reference unresolvable" body, hidden Open-full button, Enter no-op
-- **`src/components/explorer/ReferenceLink.tsx`** — Cmd+click intercepted: resolved → `openPeek`; failed → `openPeekError(rawText)`; pending → no-op
-- **`src/components/explorer/RelatedResourcesPanel.tsx`** — Cmd+click: async first-resource fetch → `openPeek`; empty/error → `openPeekError`
-- **`src/components/patients/PatientListPage.tsx`** — J shortcut wired (4th surface); `focusedPatient` + relatedTarget blur guard + indigo focus ring
-- **Phase 52+53 Human UAT pending (Phase 58 scope)**: drawer visual width (420px), URL stability when J pressed, focus ring visibility (Phase 52); + 4 new Phase 53 items (see 53-HUMAN-UAT.md)
-
-### Phase 54 Deliverables (carry-forward to Phase 55)
-
-- **`src/utils/keyFieldsRegistry.ts`** — `getKeyFields(r): KeyFieldEntry[]` for 8 typed R4 types + generic fallback (4-6 fields per type)
+- **`src/contexts/PeekContext.tsx`** — error-state branch; `openPeekError(reference, originElement?)`
+- **`src/components/json/JsonPeekDrawer.tsx`** — monospace `referenceText` title for unresolvable refs
+- **`src/components/explorer/ReferenceLink.tsx`** — Cmd+click intercepted; resolved → `openPeek`, failed → `openPeekError`
+- **`src/components/explorer/ResourceDetailPage.tsx`** — 4-mode shell: `Summary | Human | Graph | JSON`, URL-driven `?mode=`
 - **`src/components/explorer/KeyFieldsTable.tsx`** — 2-column Mantine Table for Summary mode
-- **`src/components/explorer/JsonModeView.tsx`** — JSON toolbar: Copy/Download/validation chip/Open-in-validator
-- **`src/components/json/JsonViewer.tsx`** — extended with `showLineNumbers?: boolean` prop (PEEK-06 invariant preserved)
-- **`src/components/explorer/ResourceDetailPage.tsx`** — full 4-mode shell: `Summary | Human | Graph | JSON`, URL-driven `?mode=`, `useShortcuts` for 1/2/3/4, lazy ResourceGraphView
-- **`src/components/explorer/ResourceGraphView.tsx`** — `compact?: boolean` prop suppresses standalone header when embedded
-- **`src/App.tsx`** — `NavigateToMode` adapter; legacy `/graph` routes → `?mode=graph` redirects
-- **`DeveloperJsonView.tsx` deleted** — merged into JsonModeView; 0 remaining importers
-- **Phase 54 Human UAT pending (Phase 58 scope)**: visual pill tabs, keyboard shortcuts, React Flow canvas, chip colors, file download, /graph redirect (6 items)
+- **`src/components/explorer/JsonModeView.tsx`** — JSON toolbar: Copy / Download / validation chip / Open-in-validator
 
 ### Blockers/Concerns
 
-- None. EXPL-01/02/03 fully shipped (Phase 55). Phase 56 (Sidebar v2 + Expert Toggle + ⌘K) is unblocked.
+- None. v1.9 is unblocked. Phase 59 (Code Quality Sweep) is the natural starting point — fully automatable, independent of the other two phases.
 
 ### Quick Tasks Completed
 
@@ -105,6 +102,6 @@ Last activity: 2026-05-11 — Milestone v1.9 started
 
 ## Session Continuity
 
-Last session: 2026-05-05T11:00:00.000Z
-Stopped at: v1.8 milestone archived — tag v1.8 created
-Next action: `/gsd-new-milestone` to start v1.9 planning (or run Phase 58 UAT manually — see 58-CONTEXT.md)
+Last session: 2026-05-11T00:00:00.000Z
+Stopped at: v1.9 roadmap drafted (3 phases: 59 Code Quality Sweep, 60 Rev-Ref Discovery, 61 UAT Closure)
+Next action: `/gsd-plan-phase 59` to plan the Code Quality Sweep (FIX-01..08, single batched plan)

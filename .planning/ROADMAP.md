@@ -11,21 +11,27 @@
 - ✅ **v1.6 -- Hardening, UX Polish & Carry-Overs (shipped 2026-04-30)** -- [Archive](milestones/v1.6-ROADMAP.md) . [Requirements](milestones/v1.6-REQUIREMENTS.md)
 - ✅ **v1.7 -- Resource Navigation (shipped 2026-05-04)** -- [Archive](milestones/v1.7-ROADMAP.md) . [Requirements](milestones/v1.7-REQUIREMENTS.md) . [Audit](milestones/v1.7-MILESTONE-AUDIT.md)
 - ✅ **v1.8 -- Navigation Redesign (shipped 2026-05-05)** -- [Archive](milestones/v1.8-ROADMAP.md)
+- 🚧 **v1.9 -- Polish, Discovery & UAT Closure (active)** -- [Requirements](REQUIREMENTS.md)
 
 ## Deferred Items
 
-Carried to v1.9 (re-evaluate at milestone-new):
+Carried to v2.0 (re-evaluate at next milestone-new):
 
-- **STACK-01 (Mantine 9 / React 19 upgrade — third WAIVE-AND-DEFER 2026-05-05):** Three consecutive gate failures (v1.6 Phase 45, v1.7 Phase 50, v1.8 skip). Mantine 9 still closed (`^8.0.0`) by `@medplum/react@5.1.10`. **Re-attempt trigger:** `npm view @medplum/react peerDependencies` — if `@mantine/core` peer range now includes `^9.x`, open new phase. Reactivation: `.planning/phases/50-*/50-CONTEXT.md` + `50-SUMMARY.md`.
-- **Phase 58 UAT Backlog** — ~35 browser-only UAT items deferred across Phases 42–54. Full inventory: `.planning/phases/58-uat-backlog-closure/58-CONTEXT.md`. Requires live Blaze + real browser. 4 items data-blocked (need seed fixtures).
-- **Reverse-reference CapabilityStatement-driven discovery** — curated catalog shipped v1.7 (REVR-01); dynamic discovery deferred until real-world gaps surface.
-- **Graph view G2 — schema graph** — interactive FHIR resource type graph (static, server-independent). Defer until G1 validated.
-- **Graph view depth > 3** — React Flow handles it but UX needs design.
-- Federated cohort queries (server-side CQL), cohort versioning, multi-criteria phenotype builder — no demand surfaced.
+- **STACK-01 (Mantine 9 / React 19 upgrade — deferred indefinitely 2026-05-04):** Three consecutive gate failures (v1.6 Phase 45, v1.7 Phase 50, v1.8 skip). Mantine 9 still closed (`^8.0.0`) by `@medplum/react@5.1.10`. **Re-attempt trigger:** `npm view @medplum/react peerDependencies` — if `@mantine/core` peer range now includes `^9.x`, open new phase. Reactivation: `.planning/milestones/v1.7-phases/50-*/50-CONTEXT.md` + `50-SUMMARY.md`.
+- **GRPH-G2 — schema graph** — interactive FHIR resource type graph (static, server-independent). Defer until G1 validated.
+- **GRPH-DEPTH — graph depth > 3** — React Flow handles it but UX needs design.
+- **REVR-DYN-EXT** — Deep CapabilityStatement SearchParameter `$describe` resolution for params without inline `target` list.
+- **FEDCQL-01** — Federated cohort queries / server-side CQL execution.
+- **COHORT-VERSION-01** — Cohort versioning / audit history.
+- Multi-criteria phenotype builder — no demand surfaced.
 
 ---
 
 ## Phases
+
+- [ ] **Phase 59: Code Quality Sweep** — 8 backlog fixes (FIX-01..08): patient-context for middle-click refs, typed extension cast, breadcrumb edge cases, FHIR-id validation, AbortSignal honoring, Error-instance throws, regression test, semantic icon swap.
+- [ ] **Phase 60: CapabilityStatement-Driven Reverse-Reference Discovery** — Replace hand-curated `reverseReferenceCatalog.ts` with a dynamic catalog parsed from the server's `CapabilityStatement` SearchParameters, with transparent fallback when the CapabilityStatement is unavailable (REVR-04).
+- [ ] **Phase 61: UAT Backlog Closure** — Walk the deferred Phase 58 UAT inventory (Groups A, C–G) against a live Blaze server running Synthea data; WAIVE Group B with documented rationale (UAT-01). Human-only, no plans.
 
 <details>
 <summary>✅ v1.8 Navigation Redesign (Phases 52-58) — SHIPPED 2026-05-05</summary>
@@ -36,7 +42,7 @@ Carried to v1.9 (re-evaluate at milestone-new):
 - [x] Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03) (2/2 plans) — completed 2026-05-04
 - [x] Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04) (2/2 plans) — completed 2026-05-04
 - [x] Phase 57: References-Out Card (LENS-02) (2/2 plans) — completed 2026-05-05
-- [~] Phase 58: UAT Backlog Closure (human-only) — context documented 2026-05-05; walkthrough pending
+- [~] Phase 58: UAT Backlog Closure (human-only) — context documented 2026-05-05; walkthrough re-scoped into v1.9 Phase 61
 
 Full details: [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md)
 
@@ -133,129 +139,52 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 
 ## Phase Details
 
-### Phase 46: Theme A — Foundation: Summary Util
-**Goal**: Establish a single pure-function summary primitive (`summarizeResource`) used by every list/card surface in the app, dedup three current inline implementations, and provide the foundational dependency for Phases 47–49.
-**Depends on**: Nothing (foundation phase)
-**Requirements**: NAV-01, NAV-02
+### Phase 59: Code Quality Sweep
+**Goal**: Resolve 8 LOW-severity items surfaced by the v1.7 code review backlog in a single batched sweep — patient-context preservation for middle-click reference clicks, type-safety cleanup, navigation breadcrumb edge cases, defensive validation in FHIR-id parsing, AbortSignal honoring, Error-instance throws, a missing regression test, and a semantic icon swap.
+**Depends on**: Nothing (independent of other v1.9 phases; touches 8 separate small surfaces)
+**Requirements**: FIX-01, FIX-02, FIX-03, FIX-04, FIX-05, FIX-06, FIX-07, FIX-08
 **Success Criteria** (what must be TRUE):
-  1. A pure-function `summarizeResource(r: Resource) → { primary: string; secondary?: string }` exists, exported from a single module, and returns deterministic output for every R4 resource type (8 typed entries + generic fallback).
-  2. The three legacy call sites (`SearchResultsPage.getResourceSummary`, `FhirResourcesView.getSummary`, `MiiModuleTab.getSummary`) all import and call the new utility — grep shows zero remaining inline summary computations at those sites.
-  3. Unit tests cover all 8 typed registry entries plus the generic fallback (Patient, Observation, Condition, Encounter, MedicationStatement, Procedure, DiagnosticReport, AllergyIntolerance, generic) — at least one test per entry asserting both `primary` and (where applicable) `secondary` shape.
-  4. Visual output at the three migrated call sites matches or improves on the prior inline output — explorer table cells and MII tab labels render summaries identical to or richer than v1.6.
-  5. `npm run build` clean; `tsc -b --noEmit` exit 0; full test suite passes (no regressions vs. 1240 baseline).
-**Plans**: TBD
-**Effort**: medium (2-3 days)
-**Execution**: Fully automatable (pure function + registry + 3 call-site migrations; no human UAT needed beyond test gate)
+  1. Middle-clicking a `ReferenceLink` opens the target resource in a new tab with patient context preserved when present — when the link is rendered inside a patient-scoped route (`/patients/:patientId/...`), the resulting URL is `/patients/:patientId/:type/:id`; outside a patient scope it falls back to `/explorer/:type/:id`. Verified via RTL test that opens a new tab via `auxclick` (button=1) and asserts the hrefs.
+  2. `HumanReadableView` no longer contains the `(resource as unknown as Record<string, unknown>).extension as ExtensionShape[]` double-cast — grep shows zero occurrences of that pattern in the file. The replacement uses `DomainResource.extension` typing directly. `tsc -b --noEmit` exit 0.
+  3. The bare `/patients` path (no trailing segment) activates the Patients breadcrumb in `NavigationBreadcrumbs`. RTL test renders the component at `/patients` and asserts the breadcrumb is marked active.
+  4. `referenceChecker` rejects malformed FHIR ids (trailing slash, empty, illegal chars) before adding them to the `_id` query bucket — validated against `FHIR_ID_PATTERN`. Unit test feeds `Patient/123/` and asserts the id is NOT added.
+  5. `structuralValidator` returns `[]` immediately when called with an already-aborted `AbortSignal`. Unit test calls `controller.abort()` before invocation and asserts an empty result with no walker work performed.
+  6. `ConnectionContext` throws `new Error(message)` on connection failure (instanceof Error). Existing test that catches the throw is updated to assert `instanceof Error` and `.message` shape.
+  7. A regression test pins the `completenessWalker` sliced-array v1-behaviour invariant (Pitfall 4 documented in code) so future refactors can't silently break it.
+  8. The `$everything` button on `ResourceDetailPage` renders `IconExternalLink` (replacing `IconShareplay`). RTL test asserts the icon's `data-testid` or test-locator. `npm run build` clean.
+**Plans**: TBD (1 plan — all 8 fixes batched; no plan-level dependency between them)
+**Effort**: small (< 1 day — 8 focused file edits + 8 small tests)
+**Execution**: Fully automatable (no UI surface changes; visual regression nil)
+
+### Phase 60: CapabilityStatement-Driven Reverse-Reference Discovery
+**Goal**: Upgrade the reverse-reference catalog from a hand-curated module to a dynamic catalog derived from the connected server's CapabilityStatement, while preserving the curated catalog as a transparent fallback. The `IncomingReferencesPanel` should populate with the union of (a) what the server actually advertises as referenceable and (b) what the curated catalog covers, with no UX regression on servers whose CapabilityStatement is missing or sparse.
+**Depends on**: Phase 48 (existing `reverseReferenceCatalog.ts`, `RelatedResourcesPanel`, `IncomingReferencesPanel`)
+**Requirements**: REVR-04
+**Success Criteria** (what must be TRUE):
+  1. On first navigation to any non-Patient resource detail page after a fresh load (or server switch), the app fetches `/metadata` once, parses `CapabilityStatement.rest[0].resource[*].searchParam`, filters to `type: 'reference'` entries, and builds a dynamic reverse-reference catalog keyed by target resource type. The fetched CapabilityStatement is cached per server URL for the session (cleared on server switch).
+  2. The `IncomingReferencesPanel` populates from the dynamic catalog when available — verified by navigating to an `Encounter` detail page on a server whose CapabilityStatement advertises additional reference search params beyond the curated 9 entries; the panel shows cards for the additional types.
+  3. When the CapabilityStatement is unavailable (404, network error, malformed) OR when a specific resource type has no entries in the dynamic catalog, the panel falls back to the hand-curated `reverseReferenceCatalog.ts` transparently. No error toast or banner is shown to the user.
+  4. Unit tests cover: (a) CapabilityStatement parser produces the expected dynamic catalog shape from a fixture CapabilityStatement, (b) panel renders the dynamic-catalog entries when available, (c) panel renders the curated-catalog entries when the dynamic fetch fails, (d) per-server cache invalidates on server-URL change.
+  5. `tsc -b --noEmit` exit 0; `npm run build` clean; full test suite passes; bundle gz delta within ±5 KB.
+**Plans**: TBD (2 plans)
+  - 60-01: CapabilityStatement fetch + parse + per-server cache + dynamic catalog builder (REVR-04 parser half)
+  - 60-02: `IncomingReferencesPanel` integration + curated fallback + tests (REVR-04 integration half)
+**Effort**: medium (2-3 days — parser + cache + panel integration + fallback path + 4-5 tests)
+**Execution**: Mixed (parser + cache + integration code is fully automatable; a brief live-Blaze smoke check confirms the dynamic catalog produces a non-empty result on a real CapabilityStatement)
 **UI hint**: yes
 
-### Phase 47: Theme B — Readability: HumanReadableView
-**Goal**: Make `HumanReadableView` self-sufficient — references resolve to human-readable summaries inline, property-level extensions are reachable without dropping into raw JSON, and contained resources render in-place.
-**Depends on**: Phase 46 (consumes `summarizeResource` for both reference rendering and contained-resource rendering)
-**Requirements**: READ-01, READ-02, READ-03
+### Phase 61: UAT Backlog Closure
+**Goal**: Walk the deferred Phase 58 UAT inventory against a live Blaze server running Synthea data, marking every item as PASS or WAIVED with documented rationale. Close Groups A, C, D, E, F, and G; explicitly WAIVE Group B (data-blocked — Synthea lacks fixtures for those scenarios) with a revisit note.
+**Depends on**: All v1.6, v1.7, v1.8 phases (the UAT items being walked belong to Phases 42–54)
+**Requirements**: UAT-01
 **Success Criteria** (what must be TRUE):
-  1. A reference field rendered in `HumanReadableView` displays the target resource's `summarizeResource(target).primary` as inline text (not the raw `Type/id` href), with the full reference URL accessible on hover (Mantine Tooltip), and the rendered text remains a clickable router link to `/explorer/{type}/{id}`.
-  2. Reference resolution uses a session-level `Map<\`${type}/${id}\`, Resource | null>` cache (cleared on full reload) — repeat references hit cache; failed lookups (404, network error) silently fall back to the raw href display with NO error toast.
-  3. Property-level extensions (currently filtered by the `_`-prefix check in HumanReadableView) are reachable from the human-readable surface — at least one user-visible affordance (inline reveal, dedicated subsection, or `[View]` modal trigger) surfaces the extension data without requiring a switch to the JSON tab.
-  4. Contained resources (`Resource.contained[]`) render inline within the human-readable view, each displaying its own `summarizeResource()` output and expandable to a full ResourcePropertyTable view — no fall-through to the JSON modal.
-  5. Tests cover the cache hit/miss/fallback paths for READ-01, the extension-surface presence for READ-02, and the contained-resource render path for READ-03; full suite passes; `npm run build` clean.
-**Plans**: 2 plans
-  - [x] 47-01-PLAN.md — useReferenceResolver hook + ReferenceLink (READ-01)
-  - [x] 47-02-PLAN.md — ExtensionChip + ContainedResourcesAccordion + HumanReadableView integration (READ-02 + READ-03)
-**Effort**: large (3+ days)
-**Execution**: Mixed (component + hook code is fully automatable; visual / interaction UAT — tooltip hover, modal transitions, contained-resource expand — needs a brief human walkthrough on live Blaze data)
-**UI hint**: yes
-
-### Phase 48: Theme C — Reverse References: Incoming-References Panel
-**Goal**: Surface incoming references at the bottom of every non-Patient resource detail, generalize the existing PatientRelatedResources idiom into a single component, and ship the curated reverse-reference catalog that drives both this panel and the Phase 49 graph.
-**Depends on**: Phase 46 (incoming-reference cards display target summaries via `summarizeResource`)
-**Requirements**: REVR-01, REVR-02, REVR-03
-**Success Criteria** (what must be TRUE):
-  1. A curated catalog file (`src/utils/reverseReferenceCatalog.ts` or similar) exports a TypeScript const mapping each of the 8–12 covered source resource types to their reverse-reference search params (e.g. `Patient → [{ type: 'Observation', param: 'subject' }, ...]`). Coverage matches or exceeds the scope of `PatientRelatedResources.tsx`.
-  2. Navigating to a non-Patient resource detail page (e.g. `/explorer/Encounter/abc`) renders an `<IncomingReferencesPanel>` at the bottom showing the resource types referencing it, with counts fetched via parallel `?{param}={ref}&_summary=count` queries against the catalog. Card grid UI mirrors `PatientRelatedResources`.
-  3. Clicking a card navigates to a filtered explorer view (same click-through pattern as `PatientRelatedResources` today).
-  4. `PatientRelatedResources.tsx` and `IncomingReferencesPanel` share a single render component (two props paths: forward-reference for Patient, reverse-reference for everything else) — no two-component duplication; existing Patient detail UX shows zero regression.
-  5. Tests cover catalog shape (REVR-01), parallel count fetch + card render (REVR-02), and shared-component invariant (REVR-03); full suite passes; `npm run build` clean.
-**Plans**: 4 plans
-  - [x] 48-01-PLAN.md — reverseReferenceCatalog (REVR-01)
-  - [x] 48-02-PLAN.md — RelatedResourcesPanel + IncomingReferencesPanel (REVR-02 + REVR-03 cross-wrapper invariant)
-  - [x] 48-03-PLAN.md — PatientRelatedResources refactor + ResourceDetailPage mount relocation + HUMAN-UAT (REVR-03)
-  - [x] 48-04-PLAN.md — gap-closure: WR-01 state-key collision in RelatedResourcesPanel (REVR-02 + REVR-03)
-**Effort**: medium (2-3 days)
-**Execution**: Mixed (catalog + panel + generalization is fully automatable; click-through navigation UAT on live Blaze data needs a brief human walkthrough)
-**UI hint**: yes
-
-### Phase 49: Theme D — Graph View: Reference Graph
-**Goal**: Ship the G1 reference graph for any FHIR resource — outgoing + incoming refs at depth 1+ with click-to-navigate, hierarchical layout via React Flow + dagre, dark-mode-themed, lazy-loaded.
-**Depends on**: Phase 46 (node labels render `summarizeResource(target).primary`) AND Phase 47 (reference resolution + cache reused for outgoing edges)
-**Requirements**: GRPH-01, GRPH-02, GRPH-03, GRPH-04
-**Success Criteria** (what must be TRUE):
-  1. A new lazy route `/explorer/:type/:id/graph` is reachable from a "Graph" button on `ResourceDetailPage` (positioned next to existing "Raw JSON" / "$everything" actions). Initial-load bundle gz delta ≤ +5 KB; the graph route's chunk is code-split (Vite analyzer confirms a separate async chunk).
-  2. The graph centers the current resource as the root node, renders outgoing references at depth ≥ 1 AND incoming references at depth 1 (sourced from the Phase 48 `reverseReferenceCatalog`), defaults to depth = 1 in both directions, and hard-caps at depth 3.
-  3. Each node is clickable and navigates to `/explorer/{type}/{id}` for the target. Node labels render `summarizeResource(target).primary` as a Mantine-themed React component. Edge labels show the FHIR reference field name (e.g. `subject`, `encounter`). Hover on a node shows a Mantine Tooltip with `summarizeResource(target).secondary`.
-  4. Layout is hierarchical (DAG) via `@dagrejs/dagre` ≥ 3.x rendered through `@xyflow/react` (React Flow 12). Switching the app theme (Mantine 8 light ↔ dark) re-themes the graph via CSS variables WITHOUT remounting the graph component. Zoom / pan / minimap controls are visible and functional.
-  5. Pinned dependency versions for `@xyflow/react` and `@dagrejs/dagre` are recorded in `49-CONTEXT.md`; tests cover graph BFS bounds (depth cap), node-click navigation, and theme-switch invariant; `npm run build` clean.
-**Plans**: 3 plans
-  - [x] 49-01-PLAN.md — Foundation: deps + lazy route + Graph button + Wave 0 scaffold (GRPH-01)
-  - [x] 49-02-PLAN.md — useGraphBfs + ResourceGraphNode + applyDagreLayout + BFS unit tests + node RTL tests (GRPH-02 + GRPH-03)
-  - [x] 49-03-PLAN.md — Theme bridge + ResourceGraphView wiring + final D-20 tests + bundle gate + HUMAN-UAT (GRPH-01 + GRPH-04)
-**Effort**: large (3+ days)
-**Execution**: Mixed (graph component + BFS + theme wiring is automatable; visual UAT — pan/zoom feel, minimap, dark-mode re-theme without flicker, click-navigate flow — needs a human walkthrough on live Blaze data)
-**UI hint**: yes
-
-### Phase 50: Theme E — STACK-01 Carry-Over: Mantine 9 / React 19 Gate
-**Goal**: Re-attempt the Mantine 9 / React 19 upgrade carried over from v1.6 Phase 45. Conditional execution: peer-dep gate decides whether the phase ships an upgrade or closes as `deferred`.
-**Depends on**: Nothing (independent of Phases 46–49; gate-driven)
-**Requirements**: STACK-01
-**Success Criteria** (what must be TRUE — closure path depends on gate):
-
-  **If gate PASSES (`@medplum/react` peer range now includes Mantine `^9.x`):**
-  1. Mantine 8 → 9 codemod applied; React 18 → 19 upgrade applied; all peer-dep ranges in `package.json` align with new versions.
-  2. Breaking-change sweep complete — every Mantine 9 deprecation and React 19 incompatibility surfaced by the test suite or `tsc` is fixed in source.
-  3. Visual regression UAT (per v1.6 Phase 45 SCs) walked on live Blaze data — Sidebar, Dashboard, Patients, Quality, Explorer, Patient detail, Cohorts, IPS, Graph (new in Phase 49) all render with no visible regression.
-  4. Full test suite passes; `npm run build` clean; bundle gz delta documented (target: within ±50 KB of pre-upgrade baseline).
-  5. Phase closes `validated`; STACK-01 marked `validated` in REQUIREMENTS.md traceability.
-
-  **If gate FAILS (peer range still pins Mantine `^8.0.0`):**
-  1. `npm view @medplum/react peerDependencies` output captured verbatim in 50-CONTEXT.md as evidence of gate state.
-  2. SUMMARY.md documents the `WAIVE-AND-DEFER` decision matching v1.6 Phase 45 precedent — no source diff applied.
-  3. STACK-01 carried forward to v1.8 deferred-items list; phase closes `deferred`.
-
-**Plans**: 2 plans (closure path: gate FAILED for Mantine 9 → pure-doc WAIVE-AND-DEFER)
-  - [ ] 50-01-PLAN.md — 50-SUMMARY.md (WAIVE-AND-DEFER record + frozen 2026-05-01 gate output) + 50-VERIFICATION.md (status `passed`)
-  - [ ] 50-02-PLAN.md — REQUIREMENTS.md / PROJECT.md / ROADMAP.md traceability rollover (STACK-01 → `deferred → v1.8`)
-**Effort**: large (3+ days if gate passes; small if gate fails — pure-doc closure)
-**Execution**: Mixed if gate passes (codemod + tsc sweep automatable; visual UAT requires human walkthrough across all views) / Fully automatable if gate fails (pure-doc `WAIVE-AND-DEFER`)
-**UI hint**: yes (only relevant if gate passes — visual regression UAT touches every view)
-
-### Phase 57: References-Out Card
-**Goal**: Add a "References Out" panel to the Summary mode of `ResourceDetailPage` — showing all resources that the current resource references (outgoing refs), complementing the existing `IncomingReferencesPanel` (reverse refs). Deferred from Phase 54 / LENS-02.
-**Depends on**: Phase 54 (`ResourceDetailPage` 4-mode shell, `KeyFieldsTable`, `IncomingReferencesPanel`)
-**Requirements**: LENS-02
-**Success Criteria** (what must be TRUE):
-  1. Summary mode shows a "References" panel listing every direct FHIR reference field on the current resource (e.g. `Encounter.subject`, `Encounter.participant[].individual`). Clicking a reference navigates to that resource's detail page, preserving patient context when available.
-  2. The panel is rendered only when the resource has at least one reference field that resolves to a non-null value — otherwise it is hidden (no empty card).
-  3. For Patient resources the panel is not shown (PatientRelatedResources already covers that surface).
-  4. Full test suite passes; `npm run build` clean; `tsc -b --noEmit` exit 0; no regressions vs. post-Phase-56 baseline.
-**Plans**: TBD (1-2 plans)
-**Effort**: small-medium (1 day — new component + integration into Summary panel)
-**Execution**: Fully automatable (new component + call-site wiring; no UAT beyond test gate)
-**UI hint**: yes
-
-### Phase 51: v1.7 Gap Closure — Summary Util Coverage + Graph Patient-Context
-**Goal**: Close two `tech_debt` integration gaps surfaced by the v1.7 milestone audit — extend `summarizeResource` adoption to the two timeline call sites that diverge from it (GAP-1), and preserve patient context on graph node click when the graph is reached via the patient-scoped route (GAP-2).
-**Depends on**: Phase 46 (`summarizeResource`), Phase 49 (`ResourceGraphNode`, `ResourceGraphView`)
-**Requirements**: NAV-02 (full closure of summary-util divergence), GRPH-03 (patient-context gap)
-**Gap Closure**: Closes GAP-1 and GAP-2 from `.planning/v1.7-MILESTONE-AUDIT.md`
-**Success Criteria** (what must be TRUE):
-  1. `PatientTimeline.tsx` no longer contains an inline `extractSummary` switch — the function is removed and replaced by calls to `summarizeResource(r).primary`. Field-priority order aligns with the canonical `summarizeResource` Encounter handler (`type[0].text → class.display`).
-  2. `timeline-utils.ts` exported `extractSummary` is removed (or replaced by a thin re-export of `summarizeResource`) — `ClinicalTimeline.tsx` imports from `summarizeResource` directly or via the updated util. Grep shows zero divergent inline summary computations at these two timeline sites.
-  3. `ResourceGraphNode.tsx:43` navigation reads `patientId` from route params (same source as `ResourceGraphView.tsx:120` `backHref`) and navigates to `/patients/:patientId/:type/:id` when `patientId` is present, falling back to `/explorer/:type/:id` otherwise. GAP-2 patient-context drop is eliminated.
-  4. Full test suite passes; `npm run build` clean; `tsc -b --noEmit` exit 0; no regressions vs. post-Phase-49 baseline.
-**Plans**: 2 plans
-  - [x] 51-01-PLAN.md — GAP-1 closure: PatientTimeline + timeline-utils + ClinicalTimeline migrate to summarizeResource (NAV-02)
-  - [x] 51-02-PLAN.md — GAP-2 closure: ResourceGraphNode patientId-aware navigation + RTL tests (GRPH-03)
-**Effort**: small (< 1 day — 3 focused file edits)
-**Execution**: Fully automatable (pure call-site migrations + 1 conditional navigation fix; no new UI surfaces)
+  1. A consolidated `61-UAT-LOG.md` (or equivalent) records the outcome (PASS / WAIVE) for every Phase 58-deferred UAT item across Groups A, C, D, E, F, G. Each WAIVE entry carries an explicit rationale.
+  2. Group B items are WAIVED en bloc with a single shared rationale (no Synthea fixture availability) and a revisit-trigger note (re-run when a non-Synthea seed dataset is available).
+  3. Items that FAIL during the walkthrough are filed as discrete bugs in `.planning/backlog/` (or as new requirements for a follow-up phase) — they do NOT block phase closure, but they DO block UAT-01 from being marked validated. Phase 61 closes only when every Group-A/C/D/E/F/G item is either PASS or WAIVE.
+  4. UAT-01 traceability flips to `validated` in REQUIREMENTS.md with a phase-completion-date timestamp.
+**Plans**: — (human-only; no plans required, mirrors Phase 58 structure)
+**Effort**: medium (1 day of focused human walkthrough on live Blaze + Synthea)
+**Execution**: Human-only (no automatable surface; every item requires a real browser session against live Blaze data)
 
 ## Progress
 
@@ -267,25 +196,25 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 31-38.2 (v1.5) | v1.5 | 32/32 | ✅ Shipped | 2026-04-29 |
 | 39-45 (v1.6) | v1.6 | 14/14 (45 deferred) | ✅ Shipped | 2026-04-30 |
 | 46-51 (v1.7) | v1.7 | 14/14 (50 deferred) | ✅ Shipped | 2026-05-04 |
-| 52 (v1.8) | v1.8 | 2/2 | ✅ Complete | 2026-05-04 |
-| 53 (v1.8) | v1.8 | 2/2 | ✅ Complete | 2026-05-04 |
-| 54 (v1.8) | v1.8 | 2/2 | ✅ Complete | 2026-05-04 |
-| 55-58 (v1.8) | v1.8 | 0/? | 🚧 In Progress | — |
+| 52-57 (v1.8) | v1.8 | 12/12 | ✅ Shipped | 2026-05-05 |
+| 59 (v1.9) | v1.9 | 0/1 | ⏳ Not started | — |
+| 60 (v1.9) | v1.9 | 0/2 | ⏳ Not started | — |
+| 61 (v1.9) | v1.9 | 0/0 (human-only) | ⏳ Not started | — |
 
 ## Backlog
 
-*Surfaced by v1.7 code review (2026-05-02). HIGH + MEDIUM items promoted to Phase 51.*
+*Resolved into v1.9 Phase 59 (FIX-01..08). Below are the v1.7 code-review items now under active phase scope.*
 
-### LOW — minor correctness / polish
+### Resolved into v1.9 Phase 59 (2026-05-11)
 
-- **NAV-01: Middle-click on ReferenceLink loses patient context** — middle-click bypasses the `handleReferenceClick` interceptor; raw href is always `/explorer/…`. Fix: build patient-aware hrefs in `ReferenceLink` using a `BasePathContext`. (F-G3-05)
-- **TYPE-01: HumanReadableView double-cast for `extension`** — `(resource as unknown as Record<string, unknown>).extension as ExtensionShape[]` bypasses `DomainResource.extension?: Extension[]`. Use typed cast directly. (F-G3-09)
-- **EDGE-01: NavigationBreadcrumbs startsWith('/patients/') misses bare '/patients'** — add `|| basePath === '/patients'` guard. (F-G3-11)
-- **EDGE-02: referenceChecker id slice skips FHIR-id validation** — `Patient/123/` yields `id = '123/'`; validate against `FHIR_ID_PATTERN` before adding to `_id` bucket. (F-G4-04)
-- **EDGE-03: structuralValidator ignores AbortSignal** — `_options?.signal` accepted but never checked; add `if (_options?.signal?.aborted) return []` guard. (F-G4-06)
-- **ERR-01: ConnectionContext throws plain object instead of Error** — `throw { status: 0, message: '...' }` not instanceof Error; change to `throw new Error(...)`. (F-G5-03)
-- **TEST-01: completenessWalker sliced-array limitation lacks regression test** — Pitfall 4 is documented but not asserted; add a test for the v1-behaviour invariant. (F-G4-05)
-- **ICON-01: IconShareplay on $everything button is semantically wrong** — replace with `IconExternalLink`. (F-G2-07)
+- [x] **NAV-01 → FIX-01**: Middle-click on ReferenceLink loses patient context (now FIX-01)
+- [x] **TYPE-01 → FIX-02**: HumanReadableView double-cast for `extension` (now FIX-02)
+- [x] **EDGE-01 → FIX-03**: NavigationBreadcrumbs startsWith('/patients/') misses bare '/patients' (now FIX-03)
+- [x] **EDGE-02 → FIX-04**: referenceChecker id slice skips FHIR-id validation (now FIX-04)
+- [x] **EDGE-03 → FIX-05**: structuralValidator ignores AbortSignal (now FIX-05)
+- [x] **ERR-01 → FIX-06**: ConnectionContext throws plain object instead of Error (now FIX-06)
+- [x] **TEST-01 → FIX-07**: completenessWalker sliced-array limitation lacks regression test (now FIX-07)
+- [x] **ICON-01 → FIX-08**: IconShareplay on $everything button is semantically wrong (now FIX-08)
 
 ## Resolved Backlog (archived 2026-04-30)
 
