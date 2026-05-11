@@ -152,7 +152,8 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
   6. `ConnectionContext` throws `new Error(message)` on connection failure (instanceof Error). Existing test that catches the throw is updated to assert `instanceof Error` and `.message` shape.
   7. A regression test pins the `completenessWalker` sliced-array v1-behaviour invariant (Pitfall 4 documented in code) so future refactors can't silently break it.
   8. The `$everything` button on `ResourceDetailPage` renders `IconExternalLink` (replacing `IconShareplay`). RTL test asserts the icon's `data-testid` or test-locator. `npm run build` clean.
-**Plans**: TBD (1 plan — all 8 fixes batched; no plan-level dependency between them)
+**Plans**: 1 plan
+- [ ] 59-01-PLAN.md — Batched code-quality sweep: 8 atomic per-fix tasks covering FIX-01..08 (BasePathContext + ReferenceLink, HumanReadableView typing, NavigationBreadcrumbs bare /patients, referenceChecker FHIR_ID_PATTERN, structuralValidator AbortSignal, ConnectionContext Error throw, completenessWalker Pitfall 4 regression test, IconExternalLink icon swap)
 **Effort**: small (< 1 day — 8 focused file edits + 8 small tests)
 **Execution**: Fully automatable (no UI surface changes; visual regression nil)
 
