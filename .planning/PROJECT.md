@@ -124,13 +124,18 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 - [x] **LENS-02**: Outgoing References panel — `extractOutgoingReferences()` pure walker + `OutgoingReferencesPanel` (no Card chrome, monospace path label, Phase-47 ReferenceLink per entry); mounted in Summary mode for non-Patient resources after `IncomingReferencesPanel`; returns null when empty — Phase 57. *Validated in Phase 57: 2026-05-05*
 
-### Active (v1.9 candidates)
+### Active (v1.9 — Polish, Discovery & UAT Closure)
 
-- [ ] **STACK-01** (carried from v1.6 → v1.7 → v1.8): Mantine 9 / React 19 upgrade — re-run peer-dep gate at v1.9 milestone start. **Mantine 9 watch:** bottleneck remains `@medplum/react`'s `@mantine/core: ^8.0.0` peer pin. React 19 independently unblocked (`^18.0.0 || ^19.0.0`) but D-02 keeps them coupled.
-  - **Re-attempt trigger:** `npm view @medplum/react peerDependencies` — if `@mantine/core` peer includes `^9.x`, open new phase with codemod + breaking-change sweep + visual regression UAT.
+- [ ] **UAT-01** — Phase 58 UAT backlog closure: ~31 deferred browser-only items across Phases 42–54 (Groups A, C–G). Full inventory in `.planning/phases/58-uat-backlog-closure/58-CONTEXT.md`. Requires live Blaze + real browser. **v1.9 scope: close Groups A, C–G; WAIVE Group B (data-blocked, need Blaze seed fixtures) with revisit note.**
+- [ ] **REVR-04** — CapabilityStatement-driven reverse reference discovery: replace hand-curated `reverseReferenceCatalog.ts` with a dynamic catalog built from the server's CapabilityStatement SearchParameters; fall back gracefully to the curated catalog when the CapabilityStatement is unavailable or incomplete.
+- [ ] **FIX-01..08** — Code quality sweep: 8 low-priority backlog items — NAV-01 (middle-click ReferenceLink loses patient context; needs `BasePathContext`), TYPE-01 (HumanReadableView `extension` double-cast), EDGE-01 (NavigationBreadcrumbs misses bare `/patients` path), EDGE-02 (referenceChecker id slice not validated against `FHIR_ID_PATTERN`), EDGE-03 (structuralValidator ignores `AbortSignal`), ERR-01 (ConnectionContext throws plain object not `Error`), TEST-01 (completenessWalker sliced-array limitation lacks regression test), ICON-01 (IconShareplay → IconExternalLink on `$everything` button).
+
+### Deferred (carry-forward, not v1.9)
+
+- [~] **STACK-01** (deferred indefinitely — 2026-05-04): Mantine 9 / React 19 upgrade. Bottleneck remains `@medplum/react`'s `@mantine/core: ^8.0.0` peer pin. React 19 independently unblocked (`^18.0.0 || ^19.0.0`) but D-02 keeps them coupled.
+  - **Re-attempt trigger:** `npm view @medplum/react peerDependencies` — if `@mantine/core` peer range now includes `^9.x`, open new phase.
   - **Reactivation source:** `.planning/phases/50-theme-e-stack-01-carry-over-mantine-9-react-19-gate/50-CONTEXT.md` + `50-SUMMARY.md`.
   - **Out of scope (rejected workarounds — do NOT revisit without re-discussing D-05/D-06/D-07):** React-19-only upgrade (D-05), `--legacy-peer-deps` (D-06), Mantine 9 codemod preview (D-07).
-- [ ] **UAT-01** — Phase 58 UAT backlog closure: ~35 deferred browser-only items across Phases 42–54. Full inventory in `.planning/phases/58-uat-backlog-closure/58-CONTEXT.md`. Requires live Blaze + real browser (4 items additionally data-blocked, need seed fixtures).
 
 ## Current State
 
@@ -164,16 +169,14 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 **localStorage keys** unchanged from v1.3: `quality.thresholds.v1`, `quality.trends.v1`, `quality.cohorts.v1`, `quality.activeCohortId.v1`, `quality.resourceTypes.v1`.
 
-## Next Milestone: v1.9 (not yet scoped)
+## Current Milestone: v1.9 Polish, Discovery & UAT Closure
 
-**Carry-forwards from v1.8:**
-- STACK-01 — Mantine 9 / React 19 upgrade (third deferral; re-run peer-dep gate first)
-- Phase 58 UAT backlog — ~35 browser-only items pending human walkthrough
+**Goal:** Close the accumulated UAT backlog, fix 8 low-priority code issues, and upgrade reverse-reference lookup from a hand-curated catalog to dynamic CapabilityStatement-driven discovery.
 
-**Likely v1.9 themes (to be confirmed at `/gsd-new-milestone`):**
-- UAT backlog closure (once Phase 58 walkthrough surfaces any code fixes needed)
-- Graph view G2 — schema graph (static, server-independent resource type graph)
-- Performance/UX improvements surfaced during real-world Blaze usage
+**Target features:**
+- Code quality sweep — 8 backlog fixes (NAV-01, TYPE-01, EDGE-01/02/03, ERR-01, TEST-01, ICON-01)
+- Rev-ref CapabilityStatement-driven discovery (REVR-04) — dynamic catalog with hand-curated fallback
+- UAT backlog closure (UAT-01) — Groups A, C–G from Phase 58; Group B WAIVEd (data-blocked)
 
 <details>
 <summary>Archived: v1.8 milestone goals (shipped 2026-05-05)</summary>
@@ -314,6 +317,8 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
+*Last updated: 2026-05-11 — Milestone v1.9 started: Polish, Discovery & UAT Closure. Active requirements: UAT-01 (Phase 58 backlog closure), REVR-04 (CapabilityStatement-driven reverse reference discovery), FIX-01..08 (code quality sweep). STACK-01 moved to Deferred (indefinite). Deferred items not in v1.9: Graph G2, Graph depth > 3, federated cohort / CQL.*
+
 *Last updated: 2026-05-02 — Phase 50 (Theme E — STACK-01 carry-over) closed `deferred` via WAIVE-AND-DEFER. Gate result MIXED at 2026-05-01: `@medplum/react@5.1.10` peers `@mantine/core: ^8.0.0` (Mantine 9 still closed) but `react: ^18.0.0 || ^19.0.0` (React 19 newly open). Per user decision D-02 (50-CONTEXT.md), React/Mantine remain coupled; entire upgrade defers to v1.8 deferred-items list. v1.7 milestone now at 5/5 phases complete; STACK-01 traceability flipped to `deferred → v1.8` in REQUIREMENTS.md. Closure docs: `50-SUMMARY.md` + `50-VERIFICATION.md` (status `passed` per v1.6 Phase 45 pure-doc closure precedent). v1.8 candidates block added: STACK-01 watch with `npm view @medplum/react peerDependencies` re-attempt trigger.*
 
 *Last updated: 2026-05-01 — Phase 49 (Theme D — Graph View: Reference Graph, GRPH-01 + GRPH-02 + GRPH-03 + GRPH-04) complete: 3/3 plans (49-01 Foundation, 49-02 BFS+Node+Layout, 49-03 Theme+Tests+Bundle+UAT), status `human_needed` (5/5 ROADMAP success criteria auto-verified; 7 live-Blaze UAT items in `49-HUMAN-UAT.md` for tactile/visual checks). 49-01: pinned `@xyflow/react@12.10.2` + `@dagrejs/dagre@3.0.0` (exact, no caret); confirmed Mantine 9 / React 19 NOT pulled in transitively (5× `@mantine/core@8.3.18`, 0× v9); registered 9th lazy route `/explorer/:type/:id/graph` following Phase 27 EFF-02 precedent in `src/App.tsx`; mounted `IconAffiliate` "Graph" button in `ResourceDetailPage.tsx` toolbar `<Group>` next to "Raw JSON"/"$everything"; created Wave-0 scaffolds (`scripts/check-bundle-delta.cjs` 332.74 KB gz baseline, 3 test stubs with `it.todo()` markers). 49-02: shipped `useGraphBfs.ts` (272 LOC — depth-bounded BFS with `MAX_DEPTH=3` + `MAX_NODES=150` + `PER_FETCH_COUNT=100` constants, parallel `Promise.all` fanout per level, cancellation flag from Phase 48 `RelatedResourcesPanel.tsx:33-54` idiom — explicitly NOT `AbortController`), `ResourceGraphNode.tsx` (73 LOC — Mantine Card 220×64 with `summarizeResource(r).primary` label + Tooltip on `secondary` + indigo-6 root accent), `applyDagreLayout.ts` (63 LOC — `rankdir: 'TB'`, `nodesep=60`, `ranksep=90`, `edgesep=24`, `NODE_WIDTH=220 × NODE_HEIGHT=64`), filled 6 BFS+node tests (depth cap, node count cap, parallel fanout, click navigation, label render, tooltip secondary) — 1379 passing baseline. 49-03: replaced Plan-01 stub `<ResourceGraphView>` with full implementation (Slider depth control 1-3 with marks, React Flow Controls + MiniMap, smoothstep edges with FHIR-field-name labels, locked copy strings for empty/truncation/all-failed alerts, `data-testid="graph-flow-root"` for theme-switch invariant), shipped `graph.module.css` mapping 20 React Flow `--xy-*` CSS vars to Mantine `--mantine-color-*` (theme switches re-render zero React components — proven by `expect(refAfter).toBe(refBefore)` DOM identity test), filled remaining D-20 tests (theme switch invariant, dagre layout positions, edge label, parallel fetch fanout RTL), bundle gate **PASS** with main delta **−4.88 KB** (lazy chunk `ResourceGraphView-Bcu76g3a.js` 71.20 KB gz; main contains zero `xyflow`/`dagre` strings), scaffolded `49-HUMAN-UAT.md` with 7 manual-only verifications (pan/zoom feel, minimap drag, dark-mode fidelity, Slow-3G skeleton, empty-graph readability, truncation alert at 150 nodes, browser back/forward), flipped VALIDATION.md frontmatter `nyquist_compliant: false → true`. Test gate: 1386 passing / 1 pre-existing Phase-40 deuteranopia carry-over (NOT a regression); `tsc -b --noEmit` exit 0; `npm run build` exit 0 (526-554ms). Code review: 0 critical / 3 warnings (URL encoding defense-in-depth in `useGraphBfs.ts:126`, bundle-delta CLI fail-open on malformed `--max-delta-kb`, CSS module scoping leak in `graph.module.css`) / 5 info (advisory non-blocking — none introduce security or correctness issues). GRPH-01 + GRPH-02 + GRPH-03 + GRPH-04 satisfied; v1.7 Theme D (Graph View) closed pending live-Blaze HUMAN-UAT walk. v1.7 milestone progress: 4/5 phases complete (Phase 50 STACK-01 Mantine 9 gate is the final phase). Two new patterns established: (1) CSS-variable bridge for third-party canvas widgets (React Flow → Mantine) usable for any future graph/diagram surface; (2) BFS-with-cancellation-flag idiom over FHIR client extending Phase-48's parallel-fetch pattern to multi-level traversal. **Deferred to a follow-up phase:** the `Summary | Human | Graph | JSON` 4-mode resource shell from `design_handoff_v1.7_navigation/README.md` — represents the user's documented v1.7+ design direction but cannot be folded into Phase 49 without doubling its scope; tracked as a future phase to open after Phase 50 closes.*

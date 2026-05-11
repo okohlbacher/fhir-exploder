@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.8
-milestone_name: Navigation Redesign (shipped 2026-05-05)
-status: archived
-stopped_at: v1.8 milestone complete — archived to milestones/v1.8-ROADMAP.md
-last_updated: "2026-05-05T11:00:00.000Z"
-last_activity: 2026-05-05
+milestone: v1.9
+milestone_name: Polish, Discovery & UAT Closure
+status: active
+last_updated: "2026-05-11T00:00:00.000Z"
+last_activity: 2026-05-11
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 17
-  completed_plans: 18
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,22 +24,10 @@ See: .planning/PROJECT.md (updated 2026-05-04)
 
 ## Current Position
 
-Phase: 58
-Plan: No plans (human-only phase)
-Status: Context complete — awaiting human UAT walkthrough
-Last activity: 2026-05-05
-
-v1.8 phases (52-58):
-
-- **Phase 52: JSON Peek Drawer Foundation (PEEK-01, PEEK-02, PEEK-03, PEEK-06) — COMPLETE**
-- **Phase 53: Peek Call-Site Expansion (PEEK-04, PEEK-05) — COMPLETE**
-- **Phase 54: 4-Mode Resource Shell (SHELL-01, SHELL-02, SHELL-03, SHELL-04) — COMPLETE**
-- **Phase 55: Explorer Improvements (EXPL-01, EXPL-02, EXPL-03) — COMPLETE**
-- **Phase 56: Sidebar v2 + Expert Toggle + ⌘K (SIDE-01, SIDE-02, SIDE-03, SIDE-04) — COMPLETE**
-- **Phase 57: References-Out Card (LENS-01, LENS-02) — COMPLETE**
-- Phase 58: UAT Backlog Closure (UAT-01) — context complete, awaiting human
-
-Progress: [##########] 100% (all code phases shipped; Phase 58 is human-only)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-11 — Milestone v1.9 started
 
 ## Performance Metrics
 
@@ -69,7 +56,7 @@ Progress: [##########] 100% (all code phases shipped; Phase 58 is human-only)
 - **Global hotkey ownership:** Single shared `useShortcuts` / `useHotkeys` module owned by Phase 52 (foundation). Phase 54 (1/2/3/4) and Phase 56 (⌘K) extend it.
 - **Spotlight resource-type list:** Lazy population (≥ 2 chars trigger) per RESEARCH (avoids upfront 94-action cost).
 
-### Pending Todos (v1.8 milestone)
+### Pending Todos (v1.9 scope — in progress)
 
 - **Human UAT backlog (Phase 58 scope)** — deferred browser-only items. Full inventory in `.planning/phases/58-uat-backlog-closure/58-CONTEXT.md`. Summary:
   - **Group A** (no HUMAN-UAT files): Phase 42 (1), Phase 43 (3), Phase 44 (2)
