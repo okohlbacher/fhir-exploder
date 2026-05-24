@@ -121,3 +121,55 @@ describe('createStructuralBackend', () => {
     expect(issues.every((i) => i.severity === 'error')).toBe(true);
   });
 });
+
+describe('createStructuralBackend — FIX-05 AbortSignal early-exit', () => {
+  it('returns [] when invoked with an already-aborted signal (no walker work)', async () => {
+    const profile = miniProfiles.condition;
+    const backend = createStructuralBackend((type) =>
+      type === 'Condition' ? profile : null,
+    );
+    const controller = new AbortController();
+    controller.abort();
+    // The fixture below would normally produce missing-required-path issues
+    // because clinicalStatus is min=1 in miniProfiles.condition.
+    const resource: Condition = {
+      resourceType: 'Condition',
+      id: 'c1',
+      code: { coding: [{ system: 's', code: 'c' }] },
+      subject: { reference: 'Patient/1' },
+    };
+    const issues = await backend.validate(resource, { signal: controller.signal });
+    expect(issues).toEqual([]);
+  });
+
+  it('returns issues normally when no signal is provided', async () => {
+    const profile = miniProfiles.condition;
+    const backend = createStructuralBackend((type) =>
+      type === 'Condition' ? profile : null,
+    );
+    const resource: Condition = {
+      resourceType: 'Condition',
+      id: 'c1',
+      code: { coding: [{ system: 's', code: 'c' }] },
+      subject: { reference: 'Patient/1' },
+    };
+    const issues = await backend.validate(resource);
+    expect(issues.length).toBeGreaterThan(0); // clinicalStatus missing
+  });
+
+  it('returns issues normally when signal is provided but not aborted', async () => {
+    const profile = miniProfiles.condition;
+    const backend = createStructuralBackend((type) =>
+      type === 'Condition' ? profile : null,
+    );
+    const controller = new AbortController();
+    const resource: Condition = {
+      resourceType: 'Condition',
+      id: 'c1',
+      code: { coding: [{ system: 's', code: 'c' }] },
+      subject: { reference: 'Patient/1' },
+    };
+    const issues = await backend.validate(resource, { signal: controller.signal });
+    expect(issues.length).toBeGreaterThan(0);
+  });
+});

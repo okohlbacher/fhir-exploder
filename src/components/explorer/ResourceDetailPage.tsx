@@ -15,6 +15,7 @@ import { IncomingReferencesPanel } from './IncomingReferencesPanel';
 import { OutgoingReferencesPanel } from './OutgoingReferencesPanel';
 import { summarizeResource } from '../../utils/summarizeResource';
 import { retry } from '../../utils/lazyRetry';
+import { BasePathProvider } from '../../contexts/BasePathContext';
 
 /**
  * Validate that an extracted reference matches the FHIR resource pattern.
@@ -152,14 +153,17 @@ export function ResourceDetailPage() {
   }
 
   return (
-    <Stack gap="lg">
-      <NavigationBreadcrumbs
-        trail={breadcrumbs.trail}
-        onNavigate={breadcrumbs.navigateTo}
-        currentResourceType={resourceType}
-        currentId={id}
-        basePath={basePath}
-      />
+    /* FIX-01: BasePathProvider exposes the computed basePath ('/patients/${patientId}' or '/explorer')
+       to descendant ReferenceLink components so middle-click hrefs preserve patient context. */
+    <BasePathProvider value={basePath}>
+      <Stack gap="lg">
+        <NavigationBreadcrumbs
+          trail={breadcrumbs.trail}
+          onNavigate={breadcrumbs.navigateTo}
+          currentResourceType={resourceType}
+          currentId={id}
+          basePath={basePath}
+        />
 
       {/* D-08: header now contains ONLY Back button + Title; standalone Graph button + Tooltip removed */}
       <Group>
@@ -238,6 +242,7 @@ export function ResourceDetailPage() {
       )}
       {/* D-09 critical: the legacy bottom-mount of PatientRelatedResources/IncomingReferencesPanel (was lines 210-214) is REMOVED.
           Both panels now live ONLY inside the Summary Tabs.Panel above. */}
-    </Stack>
+      </Stack>
+    </BasePathProvider>
   );
 }

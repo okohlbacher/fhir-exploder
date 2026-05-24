@@ -17,6 +17,7 @@ import type { MedplumClient } from '@medplum/core';
 import type { ResourceType } from '@medplum/fhirtypes';
 import type { NormalizedIssue } from './types';
 import type { ExtractedReference } from './referenceWalker';
+import { FHIR_ID_PATTERN } from '../utils/referenceUrl';
 
 interface CheckReferencesOptions {
   batchSize?: number;
@@ -79,6 +80,11 @@ export async function checkReferencesExist(
     const type = r.reference.slice(0, slash);
     const id = r.reference.slice(slash + 1);
     if (!id) continue;
+    // FIX-04 (D-07): defensively validate against FHIR_ID_PATTERN so malformed
+    // ids (trailing slash, illegal chars) never reach the _id search param.
+    // Silently skip (log-only) — these are upstream extractor edge cases, not
+    // user-facing errors.
+    if (!FHIR_ID_PATTERN.test(id)) continue;
     let bucket = byType.get(type);
     if (!bucket) {
       bucket = new Set<string>();

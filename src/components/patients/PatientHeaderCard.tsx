@@ -17,8 +17,8 @@ import {
 import {
   IconBraces,
   IconCalendar,
+  IconExternalLink,
   IconId,
-  IconShareplay,
   IconUser,
 } from '@tabler/icons-react';
 import type { Patient } from '@medplum/fhirtypes';
@@ -175,7 +175,7 @@ function PatientHeaderActions({ patient }: { patient: Patient }) {
             );
           }}
         >
-          <IconShareplay size={16} />
+          <IconExternalLink size={16} data-testid="everything-external-link-icon" />
         </ActionIcon>
       </Tooltip>
 

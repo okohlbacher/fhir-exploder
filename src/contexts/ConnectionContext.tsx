@@ -27,7 +27,10 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
       const capability: CapabilityStatement =
         typeof raw === 'string' ? JSON.parse(raw) : (raw as CapabilityStatement);
       if (!capability || capability.resourceType !== 'CapabilityStatement') {
-        throw { status: 0, message: 'Invalid CapabilityStatement response' };
+        // FIX-06 (D-09): throw an Error instance (not a plain object) so consumers
+        // and instrumentation that rely on `err instanceof Error` work correctly.
+        // classifyError already accepts `err: unknown` and handles Error instances.
+        throw new Error('Invalid CapabilityStatement response');
       }
       setState({ status: 'connected', client, capability });
     } catch (err) {

@@ -47,10 +47,13 @@ export function createStructuralBackend(
     kind: 'structural',
     async validate(
       resource: Resource,
-      _options?: { signal?: AbortSignal },
+      options?: { signal?: AbortSignal },
     ): Promise<OperationOutcomeIssue[]> {
-      // Structural validator is synchronous + offline; signal accepted for
-      // interface symmetry only (D-20).
+      // FIX-05 (D-08): honor a pre-aborted signal even though the validator
+      // body is synchronous. Callers (e.g. cascadingValidator) routinely pass
+      // a shared AbortController across backends; returning [] early avoids
+      // wasted CPU on a cancelled run.
+      if (options?.signal?.aborted) return [];
       return validateStructural(resource, getProfile(resource.resourceType));
     },
   };
