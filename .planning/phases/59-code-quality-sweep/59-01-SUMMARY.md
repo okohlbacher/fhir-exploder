@@ -160,3 +160,7 @@ None. All changes wire to real data/behaviour; no placeholder values introduced.
 ## Threat Flags
 
 None — no new network endpoints, auth paths, file access, or trust-boundary schema changes beyond the in-scope mitigations above.
+
+## Self-Check: PASSED
+
+All 4 created source/test files plus SUMMARY.md present on disk; all 11 commits (944c66b, 30b14a7, c8b67e7, cb9852b, 7e23c50, 260a102, 0466ddc, 8f9ea06, 765d339, da24b02, 4eb4797) verified in git history.
