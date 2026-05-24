@@ -8,14 +8,14 @@
 
 ### Code Quality Fixes
 
-- [ ] **FIX-01**: User can middle-click a `ReferenceLink` and land in the correct patient-scoped URL (patient context preserved via patient-aware hrefs built from `BasePathContext`).
-- [ ] **FIX-02**: `HumanReadableView` uses `DomainResource.extension` typed cast instead of `(resource as unknown as Record<string, unknown>).extension as ExtensionShape[]` double-cast.
-- [ ] **FIX-03**: `NavigationBreadcrumbs` activates the Patients breadcrumb on the bare `/patients` path (not only on `/patients/` prefix children).
-- [ ] **FIX-04**: `referenceChecker` validates the extracted resource id against `FHIR_ID_PATTERN` before adding it to the `_id` query bucket (rejects trailing-slash / malformed ids).
-- [ ] **FIX-05**: `structuralValidator` checks `signal?.aborted` at entry and returns `[]` immediately when the AbortSignal has been fired.
-- [ ] **FIX-06**: `ConnectionContext` throws `new Error(message)` (an `Error` instance) on connection failure, not a plain `{ status, message }` object.
-- [ ] **FIX-07**: A regression test asserts the `completenessWalker` sliced-array v1-behaviour invariant (Pitfall 4 documented in code, currently untested).
-- [ ] **FIX-08**: The `$everything` button on `ResourceDetailPage` uses `IconExternalLink` instead of the semantically incorrect `IconShareplay`.
+- [x] **FIX-01**: User can middle-click a `ReferenceLink` and land in the correct patient-scoped URL (patient context preserved via patient-aware hrefs built from `BasePathContext`).
+- [x] **FIX-02**: `HumanReadableView` uses `DomainResource.extension` typed cast instead of `(resource as unknown as Record<string, unknown>).extension as ExtensionShape[]` double-cast.
+- [x] **FIX-03**: `NavigationBreadcrumbs` activates the Patients breadcrumb on the bare `/patients` path (not only on `/patients/` prefix children).
+- [x] **FIX-04**: `referenceChecker` validates the extracted resource id against `FHIR_ID_PATTERN` before adding it to the `_id` query bucket (rejects trailing-slash / malformed ids).
+- [x] **FIX-05**: `structuralValidator` checks `signal?.aborted` at entry and returns `[]` immediately when the AbortSignal has been fired.
+- [x] **FIX-06**: `ConnectionContext` throws `new Error(message)` (an `Error` instance) on connection failure, not a plain `{ status, message }` object.
+- [x] **FIX-07**: A regression test asserts the `completenessWalker` sliced-array v1-behaviour invariant (Pitfall 4 documented in code, currently untested).
+- [x] **FIX-08**: The `$everything` button on `ResourceDetailPage` uses `IconExternalLink` instead of the semantically incorrect `IconShareplay`.
 
 ### Reverse Reference Discovery
 

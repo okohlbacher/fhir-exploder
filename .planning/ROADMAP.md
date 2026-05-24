@@ -29,7 +29,7 @@ Carried to v2.0 (re-evaluate at next milestone-new):
 
 ## Phases
 
-- [ ] **Phase 59: Code Quality Sweep** — 8 backlog fixes (FIX-01..08): patient-context for middle-click refs, typed extension cast, breadcrumb edge cases, FHIR-id validation, AbortSignal honoring, Error-instance throws, regression test, semantic icon swap.
+- [x] **Phase 59: Code Quality Sweep** — 8 backlog fixes (FIX-01..08): patient-context for middle-click refs, typed extension cast, breadcrumb edge cases, FHIR-id validation, AbortSignal honoring, Error-instance throws, regression test, semantic icon swap. (completed 2026-05-24)
 - [ ] **Phase 60: CapabilityStatement-Driven Reverse-Reference Discovery** — Replace hand-curated `reverseReferenceCatalog.ts` with a dynamic catalog parsed from the server's `CapabilityStatement` SearchParameters, with transparent fallback when the CapabilityStatement is unavailable (REVR-04).
 - [ ] **Phase 61: UAT Backlog Closure** — Walk the deferred Phase 58 UAT inventory (Groups A, C–G) against a live Blaze server running Synthea data; WAIVE Group B with documented rationale (UAT-01). Human-only, no plans.
 
@@ -198,7 +198,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 39-45 (v1.6) | v1.6 | 14/14 (45 deferred) | ✅ Shipped | 2026-04-30 |
 | 46-51 (v1.7) | v1.7 | 14/14 (50 deferred) | ✅ Shipped | 2026-05-04 |
 | 52-57 (v1.8) | v1.8 | 12/12 | ✅ Shipped | 2026-05-05 |
-| 59 (v1.9) | v1.9 | 1/1 | Complete   | 2026-05-24 |
+| 59 (v1.9) | v1.9 | 1/1 | Complete    | 2026-05-24 |
 | 60 (v1.9) | v1.9 | 0/2 | ⏳ Not started | — |
 | 61 (v1.9) | v1.9 | 0/0 (human-only) | ⏳ Not started | — |
 
