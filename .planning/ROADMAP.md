@@ -153,7 +153,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
   7. A regression test pins the `completenessWalker` sliced-array v1-behaviour invariant (Pitfall 4 documented in code) so future refactors can't silently break it.
   8. The `$everything` button on `ResourceDetailPage` renders `IconExternalLink` (replacing `IconShareplay`). RTL test asserts the icon's `data-testid` or test-locator. `npm run build` clean.
 **Plans**: 1 plan
-- [ ] 59-01-PLAN.md — Batched code-quality sweep: 8 atomic per-fix tasks covering FIX-01..08 (BasePathContext + ReferenceLink, HumanReadableView typing, NavigationBreadcrumbs bare /patients, referenceChecker FHIR_ID_PATTERN, structuralValidator AbortSignal, ConnectionContext Error throw, completenessWalker Pitfall 4 regression test, IconExternalLink icon swap)
+- [x] 59-01-PLAN.md — Batched code-quality sweep: 8 atomic per-fix tasks covering FIX-01..08 (BasePathContext + ReferenceLink, HumanReadableView typing, NavigationBreadcrumbs bare /patients, referenceChecker FHIR_ID_PATTERN, structuralValidator AbortSignal, ConnectionContext Error throw, completenessWalker Pitfall 4 regression test, IconExternalLink icon swap)
 **Effort**: small (< 1 day — 8 focused file edits + 8 small tests)
 **Execution**: Fully automatable (no UI surface changes; visual regression nil)
 
@@ -198,7 +198,7 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
 | 39-45 (v1.6) | v1.6 | 14/14 (45 deferred) | ✅ Shipped | 2026-04-30 |
 | 46-51 (v1.7) | v1.7 | 14/14 (50 deferred) | ✅ Shipped | 2026-05-04 |
 | 52-57 (v1.8) | v1.8 | 12/12 | ✅ Shipped | 2026-05-05 |
-| 59 (v1.9) | v1.9 | 0/1 | ⏳ Not started | — |
+| 59 (v1.9) | v1.9 | 1/1 | Complete   | 2026-05-24 |
 | 60 (v1.9) | v1.9 | 0/2 | ⏳ Not started | — |
 | 61 (v1.9) | v1.9 | 0/0 (human-only) | ⏳ Not started | — |
 
