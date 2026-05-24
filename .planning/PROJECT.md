@@ -128,7 +128,7 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
 
 - [ ] **UAT-01** — Phase 58 UAT backlog closure: ~31 deferred browser-only items across Phases 42–54 (Groups A, C–G). Full inventory in `.planning/phases/58-uat-backlog-closure/58-CONTEXT.md`. Requires live Blaze + real browser. **v1.9 scope: close Groups A, C–G; WAIVE Group B (data-blocked, need Blaze seed fixtures) with revisit note.**
 - [ ] **REVR-04** — CapabilityStatement-driven reverse reference discovery: replace hand-curated `reverseReferenceCatalog.ts` with a dynamic catalog built from the server's CapabilityStatement SearchParameters; fall back gracefully to the curated catalog when the CapabilityStatement is unavailable or incomplete.
-- [ ] **FIX-01..08** — Code quality sweep: 8 low-priority backlog items — NAV-01 (middle-click ReferenceLink loses patient context; needs `BasePathContext`), TYPE-01 (HumanReadableView `extension` double-cast), EDGE-01 (NavigationBreadcrumbs misses bare `/patients` path), EDGE-02 (referenceChecker id slice not validated against `FHIR_ID_PATTERN`), EDGE-03 (structuralValidator ignores `AbortSignal`), ERR-01 (ConnectionContext throws plain object not `Error`), TEST-01 (completenessWalker sliced-array limitation lacks regression test), ICON-01 (IconShareplay → IconExternalLink on `$everything` button).
+- [x] **FIX-01..08** — Code quality sweep: 8 low-priority backlog items — NAV-01 (middle-click ReferenceLink loses patient context; needs `BasePathContext`), TYPE-01 (HumanReadableView `extension` double-cast), EDGE-01 (NavigationBreadcrumbs misses bare `/patients` path), EDGE-02 (referenceChecker id slice not validated against `FHIR_ID_PATTERN`), EDGE-03 (structuralValidator ignores `AbortSignal`), ERR-01 (ConnectionContext throws plain object not `Error`), TEST-01 (completenessWalker sliced-array limitation lacks regression test), ICON-01 (IconShareplay → IconExternalLink on `$everything` button). *Validated in Phase 59: 2026-05-24*
 
 ### Deferred (carry-forward, not v1.9)
 
@@ -138,6 +138,8 @@ Hardening + tech-debt sweep + mid-milestone layout redesign. 29/31 original reqs
   - **Out of scope (rejected workarounds — do NOT revisit without re-discussing D-05/D-06/D-07):** React-19-only upgrade (D-05), `--legacy-peer-deps` (D-06), Mantine 9 codemod preview (D-07).
 
 ## Current State
+
+**v1.9 in progress** — Phase 59 (Code Quality Sweep) complete 2026-05-24. 8 LOW-severity backlog fixes shipped: `BasePathContext` for patient-context href preservation, `HumanReadableView` extension cast cleanup, `NavigationBreadcrumbs` bare-path fix, `referenceChecker` FHIR-ID validation, `structuralValidator` AbortSignal honoring, `ConnectionContext` Error-instance throws, completenessWalker sliced-array regression test, `IconShareplay → IconExternalLink` swap. 1544 tests passing / 0 failing. Code review surfaced 3 additional issues (CR-01..CR-03) for follow-up.
 
 **v1.8 shipped 2026-05-05** — 6 code phases (52–57), 12 plans. v1.7 baseline: 1412 tests; v1.8 final: 1525 passing / 0 failing. `npm run build` + `tsc -b --noEmit` clean. src/ +5,296/−315 across 57 files. Key additions: JSON Peek Drawer (4 surfaces), 4-Mode Resource Shell, Explorer density modes, ⌘K Spotlight, Expert Toggle, Outgoing References Panel. Phase 58 UAT backlog documented — pending human walkthrough. See [MILESTONES.md](MILESTONES.md) and [milestones/v1.8-ROADMAP.md](milestones/v1.8-ROADMAP.md).
 
