@@ -60,8 +60,8 @@ interface ExtensionShape {
  */
 function ExtensionsSection({ resource }: { resource: Resource }) {
   // FIX-02 (D-05): single-cast to a type that declares optional extension[].
-  // Replaces the previous (resource as unknown as Record<string, unknown>).extension
-  // double-cast — semantically identical but TypeScript-idiomatic.
+  // Replaces the previous `as unknown as Record`-style double-cast on the
+  // extension field — semantically identical but TypeScript-idiomatic.
   //
   // NOTE: the plan's D-05 named `DomainResource`, but @medplum/fhirtypes@5.1.x
   // does not export a generic `DomainResource` (Resource is a discriminated
