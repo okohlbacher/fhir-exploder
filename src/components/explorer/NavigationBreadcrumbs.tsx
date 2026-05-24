@@ -32,7 +32,9 @@ export function NavigationBreadcrumbs({
 }: NavigationBreadcrumbsProps) {
   const navigate = useNavigate();
 
-  const isPatientScope = basePath.startsWith('/patients/');
+  // FIX-03 (D-06): activate the Patients root on the bare '/patients' path too,
+  // without broadening the match to unrelated paths like '/patients-admin'.
+  const isPatientScope = basePath === '/patients' || basePath.startsWith('/patients/');
   const rootLabel = isPatientScope ? 'Patients' : 'Explorer';
   const rootHref = isPatientScope ? '/patients' : '/explorer';
 
