@@ -247,3 +247,37 @@ describe('computeCompleteness (QUAL-02)', () => {
     expect(result.perResource[0].resourceId).toBe('Patient/unknown');
   });
 });
+
+describe('isPathPopulated — Pitfall 4 sliced-array v1 invariant (FIX-07)', () => {
+  it("inspects only the FIRST array element (name[0]); name[1].given is invisible to the walker", () => {
+    // Pitfall 4 contract (completenessWalker.ts line 59-64):
+    //   For arrays, v1 inspects element[0] only. Slice-aware logic is OUT of
+    //   scope and delegated to the Coverage tab. This test pins that v1
+    //   behaviour so a future refactor that expands to all elements will
+    //   fail loudly and require an explicit Pitfall-4 review.
+    const patient = {
+      resourceType: 'Patient',
+      id: 'p1',
+      name: [{ family: 'OnlyFamily' }, { given: ['Bob'] }],
+    } as unknown as Resource;
+    expect(isPathPopulated(patient, 'Patient.name.given')).toBe(false);
+  });
+
+  it('first-element happy path: name[0].given populated → true', () => {
+    const patient = {
+      resourceType: 'Patient',
+      id: 'p2',
+      name: [{ given: ['Alice'] }, { family: 'NoGivenOnSecond' }],
+    } as unknown as Resource;
+    expect(isPathPopulated(patient, 'Patient.name.given')).toBe(true);
+  });
+
+  it('empty array returns false (no first element to inspect)', () => {
+    const patient = {
+      resourceType: 'Patient',
+      id: 'p3',
+      name: [],
+    } as unknown as Resource;
+    expect(isPathPopulated(patient, 'Patient.name.given')).toBe(false);
+  });
+});
