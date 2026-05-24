@@ -23,8 +23,9 @@ import { Anchor, Group, Skeleton, Text, Tooltip } from '@mantine/core';
 import type { Resource } from '@medplum/fhirtypes';
 import { useReferenceResolver } from '../../hooks/useReferenceResolver';
 import { summarizeResource } from '../../utils/summarizeResource';
-import { normalizeReference, buildExplorerHref } from '../../utils/referenceUrl';
+import { normalizeReference } from '../../utils/referenceUrl';
 import { usePeek } from '../../contexts/PeekContext';
+import { useBasePath } from '../../contexts/BasePathContext';
 
 export interface ReferenceLinkProps {
   /** The raw FHIR Reference.reference string (relative, absolute, or fragment). */
@@ -60,6 +61,11 @@ export function ReferenceLink({
   const { resource, status } = useReferenceResolver(
     isFragment ? undefined : reference,
   );
+
+  // FIX-01 (D-04): the navigation base-path prefix from BasePathContext —
+  // '/patients/${patientId}' inside a patient subtree, '/explorer' otherwise.
+  // Used to build hrefs so middle-click (new tab) preserves patient context.
+  const basePath = useBasePath();
 
   // PEEK-04 (D-01/D-02): Cmd/Ctrl+click on the Anchor opens the JSON peek
   // drawer. Plain click falls through to existing in-app navigation handled
@@ -98,7 +104,7 @@ export function ReferenceLink({
     if (contained) {
       const summary = summarizeResource(contained).primary;
       const href = contained.id
-        ? buildExplorerHref(contained.resourceType, contained.id)
+        ? `${basePath}/${contained.resourceType}/${contained.id}`
         : '#';
       return (
         <Tooltip label={reference} withArrow position="top" openDelay={400}>
@@ -127,7 +133,7 @@ export function ReferenceLink({
   const slash = normalized?.indexOf('/') ?? -1;
   const type = normalized && slash >= 0 ? normalized.slice(0, slash) : '';
   const id = normalized && slash >= 0 ? normalized.slice(slash + 1) : '';
-  const href = type && id ? buildExplorerHref(type, id) : reference;
+  const href = type && id ? `${basePath}/${type}/${id}` : reference;
   const rawText = normalized ?? reference;
 
   if (status === 'pending') {

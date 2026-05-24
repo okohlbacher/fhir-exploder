@@ -13,9 +13,11 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import { PeekProvider } from '../contexts/PeekContext';
+import { BasePathProvider } from '../contexts/BasePathContext';
 import { JsonPeekDrawer } from '../components/json/JsonPeekDrawer';
 import { ReferenceLink } from '../components/explorer/ReferenceLink';
 
@@ -177,5 +179,71 @@ describe('ReferenceLink Cmd+click peek (PEEK-04)', () => {
     expect(
       screen.queryByRole('button', { name: /Open full →/ }),
     ).toBeNull();
+  });
+});
+
+describe('ReferenceLink — FIX-01 BasePathContext href construction', () => {
+  beforeEach(() => {
+    mockNavigate.mockClear();
+    mockUseRefResolver.mockReset();
+    // Resolved status so an Anchor (role="link") renders, not a Skeleton.
+    mockUseRefResolver.mockReturnValue({
+      resource: { resourceType: 'Observation', id: 'o1' },
+      status: 'resolved',
+    });
+  });
+
+  it('builds href with /explorer prefix when no BasePathProvider is present (default)', () => {
+    render(
+      <MantineProvider env="test">
+        <MemoryRouter>
+          <PeekProvider>
+            <ReferenceLink reference="Observation/o1" />
+          </PeekProvider>
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+    const anchor = screen.getByRole('link');
+    expect(anchor).toHaveAttribute('href', '/explorer/Observation/o1');
+  });
+
+  it('builds href with /patients/:patientId prefix when wrapped in BasePathProvider', () => {
+    render(
+      <MantineProvider env="test">
+        <MemoryRouter>
+          <PeekProvider>
+            <BasePathProvider value="/patients/p1">
+              <ReferenceLink reference="Observation/o1" />
+            </BasePathProvider>
+          </PeekProvider>
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+    const anchor = screen.getByRole('link');
+    expect(anchor).toHaveAttribute('href', '/patients/p1/Observation/o1');
+  });
+
+  it('middle-click (button=1) on the Anchor does not preventDefault — browser handles new tab; href carries patient context', () => {
+    render(
+      <MantineProvider env="test">
+        <MemoryRouter>
+          <PeekProvider>
+            <BasePathProvider value="/patients/p1">
+              <ReferenceLink reference="Observation/o1" />
+            </BasePathProvider>
+          </PeekProvider>
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+    const anchor = screen.getByRole('link');
+    const event = new MouseEvent('auxclick', {
+      bubbles: true,
+      cancelable: true,
+      button: 1,
+    });
+    const defaultPrevented = !anchor.dispatchEvent(event);
+    // Our handler only intercepts metaKey/ctrlKey clicks; auxclick falls through.
+    expect(defaultPrevented).toBe(false);
+    expect(anchor).toHaveAttribute('href', '/patients/p1/Observation/o1');
   });
 });
