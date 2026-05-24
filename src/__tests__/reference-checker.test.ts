@@ -228,6 +228,49 @@ describe('checkReferencesExist (DQ-09)', () => {
   });
 });
 
+describe('checkReferencesExist — FIX-04 FHIR_ID_PATTERN validation', () => {
+  it('skips references with trailing-slash ids (does not add to _id batch)', async () => {
+    const searchResourcesMock = vi.fn().mockResolvedValue([]);
+    const client = { searchResources: searchResourcesMock } as unknown as MedplumClient;
+    const refs = [
+      { reference: 'Patient/123/', path: 'Encounter.subject.reference' },
+    ] as Parameters<typeof checkReferencesExist>[1];
+    const result = await checkReferencesExist(client, refs);
+    expect(searchResourcesMock).not.toHaveBeenCalled();
+    expect(result.size).toBe(0);
+  });
+
+  it('processes valid ids and skips invalid ones in a mixed batch', async () => {
+    const searchResourcesMock = vi.fn().mockResolvedValue([{ id: 'valid-id' }]);
+    const client = { searchResources: searchResourcesMock } as unknown as MedplumClient;
+    const refs = [
+      { reference: 'Patient/valid-id', path: 'a.b' },
+      { reference: 'Patient/bad/', path: 'a.c' },
+      { reference: 'Patient/also bad space', path: 'a.d' },
+    ] as Parameters<typeof checkReferencesExist>[1];
+    await checkReferencesExist(client, refs);
+    expect(searchResourcesMock).toHaveBeenCalledTimes(1);
+    const callArgs = searchResourcesMock.mock.calls[0];
+    // callArgs: [resourceType, searchParams]
+    expect(callArgs[1]._id).toBe('valid-id');
+    expect(callArgs[1]._id).not.toContain('bad');
+  });
+
+  it('regression: existing valid references still flow through unchanged', async () => {
+    const searchResourcesMock = vi
+      .fn()
+      .mockResolvedValue([{ id: '1' }, { id: '2' }]);
+    const client = { searchResources: searchResourcesMock } as unknown as MedplumClient;
+    const refs = [
+      { reference: 'Patient/1', path: 'a.b' },
+      { reference: 'Patient/2', path: 'a.c' },
+    ] as Parameters<typeof checkReferencesExist>[1];
+    const result = await checkReferencesExist(client, refs);
+    expect(searchResourcesMock).toHaveBeenCalledTimes(1);
+    expect(result.size).toBe(0);
+  });
+});
+
 describe('normalizeBrokenRefIssues (DQ-09)', () => {
   it('emits one issue per source reference to the broken target', () => {
     const brokenRefs = new Set<string>(['Patient/999']);
