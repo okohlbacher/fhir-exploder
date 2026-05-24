@@ -1,6 +1,6 @@
 import { Button, Code, Modal, ScrollArea, Stack, Table, Text } from '@mantine/core';
 import { useState } from 'react';
-import type { Resource } from '@medplum/fhirtypes';
+import type { Extension, Resource } from '@medplum/fhirtypes';
 import { useResolvedResource } from '../../hooks/useResolvedResource';
 import { ResourcePropertyTable } from './ResourcePropertyTable';
 import { ContainedResourcesAccordion } from './ContainedResourcesAccordion';
@@ -59,12 +59,20 @@ interface ExtensionShape {
  * section only handles resource-level extensions.
  */
 function ExtensionsSection({ resource }: { resource: Resource }) {
-  const extensions = (resource as unknown as Record<string, unknown>).extension as
-    | ExtensionShape[]
-    | undefined;
+  // FIX-02 (D-05): single-cast to a type that declares optional extension[].
+  // Replaces the previous (resource as unknown as Record<string, unknown>).extension
+  // double-cast — semantically identical but TypeScript-idiomatic.
+  //
+  // NOTE: the plan's D-05 named `DomainResource`, but @medplum/fhirtypes@5.1.x
+  // does not export a generic `DomainResource` (Resource is a discriminated
+  // union; each member declares `extension?: Extension[]` independently). A
+  // single cast to `{ extension?: Extension[] }` using the exported `Extension`
+  // type achieves the identical goal: one cast, no `as unknown as Record`.
+  const extensions = ((resource as { extension?: Extension[] }).extension ??
+    []) as ExtensionShape[];
   const [openUrl, setOpenUrl] = useState<string | null>(null);
 
-  if (!extensions || extensions.length === 0) return null;
+  if (extensions.length === 0) return null;
 
   // Dedupe by url; keep first occurrence. Duplicates silently dropped per D-08.
   const seen = new Set<string>();
