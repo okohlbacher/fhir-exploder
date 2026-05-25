@@ -71,17 +71,18 @@ Exceptions: none. Phase 60 adds zero spacing declarations.
 ## Typography
 
 Restated from tokens.css + Mantine theme. **No new type sizes/weights introduced in Phase 60.**
-The panel uses Mantine `Text size="sm"` (≈14px) and `Title order={5}`. Two weights only: 400
-(regular) and 500 (medium, used for the resource-type label `fw={500}`).
+The panel uses Mantine `Text size="sm"` (≈14px) and `Title order={5}`. Exactly two weights:
+400 (regular) for body, and 600 (semibold) for labels and headings. The resource-type label
+is rendered at `fw={600}` — there is no intermediate 500 weight in this contract.
 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 14px | 400 | 1.45 (tokens.css body) |
-| Label (card type, fw500) | 14px | 500 | 1.45 |
+| Label (card type) | 14px | 600 | 1.45 |
 | Heading (panel Title order=5) | 16px | 600 | 1.2 |
 | Uppercase micro-label | 11px | 600 | 1.2 |
 
-Weights declared: regular (400) + medium/semibold (500–600). No new weights for this phase.
+Weights declared: 400 (regular), 600 (semibold). Exactly two weights — no others for this phase.
 
 ---
 
@@ -128,7 +129,7 @@ and auditor validate the implementation against these, not against new pixels.
 
 | # | Invariant | Source |
 |---|-----------|--------|
-| INV-1 | Panel appearance is **identical** to pre-Phase-60: same `SimpleGrid cols={{ base: 2, sm: 3, md: 4 }}`, same Card anatomy (icon glyph + `fw={500}` type label + light-blue count Badge), same `Title order={5}` "Referenced By". | RelatedResourcesPanel.tsx (unchanged) |
+| INV-1 | Panel appearance is **identical** to pre-Phase-60: same `SimpleGrid cols={{ base: 2, sm: 3, md: 4 }}`, same Card anatomy (icon glyph + `fw={600}` type label + light-blue count Badge), same `Title order={5}` "Referenced By". | RelatedResourcesPanel.tsx (unchanged) |
 | INV-2 | **No loading spinner regression** — the existing in-flight skeleton (per-card `Loader size="xs"` while counts resolve) stays; catalog *construction* adds no new spinner. `buildDynamicCatalog` runs synchronously inside `connect()` (CONTEXT D-01), so the catalog is already in state before the panel mounts — there is no async catalog fetch to spin on. | CONTEXT D-01 |
 | INV-3 | **Fallback is invisible** — when CapabilityStatement is unavailable, or a resource type has no dynamic entries, the panel silently uses the curated catalog. No toast, banner, badge, or copy difference distinguishes dynamic vs fallback rendering. (CONTEXT D-08, D-09; per-type fallback.) | CONTEXT D-08/D-09 |
 | INV-4 | **Merge/dedup does not alter visual output** — union of dynamic + curated, deduped by `entryKey = \`${type}:${param}\`` (CONTEXT D-07, matching RelatedResourcesPanel line 23). Card render order and count behavior must remain stable; only the *set* of cards may grow on rich CapabilityStatements (success criterion 2: extra Encounter reference types appear as additional cards). | CONTEXT D-07 |
