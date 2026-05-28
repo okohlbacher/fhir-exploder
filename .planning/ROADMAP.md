@@ -167,9 +167,9 @@ Full details: [milestones/v1.6-ROADMAP.md](milestones/v1.6-ROADMAP.md)
   3. When the CapabilityStatement is unavailable (404, network error, malformed) OR when a specific resource type has no entries in the dynamic catalog, the panel falls back to the hand-curated `reverseReferenceCatalog.ts` transparently. No error toast or banner is shown to the user.
   4. Unit tests cover: (a) CapabilityStatement parser produces the expected dynamic catalog shape from a fixture CapabilityStatement, (b) panel renders the dynamic-catalog entries when available, (c) panel renders the curated-catalog entries when the dynamic fetch fails, (d) per-server cache invalidates on server-URL change.
   5. `tsc -b --noEmit` exit 0; `npm run build` clean; full test suite passes; bundle gz delta within ±5 KB.
-**Plans**: TBD (2 plans)
-  - 60-01: CapabilityStatement fetch + parse + per-server cache + dynamic catalog builder (REVR-04 parser half)
-  - 60-02: `IncomingReferencesPanel` integration + curated fallback + tests (REVR-04 integration half)
+**Plans**: 2 plans
+  - [ ] 60-01-PLAN.md — buildDynamicCatalog parser + ConnectionState dynamicCatalog + connect() wiring + parser/cache tests (REVR-04 parser half)
+  - [ ] 60-02-PLAN.md — IncomingReferencesPanel dynamic+curated merge + transparent per-type fallback + 4b/4c tests + full build (REVR-04 integration half)
 **Effort**: medium (2-3 days — parser + cache + panel integration + fallback path + 4-5 tests)
 **Execution**: Mixed (parser + cache + integration code is fully automatable; a brief live-Blaze smoke check confirms the dynamic catalog produces a non-empty result on a real CapabilityStatement)
 **UI hint**: yes
